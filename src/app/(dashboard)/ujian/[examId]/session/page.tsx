@@ -250,7 +250,7 @@ const ExamSessionPage: FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] px-4 py-6">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-5xl">
         {/* Top bar */}
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -314,11 +314,11 @@ const ExamSessionPage: FC = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="mb-5">
+              <div className="mb-6">
                 <p className="mb-1 text-xs text-gray-400">
                   Question {responses.length + 1} of {TOTAL_QUESTIONS}
                 </p>
-                <p className="font-display text-base font-bold leading-relaxed text-gray-900">
+                <p className="font-display text-lg font-bold leading-relaxed text-gray-900">
                   {currentQ.stem}
                 </p>
               </div>
@@ -332,14 +332,14 @@ const ExamSessionPage: FC = () => {
                       key={key}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => setSelected(key)}
-                      className={`flex items-center gap-3 rounded-xl px-4 py-3.5 text-left transition-all ${
+                      className={`flex items-center gap-3 rounded-2xl px-5 py-4 text-left transition-all ${
                         isSelected
                           ? 'bg-violet-50 shadow-md'
                           : 'bg-white shadow-sm hover:shadow-md'
                       }`}
                     >
                       <span
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
                           isSelected
                             ? 'bg-violet-500 text-white'
                             : 'bg-gray-100 text-gray-600'
@@ -359,7 +359,7 @@ const ExamSessionPage: FC = () => {
                 <button
                   onClick={handleSubmit}
                   disabled={!selected}
-                  className="w-full rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 py-3.5 text-sm font-bold text-white shadow-md shadow-violet-200/30 transition-all disabled:opacity-30 hover:enabled:-translate-y-0.5"
+                  className="w-full rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-200/40 transition-all disabled:opacity-30 hover:enabled:-translate-y-0.5"
                 >
                   Submit & Next
                 </button>
@@ -368,7 +368,7 @@ const ExamSessionPage: FC = () => {
           </AnimatePresence>
 
           {/* Right - Stats */}
-          <div className="rounded-2xl bg-white/60 p-5">
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
             <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">
               Exam Stats
             </h3>
