@@ -156,7 +156,7 @@ const DashboardPage: FC = () => {
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-8 lg:grid-cols-2">
         {/* LEFT COLUMN */}
         <div className="space-y-6">
           {/* Streak - Gradient card, no border */}
@@ -461,7 +461,7 @@ const DashboardPage: FC = () => {
           </div>
 
           {/* Stacked Card Carousel */}
-          <div className="relative h-[480px]">
+          <div className="relative h-[520px]">
             <AnimatePresence mode="popLayout">
               {courseTopics.map((topic, i) => {
                 const offset = i - activeCourseIdx;
@@ -536,7 +536,7 @@ const DashboardPage: FC = () => {
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="mt-auto space-y-2"
+                            className="mt-auto space-y-3"
                           >
                             {topic.lessons.map((lesson, li) => {
                               const lessonDone =
@@ -550,10 +550,10 @@ const DashboardPage: FC = () => {
                               return (
                                 <div
                                   key={li}
-                                  className="flex items-center gap-3 rounded-xl bg-white/15 px-4 py-2.5 backdrop-blur-sm"
+                                  className="flex items-center gap-3 rounded-2xl bg-white/15 px-5 py-3.5 backdrop-blur-sm"
                                 >
                                   <div
-                                    className={`h-2.5 w-2.5 rounded-full ${
+                                    className={`h-3 w-3 rounded-full ${
                                       lessonDone
                                         ? 'bg-emerald-300'
                                         : 'bg-white/40'
@@ -573,7 +573,7 @@ const DashboardPage: FC = () => {
                                   ? `/materi/${nextMaterial.id}`
                                   : '/materi'
                               }
-                              className="mt-3 block w-full rounded-2xl bg-white py-4 text-center text-sm font-extrabold text-gray-900 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+                              className="mt-4 block w-full rounded-2xl bg-white py-4 text-center text-sm font-extrabold text-gray-900 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
                             >
                               {hasProgress
                                 ? '▶ Continue Learning'
