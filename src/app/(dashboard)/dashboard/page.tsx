@@ -1,18 +1,113 @@
 'use client';
 
 import { FC, useEffect, useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
+import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { getUserProgress } from '@/services/progress';
 import { getMaterials } from '@/services/materials';
 import { Material, UserProgress } from '@/types/firestore';
-import { CheckCircle, Circle, Lock, ArrowRight } from 'lucide-react';
+import { Zap, ExternalLink } from 'lucide-react';
+
+// Chemistry topics mapped to the SVG icons
+const courseTopics = [
+  { id: 'atom-model', name: 'Model Atom', icon: '/icons/topic-atom-model.svg' },
+  {
+    id: 'stoikiometri',
+    name: 'Stoikiometri',
+    icon: '/icons/topic-calculus.svg',
+  },
+  {
+    id: 'larutan',
+    name: 'Larutan & Konsentrasi',
+    icon: '/icons/topic-chemistry-flask.svg',
+  },
+  {
+    id: 'ikatan-kimia',
+    name: 'Ikatan Kimia',
+    icon: '/icons/topic-coordinate-geometry.svg',
+  },
+  {
+    id: 'reaksi-redoks',
+    name: 'Reaksi Redoks',
+    icon: '/icons/topic-coordinate-transformations.svg',
+  },
+  {
+    id: 'tingkat-kesulitan',
+    name: 'Tingkat Reaksi',
+    icon: '/icons/topic-difficulty-levels.svg',
+  },
+  {
+    id: 'kesetimbangan',
+    name: 'Kesetimbangan Kimia',
+    icon: '/icons/topic-exponential-functions.svg',
+  },
+  {
+    id: 'geometri-molekul',
+    name: 'Geometri Molekul',
+    icon: '/icons/topic-geometric-thinking.svg',
+  },
+  {
+    id: 'struktur-lewis',
+    name: 'Struktur Lewis',
+    icon: '/icons/topic-graph-theory.svg',
+  },
+  {
+    id: 'kimia-komputasi',
+    name: 'Kimia Komputasi',
+    icon: '/icons/topic-how-ai-works.svg',
+  },
+  {
+    id: 'hukum-gas',
+    name: 'Hukum Gas Ideal',
+    icon: '/icons/topic-linear-relationships.svg',
+  },
+  {
+    id: 'termokimia',
+    name: 'Termokimia',
+    icon: '/icons/topic-probability-and-chance.svg',
+  },
+  {
+    id: 'laju-reaksi',
+    name: 'Laju Reaksi',
+    icon: '/icons/topic-regression.svg',
+  },
+  {
+    id: 'kalorimetri',
+    name: 'Kalorimetri',
+    icon: '/icons/topic-thermometer-alt.svg',
+  },
+  {
+    id: 'termodinamika',
+    name: 'Termodinamika',
+    icon: '/icons/topic-thermometer-gauge.svg',
+  },
+  {
+    id: 'entalpi',
+    name: 'Perubahan Entalpi',
+    icon: '/icons/topic-thermometer.svg',
+  },
+  {
+    id: 'elektrokimia',
+    name: 'Elektrokimia',
+    icon: '/icons/topic-vectors.svg',
+  },
+];
+
+interface LeaderboardEntry {
+  uid: string;
+  displayName: string;
+  xp: number;
+}
 
 const DashboardPage: FC = () => {
   const { profile } = useAuth();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [activeCourseIdx, setActiveCourseIdx] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +119,21 @@ const DashboardPage: FC = () => {
       ]);
       setMaterials(mats);
       setProgress(prog);
+
+      // Leaderboard
+      const q = query(
+        collection(db, 'users'),
+        orderBy('stats.xp', 'desc'),
+        limit(5)
+      );
+      const snap = await getDocs(q);
+      setLeaderboard(
+        snap.docs.map((d) => ({
+          uid: d.id,
+          displayName: d.data().displayName,
+          xp: d.data().stats?.xp || 0,
+        }))
+      );
       setLoading(false);
     };
     fetchData();
@@ -37,159 +147,222 @@ const DashboardPage: FC = () => {
     );
   }
 
-  const getStatus = (id: string) =>
-    progress.find((p) => p.materialId === id)?.status || 'not_started';
-
-  const nextMaterial = materials.find((m) => getStatus(m.id) !== 'completed');
-
   const completedCount = progress.filter(
     (p) => p.status === 'completed'
   ).length;
+  const nextMaterial = materials.find(
+    (m) =>
+      !progress.find((p) => p.materialId === m.id && p.status === 'completed')
+  );
+
+  // Days of week for streak
+  const days = ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'];
+  const today = new Date().getDay(); // 0=Sun
+  const streakDays = days.map((_, i) => i < profile.stats.streak % 7);
+
+  const rankColors = [
+    'bg-yellow-100 text-yellow-700',
+    'bg-gray-100 text-gray-600',
+    'bg-orange-100 text-orange-700',
+  ];
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
-      {/* Greeting + Streak */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">
-            Halo, {profile.displayName.split(' ')[0]}! 👋
-          </h1>
-          <p className="text-sm text-gray-500">Ayo lanjutkan belajar</p>
-        </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5">
-          <Image src="/icons/fire.png" alt="" width={18} height={18} />
-          <span className="text-sm font-bold text-primary-orange">
-            {profile.stats.streak}
-          </span>
-        </div>
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      {/* Header */}
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-gray-900">
+          Welcome, {profile.displayName.split(' ')[0]}
+        </h1>
+        <h2 className="text-xl font-bold text-gray-900">Jump back in</h2>
       </div>
 
-      {/* Big CTA - Continue Learning */}
-      {nextMaterial && (
-        <Link
-          href={`/materi/${nextMaterial.id}`}
-          className="group flex items-center gap-4 rounded-2xl bg-gradient-to-r from-primary to-primary-cyan p-6 text-white shadow-primary transition-all hover:shadow-lg"
-        >
-          <div className="flex-1">
-            <p className="mb-1 text-xs font-medium text-white/70">Lanjutkan</p>
-            <h2 className="text-lg font-bold">{nextMaterial.title}</h2>
-            <p className="mt-1 text-sm text-white/80">
-              {nextMaterial.estimatedTime} menit
-            </p>
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 transition-transform group-hover:translate-x-1">
-            <ArrowRight size={24} />
-          </div>
-        </Link>
-      )}
-
-      {/* Progress Summary */}
-      <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-5 py-4">
-        <div className="flex-1">
-          <div className="mb-2 flex justify-between text-sm">
-            <span className="font-medium text-gray-700">Progress Materi</span>
-            <span className="text-gray-500">
-              {completedCount}/{materials.length}
-            </span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-primary-cyan transition-all duration-500"
-              style={{
-                width: `${materials.length > 0 ? (completedCount / materials.length) * 100 : 0}%`,
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Learning Path */}
-      <section>
-        <h2 className="mb-4 text-base font-bold text-gray-900">
-          Learning Path
-        </h2>
-        <div className="relative space-y-0">
-          {materials.map((material, i) => {
-            const status = getStatus(material.id);
-            const isCompleted = status === 'completed';
-            const isInProgress = status === 'in_progress';
-            const isCurrent =
-              !isCompleted &&
-              (i === 0 || getStatus(materials[i - 1].id) === 'completed');
-            const isLocked = !isCompleted && !isInProgress && !isCurrent;
-
-            return (
-              <div key={material.id} className="relative flex gap-4">
-                {/* Vertical line */}
-                {i < materials.length - 1 && (
+      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+        {/* LEFT COLUMN */}
+        <div className="space-y-6">
+          {/* Streak Card */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-4xl font-bold text-gray-900">
+                {profile.stats.streak}
+              </span>
+              <Zap size={28} className="fill-yellow-400 text-yellow-400" />
+            </div>
+            <div className="flex items-center gap-3">
+              {days.map((day, i) => (
+                <div key={day} className="flex flex-col items-center gap-1.5">
                   <div
-                    className={`absolute left-[19px] top-10 h-full w-0.5 ${
-                      isCompleted ? 'bg-success' : 'bg-gray-200'
-                    }`}
-                  />
-                )}
-
-                {/* Icon */}
-                <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center">
-                  {isCompleted ? (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-white">
-                      <CheckCircle size={20} />
-                    </div>
-                  ) : isCurrent || isInProgress ? (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-primary bg-white">
-                      <Circle size={12} className="fill-primary text-primary" />
-                    </div>
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                      <Lock size={16} className="text-gray-400" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <Link
-                  href={isLocked ? '#' : `/materi/${material.id}`}
-                  className={`mb-4 flex-1 rounded-xl border p-4 transition-all ${
-                    isCurrent || isInProgress
-                      ? 'border-primary/30 bg-primary/5 hover:shadow-md'
-                      : isCompleted
-                        ? 'border-success/20 bg-success-light/30'
-                        : 'cursor-not-allowed border-gray-100 bg-gray-50 opacity-50'
-                  }`}
-                >
-                  <h3
-                    className={`text-sm font-semibold ${
-                      isLocked ? 'text-gray-400' : 'text-gray-900'
+                    className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                      streakDays[i]
+                        ? 'bg-yellow-400'
+                        : i === (today === 0 ? 6 : today - 1)
+                          ? 'border-2 border-yellow-400 bg-yellow-50'
+                          : 'bg-gray-100'
                     }`}
                   >
-                    {material.title}
-                  </h3>
-                  <p className="mt-0.5 text-xs text-gray-500">
-                    {material.description}
-                  </p>
-                </Link>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+                    <Zap
+                      size={18}
+                      className={
+                        streakDays[i]
+                          ? 'fill-gray-900 text-gray-900'
+                          : 'text-gray-400'
+                      }
+                    />
+                  </div>
+                  <span
+                    className={`text-xs ${
+                      i === (today === 0 ? 6 : today - 1)
+                        ? 'font-bold text-gray-900'
+                        : 'text-gray-500'
+                    }`}
+                  >
+                    {day}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      {/* Quick Links */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          href="/latihan"
-          className="rounded-xl border border-gray-100 bg-white p-4 text-center transition-all hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <span className="text-2xl">✏️</span>
-          <p className="mt-1 text-xs font-medium text-gray-700">Latihan Quiz</p>
-        </Link>
-        <Link
-          href="/ujian"
-          className="rounded-xl border border-gray-100 bg-white p-4 text-center transition-all hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <span className="text-2xl">🎯</span>
-          <p className="mt-1 text-xs font-medium text-gray-700">Mulai Ujian</p>
-        </Link>
+          {/* Leaderboard Card */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800">
+                  <span className="text-lg">⚗️</span>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-900">
+                    CHEMISTRY LEAGUE
+                  </p>
+                  <p className="text-xs text-gray-500">Weekly</p>
+                </div>
+              </div>
+              <ExternalLink size={16} className="text-gray-400" />
+            </div>
+
+            <div className="space-y-3">
+              {leaderboard.map((entry, i) => (
+                <div
+                  key={entry.uid}
+                  className={`flex items-center gap-3 rounded-lg px-2 py-1.5 ${
+                    entry.uid === profile.uid ? 'bg-primary/5' : ''
+                  }`}
+                >
+                  <span
+                    className={`flex h-6 w-6 items-center justify-center rounded text-xs font-bold ${
+                      i < 3 ? rankColors[i] : 'text-gray-500'
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold text-white ${
+                      [
+                        'bg-blue-400',
+                        'bg-pink-400',
+                        'bg-green-400',
+                        'bg-purple-400',
+                        'bg-orange-400',
+                      ][i % 5]
+                    }`}
+                  >
+                    {entry.displayName.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="flex-1 text-sm font-medium text-gray-800">
+                    {entry.displayName}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {entry.xp.toLocaleString()} XP
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="space-y-6">
+          {/* Current Course Card */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
+            <h3 className="mb-1 text-2xl font-bold text-gray-900">
+              {courseTopics[activeCourseIdx].name}
+            </h3>
+            <p className="mb-6 text-sm font-medium text-primary">
+              LEVEL {Math.min(completedCount + 1, 10)}
+            </p>
+
+            {/* Course Icon */}
+            <div className="mx-auto mb-6 flex h-48 w-48 items-center justify-center">
+              <Image
+                src={courseTopics[activeCourseIdx].icon}
+                alt={courseTopics[activeCourseIdx].name}
+                width={160}
+                height={160}
+              />
+            </div>
+
+            <p className="mb-6 text-sm text-gray-500">
+              {nextMaterial
+                ? `Selanjutnya: ${nextMaterial.title}`
+                : 'Semua materi selesai! 🎉'}
+            </p>
+
+            {/* Lessons in this course */}
+            {materials.slice(0, 3).map((m) => {
+              const status = progress.find(
+                (p) => p.materialId === m.id
+              )?.status;
+              return (
+                <div
+                  key={m.id}
+                  className="flex items-center gap-3 border-t border-gray-100 px-2 py-3 text-left"
+                >
+                  <div
+                    className={`h-3 w-3 rounded-full ${
+                      status === 'completed'
+                        ? 'bg-success'
+                        : status === 'in_progress'
+                          ? 'bg-primary'
+                          : 'bg-gray-200'
+                    }`}
+                  />
+                  <span className="flex-1 text-sm text-gray-700">
+                    {m.title}
+                  </span>
+                </div>
+              );
+            })}
+
+            {/* Start Button */}
+            <Link
+              href={nextMaterial ? `/materi/${nextMaterial.id}` : '/materi'}
+              className="mt-6 block w-full rounded-xl bg-primary py-4 text-center text-sm font-bold text-white transition-opacity hover:opacity-90"
+            >
+              Start
+            </Link>
+          </div>
+
+          {/* Course Topic Icons (bottom row) */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {courseTopics.slice(0, 7).map((topic, i) => (
+              <button
+                key={topic.id}
+                onClick={() => setActiveCourseIdx(i)}
+                className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
+                  activeCourseIdx === i
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <Image
+                  src={topic.icon}
+                  alt={topic.name}
+                  width={36}
+                  height={36}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
