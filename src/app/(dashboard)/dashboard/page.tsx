@@ -141,7 +141,23 @@ const DashboardPage: FC = () => {
   const today = new Date().getDay();
   const streakDays = days.map((_, i) => i < profile.stats.streak % 7);
 
-  const weeklyXP = [20, 35, 15, 50, 40, 30, profile.stats.xp > 0 ? 45 : 0];
+  // Calculate weekly activity from real progress data
+  const weeklyXP = (() => {
+    const now = new Date();
+    const weekData = [0, 0, 0, 0, 0, 0, 0]; // M T W Th F S Su
+    progress.forEach((p) => {
+      const accessedAt = p.lastAccessedAt?.toDate?.();
+      if (!accessedAt) return;
+      const diffDays = Math.floor(
+        (now.getTime() - accessedAt.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (diffDays < 7) {
+        const dayIdx = (accessedAt.getDay() + 6) % 7; // Convert Sun=0 to Mon=0
+        weekData[dayIdx] += p.status === 'completed' ? 50 : 10;
+      }
+    });
+    return weekData;
+  })();
   const maxXP = Math.max(...weeklyXP, 1);
 
   return (
