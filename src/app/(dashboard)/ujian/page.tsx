@@ -2,16 +2,33 @@
 
 import { FC, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Shield, Clock, Brain, AlertTriangle } from 'lucide-react';
+import { Shield, Clock, Brain, AlertTriangle, Zap } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 
 const rules = [
-  { icon: Clock, text: '21 soal, ~30-45 menit' },
-  { icon: Brain, text: 'Kesulitan menyesuaikan jawabanmu' },
-  { icon: Shield, text: 'Tidak bisa kembali ke soal sebelumnya' },
-  { icon: AlertTriangle, text: 'Jangan tinggalkan tab selama ujian' },
+  {
+    icon: Brain,
+    text: '21 soal adaptif — kesulitan menyesuaikan jawabanmu',
+    color: 'text-violet-500 bg-violet-50',
+  },
+  {
+    icon: Clock,
+    text: 'Setiap soal memiliki batas waktu',
+    color: 'text-blue-500 bg-blue-50',
+  },
+  {
+    icon: Shield,
+    text: 'Tidak bisa kembali ke soal sebelumnya',
+    color: 'text-amber-500 bg-amber-50',
+  },
+  {
+    icon: AlertTriangle,
+    text: 'Jangan tinggalkan tab selama ujian berlangsung',
+    color: 'text-rose-500 bg-rose-50',
+  },
 ];
 
 const UjianPage: FC = () => {
@@ -23,37 +40,79 @@ const UjianPage: FC = () => {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
       >
         <h1 className="mb-2 font-display text-2xl font-extrabold text-gray-900">
           MSAT Exam
         </h1>
-        <p className="mb-8 text-sm text-gray-500">
+        <p className="text-sm text-gray-500">
           Multistage Adaptive Testing — ujian yang menyesuaikan tingkat
           kesulitan berdasarkan kemampuanmu
         </p>
       </motion.div>
 
-      {/* Exam Card */}
+      {/* Main Card */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="overflow-hidden rounded-3xl bg-white shadow-sm"
       >
-        <div className="bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-500 p-8 text-white">
-          <h2 className="mb-2 text-xl font-extrabold">
-            Stoikiometri Assessment
-          </h2>
-          <p className="text-sm text-white/80">
-            Ujian adaptif untuk mengukur pemahaman stoikiometri secara mendalam
-          </p>
+        {/* Hero Banner */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 px-8 py-12 text-white lg:px-12">
+          {/* Decorative */}
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+          <div className="absolute -bottom-8 right-20 h-24 w-24 rounded-full bg-white/5" />
+          <div className="absolute left-1/2 top-4 h-16 w-16 rounded-full bg-white/5" />
+
+          <div className="relative flex items-center gap-6">
+            <div className="hidden lg:block">
+              <Image
+                src="/icons/topic-calculus.svg"
+                alt=""
+                width={80}
+                height={80}
+                className="opacity-90"
+              />
+            </div>
+            <div>
+              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+                <Zap size={12} /> Adaptive
+              </div>
+              <h2 className="text-2xl font-extrabold lg:text-3xl">
+                Stoikiometri Assessment
+              </h2>
+              <p className="mt-2 max-w-md text-sm text-white/70">
+                Ujian adaptif untuk mengukur pemahaman stoikiometri secara
+                mendalam dan mengidentifikasi miskonsepsimu
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="p-8">
+        {/* Content */}
+        <div className="p-8 lg:p-12">
+          {/* Stats */}
+          <div className="mb-8 grid grid-cols-3 gap-4">
+            <div className="rounded-2xl bg-gray-50 p-4 text-center">
+              <p className="text-2xl font-black text-gray-900">21</p>
+              <p className="text-xs text-gray-500">Soal</p>
+            </div>
+            <div className="rounded-2xl bg-gray-50 p-4 text-center">
+              <p className="text-2xl font-black text-gray-900">3</p>
+              <p className="text-xs text-gray-500">Stage</p>
+            </div>
+            <div className="rounded-2xl bg-gray-50 p-4 text-center">
+              <p className="text-2xl font-black text-gray-900">~30</p>
+              <p className="text-xs text-gray-500">Menit</p>
+            </div>
+          </div>
+
           {/* Rules */}
           <h3 className="mb-4 text-sm font-bold text-gray-900">
             Peraturan Ujian
@@ -62,20 +121,27 @@ const UjianPage: FC = () => {
             {rules.map((rule, i) => {
               const Icon = rule.icon;
               return (
-                <div
+                <motion.div
                   key={i}
-                  className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + i * 0.05 }}
+                  className="flex items-center gap-4 rounded-xl bg-gray-50 px-5 py-3.5"
                 >
-                  <Icon size={18} className="shrink-0 text-gray-500" />
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${rule.color}`}
+                  >
+                    <Icon size={18} />
+                  </div>
                   <span className="text-sm text-gray-700">{rule.text}</span>
-                </div>
+                </motion.div>
               );
             })}
           </div>
 
           {/* Info */}
           <div className="mb-8 rounded-2xl bg-amber-50 p-5">
-            <p className="text-sm text-amber-800">
+            <p className="text-sm leading-relaxed text-amber-800">
               <strong>Penting:</strong> Ujian ini menggunakan sistem adaptif.
               Jika kamu menjawab benar, soal berikutnya akan lebih sulit. Jika
               salah, soal akan lebih mudah. Sistem juga mengukur waktu
@@ -86,7 +152,7 @@ const UjianPage: FC = () => {
           {/* Start Button */}
           <button
             onClick={() => setShowModal(true)}
-            className="w-full rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+            className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
           >
             Mulai Ujian
           </button>
@@ -97,20 +163,27 @@ const UjianPage: FC = () => {
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title="Konfirmasi"
+        title="Konfirmasi Mulai Ujian"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Batal
+              Belum Siap
             </Button>
-            <Button onClick={handleStart}>Ya, Mulai</Button>
+            <Button onClick={handleStart}>Ya, Mulai Sekarang</Button>
           </>
         }
       >
-        <p className="text-sm text-gray-600">
-          Setelah dimulai, ujian tidak bisa di-pause atau diulang. Pastikan kamu
-          siap dan memiliki koneksi internet yang stabil.
-        </p>
+        <div className="space-y-3 text-sm text-gray-600">
+          <p>
+            Setelah dimulai, ujian <strong>tidak bisa di-pause</strong> atau
+            diulang. Pastikan:
+          </p>
+          <ul className="list-inside list-disc space-y-1 text-gray-500">
+            <li>Koneksi internet stabil</li>
+            <li>Kamu dalam kondisi fokus</li>
+            <li>Tidak akan meninggalkan tab browser</li>
+          </ul>
+        </div>
       </Modal>
     </div>
   );
