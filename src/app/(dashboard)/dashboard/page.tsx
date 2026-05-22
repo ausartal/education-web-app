@@ -3,22 +3,19 @@
 import { FC, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { getUserProgress } from '@/services/progress';
 import { getMaterials } from '@/services/materials';
 import { Material, UserProgress } from '@/types/firestore';
-import { Zap, ExternalLink } from 'lucide-react';
+import { Zap, TrendingUp, BookOpen, Target, Clock } from 'lucide-react';
 
-// Chemistry topics mapped to the SVG icons
 const courseTopics = [
-  { id: 'atom-model', name: 'Model Atom', icon: '/icons/topic-atom-model.svg' },
   {
     id: 'stoikiometri',
     name: 'Stoikiometri',
     icon: '/icons/topic-calculus.svg',
   },
+  { id: 'atom-model', name: 'Model Atom', icon: '/icons/topic-atom-model.svg' },
   {
     id: 'larutan',
     name: 'Larutan & Konsentrasi',
@@ -35,11 +32,6 @@ const courseTopics = [
     icon: '/icons/topic-coordinate-transformations.svg',
   },
   {
-    id: 'tingkat-kesulitan',
-    name: 'Tingkat Reaksi',
-    icon: '/icons/topic-difficulty-levels.svg',
-  },
-  {
     id: 'kesetimbangan',
     name: 'Kesetimbangan Kimia',
     icon: '/icons/topic-exponential-functions.svg',
@@ -49,64 +41,12 @@ const courseTopics = [
     name: 'Geometri Molekul',
     icon: '/icons/topic-geometric-thinking.svg',
   },
-  {
-    id: 'struktur-lewis',
-    name: 'Struktur Lewis',
-    icon: '/icons/topic-graph-theory.svg',
-  },
-  {
-    id: 'kimia-komputasi',
-    name: 'Kimia Komputasi',
-    icon: '/icons/topic-how-ai-works.svg',
-  },
-  {
-    id: 'hukum-gas',
-    name: 'Hukum Gas Ideal',
-    icon: '/icons/topic-linear-relationships.svg',
-  },
-  {
-    id: 'termokimia',
-    name: 'Termokimia',
-    icon: '/icons/topic-probability-and-chance.svg',
-  },
-  {
-    id: 'laju-reaksi',
-    name: 'Laju Reaksi',
-    icon: '/icons/topic-regression.svg',
-  },
-  {
-    id: 'kalorimetri',
-    name: 'Kalorimetri',
-    icon: '/icons/topic-thermometer-alt.svg',
-  },
-  {
-    id: 'termodinamika',
-    name: 'Termodinamika',
-    icon: '/icons/topic-thermometer-gauge.svg',
-  },
-  {
-    id: 'entalpi',
-    name: 'Perubahan Entalpi',
-    icon: '/icons/topic-thermometer.svg',
-  },
-  {
-    id: 'elektrokimia',
-    name: 'Elektrokimia',
-    icon: '/icons/topic-vectors.svg',
-  },
 ];
-
-interface LeaderboardEntry {
-  uid: string;
-  displayName: string;
-  xp: number;
-}
 
 const DashboardPage: FC = () => {
   const { profile } = useAuth();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [activeCourseIdx, setActiveCourseIdx] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -119,21 +59,6 @@ const DashboardPage: FC = () => {
       ]);
       setMaterials(mats);
       setProgress(prog);
-
-      // Leaderboard
-      const q = query(
-        collection(db, 'users'),
-        orderBy('stats.xp', 'desc'),
-        limit(5)
-      );
-      const snap = await getDocs(q);
-      setLeaderboard(
-        snap.docs.map((d) => ({
-          uid: d.id,
-          displayName: d.data().displayName,
-          xp: d.data().stats?.xp || 0,
-        }))
-      );
       setLoading(false);
     };
     fetchData();
@@ -154,17 +79,19 @@ const DashboardPage: FC = () => {
     (m) =>
       !progress.find((p) => p.materialId === m.id && p.status === 'completed')
   );
+  const totalTimeSpent = progress.reduce(
+    (acc, p) => acc + (p.timeSpent || 0),
+    0
+  );
 
-  // Days of week for streak
+  // Streak days
   const days = ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'];
-  const today = new Date().getDay(); // 0=Sun
+  const today = new Date().getDay();
   const streakDays = days.map((_, i) => i < profile.stats.streak % 7);
 
-  const rankColors = [
-    'bg-yellow-100 text-yellow-700',
-    'bg-gray-100 text-gray-600',
-    'bg-orange-100 text-orange-700',
-  ];
+  // Mini bar chart data (simulated weekly XP — in production this would come from a weekly log)
+  const weeklyXP = [20, 35, 15, 50, 40, 30, profile.stats.xp > 0 ? 45 : 0];
+  const maxXP = Math.max(...weeklyXP, 1);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -173,7 +100,9 @@ const DashboardPage: FC = () => {
         <h1 className="text-xl font-bold text-gray-900">
           Welcome, {profile.displayName.split(' ')[0]}
         </h1>
-        <h2 className="text-xl font-bold text-gray-900">Jump back in</h2>
+        <h2 className="hidden text-xl font-bold text-gray-900 lg:block">
+          Jump back in
+        </h2>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
@@ -222,59 +151,86 @@ const DashboardPage: FC = () => {
             </div>
           </div>
 
-          {/* Leaderboard Card */}
+          {/* Progress Overview Card */}
           <div className="rounded-2xl border border-gray-200 bg-white p-6">
             <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800">
-                  <span className="text-lg">⚗️</span>
-                </div>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-gray-900">
-                    CHEMISTRY LEAGUE
-                  </p>
-                  <p className="text-xs text-gray-500">Weekly</p>
-                </div>
-              </div>
-              <ExternalLink size={16} className="text-gray-400" />
+              <h3 className="text-sm font-bold text-gray-900">
+                Progress Overview
+              </h3>
+              <Link
+                href="/profile"
+                className="text-xs text-primary hover:underline"
+              >
+                Detail →
+              </Link>
             </div>
 
-            <div className="space-y-3">
-              {leaderboard.map((entry, i) => (
-                <div
-                  key={entry.uid}
-                  className={`flex items-center gap-3 rounded-lg px-2 py-1.5 ${
-                    entry.uid === profile.uid ? 'bg-primary/5' : ''
-                  }`}
-                >
-                  <span
-                    className={`flex h-6 w-6 items-center justify-center rounded text-xs font-bold ${
-                      i < 3 ? rankColors[i] : 'text-gray-500'
-                    }`}
-                  >
-                    {i + 1}
-                  </span>
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold text-white ${
-                      [
-                        'bg-blue-400',
-                        'bg-pink-400',
-                        'bg-green-400',
-                        'bg-purple-400',
-                        'bg-orange-400',
-                      ][i % 5]
-                    }`}
-                  >
-                    {entry.displayName.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="flex-1 text-sm font-medium text-gray-800">
-                    {entry.displayName}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {entry.xp.toLocaleString()} XP
-                  </span>
+            {/* Stats Grid */}
+            <div className="mb-5 grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-blue-50 p-3">
+                <div className="mb-1 flex items-center gap-1.5">
+                  <BookOpen size={14} className="text-primary" />
+                  <span className="text-xs text-gray-500">Materi</span>
                 </div>
-              ))}
+                <p className="text-lg font-bold text-gray-900">
+                  {completedCount}/{materials.length}
+                </p>
+              </div>
+              <div className="rounded-xl bg-orange-50 p-3">
+                <div className="mb-1 flex items-center gap-1.5">
+                  <Zap size={14} className="text-primary-orange" />
+                  <span className="text-xs text-gray-500">Total XP</span>
+                </div>
+                <p className="text-lg font-bold text-gray-900">
+                  {profile.stats.xp.toLocaleString()}
+                </p>
+              </div>
+              <div className="rounded-xl bg-green-50 p-3">
+                <div className="mb-1 flex items-center gap-1.5">
+                  <Target size={14} className="text-success" />
+                  <span className="text-xs text-gray-500">Quiz</span>
+                </div>
+                <p className="text-lg font-bold text-gray-900">
+                  {profile.stats.totalQuizzes}
+                </p>
+              </div>
+              <div className="rounded-xl bg-purple-50 p-3">
+                <div className="mb-1 flex items-center gap-1.5">
+                  <Clock size={14} className="text-[#8B5CF6]" />
+                  <span className="text-xs text-gray-500">Waktu</span>
+                </div>
+                <p className="text-lg font-bold text-gray-900">
+                  {Math.round(totalTimeSpent / 60)}m
+                </p>
+              </div>
+            </div>
+
+            {/* Weekly Activity Graph */}
+            <div>
+              <div className="mb-2 flex items-center gap-1.5">
+                <TrendingUp size={14} className="text-gray-400" />
+                <span className="text-xs font-medium text-gray-500">
+                  Aktivitas Minggu Ini
+                </span>
+              </div>
+              <div className="flex items-end gap-1.5">
+                {weeklyXP.map((xp, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-1 flex-col items-center gap-1"
+                  >
+                    <div
+                      className={`w-full rounded-sm transition-all ${
+                        i === (today === 0 ? 6 : today - 1)
+                          ? 'bg-primary'
+                          : 'bg-primary/30'
+                      }`}
+                      style={{ height: `${Math.max((xp / maxXP) * 48, 4)}px` }}
+                    />
+                    <span className="text-[10px] text-gray-400">{days[i]}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -290,7 +246,6 @@ const DashboardPage: FC = () => {
               LEVEL {Math.min(completedCount + 1, 10)}
             </p>
 
-            {/* Course Icon */}
             <div className="mx-auto mb-6 flex h-48 w-48 items-center justify-center">
               <Image
                 src={courseTopics[activeCourseIdx].icon}
@@ -306,7 +261,6 @@ const DashboardPage: FC = () => {
                 : 'Semua materi selesai! 🎉'}
             </p>
 
-            {/* Lessons in this course */}
             {materials.slice(0, 3).map((m) => {
               const status = progress.find(
                 (p) => p.materialId === m.id
@@ -332,7 +286,6 @@ const DashboardPage: FC = () => {
               );
             })}
 
-            {/* Start Button */}
             <Link
               href={nextMaterial ? `/materi/${nextMaterial.id}` : '/materi'}
               className="mt-6 block w-full rounded-xl bg-primary py-4 text-center text-sm font-bold text-white transition-opacity hover:opacity-90"
@@ -341,9 +294,9 @@ const DashboardPage: FC = () => {
             </Link>
           </div>
 
-          {/* Course Topic Icons (bottom row) */}
+          {/* Course Topic Icons */}
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {courseTopics.slice(0, 7).map((topic, i) => (
+            {courseTopics.map((topic, i) => (
               <button
                 key={topic.id}
                 onClick={() => setActiveCourseIdx(i)}
