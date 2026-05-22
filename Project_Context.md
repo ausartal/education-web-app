@@ -1032,7 +1032,363 @@ Platform AKURAT mengadopsi best practices dari tiga platform edukasi terkemuka:
 
 ---
 
-## 8. MOBILE EXPERIENCE
+## 8. MSAT ALGORITHM & ADAPTIVE ENGINE
+
+### Overview
+
+MSAT (Multistage Adaptive Testing) adalah core engine AKURAT yang menentukan tingkat kesulitan soal secara real-time berdasarkan performa siswa. Berbeda dengan CAT (Computerized Adaptive Testing) tradisional yang hanya melihat benar/salah, MSAT AKURAT menggunakan **dual-signal system**: correctness + implicit confidence (berbasis waktu pengerjaan).
+
+### Difficulty Levels
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  LEVEL 1: MUDAH        │  Recall & basic application    │
+│  LEVEL 2: MODERATE     │  Multi-step & conceptual       │
+│  LEVEL 3: SUSAH        │  Complex reasoning & transfer  │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Karakteristik per Level:**
+
+| Level | Tipe Soal | Contoh (Stoikiometri) |
+|-------|-----------|----------------------|
+| Mudah | Recall, substitusi langsung | "Hitung Mr dari H₂O" |
+| Moderate | Multi-step, konversi satuan | "Berapa volume gas CO₂ (STP) dari 10g CaCO₃?" |
+| Susah | Limiting reagent, analisis, transfer | "Tentukan hasil reaksi jika 5g Zn + 100mL HCl 0.5M, mana limiting reagent?" |
+
+### Adaptive Flow
+
+```
+                    ┌─────────────┐
+                    │  START      │
+                    │  Level: MOD │
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  SOAL       │
+                    │  MODERATE   │
+                    └──────┬──────┘
+                           │
+              ┌────────────┼────────────┐
+              │            │            │
+       ┌──────▼──────┐    │     ┌──────▼──────┐
+       │  SALAH      │    │     │  BENAR      │
+       │  → MUDAH    │    │     │  → SUSAH    │
+       └──────┬──────┘    │     └──────┬──────┘
+              │            │            │
+              ▼            ▼            ▼
+        [Continue adaptive cycle per stage]
+```
+
+**Rules:**
+1. **Start**: Semua siswa mulai di level MODERATE
+2. **Naik**: Jawab benar → naik 1 level (max: SUSAH)
+3. **Turun**: Jawab salah → turun 1 level (min: MUDAH)
+4. **Stay**: Sudah di SUSAH + benar → tetap SUSAH; sudah di MUDAH + salah → tetap MUDAH
+
+### Stage System
+
+Ujian dibagi menjadi **3 stages** (tahap), masing-masing berisi cluster soal:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  STAGE 1 (Warm-up)     │  5 soal  │  Calibration phase  │
+│  STAGE 2 (Core)        │  10 soal │  Main assessment     │
+│  STAGE 3 (Validation)  │  5 soal  │  Confirm proficiency │
+└──────────────────────────────────────────────────────────┘
+Total: 20 soal per exam session
+```
+
+**Stage Transitions:**
+- Setelah Stage 1: Sistem menentukan "starting difficulty" untuk Stage 2 berdasarkan performa Stage 1
+- Setelah Stage 2: Sistem menentukan apakah Stage 3 perlu validasi naik atau turun
+- Stage 3: Soal-soal konfirmasi untuk memastikan level final siswa
+
+### Implicit Confidence System (Time-Based)
+
+Sistem kepercayaan **tidak ditampilkan ke user** — bekerja di background menggunakan waktu pengerjaan sebagai proxy untuk confidence level.
+
+#### Time Allocation per Difficulty
+
+| Level | Base Time | Fast Threshold | Slow Threshold |
+|-------|-----------|----------------|----------------|
+| Mudah | 60 detik | < 20 detik | > 45 detik |
+| Moderate | 90 detik | < 30 detik | > 70 detik |
+| Susah | 120 detik | < 40 detik | > 100 detik |
+
+#### Response Classification Matrix
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              │  CEPAT (< threshold)  │  LAMBAT (> threshold)    │
+├─────────────────────────────────────────────────────────────────┤
+│  BENAR  ✓   │  🎯 MAHIR             │  ⚠️ PAHAM TAPI LAMBAT    │
+│              │  High confidence      │  Medium confidence       │
+│              │  Score: 1.0           │  Score: 0.7              │
+├─────────────────────────────────────────────────────────────────┤
+│  SALAH  ✗   │  🎲 KEMUNGKINAN TEBAK │  ❌ TIDAK MEMAHAMI       │
+│              │  Low confidence       │  Very low confidence     │
+│              │  Score: 0.2           │  Score: 0.0              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Confidence Score Calculation
+
+```javascript
+function calculateConfidenceScore(isCorrect, timeSpent, baseTime, difficulty) {
+  const timeRatio = timeSpent / baseTime;
+  const fastThreshold = difficulty === 'easy' ? 0.33 : difficulty === 'moderate' ? 0.33 : 0.33;
+  const slowThreshold = difficulty === 'easy' ? 0.75 : difficulty === 'moderate' ? 0.78 : 0.83;
+
+  if (isCorrect && timeRatio <= fastThreshold) {
+    // Cepat + Benar = Mahir
+    return { score: 1.0, label: 'MAHIR', confidence: 'high' };
+  } else if (isCorrect && timeRatio > fastThreshold) {
+    // Benar tapi lambat = Paham tapi kurang mahir
+    const penalty = Math.min((timeRatio - fastThreshold) / (1 - fastThreshold), 0.3);
+    return { score: 0.7 - penalty, label: 'PAHAM_LAMBAT', confidence: 'medium' };
+  } else if (!isCorrect && timeRatio <= fastThreshold) {
+    // Cepat + Salah = Kemungkinan tebak/miskonsepsi
+    return { score: 0.2, label: 'TEBAK', confidence: 'low' };
+  } else {
+    // Lambat + Salah = Tidak memahami konsep
+    return { score: 0.0, label: 'TIDAK_PAHAM', confidence: 'very_low' };
+  }
+}
+```
+
+### Proficiency Scoring (Theta Estimation)
+
+Setiap siswa memiliki **theta score** (kemampuan estimasi) yang di-update setelah setiap soal:
+
+```javascript
+function updateTheta(currentTheta, confidenceResult, difficulty) {
+  const difficultyWeight = { easy: 0.5, moderate: 1.0, hard: 1.5 };
+  const weight = difficultyWeight[difficulty];
+
+  // Weighted adjustment based on confidence score
+  const adjustment = (confidenceResult.score - 0.5) * weight * 0.3;
+
+  const newTheta = currentTheta + adjustment;
+
+  // Clamp theta between -3 and +3
+  return Math.max(-3, Math.min(3, newTheta));
+}
+```
+
+**Theta Interpretation:**
+
+| Theta Range | Proficiency Level | Label |
+|-------------|-------------------|-------|
+| -3.0 to -1.5 | Sangat Kurang | Perlu remedial intensif |
+| -1.5 to -0.5 | Kurang | Perlu latihan tambahan |
+| -0.5 to 0.5 | Cukup | Pemahaman dasar tercapai |
+| 0.5 to 1.5 | Baik | Menguasai konsep |
+| 1.5 to 3.0 | Sangat Baik | Mahir & bisa transfer |
+
+### Anti-Gaming Mechanisms
+
+Sistem ini mencegah manipulasi dengan beberapa mekanisme:
+
+**1. Cross-Validation antar Stage**
+- Jika Stage 1 = MAHIR tapi Stage 3 = TIDAK_PAHAM → flag sebagai anomali
+- Konsistensi antar stage harus > 60% untuk hasil valid
+
+**2. Pattern Detection**
+```javascript
+function detectAnomalies(responses) {
+  const patterns = {
+    allFastCorrect: responses.every(r => r.confidence === 'high'),
+    alternatingPattern: hasAlternatingPattern(responses),
+    suddenDrop: hasSuddenPerformanceDrop(responses),
+    tooFastOverall: averageTimeRatio(responses) < 0.2
+  };
+
+  if (patterns.tooFastOverall && patterns.allFastCorrect) {
+    return { flag: 'POSSIBLE_CHEATING', action: 'MANUAL_REVIEW' };
+  }
+  if (patterns.suddenDrop) {
+    return { flag: 'FATIGUE_OR_GIVING_UP', action: 'SUGGEST_BREAK' };
+  }
+  return { flag: 'NORMAL', action: 'NONE' };
+}
+```
+
+**3. Randomized Question Pool**
+- Setiap level memiliki pool soal yang besar (min 30 soal per level per topik)
+- Soal dipilih random dari pool → siswa tidak bisa hafal urutan
+- Opsi jawaban di-shuffle setiap kali
+
+### Misconception Mapping
+
+Setiap soal di-tag dengan **potential misconceptions**. Ketika siswa salah, sistem mencatat miskonsepsi yang terdeteksi:
+
+```javascript
+// Question metadata structure
+const questionMeta = {
+  id: 'q_mol_003',
+  topic: 'konsep_mol',
+  subtopic: 'konversi_mol_ke_gram',
+  difficulty: 'moderate',
+  baseTime: 90,
+  correctAnswer: 'B',
+  misconceptions: {
+    'A': 'MISC_001: Lupa membagi dengan Mr (mengalikan instead)',
+    'C': 'MISC_002: Menggunakan Ar bukan Mr',
+    'D': 'MISC_003: Salah hitung Mr senyawa',
+    'E': 'MISC_004: Terbalik rumus (gram × Mr instead of gram ÷ Mr)'
+  }
+};
+```
+
+**Misconception Profile Output:**
+```
+┌────────────────────────────────────────────────────────┐
+│  PROFIL MISKONSEPSI - Ahmad                            │
+├────────────────────────────────────────────────────────┤
+│  🔴 Sering: Terbalik rumus mol (3x terdeteksi)        │
+│  🟡 Kadang: Salah hitung Mr senyawa (2x)              │
+│  🟢 Jarang: Lupa konversi satuan (1x)                 │
+├────────────────────────────────────────────────────────┤
+│  Rekomendasi: Review materi "Rumus Dasar Mol"         │
+│  Latihan fokus: Konversi mol ↔ gram                   │
+└────────────────────────────────────────────────────────┘
+```
+
+### Final Proficiency Report
+
+Setelah exam selesai, sistem menghasilkan laporan komprehensif:
+
+```javascript
+function generateReport(examSession) {
+  return {
+    // Overall
+    finalTheta: examSession.theta,
+    proficiencyLevel: thetaToLevel(examSession.theta),
+    totalCorrect: examSession.correctCount,
+    totalQuestions: examSession.totalQuestions,
+    accuracy: examSession.correctCount / examSession.totalQuestions,
+
+    // Time analysis
+    averageTimePerQuestion: examSession.totalTime / examSession.totalQuestions,
+    fastestResponse: Math.min(...examSession.times),
+    slowestResponse: Math.max(...examSession.times),
+
+    // Confidence breakdown
+    confidenceDistribution: {
+      mahir: countByLabel(examSession, 'MAHIR'),
+      pahamLambat: countByLabel(examSession, 'PAHAM_LAMBAT'),
+      tebak: countByLabel(examSession, 'TEBAK'),
+      tidakPaham: countByLabel(examSession, 'TIDAK_PAHAM')
+    },
+
+    // Difficulty progression
+    difficultyPath: examSession.difficultyHistory, // ['mod','hard','hard','mod','easy',...]
+
+    // Misconceptions
+    detectedMisconceptions: examSession.misconceptions,
+    topMisconception: getMostFrequent(examSession.misconceptions),
+
+    // Recommendations
+    recommendations: generateRecommendations(examSession)
+  };
+}
+```
+
+### Data Model (Firestore)
+
+```javascript
+// Collection: exam_sessions
+{
+  id: 'session_abc123',
+  userId: 'user_001',
+  examId: 'exam_stoichio_01',
+  startedAt: Timestamp,
+  completedAt: Timestamp,
+  currentStage: 2,
+  currentDifficulty: 'hard',
+  theta: 1.2,
+  responses: [
+    {
+      questionId: 'q_mol_003',
+      selectedAnswer: 'B',
+      isCorrect: true,
+      difficulty: 'moderate',
+      timeSpent: 25, // seconds
+      confidenceScore: 1.0,
+      confidenceLabel: 'MAHIR',
+      timestamp: Timestamp
+    }
+    // ... more responses
+  ],
+  result: {
+    finalTheta: 1.4,
+    proficiencyLevel: 'Baik',
+    accuracy: 0.85,
+    misconceptions: ['MISC_001', 'MISC_004'],
+    confidenceDistribution: { mahir: 8, pahamLambat: 5, tebak: 2, tidakPaham: 5 }
+  },
+  anomalyFlags: [],
+  status: 'completed' // 'in_progress' | 'completed' | 'abandoned' | 'flagged'
+}
+
+// Collection: question_bank
+{
+  id: 'q_mol_003',
+  topic: 'konsep_mol',
+  subtopic: 'konversi_mol_ke_gram',
+  difficulty: 'moderate',
+  baseTime: 90,
+  stem: 'Berapa mol dalam 88g CO₂? (Ar C=12, O=16)',
+  options: { A: '1 mol', B: '2 mol', C: '3 mol', D: '4 mol', E: '5 mol' },
+  correctAnswer: 'B',
+  misconceptions: { A: 'MISC_001', C: 'MISC_002', D: 'MISC_003', E: 'MISC_004' },
+  explanation: '88g ÷ 44 g/mol = 2 mol',
+  usageCount: 150,
+  avgCorrectRate: 0.65,
+  avgTimeSpent: 52,
+  createdBy: 'teacher_001',
+  status: 'active'
+}
+```
+
+### Algorithm Configuration
+
+```javascript
+// Configurable parameters (stored in Firestore: app_config/msat)
+const MSAT_CONFIG = {
+  stages: {
+    stage1: { questionCount: 5, purpose: 'calibration' },
+    stage2: { questionCount: 10, purpose: 'assessment' },
+    stage3: { questionCount: 5, purpose: 'validation' }
+  },
+  difficulty: {
+    startLevel: 'moderate',
+    levels: ['easy', 'moderate', 'hard'],
+    promotionRule: 'correct',    // naik jika benar
+    demotionRule: 'incorrect'    // turun jika salah
+  },
+  timing: {
+    easy: { baseTime: 60, fastThreshold: 20, slowThreshold: 45 },
+    moderate: { baseTime: 90, fastThreshold: 30, slowThreshold: 70 },
+    hard: { baseTime: 120, fastThreshold: 40, slowThreshold: 100 }
+  },
+  theta: {
+    initial: 0.0,
+    min: -3.0,
+    max: 3.0,
+    adjustmentFactor: 0.3
+  },
+  validation: {
+    minConsistency: 0.6,        // 60% konsistensi antar stage
+    anomalyThreshold: 0.2       // time ratio terlalu cepat
+  }
+};
+```
+
+---
+
+## 9. MOBILE EXPERIENCE
 
 ### Mobile-First Considerations
 
@@ -1079,7 +1435,7 @@ Platform AKURAT mengadopsi best practices dari tiga platform edukasi terkemuka:
 
 ---
 
-## 9. PERFORMANCE OPTIMIZATION
+## 10. PERFORMANCE OPTIMIZATION
 
 ### Image Optimization
 
@@ -1127,7 +1483,7 @@ const Chart = dynamic(() => import('@/components/Chart'), {
 
 ---
 
-## 10. CONTENT STRATEGY
+## 11. CONTENT STRATEGY
 
 ### Copy Writing Guidelines
 
@@ -1183,7 +1539,7 @@ Use: "Belum ada aktivitas hari ini. Yuk mulai belajar! 📚"
 
 ---
 
-## 11. ANALYTICS & TRACKING
+## 12. ANALYTICS & TRACKING
 
 ### User Events to Track
 
@@ -1252,7 +1608,7 @@ Use: "Belum ada aktivitas hari ini. Yuk mulai belajar! 📚"
 
 ---
 
-## 12. DEVELOPMENT WORKFLOW
+## 13. DEVELOPMENT WORKFLOW
 
 ### Design-to-Code Process
 
@@ -1313,7 +1669,7 @@ export const Disabled = () => <Button disabled>Click Me</Button>
 
 ---
 
-## 13. FUTURE ENHANCEMENTS
+## 14. FUTURE ENHANCEMENTS
 
 ### Phase 2 Features
 
@@ -1368,7 +1724,7 @@ export const Disabled = () => <Button disabled>Click Me</Button>
 
 ---
 
-## 14. APPENDIX
+## 15. APPENDIX
 
 ### Design Resources
 
@@ -1453,7 +1809,7 @@ export const Component: FC<ComponentProps> = ({
 
 ---
 
-## 15. IMPLEMENTATION CHECKLIST
+## 16. IMPLEMENTATION CHECKLIST
 
 ### Design Phase ✓
 - [ ] Create comprehensive design system in Figma
