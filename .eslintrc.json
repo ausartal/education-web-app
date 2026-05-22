@@ -4,6 +4,10 @@
     "next/typescript",
     "plugin:prettier/recommended"
   ],
+  "ignorePatterns": [
+    "src/dataconnect-generated/**",
+    "src/dataconnect-admin-generated/**"
+  ],
   "rules": {
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/no-explicit-any": "error"

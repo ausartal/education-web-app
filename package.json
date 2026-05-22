@@ -13,6 +13,8 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@dataconnect/admin-generated": "file:src/dataconnect-admin-generated",
+    "@dataconnect/generated": "file:src/dataconnect-generated",
     "@tailwindcss/typography": "^0.5.19",
     "firebase": "^12.13.0",
     "firebase-admin": "^13.10.0",

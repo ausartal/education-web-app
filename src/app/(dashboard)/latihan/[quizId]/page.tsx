@@ -3,13 +3,7 @@
 import { FC, useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  ArrowRight,
-  RotateCcw,
-} from 'lucide-react';
+import { Clock, ArrowRight, RotateCcw } from 'lucide-react';
 import { getQuestionsByDifficulty } from '@/services/questions';
 import { Question, Difficulty, AnswerKey } from '@/types/firestore';
 import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
