@@ -137,11 +137,11 @@ export default function Home() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-[#F4F5F8] px-6 py-10 lg:px-14 lg:py-16"
+          className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-[#F4F5F8] px-6 pb-10 pt-10 lg:px-14 lg:pb-16 lg:pt-14"
         >
-          <div className="grid gap-10 lg:grid-cols-2 lg:gap-6">
+          <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.05fr] lg:gap-6">
             {/* LEFT — Title + Copy + CTAs */}
-            <div className="relative z-10 flex flex-col justify-center">
+            <div className="relative z-20">
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -157,7 +157,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.25 }}
-                className="mt-6 max-w-md text-sm leading-relaxed text-gray-500 lg:text-base"
+                className="mt-6 max-w-md text-sm leading-relaxed text-gray-500 lg:text-[15px]"
               >
                 Go Beyond Scores. Diagnose chemistry understanding and
                 misconceptions with precision through an integrated adaptive
@@ -194,21 +194,26 @@ export default function Home() {
             </div>
 
             {/* RIGHT — Image collage with floating badges */}
-            <div className="relative h-[460px] sm:h-[520px] lg:h-[540px]">
-              {/* Yellow circle behind boy */}
-              <div className="absolute right-[6%] top-[2%] h-[230px] w-[230px] rounded-full bg-[#FBD300] sm:h-[260px] sm:w-[260px]" />
+            <div className="relative z-10 h-[500px] sm:h-[540px] lg:h-[560px]">
+              {/* Yellow shape behind boy */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.2 }}
+                className="absolute right-[2%] top-[2%] h-[270px] w-[260px] rounded-[40px] bg-[#FBD300] sm:h-[310px] sm:w-[300px]"
+              />
               {/* Boy student */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className="absolute right-[2%] top-[-2%] h-[280px] w-[260px] sm:h-[320px] sm:w-[300px]"
+                className="absolute right-[-30px] top-[-30px] h-[360px] w-[360px] sm:h-[400px] sm:w-[400px]"
               >
                 <Image
                   src="/images/hero-student-male.png"
                   alt="Student learning online"
                   fill
-                  className="object-contain"
+                  className="object-contain object-bottom"
                   priority
                 />
               </motion.div>
@@ -218,14 +223,14 @@ export default function Home() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                className="absolute left-[4%] top-[8%] flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-6 shadow-lg shadow-black/5"
+                className="absolute left-[2%] top-[12%] z-30 flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-7 shadow-[0_8px_24px_rgba(15,30,71,0.08)]"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF9500] text-white">
                   <Video size={16} />
                 </span>
                 <div className="leading-tight">
                   <p className="text-[10px] text-gray-400">Live</p>
-                  <p className="text-sm font-bold text-[#0E1E47]">Class</p>
+                  <p className="text-sm font-extrabold text-[#0E1E47]">Class</p>
                 </div>
               </motion.div>
 
@@ -234,7 +239,7 @@ export default function Home() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.75 }}
-                className="absolute left-[2%] top-[28%] flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-6 shadow-lg shadow-black/5"
+                className="absolute left-0 top-[34%] z-30 flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-7 shadow-[0_8px_24px_rgba(15,30,71,0.08)]"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EE1908] text-white">
                   <BookOpen size={15} />
@@ -250,19 +255,24 @@ export default function Home() {
               </motion.div>
 
               {/* Purple circle behind girl */}
-              <div className="absolute bottom-[8%] left-[8%] h-[210px] w-[210px] rounded-full bg-[#5841EA] sm:h-[240px] sm:w-[240px]" />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
+                className="absolute bottom-[6%] left-[16%] h-[230px] w-[230px] rounded-full bg-[#5841EA] sm:h-[260px] sm:w-[260px]"
+              />
               {/* Girl student */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="absolute bottom-0 left-[4%] h-[290px] w-[240px] sm:h-[330px] sm:w-[280px]"
+                className="absolute bottom-0 left-[6%] h-[330px] w-[290px] sm:h-[360px] sm:w-[320px]"
               >
                 <Image
                   src="/images/hero-student-female.png"
                   alt="Student learning with tablet"
                   fill
-                  className="object-contain"
+                  className="object-contain object-bottom"
                 />
               </motion.div>
 
@@ -271,18 +281,18 @@ export default function Home() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.85 }}
-                className="absolute bottom-[15%] right-[2%] flex items-center gap-3 rounded-2xl bg-white p-3 pr-5 shadow-lg shadow-black/5"
+                className="absolute bottom-[20%] right-[2%] z-30 flex items-center gap-3 rounded-2xl bg-white p-3 pr-5 shadow-[0_8px_24px_rgba(15,30,71,0.08)]"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FBD300] text-[#0E1E47]">
                   <Users size={16} />
                 </span>
                 <div>
-                  <div className="flex items-baseline gap-1.5">
-                    <p className="text-base font-extrabold text-[#0E1E47]">
-                      98
-                    </p>
-                    <p className="text-[11px] text-gray-500">Online Student</p>
-                  </div>
+                  <p className="text-base font-extrabold leading-tight text-[#0E1E47]">
+                    98
+                  </p>
+                  <p className="text-[11px] leading-tight text-gray-500">
+                    Online Student
+                  </p>
                   <div className="mt-1 flex -space-x-1.5">
                     {onlineAvatars.map((src, i) => (
                       <span
@@ -297,6 +307,10 @@ export default function Home() {
               </motion.div>
             </div>
           </div>
+
+          {/* Bottom decorative white bumps */}
+          <div className="pointer-events-none absolute -bottom-32 left-[8%] h-64 w-64 rounded-full bg-white" />
+          <div className="pointer-events-none absolute -bottom-32 left-[36%] h-64 w-72 rounded-full bg-white" />
         </motion.div>
       </section>
 
