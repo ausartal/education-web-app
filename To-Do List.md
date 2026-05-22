@@ -106,33 +106,33 @@
 
 ### 2.1 Primitive Components
 
-- [ ] `Button` — Variants: primary, secondary, ghost, icon, danger
-  - [ ] Sizes: sm, md, lg
-  - [ ] States: default, hover, active, disabled, loading
+- [x] `Button` — Variants: primary, secondary, ghost, icon, danger
+  - [x] Sizes: sm, md, lg
+  - [x] States: default, hover, active, disabled, loading
   - [ ] Gradient background untuk primary
-- [ ] `Input` — Text, email, password, number
-  - [ ] Label + placeholder
-  - [ ] Focus state dengan primary border
-  - [ ] Error state + error message
-  - [ ] Icon prefix/suffix
-- [ ] `TextArea` — Multi-line input
-- [ ] `Select` — Dropdown select
-- [ ] `Checkbox` & `Radio` — Form controls
-- [ ] `Card` — Variants: standard, lesson, stat, achievement
-  - [ ] Header, body, footer sections
-  - [ ] Hover lift effect
-- [ ] `Modal` — Dialog overlay
-  - [ ] Header + close button
-  - [ ] Body content
-  - [ ] Footer actions
-  - [ ] Backdrop blur + click-to-close
-  - [ ] ESC key to close
-  - [ ] Focus trap
-- [ ] `Toast` — Notification system
-  - [ ] Types: success, error, warning, info
-  - [ ] Auto-dismiss (3-5 seconds)
-  - [ ] Slide-in animation
-  - [ ] Toast provider + `useToast()` hook
+- [x] `Input` — Text, email, password, number
+  - [x] Label + placeholder
+  - [x] Focus state dengan primary border
+  - [x] Error state + error message
+  - [x] Icon prefix/suffix
+- [x] `TextArea` — Multi-line input
+- [x] `Select` — Dropdown select
+- [x] `Checkbox` & `Radio` — Form controls
+- [x] `Card` — Variants: standard, lesson, stat, achievement
+  - [x] Header, body, footer sections
+  - [x] Hover lift effect
+- [x] `Modal` — Dialog overlay
+  - [x] Header + close button
+  - [x] Body content
+  - [x] Footer actions
+  - [x] Backdrop blur + click-to-close
+  - [x] ESC key to close
+  - [x] Focus trap
+- [x] `Toast` — Notification system
+  - [x] Types: success, error, warning, info
+  - [x] Auto-dismiss (3-5 seconds)
+  - [x] Slide-in animation
+  - [x] Toast provider + `useToast()` hook
 
 ### 2.2 Feedback & Progress Components
 
