@@ -319,21 +319,7 @@ const ExamSessionPage: FC = () => {
           exit={{ opacity: 0, x: -30 }}
           transition={{ duration: 0.25 }}
         >
-          {/* Difficulty indicator */}
-          <div className="mb-4 flex items-center gap-2">
-            <div
-              className={`h-2 w-2 rounded-full ${
-                difficulty === 'easy'
-                  ? 'bg-emerald-400'
-                  : difficulty === 'moderate'
-                    ? 'bg-amber-400'
-                    : 'bg-rose-400'
-              }`}
-            />
-            <span className="text-xs capitalize text-gray-400">
-              {difficulty}
-            </span>
-          </div>
+          {/* Difficulty runs in background - hidden from user */}
 
           {/* Question stem */}
           <div className="mb-8 rounded-3xl bg-white p-8 shadow-sm">
