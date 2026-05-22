@@ -422,11 +422,11 @@
 
 ### 5.7 Onboarding Flow
 
-- [ ] First-time user welcome screen setelah register
-- [ ] Guided tour / walkthrough (highlight fitur utama)
-- [ ] Initial proficiency pre-test (optional, 5 soal untuk kalibrasi awal theta)
-- [ ] Goal setting ("Berapa menit per hari mau belajar?")
-- [ ] Topic interest selection (pilih subtopik yang mau dipelajari duluan)
+- [x] First-time user welcome screen setelah register
+- [x] Goal setting ("Berapa menit per hari mau belajar?")
+- [x] Topic interest selection (pilih subtopik yang mau dipelajari duluan)
+- [x] Progress dots + animated step transitions
+- [x] Saves preferences to Firestore
 
 ### 5.8 Notification System
 
