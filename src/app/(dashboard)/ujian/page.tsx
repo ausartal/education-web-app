@@ -45,18 +45,20 @@ const UjianPage: FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-6 text-center">
+            <div className="flex gap-8 text-center">
               <div>
                 <p className="text-3xl font-black">21</p>
-                <p className="text-xs text-white/60">Soal</p>
+                <p className="text-[11px] text-white/60">Soal</p>
               </div>
+              <div className="h-10 w-px bg-white/20" />
               <div>
                 <p className="text-3xl font-black">3</p>
-                <p className="text-xs text-white/60">Stage</p>
+                <p className="text-[11px] text-white/60">Stage</p>
               </div>
+              <div className="h-10 w-px bg-white/20" />
               <div>
                 <p className="text-3xl font-black">~30</p>
-                <p className="text-xs text-white/60">Menit</p>
+                <p className="text-[11px] text-white/60">Menit</p>
               </div>
             </div>
           </div>
