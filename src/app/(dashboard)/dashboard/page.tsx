@@ -16,39 +16,82 @@ import {
   Clock,
   BarChart3,
   PieChart,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 const courseTopics = [
   {
     id: 'stoikiometri',
     name: 'Stoikiometri',
+    subtitle: 'Perhitungan Kimia',
     icon: '/icons/topic-calculus.svg',
+    gradient: 'bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400',
+    lessons: [
+      'Konsep Mol & Bilangan Avogadro',
+      'Massa Molar & Perhitungan',
+      'Pereaksi Pembatas',
+    ],
   },
-  { id: 'atom-model', name: 'Model Atom', icon: '/icons/topic-atom-model.svg' },
+  {
+    id: 'atom-model',
+    name: 'Model Atom',
+    subtitle: 'Struktur Materi',
+    icon: '/icons/topic-atom-model.svg',
+    gradient: 'bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-400',
+    lessons: [
+      'Teori Atom Dalton & Thomson',
+      'Model Atom Bohr',
+      'Konfigurasi Elektron',
+    ],
+  },
   {
     id: 'larutan',
-    name: 'Larutan & Konsentrasi',
+    name: 'Larutan',
+    subtitle: 'Konsentrasi & Campuran',
     icon: '/icons/topic-chemistry-flask.svg',
+    gradient: 'bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-400',
+    lessons: [
+      'Molaritas & Molalitas',
+      'Pengenceran Larutan',
+      'Sifat Koligatif',
+    ],
   },
   {
     id: 'ikatan-kimia',
     name: 'Ikatan Kimia',
+    subtitle: 'Gaya Antar Atom',
     icon: '/icons/topic-coordinate-geometry.svg',
+    gradient: 'bg-gradient-to-br from-rose-500 via-pink-500 to-orange-400',
+    lessons: ['Ikatan Ion', 'Ikatan Kovalen', 'Ikatan Logam'],
   },
   {
     id: 'reaksi-redoks',
     name: 'Reaksi Redoks',
+    subtitle: 'Transfer Elektron',
     icon: '/icons/topic-coordinate-transformations.svg',
+    gradient: 'bg-gradient-to-br from-amber-500 via-orange-500 to-red-400',
+    lessons: ['Oksidasi & Reduksi', 'Bilangan Oksidasi', 'Penyetaraan Redoks'],
   },
   {
     id: 'kesetimbangan',
-    name: 'Kesetimbangan Kimia',
+    name: 'Kesetimbangan',
+    subtitle: 'Reaksi Reversibel',
     icon: '/icons/topic-exponential-functions.svg',
+    gradient: 'bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-400',
+    lessons: [
+      'Hukum Kesetimbangan',
+      'Konstanta Kc & Kp',
+      'Pergeseran Kesetimbangan',
+    ],
   },
   {
     id: 'geometri-molekul',
     name: 'Geometri Molekul',
+    subtitle: 'Bentuk & Sudut',
     icon: '/icons/topic-geometric-thinking.svg',
+    gradient: 'bg-gradient-to-br from-lime-500 via-green-500 to-emerald-400',
+    lessons: ['Teori VSEPR', 'Hibridisasi', 'Polaritas Molekul'],
   },
 ];
 
@@ -385,11 +428,40 @@ const DashboardPage: FC = () => {
         </div>
 
         {/* RIGHT COLUMN - Jump Back In */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold text-gray-900">Jump back in</h2>
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-extrabold text-gray-900">
+              Jump back in
+            </h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() =>
+                  setActiveCourseIdx(
+                    (activeCourseIdx - 1 + courseTopics.length) %
+                      courseTopics.length
+                  )
+                }
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
+                aria-label="Previous"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={() =>
+                  setActiveCourseIdx(
+                    (activeCourseIdx + 1) % courseTopics.length
+                  )
+                }
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
+                aria-label="Next"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
 
           {/* Stacked Card Carousel */}
-          <div className="relative h-[420px]">
+          <div className="relative h-[480px]">
             <AnimatePresence mode="popLayout">
               {courseTopics.map((topic, i) => {
                 const offset = i - activeCourseIdx;
@@ -398,98 +470,114 @@ const DashboardPage: FC = () => {
 
                 if (!isVisible) return null;
 
+                const hasProgress = i === 0 && completedCount > 0;
+
                 return (
                   <motion.div
                     key={topic.id}
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{
-                      scale: isActive ? 1 : 0.95 - Math.abs(offset) * 0.03,
-                      x: offset * 24,
-                      opacity: isActive ? 1 : 0.6 - Math.abs(offset) * 0.15,
+                      scale: isActive ? 1 : 0.93 - Math.abs(offset) * 0.03,
+                      x: offset * 20,
+                      opacity: isActive ? 1 : 0.5 - Math.abs(offset) * 0.1,
                       zIndex: 10 - Math.abs(offset),
                     }}
                     exit={{ scale: 0.9, opacity: 0 }}
                     transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
                     className="absolute inset-0 cursor-pointer"
-                    onClick={() => setActiveCourseIdx(i)}
+                    onClick={() => !isActive && setActiveCourseIdx(i)}
                   >
                     <div
-                      className={`h-full overflow-hidden rounded-3xl bg-white shadow-lg transition-shadow ${
-                        isActive ? 'shadow-xl shadow-gray-200/60' : ''
+                      className={`relative h-full overflow-hidden rounded-3xl transition-shadow duration-300 ${
+                        isActive
+                          ? 'shadow-2xl shadow-indigo-200/40'
+                          : 'shadow-lg'
                       }`}
                     >
-                      <div className="flex h-full flex-col bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50">
-                        {/* Card Header */}
-                        <div className="flex-1 p-8 text-center">
-                          <h3 className="mb-1 text-2xl font-black text-gray-900">
+                      {/* Background gradient */}
+                      <div className={`absolute inset-0 ${topic.gradient}`} />
+                      {/* Decorative circles */}
+                      <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+                      <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10" />
+                      <div className="absolute right-1/4 top-1/3 h-16 w-16 rounded-full bg-white/5" />
+
+                      <div className="relative flex h-full flex-col p-8">
+                        {/* Header */}
+                        <div className="text-center">
+                          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-white/60">
+                            {topic.subtitle}
+                          </p>
+                          <h3 className="mb-1 font-display text-2xl font-extrabold text-white">
                             {topic.name}
                           </h3>
-                          <p className="mb-6 text-sm font-semibold text-primary">
-                            LEVEL {Math.min(completedCount + 1, 10)}
-                          </p>
-
-                          <motion.div
-                            className="mx-auto mb-4 flex h-40 w-40 items-center justify-center"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <Image
-                              src={topic.icon}
-                              alt={topic.name}
-                              width={140}
-                              height={140}
-                              className="drop-shadow-lg"
-                            />
-                          </motion.div>
-
-                          <p className="text-sm text-gray-500">
-                            {isActive && nextMaterial
-                              ? `Next: ${nextMaterial.title}`
-                              : 'Tap to explore'}
+                          <p className="text-sm font-medium text-white/70">
+                            Level {Math.min(completedCount + 1, 10)}
                           </p>
                         </div>
 
-                        {/* Lessons + Start (only on active) */}
+                        {/* Icon */}
+                        <motion.div
+                          className="mx-auto my-6 flex h-36 w-36 items-center justify-center"
+                          whileHover={{ scale: 1.08, rotate: 2 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Image
+                            src={topic.icon}
+                            alt={topic.name}
+                            width={130}
+                            height={130}
+                            className="drop-shadow-2xl"
+                          />
+                        </motion.div>
+
+                        {/* Lessons preview (active only) */}
                         {isActive && (
                           <motion.div
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="bg-white/80 px-6 pb-6 pt-4 backdrop-blur-sm"
+                            className="mt-auto space-y-2"
                           >
-                            {materials.slice(0, 2).map((m) => {
-                              const status = progress.find(
-                                (p) => p.materialId === m.id
-                              )?.status;
+                            {topic.lessons.map((lesson, li) => {
+                              const lessonDone =
+                                i === 0 &&
+                                materials[li] &&
+                                progress.find(
+                                  (p) =>
+                                    p.materialId === materials[li].id &&
+                                    p.status === 'completed'
+                                );
                               return (
                                 <div
-                                  key={m.id}
-                                  className="flex items-center gap-3 py-2"
+                                  key={li}
+                                  className="flex items-center gap-3 rounded-xl bg-white/15 px-4 py-2.5 backdrop-blur-sm"
                                 >
                                   <div
                                     className={`h-2.5 w-2.5 rounded-full ${
-                                      status === 'completed'
-                                        ? 'bg-emerald-400'
-                                        : status === 'in_progress'
-                                          ? 'bg-primary'
-                                          : 'bg-gray-200'
+                                      lessonDone
+                                        ? 'bg-emerald-300'
+                                        : 'bg-white/40'
                                     }`}
                                   />
-                                  <span className="flex-1 text-sm text-gray-600">
-                                    {m.title}
+                                  <span className="flex-1 text-sm font-medium text-white/90">
+                                    {lesson}
                                   </span>
                                 </div>
                               );
                             })}
+
+                            {/* Start / Continue Button */}
                             <Link
                               href={
                                 nextMaterial
                                   ? `/materi/${nextMaterial.id}`
                                   : '/materi'
                               }
-                              className="mt-3 block w-full rounded-2xl bg-gradient-to-r from-primary to-primary-cyan py-3.5 text-center text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+                              className="mt-3 block w-full rounded-2xl bg-white py-4 text-center text-sm font-extrabold text-gray-900 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
                             >
-                              Start
+                              {hasProgress
+                                ? '▶ Continue Learning'
+                                : '🚀 Start Learning'}
                             </Link>
                           </motion.div>
                         )}
@@ -502,22 +590,22 @@ const DashboardPage: FC = () => {
           </div>
 
           {/* Thumbnail Selector */}
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-2.5">
             {courseTopics.map((topic, i) => (
               <button
                 key={topic.id}
                 onClick={() => setActiveCourseIdx(i)}
-                className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-300 ${
+                className={`flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${
                   activeCourseIdx === i
-                    ? 'scale-110 bg-primary/10 ring-2 ring-primary shadow-md'
-                    : 'bg-gray-50 hover:bg-gray-100 hover:scale-105'
+                    ? 'scale-110 bg-white ring-2 ring-primary shadow-lg'
+                    : 'bg-gray-50 hover:bg-white hover:shadow-md hover:scale-105'
                 }`}
               >
                 <Image
                   src={topic.icon}
                   alt={topic.name}
-                  width={30}
-                  height={30}
+                  width={26}
+                  height={26}
                 />
               </button>
             ))}
