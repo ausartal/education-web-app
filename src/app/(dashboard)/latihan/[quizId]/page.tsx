@@ -229,7 +229,7 @@ const QuizPage: FC = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="mb-5 rounded-2xl bg-white p-6 shadow-sm">
+              <div className="mb-5 p-0">
                 <p className="mb-1 text-xs text-gray-400">
                   Question {currentIdx + 1} of {questions.length}
                 </p>
@@ -323,7 +323,7 @@ const QuizPage: FC = () => {
 
           {/* Right - Stats + Tools */}
           <div className="space-y-4">
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="rounded-2xl bg-white/60 p-5">
               <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">
                 Quiz Stats
               </h3>
@@ -343,7 +343,7 @@ const QuizPage: FC = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white shadow-sm">
+            <div className="rounded-2xl bg-white/60">
               <button
                 onClick={() => setShowCalc(!showCalc)}
                 className="flex w-full items-center justify-between px-5 py-3.5 text-sm font-semibold text-gray-700"
@@ -360,7 +360,7 @@ const QuizPage: FC = () => {
               )}
             </div>
 
-            <div className="rounded-2xl bg-white shadow-sm">
+            <div className="rounded-2xl bg-white/60">
               <button
                 onClick={() => setShowPeriodic(!showPeriodic)}
                 className="flex w-full items-center justify-between px-5 py-3.5 text-sm font-semibold text-gray-700"
