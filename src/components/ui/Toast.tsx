@@ -1,7 +1,14 @@
 'use client';
 
 import { FC } from 'react';
-import { X, CheckCircle, AlertCircle, AlertTriangle, Info, LucideIcon } from 'lucide-react';
+import {
+  X,
+  CheckCircle,
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  LucideIcon,
+} from 'lucide-react';
 import { useToast, ToastType } from '@/hooks/useToast';
 
 const icons: Record<ToastType, LucideIcon> = {
