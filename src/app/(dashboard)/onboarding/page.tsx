@@ -182,20 +182,29 @@ const OnboardingPage: FC = () => {
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
       <div className="w-full max-w-lg">
-        {/* Progress dots */}
-        <div className="mb-8 flex justify-center gap-2">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className={`h-2 rounded-full transition-all ${
-                i === step
-                  ? 'w-8 bg-primary'
-                  : i < step
-                    ? 'w-2 bg-primary/40'
-                    : 'w-2 bg-gray-200'
-              }`}
+        {/* Progress Bar */}
+        <div className="mb-10">
+          <div className="mb-2 flex justify-between text-xs font-semibold">
+            <span className={step >= 0 ? 'text-primary' : 'text-gray-300'}>
+              Welcome
+            </span>
+            <span className={step >= 1 ? 'text-primary' : 'text-gray-300'}>
+              Goal
+            </span>
+            <span className={step >= 2 ? 'text-primary' : 'text-gray-300'}>
+              Topics
+            </span>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-gray-200">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-primary-cyan"
+              animate={{ width: `${((step + 1) / 3) * 100}%` }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
             />
-          ))}
+          </div>
+          <p className="mt-1.5 text-center text-xs text-gray-400">
+            Step {step + 1} of 3
+          </p>
         </div>
 
         <AnimatePresence mode="wait">{steps[step]}</AnimatePresence>
