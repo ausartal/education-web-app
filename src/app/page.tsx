@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Video, BookOpen, Users } from 'lucide-react';
 
 const targetUsers = [
   'Students who want to get grading on chemistry',
@@ -21,37 +22,37 @@ const chemistryTopics = [
   {
     name: 'Compound',
     desc: 'Substances consisting of 2+ elements',
-    icon: '/images/topic-compound.png',
+    icon: '/icons/topic-geometric-thinking.svg',
   },
   {
     name: 'Atom',
     desc: 'The smallest building of matter',
-    icon: '/images/topic-atom.png',
+    icon: '/icons/topic-atom-model.svg',
   },
   {
     name: 'Periodic Table',
     desc: 'A map that organizes all elements',
-    icon: '/images/topic-periodic-table.png',
+    icon: '/icons/topic-coordinate-geometry.svg',
   },
   {
     name: 'Mol',
     desc: 'Unit for counting the number of particles',
-    icon: '/images/topic-mol.png',
+    icon: '/icons/topic-probability-and-chance.svg',
   },
   {
     name: 'Chemical Reaction',
     desc: 'Symbolic changes in substances in reactions',
-    icon: '/images/topic-chemical-reaction.png',
+    icon: '/icons/topic-vectors.svg',
   },
   {
     name: 'Stoichiometry',
     desc: '"Calculating" in chemical reactions',
-    icon: '/images/topic-stoichiometry.png',
+    icon: '/icons/topic-calculus.svg',
   },
   {
     name: 'Solution',
     desc: 'A mixture of solute and solvent',
-    icon: '/images/topic-solution.png',
+    icon: '/icons/topic-chemistry-flask.svg',
   },
 ];
 
@@ -100,6 +101,14 @@ const features = [
   },
 ];
 
+const onlineAvatars = [
+  '/images/hero-student-male.png',
+  '/images/hero-student-female.png',
+  '/images/hero-student-male.png',
+  '/images/hero-student-female.png',
+  '/images/hero-student-male.png',
+];
+
 export default function Home() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
@@ -122,7 +131,344 @@ export default function Home() {
     <>
       <LandingNavbar />
 
-      {/* Hero - Assessment Section */}
+      {/* HERO — MEASURE PRECISELY, LEARN ACCURATELY */}
+      <section className="px-4 pt-4 lg:px-8 lg:pt-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-[#F4F5F8] px-6 py-10 lg:px-14 lg:py-16"
+        >
+          <div className="grid gap-10 lg:grid-cols-2 lg:gap-6">
+            {/* LEFT — Title + Copy + CTAs */}
+            <div className="relative z-10 flex flex-col justify-center">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className="font-display text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-[#0E1E47] sm:text-5xl lg:text-[58px]"
+              >
+                Measure <span className="text-[#1A73E8]">Precisely</span>
+                <br />
+                <span className="text-[#1A73E8]">Learn</span> Accurately
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.25 }}
+                className="mt-6 max-w-md text-sm leading-relaxed text-gray-500 lg:text-base"
+              >
+                Go Beyond Scores. Diagnose chemistry understanding and
+                misconceptions with precision through an integrated adaptive
+                platform.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="mt-9 flex flex-wrap items-center gap-4"
+              >
+                <Link
+                  href="/register"
+                  className="rounded-2xl bg-[#5841EA] px-8 py-4 text-sm font-semibold text-white shadow-md shadow-[#5841EA]/25 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  Start Learning
+                </Link>
+                <Link
+                  href="/register"
+                  className="rounded-2xl bg-[#FBD300] px-8 py-4 text-sm font-semibold text-[#0E1E47] shadow-md shadow-amber-200 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  Start Teaching
+                </Link>
+              </motion.div>
+
+              {/* Carousel dots */}
+              <div className="mt-10 flex items-center gap-2">
+                <span className="h-1 w-10 rounded-full bg-[#0E1E47]" />
+                <span className="h-1 w-3 rounded-full bg-gray-300" />
+                <span className="h-1 w-3 rounded-full bg-gray-300" />
+                <span className="h-1 w-3 rounded-full bg-gray-300" />
+              </div>
+            </div>
+
+            {/* RIGHT — Image collage with floating badges */}
+            <div className="relative h-[460px] sm:h-[520px] lg:h-[540px]">
+              {/* Yellow circle behind boy */}
+              <div className="absolute right-[6%] top-[2%] h-[230px] w-[230px] rounded-full bg-[#FBD300] sm:h-[260px] sm:w-[260px]" />
+              {/* Boy student */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="absolute right-[2%] top-[-2%] h-[280px] w-[260px] sm:h-[320px] sm:w-[300px]"
+              >
+                <Image
+                  src="/images/hero-student-male.png"
+                  alt="Student learning online"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </motion.div>
+
+              {/* Live Class badge */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="absolute left-[4%] top-[8%] flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-6 shadow-lg shadow-black/5"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF9500] text-white">
+                  <Video size={16} />
+                </span>
+                <div className="leading-tight">
+                  <p className="text-[10px] text-gray-400">Live</p>
+                  <p className="text-sm font-bold text-[#0E1E47]">Class</p>
+                </div>
+              </motion.div>
+
+              {/* 203+ Learning Resources badge */}
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.75 }}
+                className="absolute left-[2%] top-[28%] flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-6 shadow-lg shadow-black/5"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EE1908] text-white">
+                  <BookOpen size={15} />
+                </span>
+                <div className="leading-tight">
+                  <p className="text-base font-extrabold text-[#0E1E47]">
+                    203+
+                  </p>
+                  <p className="text-[11px] text-gray-500">
+                    Learning Resources
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Purple circle behind girl */}
+              <div className="absolute bottom-[8%] left-[8%] h-[210px] w-[210px] rounded-full bg-[#5841EA] sm:h-[240px] sm:w-[240px]" />
+              {/* Girl student */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="absolute bottom-0 left-[4%] h-[290px] w-[240px] sm:h-[330px] sm:w-[280px]"
+              >
+                <Image
+                  src="/images/hero-student-female.png"
+                  alt="Student learning with tablet"
+                  fill
+                  className="object-contain"
+                />
+              </motion.div>
+
+              {/* 98 Online Student badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.85 }}
+                className="absolute bottom-[15%] right-[2%] flex items-center gap-3 rounded-2xl bg-white p-3 pr-5 shadow-lg shadow-black/5"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FBD300] text-[#0E1E47]">
+                  <Users size={16} />
+                </span>
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <p className="text-base font-extrabold text-[#0E1E47]">
+                      98
+                    </p>
+                    <p className="text-[11px] text-gray-500">Online Student</p>
+                  </div>
+                  <div className="mt-1 flex -space-x-1.5">
+                    {onlineAvatars.map((src, i) => (
+                      <span
+                        key={i}
+                        className="relative h-5 w-5 overflow-hidden rounded-full border-2 border-white bg-gray-200"
+                      >
+                        <Image src={src} alt="" fill className="object-cover" />
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Learning Material — Chemistry Topics */}
+      <section
+        id="learning-material"
+        className="relative px-4 py-20 lg:px-8 lg:py-28"
+      >
+        {/* Decorative shapes */}
+        <Image
+          src="/icons/dot-purple.svg"
+          alt=""
+          width={36}
+          height={36}
+          className="absolute right-[6%] top-[8%] hidden lg:block"
+          aria-hidden
+        />
+        <Image
+          src="/icons/dot-blue.svg"
+          alt=""
+          width={32}
+          height={32}
+          className="absolute left-[5%] top-[40%] hidden lg:block"
+          aria-hidden
+        />
+
+        <div className="mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16 text-center"
+          >
+            <h2 className="mb-3 font-display text-3xl font-extrabold text-gray-900 lg:text-4xl">
+              Chemistry Materials We Teach
+            </h2>
+            <p className="mx-auto max-w-2xl text-sm leading-relaxed text-gray-500">
+              Here, we offer a variety of chemistry materials designed for all
+              levels, from beginner to advanced. Our material covers a variety
+              of fundamental topics in chemistry.
+            </p>
+          </motion.div>
+
+          {/* Row 1 - 4 cards */}
+          <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {chemistryTopics.slice(0, 4).map((topic, i) => (
+              <motion.div
+                key={topic.name}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-center gap-4 rounded-2xl bg-gray-50 px-5 py-5 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
+              >
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
+                  <Image
+                    src={topic.icon}
+                    alt={topic.name}
+                    width={36}
+                    height={36}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-display text-sm font-bold text-gray-900">
+                    {topic.name}
+                  </h3>
+                  <p className="text-xs leading-relaxed text-gray-500 line-clamp-2">
+                    {topic.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Row 2 - 3 cards centered */}
+          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {chemistryTopics.slice(4).map((topic, i) => (
+              <motion.div
+                key={topic.name}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 + i * 0.05 }}
+                className="flex items-center gap-4 rounded-2xl bg-gray-50 px-5 py-5 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
+              >
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
+                  <Image
+                    src={topic.icon}
+                    alt={topic.name}
+                    width={36}
+                    height={36}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-display text-sm font-bold text-gray-900">
+                    {topic.name}
+                  </h3>
+                  <p className="text-xs leading-relaxed text-gray-500 line-clamp-2">
+                    {topic.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Learning Resources — What you get */}
+      <section
+        id="learning-resources"
+        className="bg-gray-50/40 px-4 py-20 lg:px-8 lg:py-28"
+      >
+        <div className="mx-auto max-w-6xl">
+          {/* Header */}
+          <div className="mb-14 grid gap-6 lg:grid-cols-2">
+            <motion.h2
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="font-display text-3xl font-extrabold leading-tight text-gray-900 lg:text-4xl"
+            >
+              What do you get at
+              <br />
+              <span className="text-primary">AKURAT?</span>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="self-end text-sm leading-relaxed text-gray-500"
+            >
+              AKURAT is an online learning platform specifically designed to
+              help you learn chemistry easily, fun and effectively. We offer a
+              variety of learning programs tailored to your needs and learning
+              level.
+            </motion.p>
+          </div>
+
+          {/* Feature Grid */}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature, i) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className={`group rounded-3xl p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${feature.bg}`}
+              >
+                <div className="mb-6 flex h-32 items-center justify-center">
+                  <Image
+                    src={feature.icon}
+                    alt={feature.title}
+                    width={140}
+                    height={140}
+                    className="transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+                <h3 className="mb-2 font-display text-lg font-bold text-gray-900">
+                  {feature.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-gray-500">
+                  {feature.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Assessment Section — Adaptive demo */}
       <section
         id="assessment"
         className="relative overflow-hidden bg-[#FFFCEF] px-4 py-20 lg:px-8 lg:py-28"
@@ -184,7 +530,6 @@ export default function Home() {
               width={620}
               height={480}
               className="relative z-10 w-full max-w-xl drop-shadow-2xl"
-              priority
             />
           </motion.div>
 
@@ -196,20 +541,19 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="flex-1"
           >
-            <h1 className="mb-4 font-display text-4xl font-extrabold leading-[1.15] text-gray-900 lg:text-5xl">
+            <h2 className="mb-4 font-display text-3xl font-extrabold leading-[1.15] text-gray-900 lg:text-5xl">
               <span className="text-primary-orange">Guided</span>{' '}
               <span className="text-gray-900">Courses With Every</span>{' '}
               <span className="text-primary">Journey</span>
-            </h1>
+            </h2>
             <p className="mb-8 max-w-md text-sm leading-relaxed text-gray-500">
-              Experience how AKURAT maps misconceptions in real-time
-              <br />
-              Select an answer to see the adaptive routing
+              Experience how AKURAT maps misconceptions in real-time. Select an
+              answer to see the adaptive routing.
             </p>
 
             {/* Target Users */}
             <ul className="space-y-3">
-              {targetUsers.map((user, i) => (
+              {targetUsers.map((u, i) => (
                 <motion.li
                   key={i}
                   initial={{ opacity: 0, y: 8 }}
@@ -218,9 +562,7 @@ export default function Home() {
                   transition={{ delay: 0.15 + i * 0.05 }}
                   className="flex items-center justify-between rounded-xl bg-white px-5 py-3.5 shadow-sm ring-1 ring-gray-100/80 transition-all hover:shadow-md hover:ring-primary/30"
                 >
-                  <span className="text-sm font-medium text-gray-800">
-                    {user}
-                  </span>
+                  <span className="text-sm font-medium text-gray-800">{u}</span>
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-orange text-xs font-bold text-white shadow-sm">
                     {i + 1}
                   </span>
@@ -228,151 +570,6 @@ export default function Home() {
               ))}
             </ul>
           </motion.div>
-        </div>
-      </section>
-
-      {/* Learning Material */}
-      <section id="learning-material" className="px-4 py-20 lg:px-8 lg:py-28">
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16 text-center"
-          >
-            <h2 className="mb-3 font-display text-3xl font-extrabold text-gray-900 lg:text-4xl">
-              Chemistry Materials We Teach
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm leading-relaxed text-gray-500">
-              Here, we offer a variety of chemistry materials designed for all
-              levels, from beginner to advanced. Our material covers a variety
-              of fundamental topics in chemistry.
-            </p>
-          </motion.div>
-
-          {/* Row 1 - 4 cards */}
-          <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {chemistryTopics.slice(0, 4).map((topic, i) => (
-              <motion.div
-                key={topic.name}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-4 rounded-2xl bg-gray-50 px-5 py-5 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
-              >
-                <Image
-                  src={topic.icon}
-                  alt={topic.name}
-                  width={56}
-                  height={56}
-                  className="shrink-0"
-                />
-                <div className="min-w-0">
-                  <h3 className="font-display text-sm font-bold text-gray-900">
-                    {topic.name}
-                  </h3>
-                  <p className="text-xs leading-relaxed text-gray-500 line-clamp-2">
-                    {topic.desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Row 2 - 3 cards centered */}
-          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {chemistryTopics.slice(4).map((topic, i) => (
-              <motion.div
-                key={topic.name}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 + i * 0.05 }}
-                className="flex items-center gap-4 rounded-2xl bg-gray-50 px-5 py-5 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
-              >
-                <Image
-                  src={topic.icon}
-                  alt={topic.name}
-                  width={56}
-                  height={56}
-                  className="shrink-0"
-                />
-                <div className="min-w-0">
-                  <h3 className="font-display text-sm font-bold text-gray-900">
-                    {topic.name}
-                  </h3>
-                  <p className="text-xs leading-relaxed text-gray-500 line-clamp-2">
-                    {topic.desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Learning Resources */}
-      <section
-        id="learning-resources"
-        className="bg-gray-50/40 px-4 py-20 lg:px-8 lg:py-28"
-      >
-        <div className="mx-auto max-w-6xl">
-          {/* Header */}
-          <div className="mb-14 grid gap-6 lg:grid-cols-2">
-            <motion.h2
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="font-display text-3xl font-extrabold leading-tight text-gray-900 lg:text-4xl"
-            >
-              What do you get at
-              <br />
-              <span className="text-primary">AKURAT?</span>
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="self-end text-sm leading-relaxed text-gray-500"
-            >
-              AKURAT is an online learning platform specifically designed to
-              help you learn chemistry easily, fun and effectively. We offer a
-              variety of learning programs tailored to your needs and learning
-              level.
-            </motion.p>
-          </div>
-
-          {/* Feature Grid */}
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className={`group rounded-3xl p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${feature.bg}`}
-              >
-                <div className="mb-6 flex h-32 items-center justify-center">
-                  <Image
-                    src={feature.icon}
-                    alt={feature.title}
-                    width={140}
-                    height={140}
-                    className="transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <h3 className="mb-2 font-display text-lg font-bold text-gray-900">
-                  {feature.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-gray-500">
-                  {feature.description}
-                </p>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
