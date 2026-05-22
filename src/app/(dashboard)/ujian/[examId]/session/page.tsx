@@ -7,6 +7,8 @@ import { Clock, Wifi, WifiOff } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { getQuestionsByDifficulty } from '@/services/questions';
+import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
+import { PeriodicTableRef } from '@/components/tools/PeriodicTableRef';
 import {
   createExamSession,
   saveResponse,
@@ -45,6 +47,8 @@ const ExamSessionPage: FC = () => {
   const [loading, setLoading] = useState(true);
   const [online, setOnline] = useState(true);
   const [tabWarning, setTabWarning] = useState(false);
+  const [showCalc, setShowCalc] = useState(false);
+  const [showPeriodic, setShowPeriodic] = useState(false);
 
   const questionStartTime = useRef(Date.now());
   const allQuestions = useRef<Question[]>([]);
@@ -304,7 +308,7 @@ const ExamSessionPage: FC = () => {
         )}
 
         {/* 2-column layout */}
-        <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_240px]">
           {/* Left - Question + Options */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -367,30 +371,66 @@ const ExamSessionPage: FC = () => {
             </motion.div>
           </AnimatePresence>
 
-          {/* Right - Stats */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">
-              Exam Stats
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Stage</span>
-                <span className="font-bold text-violet-600">
-                  {stage}/{STAGES}
-                </span>
+          {/* Right - Stats + Tools */}
+          <div className="space-y-3">
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">
+                Exam Stats
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Stage</span>
+                  <span className="font-bold text-violet-600">
+                    {stage}/{STAGES}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Progress</span>
+                  <span className="font-bold text-primary">
+                    {responses.length + 1}/{TOTAL_QUESTIONS}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Theta</span>
+                  <span className="font-bold text-gray-900">
+                    {theta.toFixed(1)}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Progress</span>
-                <span className="font-bold text-primary">
-                  {responses.length + 1}/{TOTAL_QUESTIONS}
+            </div>
+
+            {/* Calculator */}
+            <div className="rounded-2xl bg-white shadow-sm">
+              <button
+                onClick={() => setShowCalc(!showCalc)}
+                className="flex w-full items-center justify-between px-4 py-3 text-xs font-semibold text-gray-700"
+              >
+                Calculator
+                <span className="text-gray-400">{showCalc ? '▲' : '▼'}</span>
+              </button>
+              {showCalc && (
+                <div className="border-t border-gray-50 p-3">
+                  <ScientificCalculator />
+                </div>
+              )}
+            </div>
+
+            {/* Periodic Table */}
+            <div className="rounded-2xl bg-white shadow-sm">
+              <button
+                onClick={() => setShowPeriodic(!showPeriodic)}
+                className="flex w-full items-center justify-between px-4 py-3 text-xs font-semibold text-gray-700"
+              >
+                Periodic Table
+                <span className="text-gray-400">
+                  {showPeriodic ? '▲' : '▼'}
                 </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Theta</span>
-                <span className="font-bold text-gray-900">
-                  {theta.toFixed(1)}
-                </span>
-              </div>
+              </button>
+              {showPeriodic && (
+                <div className="border-t border-gray-50 p-3">
+                  <PeriodicTableRef />
+                </div>
+              )}
             </div>
           </div>
         </div>
