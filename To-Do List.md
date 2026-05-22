@@ -272,27 +272,29 @@
 
 ### 4.1 Landing Page / Homepage
 
-- [ ] Hero section:
-  - [ ] Full-width gradient background (gradient-hero)
-  - [ ] Headline + subtitle (motivational copy)
-  - [ ] CTA buttons: "Mulai Belajar" + "Pelajari Lebih Lanjut"
-  - [ ] Hero illustration (chemistry themed)
-- [ ] Features section (3-column grid):
-  - [ ] Adaptive Learning — icon + title + description
-  - [ ] Misconception Analysis — icon + title + description
-  - [ ] Progress Tracking — icon + title + description
-- [ ] How It Works section:
-  - [ ] Step-by-step visual timeline (4 steps)
-  - [ ] Connecting lines antar steps
-- [ ] Testimonials section:
-  - [ ] Student success stories (carousel/grid)
-  - [ ] Avatar + name + quote
-- [ ] Final CTA section:
-  - [ ] "Siap Mulai?" + signup button
-- [ ] Footer:
-  - [ ] Links: About, Contact, Privacy, Terms
-  - [ ] Social media icons
-  - [ ] Copyright
+- [x] Navbar (public): Logo + nav links + Sign In + Get Started buttons
+- [x] Hero/Assessment section:
+  - [x] Quiz mockup image (left)
+  - [x] "Guided Courses With Every Journey" heading (right)
+  - [x] Target users numbered list
+  - [x] Decorative shapes (cyan, purple, orange)
+- [x] Learning Material section:
+  - [x] "Chemistry Materials We Teach" heading
+  - [x] 7 topic cards with icons (4+3 grid)
+  - [x] Horizontal scroll on mobile
+- [x] Learning Resources section:
+  - [x] "What do you get at AKURAT?" heading
+  - [x] 6 feature cards (3x2 grid)
+  - [x] Highlight card with yellow background
+- [x] Footer:
+  - [x] Logo + tagline
+  - [x] 3-column nav links
+  - [x] Gradient divider line
+  - [x] Copyright + Cookies Settings
+- [x] Auth pages redesigned:
+  - [x] Split-screen layout (branded left panel + form right)
+  - [x] Login: Google/Facebook + email/password + purple button
+  - [x] Register: Role selection (Student/Teacher) + form fields
 
 ### 4.2 Static Pages
 
