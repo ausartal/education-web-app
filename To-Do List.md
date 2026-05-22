@@ -439,16 +439,15 @@
 
 ### 5.9 Calculator & Reference Tools
 
-- [ ] In-app scientific calculator:
-  - [ ] Basic operations (+, -, ×, ÷)
-  - [ ] Scientific functions (log, ln, power, sqrt)
-  - [ ] Mol calculation shortcuts (gram ÷ Mr, etc.)
-  - [ ] Accessible via button atau keyboard shortcut (Space)
-- [ ] Periodic table quick reference:
-  - [ ] Searchable by element name/symbol
-  - [ ] Show Ar (atomic mass) prominently
-  - [ ] Tap to copy Ar value
-  - [ ] Collapsible panel (tidak mengganggu soal)
+- [x] In-app scientific calculator:
+  - [x] Basic operations (+, -, ×, ÷)
+  - [x] Scientific functions (log, ln, √, x², 10ˣ, π)
+  - [x] Floating button (bottom-right), animated panel
+- [x] Periodic table quick reference:
+  - [x] Searchable by element name/symbol
+  - [x] Show Ar (atomic mass) prominently
+  - [x] Tap to copy Ar value
+  - [x] Floating button, collapsible panel
 
 ---
 
