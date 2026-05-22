@@ -28,6 +28,24 @@ const QuizPage: FC = () => {
   const [timer, setTimer] = useState(0);
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showCalc, setShowCalc] = useState(false);
+  const [showPeriodic, setShowPeriodic] = useState(false);
+
+  const currentQ = questions[currentIdx];
+  const options: AnswerKey[] = ['A', 'B', 'C', 'D', 'E'];
+
+  // Shuffle options order per question
+  const shuffledOptions = useMemo(() => {
+    if (!currentQ) return options;
+    const filtered = options.filter((k) => currentQ.options[k]);
+    const seed = currentIdx;
+    const shuffled = [...filtered];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = (seed * 7 + i * 13) % (i + 1);
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, [currentIdx, currentQ]);
 
   // Fetch questions
   useEffect(() => {
@@ -50,8 +68,6 @@ const QuizPage: FC = () => {
     const interval = setInterval(() => setTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
   }, [timer, loading, submitted, finished]);
-
-  const currentQ = questions[currentIdx];
 
   const handleSubmit = useCallback(() => {
     if (!currentQ || submitted) return;
@@ -138,23 +154,7 @@ const QuizPage: FC = () => {
     );
   }
 
-  const options: AnswerKey[] = ['A', 'B', 'C', 'D', 'E'];
-
-  // Shuffle options order per question (seeded by question index)
-  const shuffledOptions = useMemo(() => {
-    const filtered = options.filter((k) => currentQ?.options[k]);
-    const seed = currentIdx;
-    const shuffled = [...filtered];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = (seed * 7 + i * 13) % (i + 1);
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }, [currentIdx, currentQ]);
-
-  const [showCalc, setShowCalc] = useState(false);
-  const [showPeriodic, setShowPeriodic] = useState(false);
-  const isCorrect = selected === currentQ.correctAnswer;
+  const isCorrect = selected === currentQ?.correctAnswer;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
