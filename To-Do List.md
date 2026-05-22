@@ -2,7 +2,7 @@
 
 > Platform Asesmen Kimia Adaptif dengan Multistage Adaptive Testing (MSAT)  
 > Tech Stack: Next.js 14 (App Router) + TypeScript + Tailwind CSS + Firebase  
-> Last Updated: 22 Mei 2026 (Phase 1-3 complete, Phase 4 next)
+> Last Updated: 23 Mei 2026 (Phase 1-13 complete, UI polish in progress)
 
 ---
 
@@ -877,3 +877,34 @@
 ---
 
 *End of To-Do List*
+
+
+---
+
+## UI POLISH (Ongoing)
+
+### Completed Polish
+- [x] Landing page redesign (matching mockups, decorative shapes, feature icons)
+- [x] Auth pages (split-screen, user-friendly errors, Facebook coming soon)
+- [x] Dashboard (Brilliant-style carousel, progress toggle, real weekly data)
+- [x] Materi list (Duolingo-style, progressive badges)
+- [x] Materi detail (sidebar TOC in card, bottom actions bar, time tracking)
+- [x] Latihan page (intro popup, progressive unlock, confirmation modal)
+- [x] Quiz UI (light mode, 2-column, inline tools, shuffled answers, no borders)
+- [x] Ujian page (gradient hero, 2x2 rules, centered CTA)
+- [x] Exam session (2-column light mode, inline calculator/periodic table)
+- [x] Settings (4 section cards, language selector, logout button)
+- [x] About/Privacy/Terms/Contact (professional card-based design)
+- [x] Navigation fixes (Home→/dashboard, logo→/dashboard, redirect after login)
+- [x] Favicon updated to AKURAT logo
+
+### Remaining Polish
+- [ ] Profile page visual improvement
+- [ ] Exam results page visual improvement
+- [ ] Teacher pages visual consistency
+- [ ] Admin pages visual consistency
+- [ ] Mobile responsive check (all pages)
+- [ ] Onboarding page visual improvement
+- [ ] Quiz completion screen improvement
+- [ ] Overall color/spacing consistency audit
+
