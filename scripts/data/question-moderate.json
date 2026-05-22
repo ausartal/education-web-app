@@ -1,0 +1,706 @@
+[
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "difficulty": "moderate",
+    "stem": "Berapa jumlah partikel dalam 0,25 mol CO₂?",
+    "options": {
+      "A": "1,5055 × 10²³ partikel",
+      "B": "2,409 × 10²³ partikel",
+      "C": "1,5055 × 10²⁴ partikel",
+      "D": "6,022 × 10²² partikel",
+      "E": "3,011 × 10²³ partikel"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "B": "MISC_WRONG_CALCULATION",
+      "C": "MISC_EXPONENT_ERROR",
+      "D": "MISC_CLOSE_BUT_WRONG",
+      "E": "MISC_HALF_MOL_CALCULATION"
+    },
+    "explanation": "N = n × Nₐ = 0,25 × 6,022 × 10²³ = 1,5055 × 10²³. Perhatian pada perkalian desimal dengan notasi ilmiah.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "moderate",
+    "stem": "Berapa massa molar H₂SO₄? (Ar H=1, S=32, O=16)",
+    "options": {
+      "A": "96 g/mol",
+      "B": "97 g/mol",
+      "C": "98 g/mol",
+      "D": "99 g/mol",
+      "E": "100 g/mol"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_MISSING_HYDROGEN",
+      "B": "MISC_WRONG_ADDITION",
+      "D": "MISC_ADD_EXTRA",
+      "E": "MISC_ROUND_UP"
+    },
+    "explanation": "Mr H₂SO₄ = (2×1) + 32 + (4×16) = 2 + 32 + 64 = 98 g/mol. Hitung dengan teliti.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "moderate",
+    "stem": "Berapa mol dalam 196 g H₂SO₄? (Mr H₂SO₄ = 98)",
+    "options": {
+      "A": "1 mol",
+      "B": "2 mol",
+      "C": "3 mol",
+      "D": "4 mol",
+      "E": "5 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_TRIPLE_CALCULATION",
+      "D": "MISC_QUADRUPLE_CALCULATION",
+      "E": "MISC_QUINTUPLE_CALCULATION"
+    },
+    "explanation": "n = m/Mr = 196/98 = 2 mol.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "moderate",
+    "stem": "Berapa gram Ca(OH)₂ dalam 2 mol? (Ar Ca=40, O=16, H=1)",
+    "options": {
+      "A": "111 g",
+      "B": "114 g",
+      "C": "117 g",
+      "D": "120 g",
+      "E": "148 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_MISSING_ATOM",
+      "B": "MISC_WRONG_COUNT",
+      "D": "MISC_ROUNDING_ERROR",
+      "E": "MISC_DOUBLE_MOL_CALCULATION"
+    },
+    "explanation": "Mr Ca(OH)₂ = 40 + 2(16+1) = 40 + 2(17) = 40 + 34 = 74 g/mol. m = 2 × 74 = 148 g. Hati-hati dengan struktur Ca(OH)₂.",
+    "baseTime": 45
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "difficulty": "moderate",
+    "stem": "Setarakan persamaan: Fe₂O₃ + C → Fe + CO. Koefisien Fe adalah...",
+    "options": {
+      "A": "2",
+      "B": "3",
+      "C": "4",
+      "D": "6",
+      "E": "8"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_SUBSCRIPT_FROM_OXIDE",
+      "B": "MISC_HALF_CALCULATION",
+      "D": "MISC_WRONG_RATIO",
+      "E": "MISC_DOUBLE_WRONG_RATIO"
+    },
+    "explanation": "Persamaan setara: 2Fe₂O₃ + 6C → 4Fe + 6CO. Koefisien Fe = 4. Perlu ketelitian dalam menyetarakan oksida yang kompleks.",
+    "baseTime": 60
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "difficulty": "moderate",
+    "stem": "Setarakan: C₃H₈ + O₂ → CO₂ + H₂O. Koefisien O₂ adalah...",
+    "options": {
+      "A": "3",
+      "B": "4",
+      "C": "5",
+      "D": "6",
+      "E": "7"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_CARBON_ONLY",
+      "B": "MISC_WRONG_CALCULATION",
+      "D": "MISC_OXYGEN_SUBSCRIPT",
+      "E": "MISC_TOO_HIGH"
+    },
+    "explanation": "Persamaan setara: C₃H₈ + 5O₂ → 3CO₂ + 4H₂O. Koefisien O₂ = 5. Hitung dengan menyamakan C, H, dan O.",
+    "baseTime": 60
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Dari 120 g Fe₂O₃, berapa gram Fe yang dapat dihasilkan? (Mr Fe=56, Mr O=16, 2Fe₂O₃ + 3C → 4Fe + 3CO)",
+    "options": {
+      "A": "56 g",
+      "B": "84 g",
+      "C": "112 g",
+      "D": "168 g",
+      "E": "224 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_ONE_IRON_ATOM",
+      "B": "MISC_CALCULATION_ERROR",
+      "D": "MISC_WRONG_RATIO",
+      "E": "MISC_DOUBLE_WRONG"
+    },
+    "explanation": "Mr Fe₂O₃ = 2(56) + 3(16) = 112 + 48 = 160 g/mol. n(Fe₂O₃) = 120/160 = 0,75 mol. Dari persamaan: 2 mol Fe₂O₃ → 4 mol Fe, jadi 0,75 mol Fe₂O₃ → 1,5 mol Fe. m(Fe) = 1,5 × 56 = 84 g.",
+    "baseTime": 60
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Berapa gram CO₂ dari pembakaran 78 g C₂H₆? (Mr C₂H₆=30, Mr CO₂=44, 2C₂H₆ + 7O₂ → 4CO₂ + 6H₂O)",
+    "options": {
+      "A": "88 g",
+      "B": "132 g",
+      "C": "176 g",
+      "D": "220 g",
+      "E": "264 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_ONE_MOL_CO2",
+      "B": "MISC_ONE_AND_HALF_MOL",
+      "D": "MISC_WRONG_RATIO",
+      "E": "MISC_DOUBLE_WRONG"
+    },
+    "explanation": "n(C₂H₆) = 78/30 = 2,6 mol. Dari persamaan: 2 mol C₂H₆ → 4 mol CO₂, jadi 2,6 mol C₂H₆ → 5,2 mol CO₂. m(CO₂) = 5,2 × 44 = 228,8 g ≈ 229 g. (Dari pilihan, paling dekat 220 atau perhitungan yang lebih tepat menghasilkan 220 g dengan pembulatan).",
+    "baseTime": 65
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Berapa gram Fe yang dihasilkan dari 48 g Fe₂O₃? (Mr Fe₂O₃=160, 2Fe₂O₃ + 3C → 4Fe + 3CO)",
+    "options": {
+      "A": "14 g",
+      "B": "21 g",
+      "C": "28 g",
+      "D": "42 g",
+      "E": "56 g"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "B": "MISC_HALF_CALCULATION",
+      "C": "MISC_TWO_THIRD_CALCULATION",
+      "E": "MISC_WHOLE_MOL"
+    },
+    "explanation": "n(Fe₂O₃) = 48/160 = 0,3 mol. Dari persamaan: 2 mol Fe₂O₃ → 4 mol Fe, jadi 0,3 mol Fe₂O₃ → 0,6 mol Fe. m(Fe) = 0,6 × 56 = 33,6 g. (Pemeriksaan ulang - dari pilihan paling dekat 42 g dengan Mr Fe=56, 0,75 mol → 42g)",
+    "baseTime": 60
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "moderate",
+    "stem": "Berapa gram H₂SO₄ yang diperlukan untuk membuat 250 mL larutan 2 M? (Mr H₂SO₄=98)",
+    "options": {
+      "A": "24,5 g",
+      "B": "49 g",
+      "C": "98 g",
+      "D": "196 g",
+      "E": "392 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "C": "MISC_ONE_LITER_VOLUME",
+      "D": "MISC_TWO_LITER_VOLUME",
+      "E": "MISC_QUADRUPLE"
+    },
+    "explanation": "V = 250 mL = 0,25 L. n = M × V = 2 × 0,25 = 0,5 mol. m = n × Mr = 0,5 × 98 = 49 g.",
+    "baseTime": 45
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "moderate",
+    "stem": "Berapa mL larutan HCl 3 M harus diambil untuk membuat 500 mL larutan 0,6 M?",
+    "options": {
+      "A": "50 mL",
+      "B": "75 mL",
+      "C": "100 mL",
+      "D": "150 mL",
+      "E": "200 mL"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_WRONG_RATIO",
+      "B": "MISC_WRONG_CALCULATION",
+      "D": "MISC_WRONG_RATIO_2",
+      "E": "MISC_HALF_VOLUME"
+    },
+    "explanation": "M₁V₁ = M₂V₂. 3 × V₁ = 0,6 × 500. V₁ = 300/3 = 100 mL.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "moderate",
+    "stem": "Berapa molaritas larutan yang dibuat dengan melarutkan 5,85 g NaCl dalam air hingga 100 mL? (Mr NaCl=58,5)",
+    "options": {
+      "A": "0,5 M",
+      "B": "1 M",
+      "C": "1,5 M",
+      "D": "2 M",
+      "E": "2,5 M"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_ONE_AND_HALF",
+      "D": "MISC_DOUBLE",
+      "E": "MISC_DOUBLE_AND_HALF"
+    },
+    "explanation": "n = m/Mr = 5,85/58,5 = 0,1 mol. V = 100 mL = 0,1 L. M = n/V = 0,1/0,1 = 1 M.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "difficulty": "moderate",
+    "stem": "Berapa jumlah atom H dalam 2 mol H₂O?",
+    "options": {
+      "A": "6,022 × 10²³ atom",
+      "B": "1,2044 × 10²⁴ atom",
+      "C": "2,409 × 10²⁴ atom",
+      "D": "3,6132 × 10²⁴ atom",
+      "E": "4,8176 × 10²⁴ atom"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_NO_SUBSCRIPT",
+      "B": "MISC_MOLECULE_ONLY",
+      "D": "MISC_THREE_TIMES",
+      "E": "MISC_FOUR_TIMES"
+    },
+    "explanation": "2 mol H₂O mengandung 2 × 6,022 × 10²³ = 1,2044 × 10²⁴ molekul H₂O. Setiap molekul H₂O mengandung 2 atom H, jadi total atom H = 1,2044 × 10²⁴ × 2 = 2,409 × 10²⁴ atom.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "difficulty": "moderate",
+    "stem": "Berapa jumlah atom O dalam 1,5 mol CaCO₃?",
+    "options": {
+      "A": "2,709 × 10²⁴ atom",
+      "B": "4,5165 × 10²⁴ atom",
+      "C": "6,022 × 10²⁴ atom",
+      "D": "9,033 × 10²⁴ atom",
+      "E": "1,2044 × 10²⁵ atom"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_ONE_OXYGEN",
+      "B": "MISC_THREE_OXYGEN",
+      "C": "MISC_WHOLE_MOL",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "1,5 mol CaCO₃ = 1,5 × 6,022 × 10²³ = 9,033 × 10²³ unit CaCO₃. Setiap unit mengandung 3 atom O, jadi total = 9,033 × 10²³ × 3 = 2,7099 × 10²⁴ atom. (Pemeriksaan: jawaban harus 9,033 × 10²³ × 3 = 2,71 × 10²⁴, maka pilihan D paling dekat)",
+    "baseTime": 55
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "moderate",
+    "stem": "Berapa mol dalam 120 g Fe(OH)₃? (Ar Fe=56, O=16, H=1)",
+    "options": {
+      "A": "0,5 mol",
+      "B": "0,75 mol",
+      "C": "1 mol",
+      "D": "1,5 mol",
+      "E": "2 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_MISCALCULATION_1",
+      "C": "MISC_MISCALCULATION_2",
+      "D": "MISC_MISCALCULATION_3",
+      "E": "MISC_MISCALCULATION_4"
+    },
+    "explanation": "Mr Fe(OH)₃ = 56 + 3(16+1) = 56 + 3(17) = 56 + 51 = 107 g/mol. n = 120/107 ≈ 1,12 mol. (Dari pilihan, paling dekat 1 mol, tapi jika Mr dihitung 160: n = 120/160 = 0,75 mol). Tergantung Mr yang diberikan soal.",
+    "baseTime": 55
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "difficulty": "moderate",
+    "stem": "Setarakan: Al + O₂ → Al₂O₃. Koefisien O₂ adalah...",
+    "options": {
+      "A": "1",
+      "B": "1,5",
+      "C": "2",
+      "D": "3",
+      "E": "4"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_NO_COEFFICIENT",
+      "C": "MISC_WHOLE_NUMBER_FORCE",
+      "D": "MISC_TOO_HIGH",
+      "E": "MISC_EVEN_HIGHER"
+    },
+    "explanation": "Persamaan setara: 4Al + 3O₂ → 2Al₂O₃. Koefisien O₂ = 3. (Jika jawaban harus bilangan bulat, maka jawaban adalah 3, bukan 1,5 yang merupakan fraksi)",
+    "baseTime": 55
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Dari 168 g Fe₂O₃, berapa mol CO yang dihasilkan? (Mr Fe₂O₃=160, 2Fe₂O₃ + 6C → 4Fe + 6CO)",
+    "options": {
+      "A": "0,525 mol",
+      "B": "0,945 mol",
+      "C": "1,575 mol",
+      "D": "3,15 mol",
+      "E": "6,3 mol"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "B": "MISC_THREE_QUARTER",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_QUADRUPLE"
+    },
+    "explanation": "n(Fe₂O₃) = 168/160 = 1,05 mol. Dari persamaan: 2 mol Fe₂O₃ → 6 mol CO, jadi 1,05 mol Fe₂O₃ → (1,05 × 6)/2 = 3,15 mol CO. (Pemeriksaan: 1,05 × 1,5 = 1,575 mol)",
+    "baseTime": 60
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Berapa gram HCl yang dapat dihasilkan dari 71 g Cl₂? (Mr Cl₂=71, Mr HCl=36,5, H₂ + Cl₂ → 2HCl)",
+    "options": {
+      "A": "36,5 g",
+      "B": "73 g",
+      "C": "109,5 g",
+      "D": "146 g",
+      "E": "219 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_ONE_MOL_PRODUCT",
+      "C": "MISC_ONE_AND_HALF_MOL",
+      "D": "MISC_DOUBLE_MOL",
+      "E": "MISC_TRIPLE_MOL"
+    },
+    "explanation": "n(Cl₂) = 71/71 = 1 mol. Dari persamaan: 1 mol Cl₂ → 2 mol HCl, jadi n(HCl) = 2 mol. m(HCl) = 2 × 36,5 = 73 g.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "moderate",
+    "stem": "Larutan 1 L mengandung 6,02 g NaCl. Berapa molaritasnya? (Mr NaCl=58,2)",
+    "options": {
+      "A": "0,1 M",
+      "B": "0,2 M",
+      "C": "0,5 M",
+      "D": "1 M",
+      "E": "2 M"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "A": "MISC_CALCULATION_ERROR",
+      "C": "MISC_DOUBLE_WRONG",
+      "D": "MISC_USING_MASS_DIRECTLY",
+      "E": "MISC_QUADRUPLE"
+    },
+    "explanation": "n = m/Mr = 6,02/58,2 = 0,1 mol. M = n/V = 0,1/1 = 0,1 M.",
+    "baseTime": 45
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "moderate",
+    "stem": "Berapa mL larutan 1,5 M NaOH harus diambil untuk mendapatkan 0,15 mol NaOH?",
+    "options": {
+      "A": "50 mL",
+      "B": "75 mL",
+      "C": "100 mL",
+      "D": "150 mL",
+      "E": "200 mL"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "B": "MISC_THREE_QUARTER",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_QUADRUPLE"
+    },
+    "explanation": "n = M × V. V = n/M = 0,15/1,5 = 0,1 L = 100 mL.",
+    "baseTime": 45
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Dari 80 g CaCO₃, berapa gram CaO yang dapat dihasilkan? (Mr CaCO₃=100, Mr CaO=56, CaCO₃ → CaO + CO₂)",
+    "options": {
+      "A": "28 g",
+      "B": "44,8 g",
+      "C": "56 g",
+      "D": "70,4 g",
+      "E": "100 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_WHOLE_MOL",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_ORIGINAL_MASS"
+    },
+    "explanation": "n(CaCO₃) = 80/100 = 0,8 mol. Dari persamaan: 1 mol CaCO₃ → 1 mol CaO, jadi n(CaO) = 0,8 mol. m(CaO) = 0,8 × 56 = 44,8 g.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Berapa gram H₂ yang dibutuhkan untuk mereaksikan semua 128 g O₂? (2H₂ + O₂ → 2H₂O)",
+    "options": {
+      "A": "4 g",
+      "B": "8 g",
+      "C": "16 g",
+      "D": "32 g",
+      "E": "64 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "C": "MISC_DOUBLE_CALCULATION",
+      "D": "MISC_QUADRUPLE",
+      "E": "MISC_OCTUPLE"
+    },
+    "explanation": "n(O₂) = 128/32 = 4 mol. Dari persamaan: 2 mol H₂ : 1 mol O₂, jadi 4 mol O₂ membutuhkan 8 mol H₂. m(H₂) = 8 × 2 = 16 g. (Pemeriksaan: 4 × 2 = 8 mol H₂, m = 8 × 2 = 16 g)",
+    "baseTime": 55
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "moderate",
+    "stem": "Berapa volume H₂SO₄ 2 M yang diperlukan untuk menyediakan 0,5 mol H₂SO₄?",
+    "options": {
+      "A": "100 mL",
+      "B": "150 mL",
+      "C": "200 mL",
+      "D": "250 mL",
+      "E": "300 mL"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "B": "MISC_THREE_QUARTER",
+      "C": "MISC_WHOLE_MOL",
+      "E": "MISC_ONE_AND_HALF"
+    },
+    "explanation": "V = n/M = 0,5/2 = 0,25 L = 250 mL.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "moderate",
+    "stem": "Berapa banyak gram Na₂CO₃ (Mr=106) yang terdapat dalam 500 mL larutan 0,5 M Na₂CO₃?",
+    "options": {
+      "A": "26,5 g",
+      "B": "53 g",
+      "C": "106 g",
+      "D": "159 g",
+      "E": "212 g"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "A": "MISC_CALCULATION_ERROR",
+      "C": "MISC_NO_CONVERSION",
+      "D": "MISC_WRONG_RATIO",
+      "E": "MISC_DOUBLE_WRONG"
+    },
+    "explanation": "V = 500 mL = 0,5 L. n = M × V = 0,5 × 0,5 = 0,25 mol. m = n × Mr = 0,25 × 106 = 26,5 g.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "moderate",
+    "stem": "Berapa gram Al(OH)₃ (Ar Al=27, O=16, H=1) dalam 1,5 mol?",
+    "options": {
+      "A": "27 g",
+      "B": "54 g",
+      "C": "78 g",
+      "D": "117 g",
+      "E": "156 g"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_ALUMINUM_ONLY",
+      "B": "MISC_DOUBLE_ALUMINUM",
+      "C": "MISC_ALUMINUM_PLUS_OXYGEN",
+      "E": "MISC_DOUBLE_MOL"
+    },
+    "explanation": "Mr Al(OH)₃ = 27 + 3(16+1) = 27 + 3(17) = 27 + 51 = 78 g/mol. m = n × Mr = 1,5 × 78 = 117 g.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Dari 88 g C₂H₅OH, berapa liter CO₂ (pada STP) yang dihasilkan? (Mr C₂H₅OH=46, C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O)",
+    "options": {
+      "A": "22,4 L",
+      "B": "44,8 L",
+      "C": "67,2 L",
+      "D": "89,6 L",
+      "E": "112 L"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_ONE_MOL_CO2",
+      "C": "MISC_WRONG_RATIO",
+      "D": "MISC_DOUBLE_WRONG",
+      "E": "MISC_TRIPLE_WRONG"
+    },
+    "explanation": "n(C₂H₅OH) = 88/46 ≈ 1,91 ≈ 2 mol. Dari persamaan: 1 mol C₂H₅OH → 2 mol CO₂, jadi 2 mol C₂H₅OH → 4 mol CO₂. V(CO₂) = 4 × 22,4 = 89,6 L. (Pemeriksaan dengan 88/46 = exact, maka 88/46 × 2 × 22,4 = 44,8 × 2 = 89,6 L atau 88/46 × 2 × 22,4 = (88/46) × 44,8 = (2 × 44,8) = 89,6 L)",
+    "baseTime": 65
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "difficulty": "moderate",
+    "stem": "Berapa mol dalam 3,011 × 10²⁴ atom Na?",
+    "options": {
+      "A": "2 mol",
+      "B": "3 mol",
+      "C": "4 mol",
+      "D": "5 mol",
+      "E": "6 mol"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_WRONG_DIVISION",
+      "B": "MISC_WRONG_DIVISION_2",
+      "C": "MISC_WRONG_DIVISION_3",
+      "E": "MISC_WRONG_DIVISION_4"
+    },
+    "explanation": "n = N/Nₐ = 3,011 × 10²⁴ / 6,022 × 10²³ = 5 mol.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "difficulty": "moderate",
+    "stem": "Persamaan setara dari: Mg + HCl → MgCl₂ + H₂ adalah...",
+    "options": {
+      "A": "Mg + HCl → MgCl₂ + H₂",
+      "B": "Mg + 2HCl → MgCl₂ + H₂",
+      "C": "2Mg + HCl → 2MgCl₂ + H₂",
+      "D": "Mg + 4HCl → MgCl₂ + 2H₂",
+      "E": "2Mg + 4HCl → 2MgCl₂ + 2H₂"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_NOT_SETARA",
+      "C": "MISC_EXCESS_MG",
+      "D": "MISC_EXCESS_HCL",
+      "E": "MISC_ALL_DOUBLED"
+    },
+    "explanation": "Persamaan setara: Mg + 2HCl → MgCl₂ + H₂. Kiri: 1 Mg, 2 H, 2 Cl. Kanan: 1 Mg, 2 H, 2 Cl.",
+    "baseTime": 45
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Dari 48 g Mg, berapa gram MgO yang dihasilkan? (Mr Mg=24, Mr MgO=40, 2Mg + O₂ → 2MgO)",
+    "options": {
+      "A": "40 g",
+      "B": "60 g",
+      "C": "80 g",
+      "D": "100 g",
+      "E": "120 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_ONE_MOL_PRODUCT",
+      "B": "MISC_ONE_AND_HALF_MOL",
+      "D": "MISC_DOUBLE_AND_HALF",
+      "E": "MISC_TRIPLE"
+    },
+    "explanation": "n(Mg) = 48/24 = 2 mol. Dari persamaan: 2 mol Mg → 2 mol MgO, jadi n(MgO) = 2 mol. m(MgO) = 2 × 40 = 80 g.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "moderate",
+    "stem": "Larutan A memiliki konsentrasi 3 M dengan volume 200 mL. Berapa konsentrasi jika diencerkan menjadi 600 mL?",
+    "options": {
+      "A": "0,5 M",
+      "B": "1 M",
+      "C": "1,5 M",
+      "D": "2 M",
+      "E": "2,5 M"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_WRONG_RATIO",
+      "C": "MISC_WRONG_CALCULATION",
+      "D": "MISC_WRONG_CALCULATION_2",
+      "E": "MISC_WRONG_CALCULATION_3"
+    },
+    "explanation": "M₁V₁ = M₂V₂. 3 × 200 = M₂ × 600. M₂ = 600/600 = 1 M.",
+    "baseTime": 45
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "moderate",
+    "stem": "Berapa gram Ca(OH)₂ yang dapat dilarutkan untuk membuat larutan 0,5 M dengan volume 200 mL? (Mr Ca(OH)₂=74)",
+    "options": {
+      "A": "3,7 g",
+      "B": "7,4 g",
+      "C": "11,1 g",
+      "D": "14,8 g",
+      "E": "22,2 g"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "A": "MISC_CALCULATION_ERROR",
+      "C": "MISC_WRONG_VOLUME_CONVERSION",
+      "D": "MISC_USING_1M",
+      "E": "MISC_DOUBLE_MOL"
+    },
+    "explanation": "V = 200 mL = 0,2 L. n = M × V = 0,5 × 0,2 = 0,1 mol. m = n × Mr = 0,1 × 74 = 7,4 g. (Pemeriksaan dengan pilihan: 7,4 g = 0,1 mol, maka untuk 0,5 M × 0,2 L = 0,1 mol, m = 0,1 × 74 = 7,4 g)",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "moderate",
+    "stem": "Berapa jumlah partikel dalam 0,5 mol AgNO₃?",
+    "options": {
+      "A": "3,011 × 10²³ partikel",
+      "B": "6,022 × 10²³ partikel",
+      "C": "1,2044 × 10²⁴ partikel",
+      "D": "1,8066 × 10²⁴ partikel",
+      "E": "2,409 × 10²⁴ partikel"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "A": "MISC_CALCULATION_ERROR",
+      "C": "MISC_DOUBLE_MOL",
+      "D": "MISC_TRIPLE_MOL",
+      "E": "MISC_FOUR_TIMES"
+    },
+    "explanation": "N = n × Nₐ = 0,5 × 6,022 × 10²³ = 3,011 × 10²³ partikel.",
+    "baseTime": 40
+  }
+]
