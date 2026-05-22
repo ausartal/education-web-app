@@ -12,7 +12,10 @@ import { Material } from '@/types/firestore';
 const COLLECTION = 'materials';
 
 export async function getMaterials(): Promise<Material[]> {
-  const q = query(collection(db, COLLECTION), where('status', '==', 'published'));
+  const q = query(
+    collection(db, COLLECTION),
+    where('status', '==', 'published')
+  );
   const snap = await getDocs(q);
   const materials = snap.docs.map(
     (d) => ({ id: d.id, ...d.data() }) as Material
