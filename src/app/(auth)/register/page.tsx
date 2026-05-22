@@ -26,7 +26,7 @@ const RegisterPage: FC = () => {
     setLoading(true);
     try {
       await signUp(email, password, fullName, role);
-      router.push('/dashboard');
+      router.push('/onboarding');
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Registrasi gagal. Coba lagi.'
