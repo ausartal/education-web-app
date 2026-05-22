@@ -63,7 +63,7 @@ const UjianPage: FC = () => {
         </div>
 
         {/* Rules - 2x2 grid */}
-        <div className="mb-8 grid gap-3 sm:grid-cols-2">
+        <div className="mb-6 grid gap-3 sm:grid-cols-2">
           {[
             {
               icon: Brain,
@@ -104,19 +104,29 @@ const UjianPage: FC = () => {
               </motion.div>
             );
           })}
+
+          {/* Info card - spans full width */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="rounded-2xl bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-5 sm:col-span-2"
+          >
+            <p className="text-center text-sm font-medium leading-relaxed text-indigo-700">
+              Sistem mengukur <strong>kecepatan</strong> dan{' '}
+              <strong>ketepatan</strong> jawabanmu untuk menghasilkan profil
+              pemahaman yang akurat.
+            </p>
+          </motion.div>
         </div>
 
-        {/* Bottom - Warning + Button centered */}
+        {/* Bottom - Button centered */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="mx-auto max-w-md text-center"
         >
-          <p className="mb-5 text-xs leading-relaxed text-gray-500">
-            Sistem mengukur kecepatan dan ketepatan jawabanmu untuk menghasilkan
-            profil pemahaman yang akurat.
-          </p>
           <button
             onClick={() => setShowModal(true)}
             className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
