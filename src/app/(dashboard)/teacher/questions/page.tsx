@@ -53,7 +53,9 @@ const TeacherQuestions: FC = () => {
   }, []);
 
   const filtered =
-    filter === 'all' ? questions : questions.filter((q) => q.difficulty === filter);
+    filter === 'all'
+      ? questions
+      : questions.filter((q) => q.difficulty === filter);
 
   const handleCreate = async () => {
     await addDoc(collection(db, 'question_bank'), {
@@ -140,7 +142,9 @@ const TeacherQuestions: FC = () => {
                 <p className="flex-1 text-sm font-medium text-gray-900 line-clamp-2">
                   {q.stem}
                 </p>
-                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${diffColors[q.difficulty]}`}>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${diffColors[q.difficulty]}`}
+                >
                   {q.difficulty}
                 </span>
               </div>
@@ -152,7 +156,11 @@ const TeacherQuestions: FC = () => {
         </div>
 
         {/* Create Modal */}
-        <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="New Question">
+        <Modal
+          isOpen={showCreate}
+          onClose={() => setShowCreate(false)}
+          title="New Question"
+        >
           <div className="max-h-[60vh] space-y-3 overflow-y-auto">
             <textarea
               placeholder="Question stem"
@@ -163,7 +171,9 @@ const TeacherQuestions: FC = () => {
             />
             <select
               value={form.difficulty}
-              onChange={(e) => setForm({ ...form, difficulty: e.target.value as Difficulty })}
+              onChange={(e) =>
+                setForm({ ...form, difficulty: e.target.value as Difficulty })
+              }
               className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none"
             >
               <option value="easy">Easy</option>
@@ -175,29 +185,41 @@ const TeacherQuestions: FC = () => {
                 key={key}
                 placeholder={`Option ${key}`}
                 value={form[`option${key}` as keyof typeof form] as string}
-                onChange={(e) => setForm({ ...form, [`option${key}`]: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, [`option${key}`]: e.target.value })
+                }
                 className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
             ))}
             <select
               value={form.correctAnswer}
-              onChange={(e) => setForm({ ...form, correctAnswer: e.target.value as AnswerKey })}
+              onChange={(e) =>
+                setForm({ ...form, correctAnswer: e.target.value as AnswerKey })
+              }
               className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none"
             >
               {['A', 'B', 'C', 'D', 'E'].map((k) => (
-                <option key={k} value={k}>Correct: {k}</option>
+                <option key={k} value={k}>
+                  Correct: {k}
+                </option>
               ))}
             </select>
             <textarea
               placeholder="Explanation"
               value={form.explanation}
-              onChange={(e) => setForm({ ...form, explanation: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, explanation: e.target.value })
+              }
               rows={2}
               className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
             />
             <div className="flex gap-3">
-              <Button variant="secondary" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={!form.stem}>Create</Button>
+              <Button variant="secondary" onClick={() => setShowCreate(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreate} disabled={!form.stem}>
+                Create
+              </Button>
             </div>
           </div>
         </Modal>

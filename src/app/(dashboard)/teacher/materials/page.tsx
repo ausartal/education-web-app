@@ -66,7 +66,15 @@ const TeacherMaterials: FC = () => {
       updatedAt: serverTimestamp(),
     });
     setShowCreate(false);
-    setForm({ title: '', description: '', topic: 'stoikiometri', subtopic: '', order: 1, content: '', estimatedTime: 15 });
+    setForm({
+      title: '',
+      description: '',
+      topic: 'stoikiometri',
+      subtopic: '',
+      order: 1,
+      content: '',
+      estimatedTime: 15,
+    });
     addToast('success', 'Material created');
     // Refresh
     const snap = await getDocs(collection(db, 'materials'));
@@ -124,7 +132,11 @@ const TeacherMaterials: FC = () => {
                 className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
                 title={m.status === 'published' ? 'Unpublish' : 'Publish'}
               >
-                {m.status === 'published' ? <EyeOff size={16} /> : <Eye size={16} />}
+                {m.status === 'published' ? (
+                  <EyeOff size={16} />
+                ) : (
+                  <Eye size={16} />
+                )}
               </button>
               <button className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700">
                 <Edit size={16} />
@@ -134,7 +146,11 @@ const TeacherMaterials: FC = () => {
         </div>
 
         {/* Create Modal */}
-        <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="New Material">
+        <Modal
+          isOpen={showCreate}
+          onClose={() => setShowCreate(false)}
+          title="New Material"
+        >
           <div className="space-y-4">
             <input
               placeholder="Title"
@@ -145,7 +161,9 @@ const TeacherMaterials: FC = () => {
             <input
               placeholder="Description"
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
               className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
             />
             <textarea
