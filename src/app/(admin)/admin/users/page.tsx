@@ -12,7 +12,7 @@ import {
 import { db } from '@/lib/firebase';
 import { UserProfile, UserRole } from '@/types/firestore';
 import { useToast } from '@/hooks/useToast';
-import { Search, Shield, Trash2 } from 'lucide-react';
+import { Search, Trash2 } from 'lucide-react';
 
 const roleColors: Record<UserRole, string> = {
   student: 'bg-blue-50 text-primary',
