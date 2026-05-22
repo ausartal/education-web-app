@@ -93,7 +93,9 @@ const LatihanPage: FC = () => {
 
   const isLocked = (quiz: (typeof quizzes)[0]) => {
     if (quiz.id === 'easy') return false;
-    return !easyCompleted;
+    if (quiz.id === 'moderate') return !easyCompleted;
+    if (quiz.id === 'hard') return !lastScores.moderate;
+    return true;
   };
 
   return (
