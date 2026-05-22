@@ -512,12 +512,11 @@
 
 ### 7.3 Student Monitoring
 
-- [ ] `/teacher/students` — Student list
-- [ ] `/teacher/students/[studentId]` — Student detail view
-  - [ ] Profile card
-  - [ ] Progress timeline
-  - [ ] Quiz/exam history table
-  - [ ] Misconception profile chart
+- [x] `/teacher/students` — Student list with search, stats per student
+- [x] `/teacher/students/[studentId]` — Student detail view
+  - [x] Profile card (avatar, name, email, school)
+  - [x] Stats grid (XP, Streak, Lessons, Quizzes, Level)
+  - [x] Exam history table (exam ID, status, theta, accuracy)
   - [ ] Theta progression over time
   - [ ] Notes section (teacher can add notes)
 
