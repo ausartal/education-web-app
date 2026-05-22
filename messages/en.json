@@ -1,0 +1,53 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "start": "Start",
+    "continue": "Continue",
+    "submit": "Submit",
+    "search": "Search..."
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "jumpBackIn": "Jump back in",
+    "streak": "Daily Streak",
+    "progress": "Your Progress",
+    "startLearning": "Start Learning",
+    "continueLearning": "Continue Learning"
+  },
+  "materi": {
+    "title": "Learning Materials",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "markComplete": "Mark as Complete"
+  },
+  "quiz": {
+    "title": "Practice Quiz",
+    "submitAnswer": "Submit Answer",
+    "correct": "Correct!",
+    "incorrect": "Incorrect",
+    "complete": "Quiz Complete!",
+    "retake": "Retake"
+  },
+  "exam": {
+    "title": "MSAT Exam",
+    "startExam": "Start Exam",
+    "rules": "Exam Rules",
+    "results": "Exam Results"
+  }
+}

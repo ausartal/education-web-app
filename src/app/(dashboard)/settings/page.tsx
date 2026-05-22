@@ -110,6 +110,22 @@ const SettingsPage: FC = () => {
           {/* Divider */}
           <div className="border-t border-gray-100" />
 
+          {/* Language */}
+          <div>
+            <h2 className="mb-4 text-sm font-bold text-gray-900">Language</h2>
+            <div className="flex gap-3">
+              <button className="flex-1 rounded-xl bg-primary/10 px-4 py-3 text-sm font-semibold text-primary ring-2 ring-primary">
+                🇮🇩 Bahasa Indonesia
+              </button>
+              <button className="flex-1 rounded-xl bg-gray-50 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100">
+                🇬🇧 English
+              </button>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100" />
+
           {/* Notifications */}
           <div>
             <h2 className="mb-4 text-sm font-bold text-gray-900">
