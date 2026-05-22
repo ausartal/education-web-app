@@ -3,6 +3,7 @@
 import { FC, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { getUserProgress } from '@/services/progress';
 import { getMaterials } from '@/services/materials';
@@ -383,89 +384,140 @@ const DashboardPage: FC = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
+        {/* RIGHT COLUMN - Jump Back In */}
         <div className="space-y-6">
-          {/* Course Card - Fluid, no hard borders */}
-          <div className="animate-[fadeIn_0.6s_ease-out] overflow-hidden rounded-3xl bg-white shadow-sm shadow-gray-100">
-            <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 p-8 text-center">
-              <h3 className="mb-1 text-2xl font-black text-gray-900">
-                {courseTopics[activeCourseIdx].name}
-              </h3>
-              <p className="mb-6 text-sm font-semibold text-primary">
-                LEVEL {Math.min(completedCount + 1, 10)}
-              </p>
+          <h2 className="text-xl font-bold text-gray-900">Jump back in</h2>
 
-              <div className="mx-auto mb-4 flex h-44 w-44 items-center justify-center transition-transform duration-500 hover:scale-105">
-                <Image
-                  src={courseTopics[activeCourseIdx].icon}
-                  alt={courseTopics[activeCourseIdx].name}
-                  width={150}
-                  height={150}
-                  className="drop-shadow-lg"
-                />
-              </div>
+          {/* Stacked Card Carousel */}
+          <div className="relative h-[420px]">
+            <AnimatePresence mode="popLayout">
+              {courseTopics.map((topic, i) => {
+                const offset = i - activeCourseIdx;
+                const isActive = offset === 0;
+                const isVisible = Math.abs(offset) <= 2;
 
-              <p className="text-sm text-gray-500">
-                {nextMaterial ? `Next: ${nextMaterial.title}` : 'All done! 🎉'}
-              </p>
-            </div>
+                if (!isVisible) return null;
 
-            {/* Lessons */}
-            <div className="px-6 py-4">
-              {materials.slice(0, 3).map((m) => {
-                const status = progress.find(
-                  (p) => p.materialId === m.id
-                )?.status;
                 return (
-                  <div key={m.id} className="flex items-center gap-3 py-3">
+                  <motion.div
+                    key={topic.id}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{
+                      scale: isActive ? 1 : 0.95 - Math.abs(offset) * 0.03,
+                      x: offset * 24,
+                      opacity: isActive ? 1 : 0.6 - Math.abs(offset) * 0.15,
+                      zIndex: 10 - Math.abs(offset),
+                    }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                    className="absolute inset-0 cursor-pointer"
+                    onClick={() => setActiveCourseIdx(i)}
+                  >
                     <div
-                      className={`h-3 w-3 rounded-full transition-colors ${
-                        status === 'completed'
-                          ? 'bg-emerald-400'
-                          : status === 'in_progress'
-                            ? 'bg-primary'
-                            : 'bg-gray-200'
+                      className={`h-full overflow-hidden rounded-3xl bg-white shadow-lg transition-shadow ${
+                        isActive ? 'shadow-xl shadow-gray-200/60' : ''
                       }`}
-                    />
-                    <span className="flex-1 text-sm text-gray-700">
-                      {m.title}
-                    </span>
-                    {status === 'completed' && (
-                      <span className="text-xs text-emerald-500">✓</span>
-                    )}
-                  </div>
+                    >
+                      <div className="flex h-full flex-col bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50">
+                        {/* Card Header */}
+                        <div className="flex-1 p-8 text-center">
+                          <h3 className="mb-1 text-2xl font-black text-gray-900">
+                            {topic.name}
+                          </h3>
+                          <p className="mb-6 text-sm font-semibold text-primary">
+                            LEVEL {Math.min(completedCount + 1, 10)}
+                          </p>
+
+                          <motion.div
+                            className="mx-auto mb-4 flex h-40 w-40 items-center justify-center"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <Image
+                              src={topic.icon}
+                              alt={topic.name}
+                              width={140}
+                              height={140}
+                              className="drop-shadow-lg"
+                            />
+                          </motion.div>
+
+                          <p className="text-sm text-gray-500">
+                            {isActive && nextMaterial
+                              ? `Next: ${nextMaterial.title}`
+                              : 'Tap to explore'}
+                          </p>
+                        </div>
+
+                        {/* Lessons + Start (only on active) */}
+                        {isActive && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-white/80 px-6 pb-6 pt-4 backdrop-blur-sm"
+                          >
+                            {materials.slice(0, 2).map((m) => {
+                              const status = progress.find(
+                                (p) => p.materialId === m.id
+                              )?.status;
+                              return (
+                                <div
+                                  key={m.id}
+                                  className="flex items-center gap-3 py-2"
+                                >
+                                  <div
+                                    className={`h-2.5 w-2.5 rounded-full ${
+                                      status === 'completed'
+                                        ? 'bg-emerald-400'
+                                        : status === 'in_progress'
+                                          ? 'bg-primary'
+                                          : 'bg-gray-200'
+                                    }`}
+                                  />
+                                  <span className="flex-1 text-sm text-gray-600">
+                                    {m.title}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                            <Link
+                              href={
+                                nextMaterial
+                                  ? `/materi/${nextMaterial.id}`
+                                  : '/materi'
+                              }
+                              className="mt-3 block w-full rounded-2xl bg-gradient-to-r from-primary to-primary-cyan py-3.5 text-center text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+                            >
+                              Start
+                            </Link>
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
                 );
               })}
-            </div>
-
-            {/* Start Button */}
-            <div className="px-6 pb-6">
-              <Link
-                href={nextMaterial ? `/materi/${nextMaterial.id}` : '/materi'}
-                className="block w-full rounded-2xl bg-gradient-to-r from-primary to-primary-cyan py-4 text-center text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30"
-              >
-                Start Learning
-              </Link>
-            </div>
+            </AnimatePresence>
           </div>
 
-          {/* Course Topic Icons - Pill shaped, colorful */}
-          <div className="flex gap-3 overflow-x-auto pb-2">
+          {/* Thumbnail Selector */}
+          <div className="flex justify-center gap-2">
             {courseTopics.map((topic, i) => (
               <button
                 key={topic.id}
                 onClick={() => setActiveCourseIdx(i)}
-                className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl transition-all duration-300 ${
+                className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-300 ${
                   activeCourseIdx === i
-                    ? 'scale-110 bg-primary/10 shadow-md shadow-primary/20'
+                    ? 'scale-110 bg-primary/10 ring-2 ring-primary shadow-md'
                     : 'bg-gray-50 hover:bg-gray-100 hover:scale-105'
                 }`}
               >
                 <Image
                   src={topic.icon}
                   alt={topic.name}
-                  width={34}
-                  height={34}
+                  width={30}
+                  height={30}
                 />
               </button>
             ))}
