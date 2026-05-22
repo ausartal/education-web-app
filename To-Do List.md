@@ -534,13 +534,10 @@
 
 ### 8.1 Admin Dashboard
 
-- [ ] `/admin` — Admin dashboard
-  - [ ] KPI cards: Total Users, Materials, Exams, Daily Usage
-  - [ ] Charts:
-    - [ ] User growth (line chart)
-    - [ ] Engagement metrics (bar chart)
-    - [ ] Popular topics (pie chart)
-  - [ ] System health indicators
+- [x] `/admin` — Admin dashboard
+  - [x] KPI cards: Total Users, Materials, Exams, Questions
+  - [x] User Growth bar chart (weekly)
+  - [x] Platform Overview progress bars (questions by difficulty, materials)
 
 ### 8.2 User Management
 
