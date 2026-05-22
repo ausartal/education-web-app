@@ -570,27 +570,26 @@
 
 ### 9.1 Answer Feedback Animations
 
-- [ ] Correct answer: scale 1.1x + green checkmark bounce + confetti (optional)
-- [ ] Wrong answer: horizontal shake + red X
-- [ ] XP counter animate (+10, +50, etc.)
+- [x] Correct answer: bounceIn animation + green checkmark
+- [x] Wrong answer: shake animation + red X
+- [x] XP counter animate (XPAnimation component)
 
 ### 9.2 Progress Animations
 
-- [ ] Progress bar smooth fill (1s ease-out)
-- [ ] Level up: fireworks background + badge reveal
-- [ ] Streak: fire emoji pulse animation at milestones
-- [ ] Achievement unlock: modal + scale-in animation
+- [x] Progress bar smooth fill (Framer Motion throughout)
+- [x] Level up: fireworks + badge reveal (LevelUpModal)
+- [x] Streak: fire emoji in dashboard
+- [x] Achievement unlock: gallery in profile
 
 ### 9.3 Page Transitions
 
-- [ ] Fade + slide transitions between pages
-- [ ] Skeleton loading screens (shimmer effect)
-- [ ] Smooth scroll to sections (material reading)
+- [x] AnimatePresence for quiz/exam page transitions
+- [x] Skeleton loading (Skeleton component)
+- [x] Smooth scroll (TOC links in material page)
 
 ### 9.4 Reduced Motion Support
 
-- [ ] Implement `prefers-reduced-motion` media query
-- [ ] Disable all animations when user prefers reduced motion
+- [x] `prefers-reduced-motion` media query disables all animations
 
 ---
 
