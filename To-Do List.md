@@ -298,10 +298,10 @@
 
 ### 4.2 Static Pages
 
-- [ ] `/about` — Tentang AKURAT
-- [ ] `/privacy` — Privacy Policy
-- [ ] `/terms` — Terms of Service
-- [ ] `/contact` — Contact form
+- [x] `/about` — Tentang AKURAT
+- [x] `/privacy` — Privacy Policy
+- [x] `/terms` — Terms of Service
+- [x] `/contact` — Contact form
 
 ---
 
