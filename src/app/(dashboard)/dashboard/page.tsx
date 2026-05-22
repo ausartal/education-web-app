@@ -463,7 +463,7 @@ const DashboardPage: FC = () => {
               {courseTopics.map((topic, i) => {
                 const offset = i - activeCourseIdx;
                 const isActive = offset === 0;
-                const isVisible = Math.abs(offset) <= 2;
+                const isVisible = Math.abs(offset) <= 1;
 
                 if (!isVisible) return null;
 
@@ -474,10 +474,10 @@ const DashboardPage: FC = () => {
                     key={topic.id}
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{
-                      scale: isActive ? 1 : 0.96 - Math.abs(offset) * 0.02,
-                      x: offset * 30,
-                      opacity: isActive ? 1 : 0.7 - Math.abs(offset) * 0.1,
-                      zIndex: 10 - Math.abs(offset),
+                      scale: isActive ? 1 : 0.92,
+                      x: offset * 40,
+                      opacity: isActive ? 1 : 0.5,
+                      zIndex: isActive ? 10 : 5,
                     }}
                     exit={{ scale: 0.9, opacity: 0 }}
                     transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
