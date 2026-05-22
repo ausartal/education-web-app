@@ -559,14 +559,10 @@
 
 ### 8.4 Platform Configuration
 
-- [ ] `/admin/config` — Platform settings
-  - [ ] MSAT algorithm parameters (editable):
-    - [ ] Stage question counts
-    - [ ] Time thresholds per difficulty
-    - [ ] Theta adjustment factor
-    - [ ] Anomaly detection thresholds
-  - [ ] Gamification settings (XP values, streak rules)
-  - [ ] Feature flags (enable/disable features)
+- [x] `/admin/config` — Platform settings
+  - [x] MSAT algorithm parameters (editable): stages, questions/stage, theta range, anomaly thresholds
+  - [x] Gamification settings (XP values per action)
+  - [x] Save to Firestore with toast feedback
 
 ---
 
