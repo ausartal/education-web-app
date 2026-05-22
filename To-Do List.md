@@ -388,82 +388,37 @@
 
 ### 5.4 MSAT Exam System
 
-- [ ] `/ujian` — Exam list page
-  - [ ] Available exams
-  - [ ] Exam rules & instructions
-  - [ ] Previous exam history
-- [ ] `/ujian/[examId]` — Pre-exam screen
-  - [ ] Instructions & rules display
-  - [ ] Estimated duration
-  - [ ] "Mulai Ujian" button (confirmation modal)
-- [ ] `/ujian/[examId]/session` — MSAT Exam interface
-  - [ ] **Stricter UI** (no feedback, no skip):
-    - [ ] Question display (same as quiz but no feedback)
-    - [ ] Timer per question (auto-submit when expired)
-    - [ ] Progress indicator (stage + question number)
-    - [ ] No back button (cannot revisit)
-  - [ ] **MSAT Engine integration**:
-    - [ ] Start at MODERATE difficulty
-    - [ ] Adjust difficulty after each answer (naik/turun)
-    - [ ] Track time spent per question (implicit confidence)
-    - [ ] Calculate confidence score per response
-    - [ ] Update theta after each question
-    - [ ] Stage transitions (Stage 1 → 2 → 3)
-  - [ ] **Anti-cheat measures**:
-    - [ ] Warning before exit (beforeunload event)
-    - [ ] Auto-save every response to Firestore
-    - [ ] Disconnect recovery (resume from last saved)
-    - [ ] Tab visibility detection (flag if user leaves tab)
-    - [ ] Pattern detection (anomaly flags)
-  - [ ] **Error Recovery & Session Management**:
-    - [ ] Auto-save state setiap jawaban (realtime to Firestore)
-    - [ ] Reconnection logic (detect offline → show indicator → retry)
-    - [ ] Resume session dari last saved state saat reconnect
-    - [ ] Idle timeout handling (warning setelah 3 menit idle, auto-pause setelah 5 menit)
-    - [ ] Browser crash recovery (check incomplete sessions on login)
-    - [ ] Graceful degradation jika Firestore unavailable (local queue)
-  - [ ] **Completion**:
-    - [ ] Auto-submit when all 20 questions done
-    - [ ] Generate final report
-    - [ ] Redirect to results page
+- [x] `/ujian` — Exam list page with rules, confirmation modal
+- [x] `/ujian/[examId]/session` — MSAT Exam interface
+  - [x] Stricter UI (no feedback, no skip, no back)
+  - [x] Timer per question (auto-submit when expired)
+  - [x] Progress indicator (stage + question number)
+  - [x] MSAT Engine: difficulty adjustment, theta, confidence scoring
+  - [x] Anti-cheat: tab visibility, beforeunload, online indicator
+  - [x] Auto-save every response to Firestore
+  - [x] Anomaly detection (too fast, sudden drop)
+  - [x] Auto-submit when all 21 questions done → redirect to results
 
 ### 5.5 Results & Analytics
 
-- [ ] `/ujian/[examId]/results` — Exam results page
-  - [ ] Summary card:
-    - [ ] Score percentage + correct/total
-    - [ ] Time spent
-    - [ ] XP earned
-    - [ ] Proficiency level label
-  - [ ] Detailed analysis:
-    - [ ] Per-question breakdown (✓/✗ + difficulty level)
-    - [ ] Difficulty path visualization (line chart showing level changes)
-    - [ ] Confidence distribution (pie/bar chart):
-      - Mahir, Paham Lambat, Tebak, Tidak Paham
-    - [ ] Topic mastery radar chart
-  - [ ] Misconception profile:
-    - [ ] Detected misconceptions (ranked by frequency)
-    - [ ] Specific wrong patterns identified
-    - [ ] Recommended review topics
-  - [ ] Comparison dengan previous attempts (if any)
-  - [ ] Actions: "Retake Exam" + "Review Materi" + "Back to Dashboard"
-  - [ ] **Export & Certificate**:
-    - [ ] PDF export hasil ujian (summary + detail)
-    - [ ] Certificate of completion (downloadable, shareable)
-    - [ ] Share result to social media (optional)
+- [x] `/ujian/[examId]/results` — Exam results page
+  - [x] Gradient header with proficiency level
+  - [x] Stats grid: accuracy, correct/total, time, theta
+  - [x] Difficulty path bar chart (per question)
+  - [x] Confidence distribution (animated bars)
+  - [x] Per-question breakdown (numbered grid)
+  - [x] Actions: Dashboard + Retake
 
 ### 5.6 Profile & Settings
 
-- [ ] `/profile` — User profile page
-  - [ ] Avatar + name + school info
-  - [ ] Stats overview (XP, level, streak, badges)
-  - [ ] Achievement showcase
-  - [ ] Learning history timeline
-- [ ] `/settings` — User settings
-  - [ ] Edit profile (name, school, avatar)
-  - [ ] Notification preferences
-  - [ ] Privacy settings (leaderboard visibility)
-  - [ ] Change password
+- [x] `/profile` — User profile page
+  - [x] Avatar (gradient initial) + name + email + school
+  - [x] Stats grid (6 cards): XP, Streak, Materials, Quizzes, Achievements, Level
+  - [x] Achievement gallery (unlocked=colored, locked=grayscale)
+- [x] `/settings` — User settings
+  - [x] Edit profile (name, school, grade, city)
+  - [x] Notification toggle (pill switch)
+  - [x] Save to Firestore with toast feedback
 
 ### 5.7 Onboarding Flow
 
