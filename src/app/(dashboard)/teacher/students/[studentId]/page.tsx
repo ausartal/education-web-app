@@ -10,6 +10,7 @@ import {
   getDocs,
   query,
   where,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { UserProfile, ExamSession } from '@/types/firestore';
@@ -22,12 +23,16 @@ const StudentDetail: FC = () => {
   const studentId = params.studentId as string;
   const [student, setStudent] = useState<UserProfile | null>(null);
   const [exams, setExams] = useState<ExamSession[]>([]);
+  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
       const snap = await getDoc(doc(db, 'users', studentId));
-      if (snap.exists()) setStudent(snap.data() as UserProfile);
+      if (snap.exists()) {
+        setStudent(snap.data() as UserProfile);
+        setNotes((snap.data() as Record<string, string>).teacherNotes || '');
+      }
 
       const examSnap = await getDocs(
         query(collection(db, 'exam_sessions'), where('userId', '==', studentId))
@@ -37,6 +42,11 @@ const StudentDetail: FC = () => {
     };
     fetch();
   }, [studentId]);
+
+  const handleSaveNotes = async (value: string) => {
+    setNotes(value);
+    await updateDoc(doc(db, 'users', studentId), { teacherNotes: value });
+  };
 
   if (loading) {
     return (
@@ -174,6 +184,52 @@ const StudentDetail: FC = () => {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Theta Progression Chart */}
+        {exams.length > 0 && (
+          <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
+            <h2 className="mb-4 font-display text-base font-bold text-gray-900">
+              Theta Progression
+            </h2>
+            <div className="flex items-end gap-1">
+              {exams.map((exam, i) => {
+                const normalized = ((exam.theta + 3) / 6) * 100; // -3 to +3 → 0 to 100
+                return (
+                  <div
+                    key={i}
+                    className="flex flex-1 flex-col items-center gap-1"
+                  >
+                    <span className="text-[9px] text-gray-500">
+                      {exam.theta.toFixed(1)}
+                    </span>
+                    <div
+                      className="w-full rounded-md bg-gradient-to-t from-violet-500 to-indigo-400"
+                      style={{ height: `${Math.max(normalized, 8)}px` }}
+                    />
+                    <span className="text-[9px] text-gray-400">#{i + 1}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Teacher Notes */}
+        <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
+          <h2 className="mb-4 font-display text-base font-bold text-gray-900">
+            Notes
+          </h2>
+          <textarea
+            placeholder="Add notes about this student..."
+            defaultValue={notes}
+            onBlur={(e) => handleSaveNotes(e.target.value)}
+            rows={4}
+            className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none transition-all focus:bg-white focus:ring-2 focus:ring-primary/20"
+          />
+          <p className="mt-2 text-xs text-gray-400">
+            Auto-saves when you click away
+          </p>
         </div>
       </div>
     </RoleGuard>
