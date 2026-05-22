@@ -10,9 +10,9 @@
 
 ### 1.1 Project Setup & Configuration
 
-- [ ] Initialize Next.js 14 project dengan TypeScript (`npx create-next-app@latest`)
-- [ ] Install & configure Tailwind CSS
-- [ ] Setup folder structure:
+- [x] Initialize Next.js 14 project dengan TypeScript (`npx create-next-app@latest`)
+- [x] Install & configure Tailwind CSS
+- [x] Setup folder structure:
   ```
   src/
   ├── app/            (App Router pages)
@@ -27,24 +27,24 @@
   ├── types/          (TypeScript interfaces & types)
   └── styles/         (Global CSS, design tokens)
   ```
-- [ ] Create `.gitignore` (node_modules, .env.local, firebase keys, .next, etc.)
-- [ ] Create `.env.local` dan `.env.example` untuk Firebase config
-- [ ] Setup ESLint + Prettier configuration
-- [ ] Setup path aliases (`@/components`, `@/lib`, etc.) di `tsconfig.json`
+- [x] Create `.gitignore` (node_modules, .env.local, firebase keys, .next, etc.)
+- [x] Create `.env.local` dan `.env.example` untuk Firebase config
+- [x] Setup ESLint + Prettier configuration
+- [x] Setup path aliases (`@/components`, `@/lib`, etc.) di `tsconfig.json`
 
 ### 1.2 Design System Implementation
 
-- [ ] Implement CSS variables / design tokens di `globals.css`:
-  - [ ] Color palette only light mode (primary, secondary, semantic, grays)
-  - [ ] Gradient definitions
-  - [ ] Typography scale (font families, sizes, weights, line-heights)
-  - [ ] Spacing system (4px base unit)
-  - [ ] Border radius tokens
-  - [ ] Shadow & elevation tokens
-  - [ ] Animation timing & duration tokens
-- [ ] Configure Tailwind `tailwind.config.ts` dengan custom theme (extend colors, fonts, spacing)
-- [ ] Install Google Fonts: Poppins, Inter, Fira Code
-- [ ] Setup KaTeX untuk rendering rumus kimia
+- [x] Implement CSS variables / design tokens di `globals.css`:
+  - [x] Color palette only light mode (primary, secondary, semantic, grays)
+  - [x] Gradient definitions
+  - [x] Typography scale (font families, sizes, weights, line-heights)
+  - [x] Spacing system (4px base unit)
+  - [x] Border radius tokens
+  - [x] Shadow & elevation tokens
+  - [x] Animation timing & duration tokens
+- [x] Configure Tailwind `tailwind.config.ts` dengan custom theme (extend colors, fonts, spacing)
+- [x] Install Google Fonts: Poppins, Inter, Fira Code
+- [x] Setup KaTeX untuk rendering rumus kimia
 
 ### 1.3 Firebase Setup
 
