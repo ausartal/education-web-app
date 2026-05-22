@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import Image from 'next/image';
 
-const topics = [
+const topicsRow1 = [
   {
     name: 'Compound',
     description: 'Substances consisting of 2+ elements',
@@ -22,6 +22,9 @@ const topics = [
     description: 'Unit for counting the number of particles',
     icon: '/images/topic-mol.png',
   },
+];
+
+const topicsRow2 = [
   {
     name: 'Chemical Reaction',
     description: 'Symbolic changes in substances in reactions',
@@ -39,6 +42,20 @@ const topics = [
   },
 ];
 
+const TopicCard: FC<{ name: string; description: string; icon: string }> = ({
+  name,
+  description,
+  icon,
+}) => (
+  <div className="flex min-w-[220px] flex-shrink-0 items-center gap-4 rounded-xl bg-gray-50 px-5 py-5 lg:min-w-0">
+    <Image src={icon} alt={name} width={52} height={52} className="shrink-0" />
+    <div>
+      <h3 className="text-sm font-bold text-gray-900">{name}</h3>
+      <p className="text-xs leading-relaxed text-gray-500">{description}</p>
+    </div>
+  </div>
+);
+
 export const LearningMaterialSection: FC = () => {
   return (
     <section id="learning-material" className="px-4 py-16 lg:px-8 lg:py-24">
@@ -46,44 +63,23 @@ export const LearningMaterialSection: FC = () => {
         <h2 className="mb-3 text-center font-display text-3xl text-gray-900 lg:text-4xl">
           Chemistry Materials We Teach
         </h2>
-        <p className="mx-auto mb-12 max-w-2xl text-center text-gray-500">
+        <p className="mx-auto mb-14 max-w-2xl text-center text-sm leading-relaxed text-gray-500">
           Here, we offer a variety of chemistry materials designed for all
           levels, from beginner to advanced. Our material covers a variety of
           fundamental topics in chemistry.
         </p>
 
-        {/* Topic Cards - Horizontal scroll on mobile, grid on desktop */}
-        <div className="flex gap-4 overflow-x-auto pb-4 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
-          {topics.slice(0, 4).map((topic) => (
-            <div
-              key={topic.name}
-              className="flex min-w-[200px] flex-shrink-0 items-center gap-3 rounded-xl bg-gray-50 px-4 py-4 lg:min-w-0"
-            >
-              <Image src={topic.icon} alt={topic.name} width={48} height={48} />
-              <div>
-                <h3 className="text-sm font-bold text-gray-900">
-                  {topic.name}
-                </h3>
-                <p className="text-xs text-gray-500">{topic.description}</p>
-              </div>
-            </div>
+        {/* Row 1 - 4 cards */}
+        <div className="mb-4 flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
+          {topicsRow1.map((topic) => (
+            <TopicCard key={topic.name} {...topic} />
           ))}
         </div>
 
-        <div className="mt-4 flex gap-4 overflow-x-auto pb-4 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0">
-          {topics.slice(4).map((topic) => (
-            <div
-              key={topic.name}
-              className="flex min-w-[220px] flex-shrink-0 items-center gap-3 rounded-xl bg-gray-50 px-4 py-4 lg:min-w-0"
-            >
-              <Image src={topic.icon} alt={topic.name} width={48} height={48} />
-              <div>
-                <h3 className="text-sm font-bold text-gray-900">
-                  {topic.name}
-                </h3>
-                <p className="text-xs text-gray-500">{topic.description}</p>
-              </div>
-            </div>
+        {/* Row 2 - 3 cards centered */}
+        <div className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0">
+          {topicsRow2.map((topic) => (
+            <TopicCard key={topic.name} {...topic} />
           ))}
         </div>
       </div>
