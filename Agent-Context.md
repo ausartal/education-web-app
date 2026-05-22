@@ -1,7 +1,7 @@
 # AKURAT — AI Agent Context & Handoff Document
 
-> Last Updated: 23 Mei 2026 (125 commits, Phase 1-13 complete, UI polished)
-> This document is for AI agents working on this project. It captures the current state, preferences, and conventions.
+> Last Updated: 23 Mei 2026 (126 commits, Phase 1-13 complete, UI polished)
+> This document is for AI agents working on this project.
 
 ---
 
@@ -9,9 +9,10 @@
 
 **AKURAT** (Asesmen Kimia Ukur Adaptif Terpadu) — Platform edukasi kimia berbasis AI dengan Multistage Adaptive Testing (MSAT).
 
-**Status**: Phase 1-13 complete. Phase 14 (CI/CD & Deploy) remaining.
+**Status**: Phase 1-13 complete. Phase 14 (CI/CD & Deploy) remaining. UI polish ongoing.
 **Live test**: `npm run dev` → `http://localhost:3000`
 **Test account**: `student@akurat.test` / `akurat123`
+**Repository**: https://github.com/ausartal/education-web-app.git
 
 ---
 
@@ -29,10 +30,60 @@
 | Deployment | Vercel (production) + Firebase Hosting (staging) |
 | Testing | Vitest (18 unit tests passing) |
 | Linting | ESLint + Prettier (singleQuote, semi, es5 trailing comma) |
+| Markdown | react-markdown + remark-math + rehype-katex + remark-gfm |
+| Typography | @tailwindcss/typography (prose classes) |
 
 ---
 
-## 3. PROJECT STRUCTURE
+## 3. OWNER'S DESIGN PREFERENCES (CRITICAL)
+
+The owner has very specific style preferences. Follow these strictly:
+
+### Visual Style
+- **NO hard borders** — use soft shadows (shadow-sm, shadow-md) and rounded corners (rounded-2xl, rounded-3xl)
+- **NO dark mode** for quiz/exam — always light mode (bg-[#F8F9FB])
+- **Fluid and spacious** — generous padding, breathing room between elements
+- **Colorful gradients** — each section/card has unique gradient (not monotone)
+- **No emoji in UI buttons** — use plain text labels (e.g., "Calculator" not "🧮 Calculator")
+- **Seamless** — remove unnecessary card wrappers/backgrounds behind content
+
+### Typography
+- **Font: Nunito** for headings (rounded, friendly, NOT template-looking)
+- **Font: Ubuntu** for body text
+- **Font weights**: extrabold for headings, medium/semibold for labels
+
+### Colors
+- Primary: #1A73E8 (blue)
+- Primary Cyan: #00C2FF
+- Primary Orange: #FF9500
+- Violet/Purple: for exam/quiz elements
+- Emerald/Teal: for success/completion
+- Amber/Orange: for warnings/streaks
+
+### Layout Patterns
+- **2-column layout** for quiz/exam: question+options (left), stats+tools (right)
+- **Options in 2x2 grid** (not vertical list)
+- **Stacked card carousel** (Framer Motion) for dashboard course topics
+- **Progressive disclosure** — tools (calculator, periodic table) as collapsible panels
+- **Centered CTAs** — buttons centered below content, not crammed to the side
+
+### Animations
+- Framer Motion for page transitions, hover effects, entrance animations
+- `prefers-reduced-motion` respected
+- Bounce on correct answer, shake on wrong answer
+- Staggered entrance for lists
+
+### What the owner DOESN'T like
+- Boxy/rigid layouts with hard borders
+- Dark mode for learning content
+- Emoji in functional buttons
+- Too much information crammed in one view
+- Floating/hovering tools on all pages (only in quiz/exam)
+- Raw Firebase error messages shown to users
+
+---
+
+## 4. PROJECT STRUCTURE
 
 ```
 src/
@@ -40,73 +91,47 @@ src/
 │   ├── (auth)/          → Login, Register, Forgot Password (split-screen layout)
 │   ├── (dashboard)/     → All authenticated pages (AuthGuard)
 │   │   ├── dashboard/   → Brilliant-style homepage (stacked card carousel)
-│   │   ├── materi/      → Material list + reading page (markdown + KaTeX)
-│   │   ├── latihan/     → Practice quiz (3 difficulties)
-│   │   ├── ujian/       → MSAT exam (adaptive, 21 questions)
+│   │   ├── materi/      → Material list (Duolingo-style) + reading page (markdown + KaTeX)
+│   │   ├── latihan/     → Practice quiz list + quiz interface (2-col, light mode)
+│   │   ├── ujian/       → MSAT exam page + session (2-col, no difficulty shown)
 │   │   ├── profile/     → User profile + achievements
-│   │   ├── settings/    → Edit profile, language, notifications
-│   │   ├── onboarding/  → 3-step welcome flow
+│   │   ├── settings/    → Profile, notifications, language, privacy, logout
+│   │   ├── onboarding/  → 3-step welcome flow (progress bar)
 │   │   └── teacher/     → Teacher dashboard, materials, questions, students, messages
-│   ├── (admin)/         → Admin dashboard, users, content, config (RoleGuard)
-│   ├── (public)/        → About, Privacy, Terms, Contact
-│   └── page.tsx         → Landing page
+│   ├── (admin)/         → Admin dashboard, users, content, config (RoleGuard + Sidebar)
+│   ├── (public)/        → About, Privacy, Terms, Contact (with LandingNavbar + Footer)
+│   └── page.tsx         → Landing page (redirects to /dashboard if logged in)
 ├── components/
-│   ├── ui/              → Primitives (Button, Input, Modal, Card, Table, etc.)
+│   ├── ui/              → Button, Input, Modal, Card, Table, Tabs, etc.
 │   ├── layout/          → Navbar, MobileNav, Sidebar, Footer, NotificationDropdown
 │   ├── shared/          → ProgressBar, Badge, Skeleton, XPAnimation, OfflineIndicator
 │   ├── landing/         → LandingNavbar, HeroSection, LandingFooter, etc.
 │   ├── guards/          → AuthGuard, RoleGuard
-│   └── tools/           → ScientificCalculator, PeriodicTableRef
-├── services/            → Firebase CRUD (auth, materials, questions, progress, exam, etc.)
+│   └── tools/           → ScientificCalculator, PeriodicTableRef (inline, not floating)
+├── services/            → auth, materials, questions, progress, exam, achievements, gamification, notifications, analytics, config
 ├── lib/                 → firebase.ts, firebase-admin.ts, msat-engine.ts, auth-errors.ts
 ├── types/               → firestore.ts (all TypeScript interfaces)
 ├── context/             → AuthContext
 ├── hooks/               → useToast
-└── i18n.ts              → next-intl config
+├── i18n.ts              → next-intl config
+└── __tests__/           → msat-engine.test.ts (18 tests)
 ```
 
 ---
 
-## 4. DESIGN PREFERENCES (Owner's Style)
+## 5. KEY BEHAVIORS & ROUTING
 
-The owner prefers:
-- **Fluid, no hard borders** — use soft shadows, rounded-3xl, no border-1px boxes
-- **Colorful gradients** — each section/card has unique gradient (not monotone)
-- **Animations** — Framer Motion for page transitions, hover effects, entrance animations
-- **Cheerful & modern** — inspired by Brilliant.org + Duolingo, not corporate/boring
-- **Font: Nunito** — rounded, friendly, not template-looking
-- **No dummy data** — everything fetches from real Firestore
-- **Simple for end users** — target audience includes parents who don't like complexity
-- **Brilliant-style dashboard** — stacked card carousel for course topics
-- **User-friendly errors** — no raw Firebase errors shown to users
-- **Facebook login** — grayed out with "coming soon" toast (not implemented)
-
-**Design references**: `docs/design/my-design/` (mockups) and `docs/design/my-preference/` (ClassDojo, Brilliant inspiration)
-
----
-
-## 5. KEY FEATURES IMPLEMENTED
-
-### Student
-- Dashboard: streak card + progress overview (list/chart toggle) + stacked course carousel
-- Materials: list with search + reading page (markdown + KaTeX + TOC)
-- Quiz: 3 difficulties, timer, immediate feedback (bounceIn/shake animations)
-- MSAT Exam: 21 adaptive questions, theta scoring, confidence analysis, anti-cheat
-- Results: difficulty path chart, confidence distribution, per-question breakdown
-- Profile: stats grid + achievement gallery
-- Tools: floating scientific calculator + periodic table reference
-
-### Teacher
-- Dashboard: student stats table
-- Content management: create/publish/unpublish materials, create/delete/bulk-import questions
-- Student monitoring: detail view with theta chart + teacher notes
-- Messaging: chat interface per student
-
-### Admin
-- Dashboard: KPIs + charts
-- User management: search, filter, change role, activate/deactivate, delete
-- Content moderation: approve/reject materials
-- Platform config: edit MSAT + gamification parameters
+- `/` → Landing page (redirects to `/dashboard` if logged in)
+- After login → `/dashboard`
+- After register → `/onboarding` → `/dashboard`
+- Navbar "Home" → `/dashboard` (not `/`)
+- Logo click → `/dashboard`
+- Latihan: Easy → Moderate → Hard (progressive unlock)
+- Quiz completion saves: `lastQuiz_[difficulty]`, `easyQuizCompleted`, `moderateQuizCompleted`, `stats.totalQuizzes`
+- Exam: difficulty hidden from user (runs in background)
+- Calculator/Periodic Table: only in quiz and exam pages (inline collapsible, not floating)
+- Facebook login: grayed out, shows "coming soon" toast
+- Firebase errors: mapped to user-friendly messages (auth-errors.ts)
 
 ---
 
@@ -114,38 +139,47 @@ The owner prefers:
 
 Collections: `users`, `materials`, `question_bank`, `exam_sessions`, `quiz_results`, `user_progress`, `achievements`, `user_achievements`, `messages`, `notifications`, `app_config`, `analytics_events`
 
-**Real data seeded**: 96 questions (32 per difficulty), 5 materials, 13 achievements, MSAT config, gamification config, 1 test user.
+**Seeded data**: 96 questions (32/difficulty), 5 materials, 13 achievements, MSAT config, gamification config, 1 test user.
+
+**User document extra fields**: `latihanIntroSeen`, `easyQuizCompleted`, `moderateQuizCompleted`, `lastQuiz_easy`, `lastQuiz_moderate`, `lastQuiz_hard`, `teacherNotes`, `settings.dailyGoal`, `settings.selectedTopics`, `settings.onboardingComplete`
 
 ---
 
 ## 7. CONVENTIONS
 
 - **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, `style:`, `chore:`)
+- **After every feature**: commit + push + update To-Do List
 - **Components**: FC type, named exports, interface Props
 - **Naming**: PascalCase components, camelCase functions, kebab-case files
 - **Imports**: `@/` path alias
 - **No `any`** — proper TypeScript typing
-- **Git**: commit + push after every feature, update To-Do List
-- **Validation**: always run `lint → typecheck → test` before commit
+- **Validation**: `prettier → lint → typecheck` before commit
+- **Tests**: `npm run test` (Vitest)
 
 ---
 
-## 8. WHAT'S LEFT (Phase 14)
+## 8. WHAT'S LEFT
 
-- CI/CD pipeline (GitHub Actions)
+### Phase 14 (CI/CD & Deploy)
+- GitHub Actions CI/CD pipeline
 - Vercel deployment
 - Firebase Hosting staging
 - Security rules audit
-- Production launch
+
+### UI Polish (ongoing)
+- Check all pages in To-Do List manual testing checklist
+- Mobile responsive testing
+- Cross-browser testing
 
 ---
 
 ## 9. HOW TO CONTINUE
 
-1. Read `To-Do List.md` for detailed task status
+1. Read this file + `To-Do List.md` for context
 2. Run `npm run dev` to see current state
-3. Follow the style: fluid, gradient, animated, Nunito font
+3. **Follow the style guide in Section 3** — this is critical
 4. Always commit + push after each feature
 5. Update To-Do List after completing tasks
-6. Test with `npm run test` (Vitest)
+6. Test with `npm run test`
 7. Lint with `npm run lint`
+8. Design references in `docs/design/my-design/` and `docs/design/my-preference/`
