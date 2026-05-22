@@ -146,14 +146,42 @@ const DashboardPage: FC = () => {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      {/* Greeting */}
-      <div className="mb-8 animate-[fadeIn_0.5s_ease-out]">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {profile.displayName.split(' ')[0]} ✨
-        </h1>
-        <p className="mt-1 text-gray-500">
-          Ready to learn something new today?
-        </p>
+      {/* Header Row - Welcome + Jump back in aligned */}
+      <div className="mb-8 grid animate-[fadeIn_0.5s_ease-out] gap-8 lg:grid-cols-2">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back, {profile.displayName.split(' ')[0]} ✨
+          </h1>
+          <p className="mt-1 text-gray-500">
+            Ready to learn something new today?
+          </p>
+        </div>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-extrabold text-gray-900">Jump back in</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() =>
+                setActiveCourseIdx(
+                  (activeCourseIdx - 1 + courseTopics.length) %
+                    courseTopics.length
+                )
+              }
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
+              aria-label="Previous"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() =>
+                setActiveCourseIdx((activeCourseIdx + 1) % courseTopics.length)
+              }
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
+              aria-label="Next"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
@@ -429,39 +457,8 @@ const DashboardPage: FC = () => {
 
         {/* RIGHT COLUMN - Jump Back In */}
         <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-extrabold text-gray-900">
-              Jump back in
-            </h2>
-            <div className="flex gap-2">
-              <button
-                onClick={() =>
-                  setActiveCourseIdx(
-                    (activeCourseIdx - 1 + courseTopics.length) %
-                      courseTopics.length
-                  )
-                }
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
-                aria-label="Previous"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={() =>
-                  setActiveCourseIdx(
-                    (activeCourseIdx + 1) % courseTopics.length
-                  )
-                }
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
-                aria-label="Next"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
-
           {/* Stacked Card Carousel */}
-          <div className="relative h-[520px]">
+          <div className="relative h-[580px]">
             <AnimatePresence mode="popLayout">
               {courseTopics.map((topic, i) => {
                 const offset = i - activeCourseIdx;
@@ -477,9 +474,9 @@ const DashboardPage: FC = () => {
                     key={topic.id}
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{
-                      scale: isActive ? 1 : 0.93 - Math.abs(offset) * 0.03,
-                      x: offset * 20,
-                      opacity: isActive ? 1 : 0.5 - Math.abs(offset) * 0.1,
+                      scale: isActive ? 1 : 0.96 - Math.abs(offset) * 0.02,
+                      x: offset * 30,
+                      opacity: isActive ? 1 : 0.7 - Math.abs(offset) * 0.1,
                       zIndex: 10 - Math.abs(offset),
                     }}
                     exit={{ scale: 0.9, opacity: 0 }}
@@ -576,8 +573,8 @@ const DashboardPage: FC = () => {
                               className="mt-4 block w-full rounded-2xl bg-white py-4 text-center text-sm font-extrabold text-gray-900 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
                             >
                               {hasProgress
-                                ? '▶ Continue Learning'
-                                : '🚀 Start Learning'}
+                                ? 'Continue Learning'
+                                : 'Start Learning'}
                             </Link>
                           </motion.div>
                         )}
