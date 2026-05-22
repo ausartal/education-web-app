@@ -4,9 +4,10 @@ import { FC } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Bell, LogOut, Settings, User } from 'lucide-react';
+import { LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { signOut } from '@/services/auth';
+import { NotificationDropdown } from './NotificationDropdown';
 
 const navLinks = [
   { href: '/', label: 'Dashboard' },
@@ -56,12 +57,7 @@ export const Navbar: FC = () => {
         {/* Right Section */}
         {user ? (
           <div className="flex items-center gap-3">
-            <button
-              className="relative rounded-md p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-              aria-label="Notifikasi"
-            >
-              <Bell size={20} />
-            </button>
+            <NotificationDropdown />
 
             <div className="group relative">
               <button
