@@ -137,16 +137,16 @@ export default function Home() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-[#F4F5F8] px-6 pb-10 pt-10 lg:px-14 lg:pb-16 lg:pt-14"
+          className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-[#F4F6F8] px-6 pb-0 pt-12 lg:px-16 lg:pt-16"
         >
-          <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.05fr] lg:gap-6">
+          <div className="grid items-start gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-4">
             {/* LEFT — Title + Copy + CTAs */}
-            <div className="relative z-20">
+            <div className="relative z-20 pb-12 lg:pb-20">
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1 }}
-                className="font-display text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-[#0E1E47] sm:text-5xl lg:text-[58px]"
+                className="font-display text-[40px] font-extrabold uppercase leading-[1.08] tracking-tight text-[#0E1E47] sm:text-5xl lg:text-[60px]"
               >
                 Measure <span className="text-[#1A73E8]">Precisely</span>
                 <br />
@@ -157,57 +157,58 @@ export default function Home() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.25 }}
-                className="mt-6 max-w-md text-sm leading-relaxed text-gray-500 lg:text-[15px]"
+                className="mt-6 max-w-[420px] text-[15px] leading-relaxed text-gray-500"
               >
                 Go Beyond Scores. Diagnose chemistry understanding and
                 misconceptions with precision through an integrated adaptive
-                platform.
+                platform
               </motion.p>
 
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="mt-9 flex flex-wrap items-center gap-4"
+                className="mt-10 flex flex-wrap items-center gap-4"
               >
                 <Link
                   href="/register"
-                  className="rounded-2xl bg-[#5841EA] px-8 py-4 text-sm font-semibold text-white shadow-md shadow-[#5841EA]/25 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  className="rounded-xl bg-[#5841EA] px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-[#5841EA]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl"
                 >
                   Start Learning
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-2xl bg-[#FBD300] px-8 py-4 text-sm font-semibold text-[#0E1E47] shadow-md shadow-amber-200 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  className="rounded-xl border-2 border-[#FBD300] bg-[#FBD300] px-8 py-4 text-sm font-semibold text-[#0E1E47] shadow-lg shadow-amber-200/40 transition-all hover:-translate-y-0.5 hover:shadow-xl"
                 >
                   Start Teaching
                 </Link>
               </motion.div>
 
               {/* Carousel dots */}
-              <div className="mt-10 flex items-center gap-2">
-                <span className="h-1 w-10 rounded-full bg-[#0E1E47]" />
-                <span className="h-1 w-3 rounded-full bg-gray-300" />
-                <span className="h-1 w-3 rounded-full bg-gray-300" />
-                <span className="h-1 w-3 rounded-full bg-gray-300" />
+              <div className="mt-12 flex items-center gap-2">
+                <span className="h-[3px] w-10 rounded-full bg-[#5841EA]" />
+                <span className="h-[3px] w-3 rounded-full bg-gray-300" />
+                <span className="h-[3px] w-3 rounded-full bg-gray-300" />
+                <span className="h-[3px] w-3 rounded-full bg-gray-300" />
               </div>
             </div>
 
             {/* RIGHT — Image collage with floating badges */}
-            <div className="relative z-10 h-[500px] sm:h-[540px] lg:h-[560px]">
-              {/* Yellow shape behind boy */}
+            <div className="relative h-[480px] sm:h-[520px] lg:h-[540px]">
+              {/* Yellow rounded-rect behind boy (top-right) */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
-                className="absolute right-[2%] top-[2%] h-[270px] w-[260px] rounded-[40px] bg-[#FBD300] sm:h-[310px] sm:w-[300px]"
+                className="absolute right-0 top-0 h-[250px] w-[240px] rounded-[36px] bg-[#FBD300] sm:h-[280px] sm:w-[270px]"
               />
-              {/* Boy student */}
+
+              {/* Boy student (top-right, overlapping yellow) */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className="absolute right-[-30px] top-[-30px] h-[360px] w-[360px] sm:h-[400px] sm:w-[400px]"
+                className="absolute -top-6 right-[-20px] z-10 h-[320px] w-[300px] sm:h-[360px] sm:w-[340px]"
               >
                 <Image
                   src="/images/hero-student-male.png"
@@ -218,14 +219,14 @@ export default function Home() {
                 />
               </motion.div>
 
-              {/* Live Class badge */}
+              {/* Live Class badge (near boy, top-center-left) */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="absolute left-[2%] top-[12%] z-30 flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-7 shadow-[0_8px_24px_rgba(15,30,71,0.08)]"
+                transition={{ duration: 0.5, delay: 0.65 }}
+                className="absolute left-[8%] top-[6%] z-30 flex items-center gap-3 rounded-full bg-white py-2 pl-2 pr-6 shadow-[0_6px_20px_rgba(15,30,71,0.08)]"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF9500] text-white">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF9500] text-white">
                   <Video size={16} />
                 </span>
                 <div className="leading-tight">
@@ -234,39 +235,38 @@ export default function Home() {
                 </div>
               </motion.div>
 
-              {/* 203+ Learning Resources badge */}
+              {/* 203+ Learning Resources badge (below Live Class) */}
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.75 }}
-                className="absolute left-0 top-[34%] z-30 flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-7 shadow-[0_8px_24px_rgba(15,30,71,0.08)]"
+                transition={{ duration: 0.5, delay: 0.8 }}
+                className="absolute left-[2%] top-[26%] z-30 flex items-center gap-3 rounded-full bg-white py-2 pl-2 pr-6 shadow-[0_6px_20px_rgba(15,30,71,0.08)]"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EE1908] text-white">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EE1908] text-white">
                   <BookOpen size={15} />
                 </span>
                 <div className="leading-tight">
-                  <p className="text-base font-extrabold text-[#0E1E47]">
-                    203+
-                  </p>
+                  <p className="text-lg font-extrabold text-[#0E1E47]">203+</p>
                   <p className="text-[11px] text-gray-500">
                     Learning Resources
                   </p>
                 </div>
               </motion.div>
 
-              {/* Purple circle behind girl */}
+              {/* Purple circle behind girl (bottom-center) */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.7, delay: 0.3 }}
-                className="absolute bottom-[6%] left-[16%] h-[230px] w-[230px] rounded-full bg-[#5841EA] sm:h-[260px] sm:w-[260px]"
+                className="absolute bottom-0 left-[12%] h-[240px] w-[240px] rounded-full bg-[#5841EA] sm:h-[270px] sm:w-[270px]"
               />
-              {/* Girl student */}
+
+              {/* Girl student (bottom-center, overlapping purple) */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="absolute bottom-0 left-[6%] h-[330px] w-[290px] sm:h-[360px] sm:w-[320px]"
+                className="absolute -bottom-1 left-[4%] z-10 h-[320px] w-[280px] sm:h-[350px] sm:w-[310px]"
               >
                 <Image
                   src="/images/hero-student-female.png"
@@ -276,41 +276,41 @@ export default function Home() {
                 />
               </motion.div>
 
-              {/* 98 Online Student badge */}
+              {/* 98 Online Student badge (bottom-right) */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.85 }}
-                className="absolute bottom-[20%] right-[2%] z-30 flex items-center gap-3 rounded-2xl bg-white p-3 pr-5 shadow-[0_8px_24px_rgba(15,30,71,0.08)]"
+                transition={{ duration: 0.5, delay: 0.9 }}
+                className="absolute bottom-[18%] right-[4%] z-30 rounded-2xl bg-white p-4 shadow-[0_6px_20px_rgba(15,30,71,0.08)]"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FBD300] text-[#0E1E47]">
-                  <Users size={16} />
-                </span>
-                <div>
-                  <p className="text-base font-extrabold leading-tight text-[#0E1E47]">
-                    98
-                  </p>
-                  <p className="text-[11px] leading-tight text-gray-500">
-                    Online Student
-                  </p>
-                  <div className="mt-1 flex -space-x-1.5">
-                    {onlineAvatars.map((src, i) => (
-                      <span
-                        key={i}
-                        className="relative h-5 w-5 overflow-hidden rounded-full border-2 border-white bg-gray-200"
-                      >
-                        <Image src={src} alt="" fill className="object-cover" />
-                      </span>
-                    ))}
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FBD300] text-[#0E1E47]">
+                    <Users size={16} />
+                  </span>
+                  <div>
+                    <p className="text-lg font-extrabold leading-tight text-[#0E1E47]">
+                      98
+                    </p>
+                    <p className="text-[11px] text-gray-500">Online Student</p>
                   </div>
+                </div>
+                <div className="mt-2 flex -space-x-2">
+                  {onlineAvatars.map((src, i) => (
+                    <span
+                      key={i}
+                      className="relative h-6 w-6 overflow-hidden rounded-full border-2 border-white bg-gray-200"
+                    >
+                      <Image src={src} alt="" fill className="object-cover" />
+                    </span>
+                  ))}
                 </div>
               </motion.div>
             </div>
           </div>
 
-          {/* Bottom decorative white bumps */}
-          <div className="pointer-events-none absolute -bottom-32 left-[8%] h-64 w-64 rounded-full bg-white" />
-          <div className="pointer-events-none absolute -bottom-32 left-[36%] h-64 w-72 rounded-full bg-white" />
+          {/* Bottom decorative white bumps (like in design) */}
+          <div className="pointer-events-none absolute -bottom-28 left-[6%] h-56 w-56 rounded-full bg-white/80" />
+          <div className="pointer-events-none absolute -bottom-28 left-[30%] h-56 w-64 rounded-full bg-white/80" />
         </motion.div>
       </section>
 
