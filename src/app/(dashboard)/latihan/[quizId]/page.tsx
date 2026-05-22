@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import { FC, useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { getQuestionsByDifficulty } from '@/services/questions';
 import { Question, Difficulty, AnswerKey } from '@/types/firestore';
+import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
+import { PeriodicTableRef } from '@/components/tools/PeriodicTableRef';
 
 const QuizPage: FC = () => {
   const params = useParams();
@@ -137,6 +139,21 @@ const QuizPage: FC = () => {
   }
 
   const options: AnswerKey[] = ['A', 'B', 'C', 'D', 'E'];
+
+  // Shuffle options order per question (seeded by question index)
+  const shuffledOptions = useMemo(() => {
+    const filtered = options.filter((k) => currentQ?.options[k]);
+    const seed = currentIdx;
+    const shuffled = [...filtered];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = (seed * 7 + i * 13) % (i + 1);
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, [currentIdx, currentQ]);
+
+  const [showCalc, setShowCalc] = useState(false);
+  const [showPeriodic, setShowPeriodic] = useState(false);
   const isCorrect = selected === currentQ.correctAnswer;
 
   return (
@@ -186,9 +203,7 @@ const QuizPage: FC = () => {
 
           {/* Options */}
           <div className="space-y-3">
-            {options.map((key) => {
-              if (!currentQ.options[key]) return null;
-
+            {shuffledOptions.map((key) => {
               const isSelected = selected === key;
               const isAnswer = key === currentQ.correctAnswer;
               let optionStyle = 'bg-white hover:bg-gray-50 border-gray-100';
@@ -261,6 +276,33 @@ const QuizPage: FC = () => {
               </p>
               <p className="text-sm text-gray-600">{currentQ.explanation}</p>
             </motion.div>
+          )}
+
+          {/* Tools */}
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => setShowCalc(!showCalc)}
+              className={`rounded-xl px-3 py-2 text-xs font-semibold transition-all ${showCalc ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              🧮 Calculator
+            </button>
+            <button
+              onClick={() => setShowPeriodic(!showPeriodic)}
+              className={`rounded-xl px-3 py-2 text-xs font-semibold transition-all ${showPeriodic ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              ⚗️ Periodic Table
+            </button>
+          </div>
+
+          {showCalc && (
+            <div className="mt-3">
+              <ScientificCalculator />
+            </div>
+          )}
+          {showPeriodic && (
+            <div className="mt-3">
+              <PeriodicTableRef />
+            </div>
           )}
 
           {/* Actions */}

@@ -4,8 +4,6 @@ import { FC, ReactNode } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { AuthGuard } from '@/components/guards/AuthGuard';
-import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
-import { PeriodicTableRef } from '@/components/tools/PeriodicTableRef';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,8 +20,6 @@ const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
         {children}
       </main>
       <MobileNav />
-      <ScientificCalculator />
-      <PeriodicTableRef />
     </AuthGuard>
   );
 };
