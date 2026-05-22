@@ -251,17 +251,17 @@
 ### 3.2 Seed Data
 
 - [x] Buat script `scripts/seed.ts` untuk populate database
-- [ ] 🧑 MANUAL: Seed materi stoikiometri (minimal 5 topik) — konten harus ditulis/review oleh ahli:
-  - [ ] Konsep Mol
-  - [ ] Massa Molar (Mr/Ar)
-  - [ ] Konversi Mol ↔ Gram ↔ Partikel ↔ Volume Gas
-  - [ ] Persamaan Reaksi & Stoikiometri
-  - [ ] Limiting Reagent & Excess
-- [ ] 🧑 MANUAL: Seed question bank (minimal 30 soal per difficulty per topik) — soal harus valid secara akademis:
-  - [ ] 30+ soal MUDAH
-  - [ ] 30+ soal MODERATE
-  - [ ] 30+ soal SUSAH
-  - [ ] Setiap soal harus punya misconception tags
+- [x] 🧑 MANUAL: Seed materi stoikiometri (minimal 5 topik) — konten harus ditulis/review oleh ahli:
+  - [x] Konsep Mol
+  - [x] Massa Molar (Mr/Ar)
+  - [x] Konversi Mol ↔ Gram ↔ Partikel ↔ Volume Gas
+  - [x] Persamaan Reaksi & Stoikiometri
+  - [x] Limiting Reagent & Excess
+- [x] 🧑 MANUAL: Seed question bank (minimal 30 soal per difficulty per topik) — soal harus valid secara akademis:
+  - [x] 30+ soal MUDAH (32)
+  - [x] 30+ soal MODERATE (32)
+  - [x] 30+ soal SUSAH (32)
+  - [x] Setiap soal harus punya misconception tags
 - [x] Seed achievements/badges data
 - [x] Seed MSAT config parameters
 - [x] Buat script `scripts/seed-test-users.ts` untuk test accounts
