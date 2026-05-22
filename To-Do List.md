@@ -263,6 +263,27 @@
   - [x] 30+ soal SUSAH (32)
   - [x] Setiap soal harus punya misconception tags
 - [x] Seed achievements/badges data
+
+### 3.3 Expanded Chemistry Topics (Future Content)
+
+> Topik-topik tambahan untuk course cards di dashboard. Konten materi & soal ditambahkan bertahap.
+
+- [ ] 🧑 MANUAL: Model Atom (atom-model)
+- [ ] 🧑 MANUAL: Larutan & Konsentrasi (larutan)
+- [ ] 🧑 MANUAL: Ikatan Kimia (ikatan-kimia)
+- [ ] 🧑 MANUAL: Reaksi Redoks (reaksi-redoks)
+- [ ] 🧑 MANUAL: Tingkat Reaksi (tingkat-kesulitan)
+- [ ] 🧑 MANUAL: Kesetimbangan Kimia (kesetimbangan)
+- [ ] 🧑 MANUAL: Geometri Molekul (geometri-molekul)
+- [ ] 🧑 MANUAL: Struktur Lewis (struktur-lewis)
+- [ ] 🧑 MANUAL: Kimia Komputasi (kimia-komputasi)
+- [ ] 🧑 MANUAL: Hukum Gas Ideal (hukum-gas)
+- [ ] 🧑 MANUAL: Termokimia (termokimia)
+- [ ] 🧑 MANUAL: Laju Reaksi (laju-reaksi)
+- [ ] 🧑 MANUAL: Kalorimetri (kalorimetri)
+- [ ] 🧑 MANUAL: Termodinamika (termodinamika)
+- [ ] 🧑 MANUAL: Perubahan Entalpi (entalpi)
+- [ ] 🧑 MANUAL: Elektrokimia (elektrokimia)
 - [x] Seed MSAT config parameters
 - [x] Buat script `scripts/seed-test-users.ts` untuk test accounts
 

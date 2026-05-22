@@ -2,7 +2,28 @@
 
 ## Project Summary
 
-**AKURAT** (Asesmen Kimia Ukur Adaptif Terpadu) adalah platform edukasi berbasis AI menggunakan teknologi **Multistage Adaptive Testing (MSAT)** khusus untuk asesmen Chemistry Stoichiometry. Platform ini dirancang untuk pembelajaran, latihan, ujian adaptif, dan analisis mendalam profil pemahaman konsep serta miskonsepsi siswa.
+**AKURAT** (Asesmen Kimia Ukur Adaptif Terpadu) adalah platform edukasi berbasis AI menggunakan teknologi **Multistage Adaptive Testing (MSAT)** untuk asesmen kimia secara menyeluruh. Platform ini dirancang untuk pembelajaran, latihan, ujian adaptif, dan analisis mendalam profil pemahaman konsep serta miskonsepsi siswa.
+
+**Cakupan Materi (17 Course Topics):**
+1. Stoikiometri (active — sudah ada materi & soal)
+2. Model Atom
+3. Larutan & Konsentrasi
+4. Ikatan Kimia
+5. Reaksi Redoks
+6. Tingkat Reaksi
+7. Kesetimbangan Kimia
+8. Geometri Molekul
+9. Struktur Lewis
+10. Kimia Komputasi
+11. Hukum Gas Ideal
+12. Termokimia
+13. Laju Reaksi
+14. Kalorimetri
+15. Termodinamika
+16. Perubahan Entalpi
+17. Elektrokimia
+
+> Catatan: Stoikiometri adalah topik pertama yang fully implemented. Topik lainnya ditampilkan sebagai course cards di dashboard (Brilliant-style) dan kontennya ditambahkan bertahap.
 
 **Target Primary**: Asosiasi Kimia Indonesia (eksklusif untuk anggota)  
 **Secondary Targets**: SMA, Lembaga Kursus, Guru Privat, Platform Tryout Online, Pelatihan Akademik
