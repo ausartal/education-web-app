@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState, useMemo } from 'react';
+import { FC, useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
@@ -24,6 +24,7 @@ const MateriDetailPage: FC = () => {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [tocOpen, setTocOpen] = useState(false);
+  const startTime = useRef(Date.now());
 
   const id = params.id as string;
 
@@ -34,13 +35,27 @@ const MateriDetailPage: FC = () => {
       setAllMaterials(all);
       setLoading(false);
 
-      // Mark as in_progress
       if (profile && mat) {
         updateProgress(profile.uid, mat.id, 'in_progress', 0);
       }
     };
     fetch();
   }, [id, profile]);
+
+  // Save time spent when leaving page
+  useEffect(() => {
+    const saveTime = () => {
+      if (profile && id) {
+        const seconds = Math.round((Date.now() - startTime.current) / 1000);
+        updateProgress(profile.uid, id, 'in_progress', seconds);
+      }
+    };
+    window.addEventListener('beforeunload', saveTime);
+    return () => {
+      saveTime();
+      window.removeEventListener('beforeunload', saveTime);
+    };
+  }, [profile, id]);
 
   // Extract headings for TOC
   const headings = useMemo(() => {
@@ -62,7 +77,8 @@ const MateriDetailPage: FC = () => {
 
   const handleMarkComplete = async () => {
     if (!profile || !material) return;
-    await updateProgress(profile.uid, material.id, 'completed', 0);
+    const seconds = Math.round((Date.now() - startTime.current) / 1000);
+    await updateProgress(profile.uid, material.id, 'completed', seconds);
     setCompleted(true);
   };
 
