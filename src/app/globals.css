@@ -63,8 +63,7 @@
     );
 
     /* ===== TYPOGRAPHY ===== */
-    --font-display: 'Archivo Black', -apple-system, BlinkMacSystemFont,
-      sans-serif;
+    --font-display: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-body: 'Ubuntu', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'Space Mono', 'JetBrains Mono', monospace;
     --font-math: 'KaTeX_Main', 'Latin Modern Math', serif;
@@ -145,5 +144,16 @@
     background: var(--primary-bg);
     font-family: var(--font-body);
     line-height: var(--leading-normal);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

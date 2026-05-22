@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
-import { Archivo_Black, Ubuntu, Space_Mono } from 'next/font/google';
+import { Nunito, Ubuntu, Space_Mono } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/hooks/useToast';
 import { ToastContainer } from '@/components/ui/Toast';
 import './globals.css';
 
-const archivoBlack = Archivo_Black({
+const nunito = Nunito({
   subsets: ['latin'],
-  weight: '400',
+  weight: ['400', '600', '700', '800', '900'],
   variable: '--font-display',
   display: 'swap',
 });
@@ -40,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${archivoBlack.variable} ${ubuntu.variable} ${spaceMono.variable} antialiased`}
+        className={`${nunito.variable} ${ubuntu.variable} ${spaceMono.variable} antialiased`}
       >
         <AuthProvider>
           <ToastProvider>
