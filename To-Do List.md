@@ -507,16 +507,8 @@
   - [x] List questions with difficulty filter (All/Easy/Moderate/Hard)
   - [x] Create new question (modal: stem, options A-E, correct answer, explanation)
   - [x] Difficulty badge per question
-  - [ ] Create new question:
-    - [ ] Stem input (dengan KaTeX preview)
-    - [ ] 5 options (A-E)
-    - [ ] Correct answer selection
-    - [ ] Misconception tagging per wrong option
-    - [ ] Difficulty level assignment
-    - [ ] Base time setting
-    - [ ] Explanation input
-  - [ ] Edit/delete questions
-  - [ ] Bulk import questions (CSV/JSON)
+  - [x] Delete questions
+  - [x] Bulk import questions (JSON file upload)
 
 ### 7.3 Student Monitoring
 
