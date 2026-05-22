@@ -1,0 +1,53 @@
+{
+  "common": {
+    "loading": "Memuat...",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "start": "Mulai",
+    "continue": "Lanjutkan",
+    "submit": "Kirim",
+    "search": "Cari..."
+  },
+  "auth": {
+    "signIn": "Masuk",
+    "signUp": "Daftar",
+    "signOut": "Keluar",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Lupa password?",
+    "noAccount": "Belum punya akun?",
+    "hasAccount": "Sudah punya akun?"
+  },
+  "dashboard": {
+    "welcome": "Selamat datang kembali",
+    "jumpBackIn": "Lanjutkan belajar",
+    "streak": "Streak harian",
+    "progress": "Progress Kamu",
+    "startLearning": "Mulai Belajar",
+    "continueLearning": "Lanjut Belajar"
+  },
+  "materi": {
+    "title": "Materi Pembelajaran",
+    "completed": "Selesai",
+    "inProgress": "Sedang Dipelajari",
+    "markComplete": "Tandai Selesai"
+  },
+  "quiz": {
+    "title": "Latihan Quiz",
+    "submitAnswer": "Kirim Jawaban",
+    "correct": "Benar!",
+    "incorrect": "Salah",
+    "complete": "Quiz Selesai!",
+    "retake": "Ulangi"
+  },
+  "exam": {
+    "title": "Ujian MSAT",
+    "startExam": "Mulai Ujian",
+    "rules": "Peraturan Ujian",
+    "results": "Hasil Ujian"
+  }
+}
