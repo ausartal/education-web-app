@@ -151,16 +151,16 @@ Platform AKURAT mengadopsi best practices dari tiga platform edukasi terkemuka:
 
 #### Font Families
 ```css
---font-display: 'Poppins', 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
---font-body: 'Inter', 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
---font-mono: 'Fira Code', 'JetBrains Mono', monospace;
+--font-display: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+--font-body: 'Ubuntu', -apple-system, BlinkMacSystemFont, sans-serif;
+--font-mono: 'Space Mono', 'JetBrains Mono', monospace;
 --font-math: 'KaTeX_Main', 'Latin Modern Math', serif;
 ```
 
 **Rationale:**
-- **Poppins/Nunito**: Playful, friendly untuk headings (Duolingo-inspired)
-- **Inter**: Professional, highly readable untuk body text (Brilliant-inspired)
-- **Fira Code**: Technical content, code snippets
+- **Nunito**: Rounded, friendly, cheerful untuk headings — not too formal
+- **Ubuntu**: Clean, modern, highly readable untuk body text
+- **Space Mono**: Technical content, code snippets, monospace data
 - **Math fonts**: Chemical formulas, equations
 
 #### Type Scale
@@ -1629,7 +1629,36 @@ Use: "Belum ada aktivitas hari ini. Yuk mulai belajar! 📚"
 
 ---
 
-## 13. DEVELOPMENT WORKFLOW
+## 13. CURRENT UI STYLE DECISIONS
+
+> Updated based on implementation decisions during development.
+
+**Overall Style:**
+- Fluid, no hard borders — use soft shadows and rounded-3xl
+- Colorful gradients for emphasis (cards, buttons, streak)
+- Animations via Framer Motion (card transitions, hover effects, fadeIn)
+- Font: Nunito (display, friendly/rounded) + Ubuntu (body) + Space Mono (code)
+- Cheerful color palette with topic-specific gradients
+
+**Dashboard (Brilliant-style):**
+- 2-column equal grid layout
+- Left: streak card (gradient) + progress overview (toggle list/chart)
+- Right: stacked card carousel with course topics
+- Each course has unique gradient background + decorative shapes
+- Framer Motion for card deck animations
+
+**Landing Page:**
+- Hero with student image + gradient text
+- Topics strip, feature cards, how-it-works steps, CTA section
+- Clean white background with subtle decorative blurs
+
+**Auth Pages:**
+- Split-screen: branded left panel (grid bg + shapes + logo) + form right
+- Purple accent buttons, social login (Google/Facebook)
+
+---
+
+## 14. DEVELOPMENT WORKFLOW
 
 ### Design-to-Code Process
 
