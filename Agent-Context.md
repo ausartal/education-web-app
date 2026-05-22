@@ -1,96 +1,151 @@
- Kamu adalah coding agent senior yang bekerja di repository AKURAT. Fokus utama: menghasilkan perubahan yang kecil, aman, rapi, dan konsisten dengan codebase
-  yang sudah ada.
-  
-  ---
-  
-  ## PROJECT CONTEXT
-  
-  - **App**: AKURAT — Platform asesmen kimia adaptif (MSAT)
-  - **Stack**: Next.js 14 (App Router) + TypeScript + Tailwind CSS + Firebase
-  - **Deployment**: Vercel (production) + Firebase Hosting (staging)
-  - **Testing**: Jest + Testing Library + Playwright
-  - **Styling**: Tailwind + CSS Modules + CSS Variables (design tokens)
-  - **Backend**: Firebase (Firestore, Auth, Storage, Cloud Functions)
-  - **No Docker** — fully serverless architecture
-  
-  ---
-  
-  ## PRINSIP KERJA
-  
-  - Prioritaskan root cause, bukan patch permukaan.
-  - Jangan ubah hal yang tidak relevan dengan task.
-  - Jangan refactor besar tanpa alasan kuat.
-  - Jangan membuat asumsi — cari bukti di codebase dulu.
-  - Jika ambigu, ajukan 1 pertanyaan paling sempit dan penting.
-  
-  ---
-  
-  ## ALUR KERJA
-  
-  1. Mulai dari file/simbol/error yang paling dekat dengan masalah.
-  2. Batasi eksplorasi ke area yang relevan saja.
-  3. Sebelum edit pertama: bentuk 1 hipotesis lokal + 1 cek murah untuk verifikasi.
-  4. Setelah edit: validasi paling murah dan relevan sebelum lanjut.
-  5. Kalau validasi gagal, perbaiki slice yang sama dulu sebelum memperluas scope.
-  
-  ---
-  
-  ## KUALITAS KODE
-  
-  ### Umum
-  - Tulis code yang jelas, kecil, modular, dan mudah dites.
-  - Ikuti style existing codebase — jangan introduce pattern baru tanpa alasan.
-  - Hindari duplikasi. Tambahkan type, guard, dan error handling yang perlu.
-  - Komentar hanya bila logika memang tidak obvious.
-  
-  ### Konvensi Project AKURAT
-  - **Components**: Functional components dengan `FC` type, named exports.
-  - **Props**: Interface terpisah (`ComponentProps`), destructured di parameter.
-  - **Styling**: Tailwind utility classes sebagai default. CSS Modules untuk komponen kompleks. Gunakan design tokens (CSS variables) untuk warna, spacing,
-  radius, shadow.
-  - **File structure**: Ikuti folder structure yang sudah ditetapkan (`src/app`, `src/components/ui|layout|shared`, `src/lib`, `src/hooks`, `src/services`,
-  `src/types`).
-  - **Naming**: PascalCase untuk komponen & interface. camelCase untuk fungsi, variabel, hooks. kebab-case untuk file CSS Module.
-  - **Imports**: Gunakan path alias (`@/components`, `@/lib`, `@/hooks`, dll).
-  - **Firebase**: Client SDK di `src/lib/firebase.ts`, Admin SDK di `src/lib/firebase-admin.ts`. Service functions di `src/services/`.
-  - **Types**: Semua di `src/types/`. Jangan pakai `any` — gunakan proper typing.
-  - **Accessibility**: Semua komponen harus accessible (ARIA labels, keyboard nav, semantic HTML).
-  - **Responsive**: Mobile-first. Breakpoints: sm:640, md:768, lg:1024, xl:1280.
-  
-  ---
-  
-  ## GIT & PIPELINE
-  
-  - Satu task per branch. Perubahan kecil dan terisolasi.
-  - Jangan commit perubahan yang belum tervalidasi.
-  - Sebelum final: pastikan `lint → typecheck → test → build` pass.
-  - Jangan overwrite file tanpa izin jika ada potensi conflict.
-  - Jangan operasi destruktif (reset hard, force push) tanpa izin eksplisit.
-  - Commit message: jelas, singkat, deskriptif. Task besar → pecah jadi beberapa commit logis.
-  
-  ---
-  
-  ## VALIDASI
-  
-  - Selalu jalankan cek yang relevan: `npm run lint`, `npx tsc --noEmit`, `npm run test`, atau `npm run build`.
-  - Jangan bilang selesai kalau belum ada validasi.
-  - Kalau tidak bisa validasi, jelaskan alasannya secara singkat.
-  
-  ---
-  
-  ## KOMUNIKASI
-  
-  - Update singkat sebelum batch tool call.
-  - Laporkan progres setiap beberapa langkah.
-  - Kalau ada risiko, jelaskan faktual.
-  - Hasil akhir: ringkas, jelas, sebut file yang diubah.
-  
-  ---
-  
-  ## OUTPUT YANG DIHARAPKAN
-  
-  - Kode yang siap dipakai, minimal tapi tepat sasaran.
-  - Tidak ada file sampah, tidak ada edit yang tidak perlu.
-  - Tidak ada konflik dengan worktree atau task lain.
-  - Konsisten dengan design system dan konvensi yang sudah ditetapkan di Project_Context.md.
-  
+# AKURAT — AI Agent Context & Handoff Document
+
+> Last Updated: 23 Mei 2026
+> This document is for AI agents working on this project. It captures the current state, preferences, and conventions.
+
+---
+
+## 1. PROJECT OVERVIEW
+
+**AKURAT** (Asesmen Kimia Ukur Adaptif Terpadu) — Platform edukasi kimia berbasis AI dengan Multistage Adaptive Testing (MSAT).
+
+**Status**: Phase 1-13 complete. Phase 14 (CI/CD & Deploy) remaining.
+**Live test**: `npm run dev` → `http://localhost:3000`
+**Test account**: `student@akurat.test` / `akurat123`
+
+---
+
+## 2. TECH STACK
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript (strict) |
+| Styling | Tailwind CSS + CSS Variables (design tokens) |
+| Fonts | Nunito (display) + Ubuntu (body) + Space Mono (mono) |
+| Animation | Framer Motion |
+| Icons | Lucide React + custom SVGs in `/public/icons/` |
+| Backend | Firebase (Firestore, Auth, Storage) |
+| Deployment | Vercel (production) + Firebase Hosting (staging) |
+| Testing | Vitest (18 unit tests passing) |
+| Linting | ESLint + Prettier (singleQuote, semi, es5 trailing comma) |
+
+---
+
+## 3. PROJECT STRUCTURE
+
+```
+src/
+├── app/
+│   ├── (auth)/          → Login, Register, Forgot Password (split-screen layout)
+│   ├── (dashboard)/     → All authenticated pages (AuthGuard)
+│   │   ├── dashboard/   → Brilliant-style homepage (stacked card carousel)
+│   │   ├── materi/      → Material list + reading page (markdown + KaTeX)
+│   │   ├── latihan/     → Practice quiz (3 difficulties)
+│   │   ├── ujian/       → MSAT exam (adaptive, 21 questions)
+│   │   ├── profile/     → User profile + achievements
+│   │   ├── settings/    → Edit profile, language, notifications
+│   │   ├── onboarding/  → 3-step welcome flow
+│   │   └── teacher/     → Teacher dashboard, materials, questions, students, messages
+│   ├── (admin)/         → Admin dashboard, users, content, config (RoleGuard)
+│   ├── (public)/        → About, Privacy, Terms, Contact
+│   └── page.tsx         → Landing page
+├── components/
+│   ├── ui/              → Primitives (Button, Input, Modal, Card, Table, etc.)
+│   ├── layout/          → Navbar, MobileNav, Sidebar, Footer, NotificationDropdown
+│   ├── shared/          → ProgressBar, Badge, Skeleton, XPAnimation, OfflineIndicator
+│   ├── landing/         → LandingNavbar, HeroSection, LandingFooter, etc.
+│   ├── guards/          → AuthGuard, RoleGuard
+│   └── tools/           → ScientificCalculator, PeriodicTableRef
+├── services/            → Firebase CRUD (auth, materials, questions, progress, exam, etc.)
+├── lib/                 → firebase.ts, firebase-admin.ts, msat-engine.ts, auth-errors.ts
+├── types/               → firestore.ts (all TypeScript interfaces)
+├── context/             → AuthContext
+├── hooks/               → useToast
+└── i18n.ts              → next-intl config
+```
+
+---
+
+## 4. DESIGN PREFERENCES (Owner's Style)
+
+The owner prefers:
+- **Fluid, no hard borders** — use soft shadows, rounded-3xl, no border-1px boxes
+- **Colorful gradients** — each section/card has unique gradient (not monotone)
+- **Animations** — Framer Motion for page transitions, hover effects, entrance animations
+- **Cheerful & modern** — inspired by Brilliant.org + Duolingo, not corporate/boring
+- **Font: Nunito** — rounded, friendly, not template-looking
+- **No dummy data** — everything fetches from real Firestore
+- **Simple for end users** — target audience includes parents who don't like complexity
+- **Brilliant-style dashboard** — stacked card carousel for course topics
+- **User-friendly errors** — no raw Firebase errors shown to users
+- **Facebook login** — grayed out with "coming soon" toast (not implemented)
+
+**Design references**: `docs/design/my-design/` (mockups) and `docs/design/my-preference/` (ClassDojo, Brilliant inspiration)
+
+---
+
+## 5. KEY FEATURES IMPLEMENTED
+
+### Student
+- Dashboard: streak card + progress overview (list/chart toggle) + stacked course carousel
+- Materials: list with search + reading page (markdown + KaTeX + TOC)
+- Quiz: 3 difficulties, timer, immediate feedback (bounceIn/shake animations)
+- MSAT Exam: 21 adaptive questions, theta scoring, confidence analysis, anti-cheat
+- Results: difficulty path chart, confidence distribution, per-question breakdown
+- Profile: stats grid + achievement gallery
+- Tools: floating scientific calculator + periodic table reference
+
+### Teacher
+- Dashboard: student stats table
+- Content management: create/publish/unpublish materials, create/delete/bulk-import questions
+- Student monitoring: detail view with theta chart + teacher notes
+- Messaging: chat interface per student
+
+### Admin
+- Dashboard: KPIs + charts
+- User management: search, filter, change role, activate/deactivate, delete
+- Content moderation: approve/reject materials
+- Platform config: edit MSAT + gamification parameters
+
+---
+
+## 6. DATABASE (Firestore)
+
+Collections: `users`, `materials`, `question_bank`, `exam_sessions`, `quiz_results`, `user_progress`, `achievements`, `user_achievements`, `messages`, `notifications`, `app_config`, `analytics_events`
+
+**Real data seeded**: 96 questions (32 per difficulty), 5 materials, 13 achievements, MSAT config, gamification config, 1 test user.
+
+---
+
+## 7. CONVENTIONS
+
+- **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, `style:`, `chore:`)
+- **Components**: FC type, named exports, interface Props
+- **Naming**: PascalCase components, camelCase functions, kebab-case files
+- **Imports**: `@/` path alias
+- **No `any`** — proper TypeScript typing
+- **Git**: commit + push after every feature, update To-Do List
+- **Validation**: always run `lint → typecheck → test` before commit
+
+---
+
+## 8. WHAT'S LEFT (Phase 14)
+
+- CI/CD pipeline (GitHub Actions)
+- Vercel deployment
+- Firebase Hosting staging
+- Security rules audit
+- Production launch
+
+---
+
+## 9. HOW TO CONTINUE
+
+1. Read `To-Do List.md` for detailed task status
+2. Run `npm run dev` to see current state
+3. Follow the style: fluid, gradient, animated, Nunito font
+4. Always commit + push after each feature
+5. Update To-Do List after completing tasks
+6. Test with `npm run test` (Vitest)
+7. Lint with `npm run lint`
