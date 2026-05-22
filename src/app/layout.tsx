@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Poppins, Inter, Fira_Code } from 'next/font/google';
+import { AuthProvider } from '@/context/AuthContext';
 import './globals.css';
 
 const poppins = Poppins({
@@ -37,7 +38,7 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${inter.variable} ${firaCode.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

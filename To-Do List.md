@@ -48,17 +48,17 @@
 
 ### 1.3 Firebase Setup
 
-- [ ] 🧑 MANUAL: Create Firebase project di Firebase Console
-- [ ] 🧑 MANUAL: Enable Firebase services:
-  - [ ] Authentication (Email/Password + Google OAuth)
-  - [ ] Cloud Firestore
-  - [ ] Firebase Storage (untuk gambar materi)
-  - [ ] Cloud Functions (untuk MSAT engine logic)
+- [x] 🧑 MANUAL: Create Firebase project di Firebase Console
+- [x] 🧑 MANUAL: Enable Firebase services:
+  - [x] Authentication (Email/Password + Google OAuth)
+  - [x] Cloud Firestore
+  - [x] Firebase Storage (untuk gambar materi)
+  - [x] Cloud Functions (untuk MSAT engine logic)
 - [x] Install Firebase SDK (`firebase`, `firebase-admin`)
 - [x] Create `src/lib/firebase.ts` — client-side Firebase initialization
 - [x] Create `src/lib/firebase-admin.ts` — server-side admin SDK (untuk API routes)
 - [x] Setup Firestore security rules (draft awal)
-- [ ] 🧑 MANUAL: Generate & simpan service account key (JANGAN commit ke git)
+- [x] 🧑 MANUAL: Generate & simpan service account key (JANGAN commit ke git)
 - [x] 🧑 MANUAL: Isi `.env.local` dengan Firebase config values dari Console
 
 ### 1.4 Authentication System
