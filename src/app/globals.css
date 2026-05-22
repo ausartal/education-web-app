@@ -63,9 +63,10 @@
     );
 
     /* ===== TYPOGRAPHY ===== */
-    --font-display: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'Fira Code', 'JetBrains Mono', monospace;
+    --font-display: 'Archivo Black', -apple-system, BlinkMacSystemFont,
+      sans-serif;
+    --font-body: 'Ubuntu', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Space Mono', 'JetBrains Mono', monospace;
     --font-math: 'KaTeX_Main', 'Latin Modern Math', serif;
 
     /* Type Scale */

@@ -83,7 +83,7 @@
 ### 1.5 Core Layout & Navigation
 
 - [ ] Create `src/components/layout/Navbar.tsx` — Desktop top navigation
-  - [ ] Logo + brand name
+  - [ ] Logo + brand name "AKURAT"
   - [ ] Nav links (Dashboard, Materi, Latihan, Ujian)
   - [ ] Notification bell icon
   - [ ] User avatar dropdown (Profile, Settings, Logout)

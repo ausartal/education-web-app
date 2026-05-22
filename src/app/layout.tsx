@@ -1,23 +1,25 @@
 import type { Metadata } from 'next';
-import { Poppins, Inter, Fira_Code } from 'next/font/google';
+import { Archivo_Black, Ubuntu, Space_Mono } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
 import './globals.css';
 
-const poppins = Poppins({
+const archivoBlack = Archivo_Black({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: '400',
   variable: '--font-display',
   display: 'swap',
 });
 
-const inter = Inter({
+const ubuntu = Ubuntu({
   subsets: ['latin'],
+  weight: ['300', '400', '500', '700'],
   variable: '--font-body',
   display: 'swap',
 });
 
-const firaCode = Fira_Code({
+const spaceMono = Space_Mono({
   subsets: ['latin'],
+  weight: ['400', '700'],
   variable: '--font-mono',
   display: 'swap',
 });
@@ -36,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${poppins.variable} ${inter.variable} ${firaCode.variable} antialiased`}
+        className={`${archivoBlack.variable} ${ubuntu.variable} ${spaceMono.variable} antialiased`}
       >
         <AuthProvider>{children}</AuthProvider>
       </body>
