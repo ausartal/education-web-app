@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Archivo_Black, Ubuntu, Space_Mono } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
+import { ToastProvider } from '@/hooks/useToast';
+import { ToastContainer } from '@/components/ui/Toast';
 import './globals.css';
 
 const archivoBlack = Archivo_Black({
@@ -40,7 +42,12 @@ export default function RootLayout({
       <body
         className={`${archivoBlack.variable} ${ubuntu.variable} ${spaceMono.variable} antialiased`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ToastProvider>
+            {children}
+            <ToastContainer />
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );
