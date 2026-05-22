@@ -62,73 +62,68 @@ const UjianPage: FC = () => {
           </div>
         </div>
 
-        {/* Rules + Action */}
-        <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-          <div className="space-y-3">
-            {[
-              {
-                icon: Brain,
-                text: 'Kesulitan menyesuaikan jawabanmu secara real-time',
-                color: 'text-violet-500 bg-violet-50',
-              },
-              {
-                icon: Clock,
-                text: 'Setiap soal memiliki batas waktu tersendiri',
-                color: 'text-blue-500 bg-blue-50',
-              },
-              {
-                icon: Shield,
-                text: 'Tidak bisa kembali ke soal sebelumnya',
-                color: 'text-amber-500 bg-amber-50',
-              },
-              {
-                icon: AlertTriangle,
-                text: 'Jangan tinggalkan tab selama ujian',
-                color: 'text-rose-500 bg-rose-50',
-              },
-            ].map((rule, i) => {
-              const Icon = rule.icon;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + i * 0.05 }}
-                  className="flex items-center gap-4 rounded-2xl bg-white px-5 py-4 shadow-sm"
+        {/* Rules - 2x2 grid */}
+        <div className="mb-8 grid gap-3 sm:grid-cols-2">
+          {[
+            {
+              icon: Brain,
+              text: 'Kesulitan menyesuaikan jawabanmu secara real-time',
+              color: 'text-violet-500 bg-violet-50',
+            },
+            {
+              icon: Clock,
+              text: 'Setiap soal memiliki batas waktu tersendiri',
+              color: 'text-blue-500 bg-blue-50',
+            },
+            {
+              icon: Shield,
+              text: 'Tidak bisa kembali ke soal sebelumnya',
+              color: 'text-amber-500 bg-amber-50',
+            },
+            {
+              icon: AlertTriangle,
+              text: 'Jangan tinggalkan tab selama ujian',
+              color: 'text-rose-500 bg-rose-50',
+            },
+          ].map((rule, i) => {
+            const Icon = rule.icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.05 }}
+                className="flex items-center gap-4 rounded-2xl bg-white px-5 py-4 shadow-sm"
+              >
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${rule.color}`}
                 >
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${rule.color}`}
-                  >
-                    <Icon size={18} />
-                  </div>
-                  <span className="text-sm text-gray-700">{rule.text}</span>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col gap-4"
-          >
-            <div className="rounded-2xl bg-amber-50 p-5">
-              <p className="text-xs leading-relaxed text-amber-700">
-                Sistem mengukur <strong>kecepatan</strong> dan{' '}
-                <strong>ketepatan</strong> jawabanmu untuk menghasilkan profil
-                pemahaman yang akurat.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setShowModal(true)}
-              className="mt-auto w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
-            >
-              Mulai Ujian
-            </button>
-          </motion.div>
+                  <Icon size={18} />
+                </div>
+                <span className="text-sm text-gray-700">{rule.text}</span>
+              </motion.div>
+            );
+          })}
         </div>
+
+        {/* Bottom - Warning + Button centered */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mx-auto max-w-md text-center"
+        >
+          <p className="mb-5 text-xs leading-relaxed text-gray-500">
+            Sistem mengukur kecepatan dan ketepatan jawabanmu untuk menghasilkan
+            profil pemahaman yang akurat.
+          </p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+          >
+            Mulai Ujian
+          </button>
+        </motion.div>
       </motion.div>
 
       <Modal
