@@ -10,7 +10,7 @@ import { signOut } from '@/services/auth';
 import { NotificationDropdown } from './NotificationDropdown';
 
 const navLinks = [
-  { href: '/', label: 'Dashboard' },
+  { href: '/dashboard', label: 'Home' },
   { href: '/materi', label: 'Materi' },
   { href: '/latihan', label: 'Latihan' },
   { href: '/ujian', label: 'Ujian' },
@@ -24,7 +24,7 @@ export const Navbar: FC = () => {
     <header className="sticky top-0 z-50 hidden h-16 border-b border-gray-200 bg-white shadow-xs md:block">
       <nav className="mx-auto flex h-full max-w-7xl items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2">
           <Image
             src="/icons/logo-icon.png"
             alt="AKURAT"
