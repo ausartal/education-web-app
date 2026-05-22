@@ -2,18 +2,57 @@
 
 import { FC, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Search, Clock, CheckCircle, BookOpen } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getMaterials } from '@/services/materials';
 import { getUserProgress } from '@/services/progress';
 import { Material, UserProgress } from '@/types/firestore';
+import { CheckCircle, Lock } from 'lucide-react';
+
+// Map materials to colorful topic icons and gradients
+const topicStyles = [
+  {
+    icon: '/icons/topic-calculus.svg',
+    gradient: 'from-indigo-500 to-blue-500',
+    bg: 'bg-indigo-500',
+  },
+  {
+    icon: '/icons/topic-atom-model.svg',
+    gradient: 'from-violet-500 to-purple-500',
+    bg: 'bg-violet-500',
+  },
+  {
+    icon: '/icons/topic-chemistry-flask.svg',
+    gradient: 'from-emerald-500 to-teal-500',
+    bg: 'bg-emerald-500',
+  },
+  {
+    icon: '/icons/topic-coordinate-geometry.svg',
+    gradient: 'from-rose-500 to-pink-500',
+    bg: 'bg-rose-500',
+  },
+  {
+    icon: '/icons/topic-exponential-functions.svg',
+    gradient: 'from-amber-500 to-orange-500',
+    bg: 'bg-amber-500',
+  },
+  {
+    icon: '/icons/topic-geometric-thinking.svg',
+    gradient: 'from-cyan-500 to-blue-500',
+    bg: 'bg-cyan-500',
+  },
+  {
+    icon: '/icons/topic-graph-theory.svg',
+    gradient: 'from-fuchsia-500 to-pink-500',
+    bg: 'bg-fuchsia-500',
+  },
+];
 
 const MateriPage: FC = () => {
   const { profile } = useAuth();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,12 +68,6 @@ const MateriPage: FC = () => {
     };
     fetch();
   }, [profile]);
-
-  const filtered = materials.filter(
-    (m) =>
-      m.title.toLowerCase().includes(search.toLowerCase()) ||
-      m.description.toLowerCase().includes(search.toLowerCase())
-  );
 
   const getStatus = (id: string) =>
     progress.find((p) => p.materialId === id)?.status || 'not_started';
@@ -52,86 +85,88 @@ const MateriPage: FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-10 text-center"
       >
         <h1 className="mb-2 font-display text-2xl font-extrabold text-gray-900">
-          Learning Materials
+          Materi Pembelajaran
         </h1>
         <p className="text-sm text-gray-500">
-          {completedCount} of {materials.length} completed
+          {completedCount} dari {materials.length} materi selesai
         </p>
-
-        {/* Progress bar */}
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+        {/* Progress */}
+        <div className="mx-auto mt-4 h-3 max-w-xs overflow-hidden rounded-full bg-gray-100">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-primary to-primary-cyan"
             initial={{ width: 0 }}
             animate={{
               width: `${materials.length > 0 ? (completedCount / materials.length) * 100 : 0}%`,
             }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            transition={{ duration: 0.8 }}
           />
         </div>
       </motion.div>
 
-      {/* Search */}
-      <div className="relative mb-6">
-        <Search
-          size={18}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-        />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search materials..."
-          className="w-full rounded-2xl bg-white py-3.5 pl-11 pr-4 text-sm shadow-sm outline-none transition-shadow focus:shadow-md focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
-
-      {/* Material Cards */}
+      {/* Material Cards - Duolingo style */}
       <div className="space-y-4">
-        {filtered.map((material, i) => {
+        {materials.map((material, i) => {
           const status = getStatus(material.id);
           const isCompleted = status === 'completed';
           const isInProgress = status === 'in_progress';
+          const isCurrent =
+            !isCompleted &&
+            (i === 0 || getStatus(materials[i - 1].id) === 'completed');
+          const isLocked = !isCompleted && !isInProgress && !isCurrent;
+          const style = topicStyles[i % topicStyles.length];
 
           return (
             <motion.div
               key={material.id}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+              transition={{ delay: i * 0.06 }}
             >
               <Link
-                href={`/materi/${material.id}`}
-                className="group flex items-center gap-5 rounded-2xl bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                href={isLocked ? '#' : `/materi/${material.id}`}
+                className={`group relative flex items-center gap-5 overflow-hidden rounded-2xl p-5 transition-all duration-300 ${
+                  isLocked
+                    ? 'cursor-not-allowed bg-gray-100 opacity-50'
+                    : isCompleted
+                      ? 'bg-white shadow-sm hover:shadow-lg hover:-translate-y-0.5'
+                      : 'bg-white shadow-md hover:shadow-xl hover:-translate-y-1'
+                }`}
               >
-                {/* Status indicator */}
+                {/* Icon Circle */}
                 <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                    isCompleted
-                      ? 'bg-emerald-100 text-emerald-600'
-                      : isInProgress
-                        ? 'bg-blue-100 text-primary'
-                        : 'bg-gray-100 text-gray-400'
-                  }`}
+                  className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${style.gradient} shadow-lg`}
                 >
-                  {isCompleted ? (
-                    <CheckCircle size={22} />
-                  ) : (
-                    <BookOpen size={22} />
+                  <Image
+                    src={style.icon}
+                    alt=""
+                    width={36}
+                    height={36}
+                    className="brightness-0 invert"
+                  />
+                  {/* Status overlay */}
+                  {isCompleted && (
+                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
+                      <CheckCircle size={14} className="text-white" />
+                    </div>
+                  )}
+                  {isLocked && (
+                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-gray-400 ring-2 ring-white">
+                      <Lock size={12} className="text-white" />
+                    </div>
                   )}
                 </div>
 
                 {/* Content */}
-                <div className="flex-1">
-                  <h3 className="mb-0.5 font-display text-base font-bold text-gray-900 group-hover:text-primary">
+                <div className="flex-1 min-w-0">
+                  <h3 className="mb-0.5 font-display text-base font-bold text-gray-900 group-hover:text-primary transition-colors">
                     {material.title}
                   </h3>
                   <p className="text-sm text-gray-500 line-clamp-1">
@@ -139,21 +174,20 @@ const MateriPage: FC = () => {
                   </p>
                 </div>
 
-                {/* Meta */}
-                <div className="hidden items-center gap-1.5 text-gray-400 sm:flex">
-                  <Clock size={14} />
-                  <span className="text-xs">{material.estimatedTime} min</span>
-                </div>
-
-                {/* Badge */}
+                {/* Right badge */}
                 {isCompleted && (
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-                    Done
+                  <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-600">
+                    ✓ Selesai
+                  </span>
+                )}
+                {isCurrent && (
+                  <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary animate-pulse">
+                    Mulai →
                   </span>
                 )}
                 {isInProgress && (
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-primary">
-                    In Progress
+                  <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-600">
+                    Lanjut
                   </span>
                 )}
               </Link>
@@ -162,11 +196,66 @@ const MateriPage: FC = () => {
         })}
       </div>
 
-      {filtered.length === 0 && (
-        <div className="py-16 text-center">
-          <p className="text-gray-400">No materials found</p>
+      {/* Extra Topics Section */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="mt-12"
+      >
+        <h2 className="mb-5 font-display text-lg font-bold text-gray-900">
+          Topik Lainnya
+        </h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {[
+            {
+              name: 'Model Atom',
+              icon: '/icons/topic-atom-model.svg',
+              color: 'bg-violet-100',
+            },
+            {
+              name: 'Ikatan Kimia',
+              icon: '/icons/topic-coordinate-geometry.svg',
+              color: 'bg-rose-100',
+            },
+            {
+              name: 'Kesetimbangan',
+              icon: '/icons/topic-exponential-functions.svg',
+              color: 'bg-amber-100',
+            },
+            {
+              name: 'Laju Reaksi',
+              icon: '/icons/topic-regression.svg',
+              color: 'bg-cyan-100',
+            },
+            {
+              name: 'Termokimia',
+              icon: '/icons/topic-thermometer.svg',
+              color: 'bg-orange-100',
+            },
+            {
+              name: 'Elektrokimia',
+              icon: '/icons/topic-vectors.svg',
+              color: 'bg-indigo-100',
+            },
+          ].map((topic) => (
+            <div
+              key={topic.name}
+              className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm opacity-60"
+            >
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-xl ${topic.color}`}
+              >
+                <Image src={topic.icon} alt="" width={22} height={22} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-700">{topic.name}</p>
+                <p className="text-[10px] text-gray-400">Coming soon</p>
+              </div>
+            </div>
+          ))}
         </div>
-      )}
+      </motion.div>
     </div>
   );
 };
