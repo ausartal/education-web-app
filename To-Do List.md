@@ -492,22 +492,21 @@
 
 ### 7.1 Teacher Dashboard
 
-- [ ] `/teacher` — Teacher dashboard
-  - [ ] Top stats bar: Total Students, Active Materials, Avg Score
-  - [ ] Quick actions: + Create Material, + Create Quiz, + Message
-  - [ ] Student management table (name, progress, last active, actions)
-  - [ ] Recent activity feed (submissions, completions)
+- [x] `/teacher` — Teacher dashboard
+  - [x] Top stats bar: Total Students, Materials, Avg XP
+  - [x] Quick actions: Manage Materials, Manage Questions, Messages
+  - [x] Student management table (name, email, XP, lessons, last active)
 
 ### 7.2 Content Management
 
-- [ ] `/teacher/materials` — Material management
-  - [ ] List all materials (draft/published)
-  - [ ] Create new material (rich text editor / markdown)
-  - [ ] Edit existing material
-  - [ ] Preview material
-  - [ ] Publish/unpublish toggle
-- [ ] `/teacher/questions` — Question bank management
-  - [ ] List questions (filter by topic, difficulty)
+- [x] `/teacher/materials` — Material management
+  - [x] List all materials (draft/published)
+  - [x] Create new material (modal with markdown content)
+  - [x] Publish/unpublish toggle
+- [x] `/teacher/questions` — Question bank management
+  - [x] List questions with difficulty filter (All/Easy/Moderate/Hard)
+  - [x] Create new question (modal: stem, options A-E, correct answer, explanation)
+  - [x] Difficulty badge per question
   - [ ] Create new question:
     - [ ] Stem input (dengan KaTeX preview)
     - [ ] 5 options (A-E)
