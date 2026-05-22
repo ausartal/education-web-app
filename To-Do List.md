@@ -430,18 +430,12 @@
 
 ### 5.8 Notification System
 
-- [ ] In-app notification center (bell icon → dropdown list)
-  - [ ] Unread count badge
-  - [ ] Notification types: achievement, streak reminder, message, system
-  - [ ] Mark as read / mark all as read
-- [ ] Push notifications (Firebase Cloud Messaging):
-  - [ ] 🧑 MANUAL: Enable FCM di Firebase Console
-  - [ ] Streak reminder ("Jangan putus streak 5 hari!")
-  - [ ] New message from teacher
-  - [ ] Achievement unlocked
-  - [ ] Exam available
-- [ ] Email notifications (optional, configurable di settings)
-- [ ] Notification preferences page (enable/disable per type)
+- [x] In-app notification center (bell icon → dropdown list)
+  - [x] Unread count badge
+  - [x] Notification types: achievement, streak, message, system
+  - [x] Mark as read / mark all as read
+- [ ] Push notifications (Firebase Cloud Messaging) — Phase 14
+- [ ] Email notifications — Phase 14
 
 ### 5.9 Calculator & Reference Tools
 
