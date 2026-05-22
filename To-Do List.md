@@ -551,10 +551,11 @@
 
 ### 8.3 Content Moderation
 
-- [ ] `/admin/content` — Content moderation queue
-  - [ ] Pending materials for approval
-  - [ ] Approve/reject with feedback
-  - [ ] Published content overview
+- [x] `/admin/content` — Content moderation
+  - [x] Pending materials list with Approve/Reject buttons
+  - [x] Published content overview with status badges
+  - [x] Approve → publishes to Firestore
+  - [x] Toast feedback
 
 ### 8.4 Platform Configuration
 
