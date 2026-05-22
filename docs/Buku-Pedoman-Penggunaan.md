@@ -1,386 +1,864 @@
-# AKURAT — Buku Pedoman Penggunaan
+# AKURAT — Buku Pedoman Penggunaan Platform
 
-> Platform Asesmen Kimia Ukur Adaptif Terpadu  
-> Versi: 1.0 | Terakhir diperbarui: 23 Mei 2026
+> **Asesmen Kimia Ukur Adaptif Terpadu**  
+> Versi Dokumen: 2.0  
+> Tanggal: 23 Mei 2026  
+> Penulis: Tim Pengembang AKURAT  
+> Klasifikasi: Dokumen Publik
 
 ---
 
 ## Daftar Isi
 
-1. [Pengenalan](#1-pengenalan)
-2. [Halaman Publik (Tanpa Login)](#2-halaman-publik-tanpa-login)
-3. [Registrasi & Login](#3-registrasi--login)
-4. [Panduan Siswa (Student)](#4-panduan-siswa-student)
-5. [Panduan Guru (Teacher)](#5-panduan-guru-teacher)
-6. [Panduan Admin](#6-panduan-admin)
-7. [Fitur Umum](#7-fitur-umum)
-8. [FAQ & Troubleshooting](#8-faq--troubleshooting)
+1. [Pendahuluan](#1-pendahuluan)
+2. [Memulai Penggunaan](#2-memulai-penggunaan)
+3. [Panduan Siswa](#3-panduan-siswa)
+4. [Panduan Guru](#4-panduan-guru)
+5. [Panduan Administrator](#5-panduan-administrator)
+6. [Fitur Pendukung](#6-fitur-pendukung)
+7. [Sistem Gamifikasi](#7-sistem-gamifikasi)
+8. [Spesifikasi Teknis](#8-spesifikasi-teknis)
+9. [Pemecahan Masalah](#9-pemecahan-masalah)
+10. [Lampiran](#10-lampiran)
 
 ---
 
-## 1. Pengenalan
+## 1. Pendahuluan
 
-**AKURAT** (Asesmen Kimia Ukur Adaptif Terpadu) adalah platform edukasi kimia berbasis AI yang menggunakan Multistage Adaptive Testing (MSAT) untuk mendiagnosis pemahaman dan miskonsepsi siswa secara presisi.
+### 1.1 Tentang AKURAT
 
-### Peran Pengguna
+AKURAT (Asesmen Kimia Ukur Adaptif Terpadu) adalah platform pembelajaran kimia berbasis web yang mengintegrasikan teknologi Multistage Adaptive Testing (MSAT) untuk mendiagnosis pemahaman dan miskonsepsi siswa secara presisi. Platform ini dirancang untuk memberikan pengalaman belajar yang personal, adaptif, dan menyenangkan.
 
-| Peran | Deskripsi |
-|-------|-----------|
-| **Student** | Belajar materi, mengerjakan latihan & ujian adaptif, melihat progress |
-| **Teacher** | Mengelola materi, soal, memantau siswa, mengirim pesan |
-| **Admin** | Mengelola platform, user, konten, dan konfigurasi sistem |
+### 1.2 Visi & Misi
+
+**Visi:** Menjadi platform asesmen kimia adaptif terdepan yang mampu mengidentifikasi dan memperbaiki miskonsepsi siswa secara akurat.
+
+**Misi:**
+- Menyediakan materi kimia berkualitas tinggi yang mudah dipahami
+- Mengukur kemampuan siswa secara adaptif menggunakan algoritma MSAT
+- Memberikan umpan balik yang bermakna untuk perbaikan pembelajaran
+- Memfasilitasi komunikasi antara guru dan siswa
+
+### 1.3 Peran Pengguna
+
+Platform AKURAT memiliki tiga peran pengguna dengan hak akses berbeda:
+
+| Peran | Hak Akses | Tujuan Utama |
+|-------|-----------|--------------|
+| **Siswa (Student)** | Belajar, latihan, ujian, melihat progress | Memahami kimia dan mengukur kemampuan |
+| **Guru (Teacher)** | Kelola materi, soal, pantau siswa, pesan | Membimbing dan memantau perkembangan siswa |
+| **Administrator (Admin)** | Kelola platform, user, konten, konfigurasi | Mengelola dan mengawasi seluruh sistem |
+
+### 1.4 Persyaratan Sistem
+
+| Komponen | Minimum |
+|----------|---------|
+| Browser | Chrome 90+, Firefox 88+, Safari 14+, Edge 90+ |
+| Koneksi Internet | 1 Mbps (stabil) |
+| Resolusi Layar | 360px (mobile) / 1024px (desktop) |
+| JavaScript | Harus diaktifkan |
 
 ---
 
-## 2. Halaman Publik (Tanpa Login)
+## 2. Memulai Penggunaan
 
-Halaman-halaman ini bisa diakses siapa saja tanpa perlu login.
+### 2.1 Mengakses Platform
 
-### 2.1 Landing Page (`/`)
+Buka browser dan kunjungi alamat platform AKURAT. Anda akan melihat halaman Landing Page dengan informasi tentang platform.
 
-- Halaman utama yang menampilkan informasi tentang AKURAT
-- Berisi: Hero section, Chemistry Materials, Learning Resources, Assessment demo, CTA
-- Tombol **Start Learning** → ke halaman Register (sebagai Student)
-- Tombol **Start Teaching** → ke halaman Register (sebagai Teacher)
-- Jika sudah login, otomatis redirect ke Dashboard
+**Navigasi Landing Page:**
+- **Home** — Kembali ke bagian atas
+- **Learning Material** — Scroll ke daftar materi kimia
+- **Learning Resources** — Scroll ke fitur-fitur platform
+- **Assessment** — Scroll ke demo asesmen adaptif
+- **Sign In** — Masuk ke akun yang sudah ada
+- **Get Started** — Membuat akun baru
 
-### 2.2 Halaman Informasi
+### 2.2 Membuat Akun Baru (Registrasi)
 
-| Halaman | URL | Isi |
-|---------|-----|-----|
-| Tentang | `/about` | Informasi tentang AKURAT |
-| Privasi | `/privacy` | Kebijakan privasi |
-| Syarat & Ketentuan | `/terms` | Terms of Service |
-| Kontak | `/contact` | Form kontak |
+**Langkah-langkah:**
 
----
+1. Klik tombol **Get Started** di navbar atau **Start Learning** / **Start Teaching** di hero section
+2. Pada halaman registrasi, pilih tipe akun:
+   - **Student** — Untuk siswa yang ingin belajar dan mengerjakan asesmen
+   - **Teacher** — Untuk guru yang ingin mengelola kelas dan materi
+3. Pilih metode registrasi:
+   - **Google** — Registrasi instan menggunakan akun Google (direkomendasikan)
+   - **Facebook** — Dalam pengembangan
+   - **Email & Password** — Registrasi manual
+4. Jika memilih registrasi manual, isi formulir:
+   - **Full Name** — Nama lengkap Anda
+   - **Username** — Nama pengguna unik
+   - **Email** — Alamat email aktif (untuk verifikasi dan reset password)
+   - **Password** — Minimal 6 karakter
+5. Klik **Sign Up**
+6. Anda akan diarahkan ke:
+   - Siswa → Halaman Onboarding (pengaturan awal)
+   - Guru → Dashboard Guru
 
-## 3. Registrasi & Login
+### 2.3 Masuk ke Akun (Login)
 
-### 3.1 Registrasi (`/register`)
+**Langkah-langkah:**
 
-1. Buka halaman `/register` atau klik **Get Started** di navbar
-2. Pilih tipe akun: **Student** atau **Teacher**
-3. Pilih metode:
-   - **Google** — Login langsung dengan akun Google
-   - **Facebook** — Coming soon
-   - **Manual** — Isi form:
-     - Full Name
-     - Username
-     - Email
-     - Password (minimal 6 karakter)
-4. Klik **Sign Up**
-5. Setelah berhasil:
-   - Student → diarahkan ke Onboarding
-   - Teacher → diarahkan ke Teacher Dashboard
-
-### 3.2 Login (`/login`)
-
-1. Buka halaman `/login` atau klik **Sign In** di navbar
-2. Pilih metode:
-   - **Google** — Login langsung
-   - **Manual** — Masukkan Email & Password
+1. Klik **Sign In** di navbar
+2. Pilih metode login:
+   - **Google** — Login instan
+   - **Email & Password** — Masukkan kredensial
 3. Klik **Sign in**
-4. Setelah berhasil:
-   - Student → diarahkan ke `/dashboard`
-   - Teacher → diarahkan ke `/teacher`
-   - Admin → diarahkan ke `/admin`
+4. Anda akan diarahkan sesuai peran:
+   - Siswa → `/dashboard`
+   - Guru → `/teacher`
+   - Admin → `/admin`
 
-### 3.3 Lupa Password (`/forgot-password`)
+### 2.4 Lupa Password
 
-1. Klik link "Forgot Password" di halaman login
-2. Masukkan email yang terdaftar
-3. Klik kirim → cek inbox email untuk link reset
+1. Di halaman login, klik **Forgot Password**
+2. Masukkan alamat email yang terdaftar
+3. Klik tombol kirim
+4. Buka email Anda dan klik link reset password
+5. Buat password baru (minimal 6 karakter)
+
+### 2.5 Logout
+
+1. Klik avatar/foto profil di pojok kanan atas navbar
+2. Pilih **Keluar** dari dropdown menu
+3. Anda akan diarahkan kembali ke halaman login
 
 ---
 
-## 4. Panduan Siswa (Student)
 
-### 4.1 Onboarding (`/onboarding`)
+## 3. Panduan Siswa
 
-Setelah registrasi pertama kali, siswa akan melewati 3 langkah onboarding:
-1. **Welcome** — Perkenalan platform
-2. **Preferensi** — Pilih topik yang diminati & daily goal
-3. **Selesai** — Mulai belajar
+### 3.1 Onboarding (Pengaturan Awal)
 
-### 4.2 Dashboard (`/dashboard`)
+Setelah registrasi pertama kali, siswa akan melewati proses onboarding 3 langkah:
 
-Halaman utama setelah login. Berisi:
-- **Welcome message** dengan nama siswa
-- **Course Topics** — Carousel topik kimia (Stoikiometri, Model Atom, Larutan, dll.)
-- **Progress Overview** — Materi selesai, waktu belajar, XP
-- **Weekly Activity** — Grafik aktivitas mingguan
-- **Streak** — Hari berturut-turut belajar
-- **Jump Back In** — Lanjutkan materi terakhir
+**Langkah 1 — Selamat Datang**
+- Perkenalan singkat tentang fitur-fitur AKURAT
+- Penjelasan tentang sistem adaptif
 
-### 4.3 Materi (`/materi`)
+**Langkah 2 — Preferensi Belajar**
+- Pilih topik kimia yang diminati (bisa lebih dari satu)
+- Atur target belajar harian (daily goal)
 
-1. Buka menu **Materi** di navbar
-2. Lihat daftar materi yang tersedia (dengan progress bar)
-3. Klik salah satu materi untuk membaca
-4. Halaman baca (`/materi/[id]`) berisi:
-   - Konten markdown dengan rumus kimia (KaTeX)
+**Langkah 3 — Mulai Perjalanan**
+- Konfirmasi pengaturan
+- Klik "Mulai Belajar" untuk masuk ke Dashboard
+
+> Onboarding hanya muncul sekali. Preferensi bisa diubah kapan saja di halaman Settings.
+
+### 3.2 Dashboard Siswa
+
+Dashboard adalah halaman utama setelah login. Berikut komponen-komponennya:
+
+**A. Header Welcome**
+- Sapaan personal dengan nama siswa
+- Pesan motivasi harian
+
+**B. Course Topics (Carousel)**
+- Kartu topik kimia dengan gradient warna unik:
+  - Stoikiometri (indigo → cyan)
+  - Model Atom (violet → fuchsia)
+  - Larutan (emerald → teal)
+  - Ikatan Kimia (rose → orange)
+  - Reaksi Redoks (amber → red)
+  - Kesetimbangan (sky → indigo)
+  - Geometri Molekul (lime → emerald)
+- Navigasi: tombol panah kiri/kanan atau swipe (mobile)
+- Setiap kartu menampilkan 3 sub-topik pelajaran
+
+**C. Statistik Progress**
+- **XP** — Total poin pengalaman yang dikumpulkan
+- **Level** — Level saat ini berdasarkan XP
+- **Streak** — Jumlah hari berturut-turut belajar
+- **Materi Selesai** — Jumlah materi yang sudah dibaca
+- **Total Waktu** — Akumulasi waktu belajar
+
+**D. Weekly Activity Chart**
+- Grafik batang aktivitas per hari (Senin-Minggu)
+- Menampilkan XP yang diperoleh setiap hari
+- Toggle view: List / Chart
+
+**E. Jump Back In**
+- Materi terakhir yang belum selesai
+- Klik untuk langsung melanjutkan
+
+### 3.3 Materi Pembelajaran
+
+#### Melihat Daftar Materi (`/materi`)
+
+1. Klik **Materi** di navbar atau bottom tab
+2. Lihat daftar materi yang tersedia:
+   - Judul dan deskripsi singkat
    - Estimasi waktu baca
-   - Tombol "Selesai" untuk menandai progress
+   - Progress bar (jika sudah mulai)
+   - Status: Belum Mulai / Sedang Dibaca / Selesai
 
-### 4.4 Latihan (`/latihan`)
+#### Membaca Materi (`/materi/[id]`)
 
-Latihan soal dengan 3 tingkat kesulitan (progressive unlock):
+1. Klik salah satu materi dari daftar
+2. Halaman baca menampilkan:
+   - **Judul** dan metadata (waktu, topik)
+   - **Konten** dalam format rich text:
+     - Teks penjelasan
+     - Rumus kimia dengan rendering KaTeX (contoh: $H_2O$, $\Delta G = \Delta H - T\Delta S$)
+     - Tabel data
+     - Daftar poin penting
+   - **Learning Objectives** — Tujuan pembelajaran
+3. Setelah selesai membaca, klik tombol **Tandai Selesai**
+4. Progress tersimpan otomatis dan XP diberikan
 
-1. **Easy** — Tersedia langsung
-2. **Moderate** — Terbuka setelah Easy selesai
-3. **Hard** — Terbuka setelah Moderate selesai
+### 3.4 Latihan Soal
 
-Cara mengerjakan:
-1. Pilih tingkat kesulitan
-2. Jawab soal satu per satu (format 2x2 grid pilihan)
-3. Lihat feedback langsung (benar/salah + penjelasan)
-4. Setelah selesai, lihat ringkasan skor
+#### Halaman Latihan (`/latihan`)
 
-**Tools tersedia saat latihan:**
-- Kalkulator Saintifik (collapsible panel)
-- Tabel Periodik (collapsible panel)
+Latihan menggunakan sistem **Progressive Unlock** — tingkat kesulitan terbuka secara bertahap:
 
-### 4.5 Ujian MSAT (`/ujian`)
+| Tingkat | Status Awal | Syarat Buka |
+|---------|-------------|-------------|
+| **Easy** (Mudah) | Terbuka | — |
+| **Moderate** (Sedang) | Terkunci | Selesaikan Easy |
+| **Hard** (Sulit) | Terkunci | Selesaikan Moderate |
 
-Ujian adaptif yang menyesuaikan kesulitan berdasarkan kemampuan siswa:
+#### Mengerjakan Latihan (`/latihan/[difficulty]`)
 
-1. Buka menu **Ujian**
-2. Baca aturan ujian
+1. Pilih tingkat kesulitan yang tersedia
+2. Interface latihan terdiri dari 2 kolom:
+   - **Kiri** — Soal dan pilihan jawaban (format grid 2×2)
+   - **Kanan** — Statistik (nomor soal, waktu, skor) dan tools
+3. Pilih jawaban dari 5 opsi (A, B, C, D, E)
+4. Setelah memilih, feedback langsung ditampilkan:
+   - ✅ Benar — Animasi bounce + penjelasan
+   - ❌ Salah — Animasi shake + jawaban benar + penjelasan
+5. Klik **Soal Berikutnya** untuk melanjutkan
+6. Setelah semua soal selesai, lihat ringkasan:
+   - Skor total (benar/total)
+   - Waktu pengerjaan
+   - XP yang diperoleh
+
+**Tools yang tersedia saat latihan:**
+- **Kalkulator Saintifik** — Panel collapsible di sisi kanan
+- **Tabel Periodik** — Panel collapsible di sisi kanan
+
+### 3.5 Ujian Adaptif MSAT
+
+#### Tentang MSAT
+
+Multistage Adaptive Testing (MSAT) adalah metode asesmen yang menyesuaikan tingkat kesulitan soal berdasarkan kemampuan siswa secara real-time. Sistem ini:
+- Menggunakan 3 stage dengan 7 soal per stage (total 21 soal)
+- Menghitung estimasi kemampuan (theta) setelah setiap stage
+- Menyesuaikan kesulitan stage berikutnya berdasarkan performa
+- Mendeteksi anomali (jawaban acak, terlalu cepat)
+
+#### Memulai Ujian (`/ujian`)
+
+1. Klik **Ujian** di navbar
+2. Baca halaman aturan ujian:
+   - Total 21 soal dalam 3 tahap
+   - Waktu terbatas per soal
+   - Tidak bisa kembali ke soal sebelumnya
+   - Tingkat kesulitan menyesuaikan otomatis
 3. Klik **Mulai Ujian**
-4. Kerjakan 21 soal (7 soal × 3 stage)
-   - Tingkat kesulitan otomatis menyesuaikan (tidak ditampilkan ke siswa)
-   - Timer berjalan per soal
-5. Setelah selesai, lihat hasil:
-   - Skor theta (kemampuan)
-   - Proficiency level
-   - Confidence score
-   - Rekomendasi belajar
 
-**Tools tersedia saat ujian:**
-- Kalkulator Saintifik
-- Tabel Periodik
+#### Mengerjakan Ujian (`/ujian/[examId]/session`)
 
-### 4.6 Profil (`/profile`)
+1. Interface sama dengan latihan (2 kolom)
+2. Timer berjalan per soal (waktu berbeda tiap kesulitan)
+3. Pilih jawaban dan klik **Submit**
+4. **Penting:** Tingkat kesulitan TIDAK ditampilkan ke siswa (berjalan di background)
+5. Jika waktu habis, soal otomatis di-skip
 
-- Lihat statistik: XP, Level, Streak, Total Lessons, Total Quizzes
-- Lihat achievements/badges yang sudah diraih
-- Edit foto profil
+#### Hasil Ujian (`/ujian/[examId]/results`)
 
-### 4.7 Pengaturan (`/settings`)
+Setelah menyelesaikan 21 soal, halaman hasil menampilkan:
 
-- **Profil** — Edit nama, sekolah, kota, kelas
-- **Notifikasi** — Aktifkan/nonaktifkan notifikasi
-- **Bahasa** — Pilih Indonesia atau English
-- **Privasi** — Pengaturan privasi
-- **Logout** — Keluar dari akun
+| Metrik | Penjelasan |
+|--------|-----------|
+| **Theta Score** | Estimasi kemampuan (-3 sampai +3) |
+| **Proficiency Level** | Kategori: Novice / Beginner / Intermediate / Advanced / Expert |
+| **Confidence Score** | Tingkat kepercayaan hasil (0-100%) |
+| **Soal Benar** | Jumlah jawaban benar dari 21 |
+| **Waktu Total** | Total waktu pengerjaan |
+| **Rekomendasi** | Saran topik untuk dipelajari lebih lanjut |
 
-### 4.8 Notifikasi
+### 3.6 Profil & Achievements
 
-- Klik ikon lonceng di navbar
-- Lihat notifikasi: achievement baru, pesan dari guru, pengingat belajar
-- Klik notifikasi untuk membuka detail
+#### Halaman Profil (`/profile`)
+
+Menampilkan:
+- Foto profil dan informasi dasar
+- Statistik lengkap (XP, Level, Streak, Lessons, Quizzes)
+- **Daftar Achievements** — Badge yang sudah diraih:
+  - First Steps (selesaikan materi pertama)
+  - Quiz Master (selesaikan semua tingkat latihan)
+  - Streak Champion (streak 7 hari)
+  - Dan lainnya (total 13 achievements)
+
+### 3.7 Pengaturan
+
+#### Halaman Settings (`/settings`)
+
+| Tab | Fungsi |
+|-----|--------|
+| **Profil** | Edit nama, sekolah, kota, kelas |
+| **Notifikasi** | Toggle notifikasi push |
+| **Bahasa** | Pilih: Indonesia / English |
+| **Privasi** | Pengaturan visibilitas profil |
+| **Logout** | Keluar dari akun |
 
 ---
 
-## 5. Panduan Guru (Teacher)
 
-### 5.1 Teacher Dashboard (`/teacher`)
+## 4. Panduan Guru
 
-Halaman utama guru setelah login. Berisi:
-- **Statistik** — Total Siswa, Materi, Bank Soal, Rata-rata XP
-- **Quick Actions** — Akses cepat ke Kelola Materi, Kelola Soal, Pesan
-- **Siswa Teratas** — Leaderboard 5 siswa dengan XP tertinggi
+### 4.1 Dashboard Guru (`/teacher`)
 
-### 5.2 Kelola Materi (`/teacher/materials`)
+Setelah login sebagai guru, Anda langsung diarahkan ke Dashboard Guru yang menampilkan:
 
-1. Lihat daftar semua materi (dengan status Publik/Draf)
-2. **Tambah Materi** — Klik tombol "Tambah Materi":
-   - Isi judul, deskripsi, konten (Markdown)
-   - Materi baru otomatis berstatus "Draf"
-3. **Publikasi/Sembunyikan** — Klik ikon mata untuk toggle status
-4. **Edit** — Klik ikon pensil untuk mengedit
+**A. Kartu Statistik (4 kartu gradient)**
+- Total Siswa — Jumlah siswa yang terdaftar
+- Materi — Jumlah materi yang tersedia
+- Bank Soal — Total soal di database
+- Rata-rata XP — Rata-rata XP seluruh siswa
 
-### 5.3 Kelola Soal (`/teacher/questions`)
+**B. Quick Actions (3 kartu aksi)**
+- **Kelola Materi** — Akses cepat ke manajemen materi
+- **Kelola Soal** — Akses cepat ke bank soal
+- **Pesan** — Akses cepat ke messaging
 
-1. Lihat semua soal di Bank Soal
-2. **Filter** — Pilih: Semua, Mudah, Sedang, Sulit
-3. **Tambah Soal** — Klik "Tambah Soal":
-   - Tulis pertanyaan
-   - Pilih tingkat kesulitan
-   - Isi 5 opsi jawaban (A-E)
-   - Pilih jawaban benar
-   - Tulis penjelasan
-4. **Hapus Soal** — Hover soal, klik ikon hapus
-5. **Impor Massal** — Upload file JSON untuk menambah banyak soal sekaligus
+**C. Siswa Teratas**
+- Leaderboard 5 siswa dengan XP tertinggi
+- Menampilkan: Ranking, Nama, Pelajaran selesai, XP, Terakhir aktif
+- Klik nama siswa untuk melihat detail
 
-Format JSON untuk impor:
+### 4.2 Kelola Materi (`/teacher/materials`)
+
+#### Melihat Daftar Materi
+
+- Semua materi ditampilkan dalam bentuk kartu
+- Setiap kartu menampilkan: Judul, Deskripsi, Waktu baca, Topik, Status
+- Status materi:
+  - **Publik** (hijau) — Terlihat oleh siswa
+  - **Draf** (abu-abu) — Hanya terlihat oleh guru/admin
+
+#### Menambah Materi Baru
+
+1. Klik tombol **Tambah Materi** (gradient hijau)
+2. Isi formulir dalam modal:
+   - **Judul** — Judul materi (wajib)
+   - **Deskripsi** — Ringkasan singkat materi
+   - **Konten** — Tulis dalam format Markdown
+     - Mendukung heading, bold, italic, list
+     - Mendukung rumus KaTeX: `$rumus$` untuk inline, `$$rumus$$` untuk block
+     - Mendukung tabel dan code block
+3. Klik **Buat Materi**
+4. Materi baru otomatis berstatus **Draf**
+
+#### Mengelola Status Materi
+
+- **Publikasikan** — Klik ikon mata (👁) pada materi berstatus Draf
+- **Sembunyikan** — Klik ikon mata tertutup pada materi berstatus Publik
+- **Edit** — Klik ikon pensil untuk mengedit konten
+
+### 4.3 Kelola Soal (`/teacher/questions`)
+
+#### Melihat Bank Soal
+
+- Header menampilkan total soal yang tersedia
+- **Filter** berdasarkan kesulitan:
+  - Semua — Tampilkan semua soal
+  - Mudah — Soal tingkat easy
+  - Sedang — Soal tingkat moderate
+  - Sulit — Soal tingkat hard
+- Setiap filter menampilkan jumlah soal dalam kategori tersebut
+
+#### Menambah Soal Baru
+
+1. Klik tombol **Tambah Soal** (gradient ungu)
+2. Isi formulir:
+   - **Pertanyaan** — Teks soal (mendukung rumus kimia)
+   - **Tingkat Kesulitan** — Pilih: Mudah / Sedang / Sulit
+   - **Opsi A-E** — Lima pilihan jawaban
+   - **Jawaban Benar** — Pilih huruf jawaban yang benar
+   - **Penjelasan** — Penjelasan mengapa jawaban tersebut benar
+3. Klik **Buat Soal**
+
+#### Menghapus Soal
+
+- Hover pada kartu soal → ikon hapus (merah) muncul di kanan
+- Klik ikon hapus → soal langsung terhapus
+- Konfirmasi via toast notification
+
+#### Impor Massal (Bulk Import)
+
+Untuk menambahkan banyak soal sekaligus:
+
+1. Siapkan file JSON dengan format berikut:
 ```json
 [
   {
     "topic": "stoikiometri",
-    "subtopic": "mol",
+    "subtopic": "konsep-mol",
     "difficulty": "easy",
-    "stem": "Pertanyaan...",
-    "options": { "A": "...", "B": "...", "C": "...", "D": "...", "E": "..." },
-    "correctAnswer": "A",
-    "explanation": "Penjelasan...",
+    "stem": "Berapakah jumlah mol dalam 36 gram air (H₂O)?",
+    "options": {
+      "A": "1 mol",
+      "B": "2 mol",
+      "C": "3 mol",
+      "D": "0.5 mol",
+      "E": "4 mol"
+    },
+    "correctAnswer": "B",
+    "explanation": "Mr H₂O = 2(1) + 16 = 18. Mol = massa/Mr = 36/18 = 2 mol.",
     "baseTime": 60
   }
 ]
 ```
+2. Klik area **Impor Massal** di bagian bawah halaman
+3. Pilih file JSON dari komputer
+4. Soal otomatis ditambahkan ke database
+5. Toast notification menampilkan jumlah soal yang berhasil diimpor
 
-### 5.4 Daftar Siswa (`/teacher/students`)
+### 4.4 Daftar Siswa (`/teacher/students`)
 
-1. Lihat ringkasan kelas: Total XP, Rata-rata Level, Pelajaran Selesai
-2. **Cari siswa** — Ketik nama atau email di search bar
-3. **Lihat detail** — Klik nama siswa untuk melihat:
-   - Statistik lengkap (XP, Level, Streak, Lessons, Quizzes)
-   - Grafik perkembangan theta
-   - Catatan guru (bisa ditambah/edit)
+#### Ringkasan Kelas
 
-### 5.5 Pesan (`/teacher/messages`)
+Tiga kartu statistik di bagian atas:
+- **Total XP Kelas** — Akumulasi XP seluruh siswa
+- **Rata-rata Level** — Level rata-rata kelas
+- **Pelajaran Selesai** — Total pelajaran yang diselesaikan seluruh siswa
 
-1. Pilih siswa dari daftar kontak di sidebar kiri
-2. **Cari kontak** — Ketik nama di search bar
-3. Ketik pesan di input bawah
-4. Tekan Enter atau klik tombol kirim
-5. Pesan real-time (tersimpan di Firestore)
+#### Mencari Siswa
 
----
+- Gunakan search bar untuk mencari berdasarkan nama atau email
+- Hasil filter secara real-time saat mengetik
 
-## 6. Panduan Admin
+#### Kartu Siswa
 
-> **Cara menjadi Admin:** Ubah field `role` menjadi `"admin"` di Firebase Console → Firestore → collection `users` → pilih document user → edit field `role`.
+Setiap siswa ditampilkan dalam kartu yang berisi:
+- Avatar (inisial nama)
+- Nama lengkap dan email
+- Statistik: XP, Streak, Lessons, Level
 
-### 6.1 Admin Dashboard (`/admin`)
+#### Detail Siswa (`/teacher/students/[id]`)
 
-Halaman utama admin. Berisi:
-- **KPI Cards** — Total Users, Materials, Exams, Questions
-- **User Growth** — Grafik pertumbuhan user mingguan
-- **Platform Overview** — Progress bar distribusi soal per kesulitan & jumlah materi
+Klik nama siswa untuk melihat halaman detail:
+- **Statistik Lengkap** — Semua metrik performa
+- **Grafik Theta** — Perkembangan kemampuan dari waktu ke waktu
+- **Catatan Guru** — Area teks untuk menulis catatan tentang siswa (tersimpan di Firestore)
 
-### 6.2 User Management (`/admin/users`)
+### 4.5 Pesan (`/teacher/messages`)
 
-1. Lihat tabel semua user
-2. **Cari** — Ketik nama atau email
-3. **Filter** — Pilih role: All, Student, Teacher, Admin
-4. **Ubah Role** — Klik dropdown role di baris user, pilih role baru
-5. **Toggle Status** — Aktifkan/nonaktifkan user
-6. **Hapus User** — Klik tombol hapus (dengan konfirmasi)
+#### Interface Messaging
 
-### 6.3 Content Moderation (`/admin/content`)
+Layout terbagi menjadi 2 panel:
+- **Panel Kiri** — Daftar kontak siswa dengan search bar
+- **Panel Kanan** — Area percakapan
 
-1. Lihat materi yang menunggu persetujuan (status: draft)
-2. **Approve** — Klik tombol Approve untuk mempublikasikan
-3. **Reject** — Klik tombol Reject untuk menolak
-4. Lihat overview konten yang sudah dipublikasikan
+#### Mengirim Pesan
 
-### 6.4 Platform Configuration (`/admin/config`)
+1. Pilih siswa dari daftar kontak di panel kiri
+2. Ketik pesan di input field di bagian bawah
+3. Tekan **Enter** atau klik tombol kirim (ikon panah)
+4. Pesan langsung terkirim dan tersimpan
 
-Pengaturan sistem yang bisa diedit:
+#### Fitur Messaging
 
-**MSAT Algorithm:**
-- Jumlah stage (default: 3)
-- Soal per stage (default: 7)
-- Range theta (-3 sampai 3)
-- Threshold anomaly detection
-
-**Gamification:**
-- XP per lesson complete
-- XP per quiz complete
-- XP per exam complete
-- XP per correct answer
-- XP per streak day
-
-Klik **Save** untuk menyimpan perubahan ke Firestore.
+- Pencarian kontak real-time
+- Bubble chat berwarna (biru untuk pesan terkirim, abu-abu untuk pesan diterima)
+- Scroll otomatis ke pesan terbaru
+- Indikator kontak aktif (highlight gradient)
 
 ---
 
-## 7. Fitur Umum
 
-### 7.1 Navigasi
+## 5. Panduan Administrator
 
-**Desktop:**
-- Navbar di atas dengan link menu
-- Logo klik → kembali ke Dashboard/Teacher/Admin (sesuai role)
+> **Catatan:** Peran Admin ditetapkan secara manual melalui Firebase Console.  
+> Path: Firebase Console → Firestore → Collection `users` → Document user → Edit field `role` menjadi `"admin"`.
 
-**Mobile:**
+### 5.1 Dashboard Admin (`/admin`)
+
+Halaman utama administrator menampilkan Key Performance Indicators (KPI):
+
+**Kartu KPI:**
+- **Total Users** — Jumlah seluruh pengguna terdaftar
+- **Materials** — Jumlah materi yang tersedia
+- **Exams** — Jumlah sesi ujian yang telah dilakukan
+- **Questions** — Total soal di bank soal
+
+**Grafik & Visualisasi:**
+- **User Growth** — Grafik batang pertumbuhan pengguna mingguan
+- **Platform Overview** — Progress bar:
+  - Distribusi soal per tingkat kesulitan (Easy/Moderate/Hard)
+  - Jumlah materi per status (Published/Draft)
+
+### 5.2 User Management (`/admin/users`)
+
+#### Tabel Pengguna
+
+Menampilkan semua user dalam format tabel:
+- Nama, Email, Role, Status (Active/Inactive), Tanggal Daftar
+
+#### Fitur Manajemen
+
+| Aksi | Cara |
+|------|------|
+| **Cari user** | Ketik di search bar (filter by nama/email) |
+| **Filter by role** | Klik tab: All / Student / Teacher / Admin |
+| **Ubah role** | Klik dropdown role pada baris user → pilih role baru |
+| **Toggle status** | Klik toggle Active/Inactive |
+| **Hapus user** | Klik tombol hapus → konfirmasi |
+
+> Semua aksi memberikan feedback via toast notification.
+
+### 5.3 Content Moderation (`/admin/content`)
+
+#### Materi Pending
+
+- Daftar materi berstatus "Draft" yang menunggu persetujuan
+- Setiap item menampilkan: Judul, Penulis, Tanggal dibuat
+
+#### Aksi Moderasi
+
+- **Approve** — Mengubah status menjadi "Published" (terlihat oleh siswa)
+- **Reject** — Menolak materi (tetap Draft, penulis diberitahu)
+
+#### Overview Konten
+
+- Ringkasan konten yang sudah dipublikasikan
+- Status badge untuk setiap materi
+
+### 5.4 Platform Configuration (`/admin/config`)
+
+#### Parameter MSAT Algorithm
+
+| Parameter | Default | Deskripsi |
+|-----------|---------|-----------|
+| Jumlah Stage | 3 | Tahapan dalam satu sesi ujian |
+| Soal per Stage | 7 | Jumlah soal di setiap tahap |
+| Theta Min | -3.0 | Batas bawah estimasi kemampuan |
+| Theta Max | 3.0 | Batas atas estimasi kemampuan |
+| Anomaly Threshold (Speed) | 5 detik | Batas waktu minimum (di bawah ini dianggap terlalu cepat) |
+| Anomaly Threshold (Random) | 0.2 | Threshold deteksi jawaban acak |
+
+#### Parameter Gamifikasi
+
+| Parameter | Default | Deskripsi |
+|-----------|---------|-----------|
+| XP per Lesson Complete | 50 | XP saat menyelesaikan materi |
+| XP per Quiz Complete | 100 | XP saat menyelesaikan latihan |
+| XP per Exam Complete | 200 | XP saat menyelesaikan ujian |
+| XP per Correct Answer | 10 | XP per jawaban benar |
+| XP per Streak Day | 25 | XP bonus per hari streak |
+
+#### Menyimpan Konfigurasi
+
+1. Edit nilai parameter yang diinginkan
+2. Klik tombol **Save**
+3. Perubahan langsung tersimpan ke Firestore
+4. Toast notification mengkonfirmasi penyimpanan
+
+---
+
+## 6. Fitur Pendukung
+
+### 6.1 Navigasi
+
+**Desktop (layar ≥ 768px):**
+- Navbar horizontal di bagian atas
+- Logo di kiri → klik untuk kembali ke halaman utama
+- Menu navigasi di tengah
+- Notifikasi + Avatar di kanan
+
+**Mobile (layar < 768px):**
 - Bottom tab bar dengan 5 ikon
-- Student: Home, Materi, Latihan, Ujian, Profil
-- Teacher: Home, Materi, Soal, Siswa, Pesan
+- Siswa: Home, Materi, Latihan, Ujian, Profil
+- Guru: Home, Materi, Soal, Siswa, Pesan
 
-### 7.2 Offline Indicator
+### 6.2 Notifikasi
 
-Jika koneksi internet terputus, banner "Kamu sedang offline" akan muncul di atas halaman.
+**Mengakses:**
+- Klik ikon lonceng (🔔) di navbar
+- Dropdown menampilkan notifikasi terbaru
 
-### 7.3 PWA (Progressive Web App)
+**Jenis Notifikasi:**
+- Achievement baru diraih
+- Pesan dari guru
+- Pengingat belajar harian
+- Level up
 
-AKURAT bisa di-install di HP:
-1. Buka di browser mobile
-2. Klik "Add to Home Screen" / "Install App"
-3. Akses seperti aplikasi native
+### 6.3 Kalkulator Saintifik
 
-### 7.4 Bahasa
+Tersedia di halaman **Latihan** dan **Ujian** sebagai panel collapsible di sisi kanan.
+
+**Fitur:**
+- Operasi dasar: +, −, ×, ÷
+- Fungsi trigonometri: sin, cos, tan, arcsin, arccos, arctan
+- Logaritma: log (basis 10), ln (natural)
+- Pangkat: x², x³, xⁿ, √x
+- Konstanta: π (3.14159...), e (2.71828...)
+- Memori: MC, MR, M+, M−
+- Radian / Derajat toggle
+
+**Cara menggunakan:**
+1. Klik tombol **Kalkulator** di panel tools (sisi kanan)
+2. Panel kalkulator terbuka
+3. Gunakan tombol-tombol untuk menghitung
+4. Klik lagi untuk menutup panel
+
+### 6.4 Tabel Periodik
+
+Referensi tabel periodik unsur tersedia di halaman **Latihan** dan **Ujian**.
+
+**Informasi yang ditampilkan:**
+- Nomor atom
+- Simbol unsur
+- Nama unsur
+- Massa atom relatif
+- Golongan dan periode
+
+### 6.5 Offline Indicator
+
+Jika koneksi internet terputus:
+- Banner kuning muncul di bagian atas halaman
+- Pesan: "Kamu sedang offline"
+- Banner otomatis hilang saat koneksi kembali
+
+### 6.6 Progressive Web App (PWA)
+
+AKURAT dapat di-install sebagai aplikasi di perangkat mobile:
+
+**Android:**
+1. Buka AKURAT di Chrome
+2. Tap menu (⋮) → "Add to Home Screen"
+3. Konfirmasi → ikon AKURAT muncul di home screen
+
+**iOS:**
+1. Buka AKURAT di Safari
+2. Tap ikon Share (↑) → "Add to Home Screen"
+3. Konfirmasi → ikon AKURAT muncul di home screen
+
+### 6.7 Multi-Bahasa
 
 Platform mendukung 2 bahasa:
-- 🇮🇩 Bahasa Indonesia
-- 🇬🇧 English
+- 🇮🇩 **Bahasa Indonesia** (default)
+- 🇬🇧 **English**
 
-Ubah di: Settings → Bahasa
-
-### 7.5 Gamification
-
-- **XP** — Poin pengalaman dari setiap aktivitas
-- **Level** — Naik level setiap mencapai threshold XP
-- **Streak** — Hari berturut-turut belajar
-- **Achievements** — Badge yang didapat dari pencapaian tertentu
-
-### 7.6 Kalkulator Saintifik
-
-Tersedia di halaman Latihan dan Ujian:
-- Operasi dasar (+, -, ×, ÷)
-- Fungsi trigonometri (sin, cos, tan)
-- Logaritma (log, ln)
-- Pangkat dan akar
-- Konstanta (π, e)
-
-### 7.7 Tabel Periodik
-
-Referensi tabel periodik interaktif tersedia di halaman Latihan dan Ujian.
+Cara mengubah: Settings → Bahasa → Pilih bahasa → Otomatis diterapkan
 
 ---
 
-## 8. FAQ & Troubleshooting
+## 7. Sistem Gamifikasi
 
-### Q: Saya lupa password, bagaimana cara reset?
-**A:** Buka `/login` → klik "Forgot Password" → masukkan email → cek inbox.
+### 7.1 Experience Points (XP)
 
-### Q: Kenapa latihan Moderate/Hard terkunci?
-**A:** Selesaikan tingkat sebelumnya terlebih dahulu. Easy → Moderate → Hard (progressive unlock).
+XP adalah poin pengalaman yang dikumpulkan dari berbagai aktivitas:
 
-### Q: Bagaimana cara melihat hasil ujian saya?
-**A:** Setelah menyelesaikan ujian, hasil langsung ditampilkan. Anda juga bisa melihat riwayat di halaman Profil.
+| Aktivitas | XP |
+|-----------|-----|
+| Menyelesaikan materi | +50 XP |
+| Menyelesaikan latihan | +100 XP |
+| Menyelesaikan ujian | +200 XP |
+| Jawaban benar (latihan/ujian) | +10 XP |
+| Bonus streak harian | +25 XP |
 
-### Q: Kenapa Facebook login tidak bisa?
-**A:** Fitur Facebook login masih dalam pengembangan (coming soon). Gunakan Google atau email/password.
+### 7.2 Level System
 
-### Q: Bagaimana guru bisa melihat progress siswa?
-**A:** Buka `/teacher/students` → klik nama siswa → lihat statistik dan grafik perkembangan.
+Level naik berdasarkan akumulasi XP:
 
-### Q: Bagaimana cara menjadi admin?
-**A:** Admin ditentukan secara manual melalui Firebase Console. Hubungi administrator sistem untuk mengubah role Anda.
+| Level | XP Dibutuhkan |
+|-------|---------------|
+| 1 | 0 |
+| 2 | 100 |
+| 3 | 250 |
+| 4 | 500 |
+| 5 | 1000 |
+| ... | Progresif |
 
-### Q: Apakah data saya aman?
-**A:** Ya. AKURAT menggunakan Firebase Authentication untuk keamanan akun dan Firestore Security Rules untuk proteksi data. Baca kebijakan privasi di `/privacy`.
+### 7.3 Streak
 
-### Q: Aplikasi terasa lambat atau error?
-**A:** Coba:
-1. Refresh halaman (Ctrl+R)
-2. Clear cache browser
-3. Pastikan koneksi internet stabil
-4. Jika masih bermasalah, hubungi admin melalui `/contact`
+- Streak bertambah setiap hari Anda melakukan aktivitas belajar
+- Streak reset ke 0 jika melewatkan 1 hari
+- Longest streak tersimpan di profil
+
+### 7.4 Achievements
+
+13 achievements tersedia, contoh:
+
+| Badge | Syarat |
+|-------|--------|
+| First Steps | Selesaikan materi pertama |
+| Quiz Starter | Selesaikan latihan pertama |
+| Exam Brave | Selesaikan ujian pertama |
+| Streak 7 | Streak 7 hari berturut-turut |
+| Streak 30 | Streak 30 hari berturut-turut |
+| Perfect Score | Skor 100% di latihan |
+| Chemistry Novice | Capai Level 5 |
+| Chemistry Expert | Capai Level 10 |
 
 ---
 
-*Dokumen ini adalah panduan resmi penggunaan platform AKURAT. Untuk pertanyaan lebih lanjut, hubungi tim pengembang melalui halaman Contact.*
+## 8. Spesifikasi Teknis
+
+### 8.1 Arsitektur Platform
+
+| Komponen | Teknologi |
+|----------|-----------|
+| Frontend | Next.js 14 (React, App Router) |
+| Bahasa | TypeScript |
+| Styling | Tailwind CSS |
+| Animasi | Framer Motion |
+| Backend | Firebase (Firestore, Auth, Storage) |
+| Rendering Rumus | KaTeX (via react-markdown + rehype-katex) |
+| Testing | Vitest (18 unit tests) |
+
+### 8.2 Database Collections
+
+| Collection | Fungsi |
+|------------|--------|
+| `users` | Data profil dan statistik pengguna |
+| `materials` | Konten materi pembelajaran |
+| `question_bank` | Bank soal (96 soal: 32 per tingkat) |
+| `exam_sessions` | Riwayat sesi ujian |
+| `quiz_results` | Hasil latihan |
+| `user_progress` | Progress belajar per materi |
+| `achievements` | Definisi achievement |
+| `user_achievements` | Achievement yang diraih user |
+| `messages` | Pesan guru-siswa |
+| `notifications` | Notifikasi pengguna |
+| `app_config` | Konfigurasi platform |
+| `analytics_events` | Event tracking |
+
+### 8.3 Algoritma MSAT
+
+Multistage Adaptive Testing bekerja sebagai berikut:
+
+```
+Stage 1 (7 soal moderate)
+    ↓ Hitung theta
+Stage 2 (7 soal, kesulitan berdasarkan theta Stage 1)
+    ↓ Hitung theta
+Stage 3 (7 soal, kesulitan berdasarkan theta Stage 2)
+    ↓ Hitung theta final
+Hasil: Theta, Proficiency Level, Confidence Score
+```
+
+**Proficiency Levels:**
+- Theta < -1.5 → Novice
+- Theta -1.5 to -0.5 → Beginner
+- Theta -0.5 to 0.5 → Intermediate
+- Theta 0.5 to 1.5 → Advanced
+- Theta > 1.5 → Expert
+
+---
+
+## 9. Pemecahan Masalah
+
+### 9.1 Masalah Umum
+
+| Masalah | Solusi |
+|---------|--------|
+| Halaman tidak bisa dibuka | Periksa koneksi internet. Refresh halaman (Ctrl+R / Cmd+R) |
+| Login gagal | Pastikan email dan password benar. Coba reset password |
+| Latihan terkunci | Selesaikan tingkat sebelumnya terlebih dahulu |
+| Ujian terhenti | Refresh halaman. Jika masih bermasalah, sesi mungkin sudah expired |
+| Notifikasi tidak muncul | Periksa pengaturan notifikasi di Settings |
+| Tampilan berantakan | Clear cache browser (Ctrl+Shift+Delete) |
+| Facebook login tidak bisa | Fitur masih dalam pengembangan. Gunakan Google atau email |
+
+### 9.2 Error Messages
+
+Platform menampilkan pesan error yang ramah pengguna:
+
+| Kode | Pesan | Solusi |
+|------|-------|--------|
+| auth/email-already-in-use | Email sudah terdaftar | Gunakan email lain atau login |
+| auth/wrong-password | Password salah | Periksa kembali atau reset password |
+| auth/user-not-found | Akun tidak ditemukan | Periksa email atau buat akun baru |
+| auth/too-many-requests | Terlalu banyak percobaan | Tunggu beberapa menit |
+| auth/weak-password | Password terlalu lemah | Gunakan minimal 6 karakter |
+
+### 9.3 Kontak Dukungan
+
+Jika masalah tidak terselesaikan:
+1. Buka halaman `/contact`
+2. Isi formulir kontak dengan deskripsi masalah
+3. Tim support akan merespons dalam 1×24 jam
+
+---
+
+## 10. Lampiran
+
+### 10.1 Daftar URL Halaman
+
+**Publik (tanpa login):**
+| URL | Halaman |
+|-----|---------|
+| `/` | Landing Page |
+| `/about` | Tentang AKURAT |
+| `/privacy` | Kebijakan Privasi |
+| `/terms` | Syarat & Ketentuan |
+| `/contact` | Kontak |
+| `/login` | Halaman Login |
+| `/register` | Halaman Registrasi |
+| `/forgot-password` | Reset Password |
+
+**Siswa (perlu login):**
+| URL | Halaman |
+|-----|---------|
+| `/dashboard` | Dashboard Siswa |
+| `/materi` | Daftar Materi |
+| `/materi/[id]` | Baca Materi |
+| `/latihan` | Daftar Latihan |
+| `/latihan/[difficulty]` | Sesi Latihan |
+| `/ujian` | Halaman Ujian |
+| `/ujian/[id]/session` | Sesi Ujian MSAT |
+| `/ujian/[id]/results` | Hasil Ujian |
+| `/profile` | Profil & Achievements |
+| `/settings` | Pengaturan |
+| `/onboarding` | Onboarding (pertama kali) |
+
+**Guru (perlu login sebagai Teacher):**
+| URL | Halaman |
+|-----|---------|
+| `/teacher` | Dashboard Guru |
+| `/teacher/materials` | Kelola Materi |
+| `/teacher/questions` | Kelola Soal |
+| `/teacher/students` | Daftar Siswa |
+| `/teacher/students/[id]` | Detail Siswa |
+| `/teacher/messages` | Pesan |
+
+**Admin (perlu login sebagai Admin):**
+| URL | Halaman |
+|-----|---------|
+| `/admin` | Dashboard Admin |
+| `/admin/users` | Manajemen User |
+| `/admin/content` | Moderasi Konten |
+| `/admin/config` | Konfigurasi Platform |
+
+### 10.2 Keyboard Shortcuts
+
+| Shortcut | Fungsi |
+|----------|--------|
+| `Enter` | Submit jawaban (latihan/ujian) |
+| `Enter` | Kirim pesan (messaging) |
+| `1-5` atau `A-E` | Pilih opsi jawaban |
+
+### 10.3 Format Penulisan Rumus (untuk Guru)
+
+Saat menulis materi atau soal, gunakan format KaTeX:
+
+| Penulisan | Hasil |
+|-----------|-------|
+| `$H_2O$` | H₂O (inline) |
+| `$\Delta G$` | ΔG |
+| `$\frac{n}{V}$` | n/V (pecahan) |
+| `$K_c = \frac{[C]^c[D]^d}{[A]^a[B]^b}$` | Rumus Kc |
+| `$$PV = nRT$$` | Persamaan gas ideal (block) |
+
+---
+
+*Dokumen ini merupakan panduan resmi penggunaan platform AKURAT versi 2.0. Untuk pembaruan terbaru, periksa repository dokumentasi atau hubungi tim pengembang.*
+
+**© 2026 AKURAT — Asesmen Kimia Ukur Adaptif Terpadu. All rights reserved.**
