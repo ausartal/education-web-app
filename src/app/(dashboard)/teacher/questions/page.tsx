@@ -6,6 +6,8 @@ import {
   collection,
   getDocs,
   addDoc,
+  deleteDoc,
+  doc,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -87,6 +89,40 @@ const TeacherQuestions: FC = () => {
     setQuestions(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Question));
   };
 
+  const handleDelete = async (id: string) => {
+    await deleteDoc(doc(db, 'question_bank', id));
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
+    addToast('success', 'Question deleted');
+  };
+
+  const handleBulkImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    try {
+      const data = JSON.parse(text);
+      if (!Array.isArray(data)) throw new Error('Not an array');
+      for (const q of data) {
+        await addDoc(collection(db, 'question_bank'), {
+          ...q,
+          usageCount: 0,
+          avgCorrectRate: 0,
+          avgTimeSpent: 0,
+          createdBy: 'teacher',
+          status: 'active',
+          createdAt: serverTimestamp(),
+        });
+      }
+      addToast('success', `${data.length} questions imported`);
+      const snap = await getDocs(collection(db, 'question_bank'));
+      setQuestions(
+        snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Question)
+      );
+    } catch {
+      addToast('error', 'Invalid JSON file');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -151,8 +187,33 @@ const TeacherQuestions: FC = () => {
               <p className="text-xs text-gray-500">
                 Answer: {q.correctAnswer} • Time: {q.baseTime}s
               </p>
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => handleDelete(q.id)}
+                  className="rounded-lg px-2.5 py-1 text-xs text-rose-600 transition-colors hover:bg-rose-50"
+                >
+                  Delete
+                </button>
+              </div>
             </motion.div>
           ))}
+        </div>
+
+        {/* Bulk Import */}
+        <div className="mt-6 rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center">
+          <input
+            type="file"
+            accept=".json"
+            onChange={handleBulkImport}
+            className="hidden"
+            id="bulk-import"
+          />
+          <label
+            htmlFor="bulk-import"
+            className="cursor-pointer text-sm text-gray-500 hover:text-primary"
+          >
+            📁 Bulk Import — Drop a JSON file to import questions
+          </label>
         </div>
 
         {/* Create Modal */}
