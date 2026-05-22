@@ -328,30 +328,25 @@
 
 ## PHASE 5: STUDENT FEATURES
 
-### 5.1 Student Dashboard
+### 5.1 Student Dashboard (Brilliant-style)
 
-- [ ] Welcome hero section:
-  - [ ] Greeting dengan user name + emoji
-  - [ ] Current streak display (🔥 + counter)
-  - [ ] Today's goal progress
-  - [ ] Quick start button ("Lanjut Belajar")
-- [ ] Stats grid (4 cards):
-  - [ ] Total XP earned
-  - [ ] Materials completed (x/y)
-  - [ ] Average quiz score
-  - [ ] Achievements unlocked
-- [ ] Quick actions (4 buttons):
-  - [ ] Continue learning
-  - [ ] Practice quiz
-  - [ ] Take exam
-  - [ ] Ask teacher
-- [ ] Learning path section:
-  - [ ] Current lesson highlight
-  - [ ] Next 3 recommended lessons
-  - [ ] Progress per lesson card
-  - [ ] Visual status: completed → in progress → locked
-- [ ] Recent activity feed (timeline format)
-- [ ] Leaderboard widget (top 5 + user position)
+- [x] Header row: "Welcome back" (left) + "Jump back in" with arrow nav (right)
+- [x] Left column:
+  - [x] Streak card (gradient amber→red, day indicators, streak count)
+  - [x] Progress Overview with toggle switch (list ↔ chart):
+    - [x] List view: colorful stat pills (Materi, XP, Quiz, Time)
+    - [x] Chart view: donut chart (materials %) + gradient bar charts
+  - [x] Weekly activity bar graph
+- [x] Right column — Stacked card carousel (Framer Motion):
+  - [x] 7 chemistry course topics with unique gradient backgrounds
+  - [x] Decorative circles on card backgrounds
+  - [x] Topic name, subtitle, level display
+  - [x] Lesson preview pills (frosted glass style)
+  - [x] "Start Learning" / "Continue Learning" button
+  - [x] 1 back card visible on each side (scale 0.92, clickable)
+  - [x] Thumbnail selector below
+- [x] Responsive layout (stacks on mobile)
+- [x] Animations: fadeIn entrance, hover scale, smooth card transitions
 
 ### 5.2 Material/Learning Pages
 
