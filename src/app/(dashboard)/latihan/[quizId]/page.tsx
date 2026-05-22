@@ -183,28 +183,24 @@ const QuizPage: FC = () => {
   const isCorrect = selected === currentQ?.correctAnswer;
 
   return (
-    <div className="relative min-h-screen bg-gray-950 px-4 py-6">
-      {/* Decorative blurs */}
-      <div className="absolute -left-20 top-1/3 h-80 w-80 rounded-full bg-violet-600/20 blur-3xl" />
-      <div className="absolute -right-20 bottom-1/4 h-64 w-64 rounded-full bg-rose-600/15 blur-3xl" />
-
-      <div className="relative mx-auto max-w-6xl">
+    <div className="min-h-screen bg-[#F8F9FB] px-4 py-6">
+      <div className="mx-auto max-w-6xl">
         {/* Top bar */}
         <div className="mb-4 flex items-center justify-between">
           <button
             onClick={() => router.push('/latihan')}
-            className="rounded-lg p-2 text-gray-400 hover:text-white"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
           >
-            ←
+            ← Back
           </button>
-          <span className="rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold capitalize text-white">
+          <span className="rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold capitalize text-primary">
             {difficulty}
           </span>
           <div
             className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold ${
               timer <= 10
-                ? 'bg-rose-500/20 text-rose-400 animate-pulse'
-                : 'bg-white/10 text-white'
+                ? 'bg-rose-100 text-rose-600 animate-pulse'
+                : 'bg-gray-100 text-gray-700'
             }`}
           >
             <Clock size={14} />
@@ -213,9 +209,9 @@ const QuizPage: FC = () => {
         </div>
 
         {/* Progress bar */}
-        <div className="mb-6 h-2 overflow-hidden rounded-full bg-white/10">
+        <div className="mb-6 h-2 overflow-hidden rounded-full bg-gray-200">
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"
+            className="h-full rounded-full bg-gradient-to-r from-primary to-primary-cyan"
             animate={{
               width: `${((currentIdx + 1) / questions.length) * 100}%`,
             }}
@@ -223,7 +219,7 @@ const QuizPage: FC = () => {
         </div>
 
         {/* 2-column layout */}
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
           {/* Left - Question + Options */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -233,45 +229,38 @@ const QuizPage: FC = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.25 }}
             >
-              {/* Question */}
-              <div className="mb-6 rounded-2xl bg-white/5 p-6 backdrop-blur-sm">
-                <p className="text-xs text-gray-400 mb-2">
+              <div className="mb-5 rounded-2xl bg-white p-6 shadow-sm">
+                <p className="mb-1 text-xs text-gray-400">
                   Question {currentIdx + 1} of {questions.length}
                 </p>
-                <p className="font-display text-lg font-bold leading-relaxed text-white">
+                <p className="font-display text-base font-bold leading-relaxed text-gray-900">
                   {currentQ.stem}
                 </p>
               </div>
 
-              {/* Options - 2x2 grid */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {shuffledOptions.map((key) => {
                   const isSelected = selected === key;
                   const isAnswer = key === currentQ.correctAnswer;
                   let style =
-                    'bg-white/5 border-white/10 hover:bg-white/10 text-white';
-
+                    'bg-white border-gray-200 hover:border-primary/40 text-gray-800';
                   if (submitted) {
                     if (isAnswer)
                       style =
-                        'bg-emerald-500/20 border-emerald-500 text-emerald-300';
+                        'bg-emerald-50 border-emerald-400 text-emerald-800';
                     else if (isSelected && !isAnswer)
-                      style = 'bg-rose-500/20 border-rose-500 text-rose-300';
-                    else
-                      style =
-                        'bg-white/5 border-white/5 text-gray-500 opacity-50';
+                      style = 'bg-rose-50 border-rose-400 text-rose-800';
+                    else style = 'bg-gray-50 border-gray-100 text-gray-400';
                   } else if (isSelected) {
-                    style =
-                      'bg-violet-500/20 border-violet-500 ring-1 ring-violet-400 text-white';
+                    style = 'bg-primary/5 border-primary text-gray-900';
                   }
-
                   return (
                     <motion.button
                       key={key}
                       whileTap={!submitted ? { scale: 0.97 } : {}}
                       onClick={() => !submitted && setSelected(key)}
                       disabled={submitted}
-                      className={`flex items-center gap-3 rounded-xl border px-4 py-4 text-left transition-all ${style}`}
+                      className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-all ${style}`}
                     >
                       <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
@@ -280,8 +269,8 @@ const QuizPage: FC = () => {
                             : submitted && isSelected && !isAnswer
                               ? 'bg-rose-500 text-white'
                               : isSelected
-                                ? 'bg-violet-500 text-white'
-                                : 'bg-white/10 text-gray-400'
+                                ? 'bg-primary text-white'
+                                : 'bg-gray-100 text-gray-600'
                         }`}
                       >
                         {key}
@@ -294,42 +283,36 @@ const QuizPage: FC = () => {
                 })}
               </div>
 
-              {/* Feedback */}
               {submitted && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`mt-4 rounded-xl p-4 ${
-                    isCorrect
-                      ? 'bg-emerald-500/10 border border-emerald-500/30'
-                      : 'bg-rose-500/10 border border-rose-500/30'
-                  }`}
+                  className={`mt-4 rounded-xl p-4 ${isCorrect ? 'bg-emerald-50' : 'bg-rose-50'}`}
                 >
                   <p
-                    className={`mb-1 text-sm font-bold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}
+                    className={`mb-1 text-sm font-bold ${isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}
                   >
                     {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-600">
                     {currentQ.explanation}
                   </p>
                 </motion.div>
               )}
 
-              {/* Submit/Next */}
               <div className="mt-5">
                 {!submitted ? (
                   <button
                     onClick={handleSubmit}
                     disabled={!selected}
-                    className="w-full rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition-all disabled:opacity-30 hover:enabled:-translate-y-0.5"
+                    className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md shadow-primary/20 transition-all disabled:opacity-30 hover:enabled:-translate-y-0.5"
                   >
                     Submit Answer
                   </button>
                 ) : (
                   <button
                     onClick={handleNext}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition-all hover:-translate-y-0.5"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5"
                   >
                     {currentIdx >= questions.length - 1
                       ? 'See Results'
@@ -343,55 +326,55 @@ const QuizPage: FC = () => {
 
           {/* Right - Stats + Tools */}
           <div className="space-y-4">
-            {/* Stats Card */}
-            <div className="rounded-2xl bg-white/5 p-5 backdrop-blur-sm">
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
               <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">
                 Quiz Stats
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Score</span>
-                  <span className="font-bold text-white">
+                  <span className="text-gray-500">Score</span>
+                  <span className="font-bold text-gray-900">
                     {score}/{currentIdx + (submitted ? 1 : 0)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Difficulty</span>
-                  <span className="font-bold capitalize text-violet-400">
-                    {difficulty}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Progress</span>
-                  <span className="font-bold text-cyan-400">
+                  <span className="text-gray-500">Progress</span>
+                  <span className="font-bold text-primary">
                     {currentIdx + 1}/{questions.length}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Tools */}
-            <div className="space-y-2">
+            <div className="rounded-2xl bg-white shadow-sm">
               <button
                 onClick={() => setShowCalc(!showCalc)}
-                className={`w-full rounded-xl px-4 py-3 text-left text-xs font-semibold transition-all ${showCalc ? 'bg-violet-500/20 text-violet-300' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                className="flex w-full items-center justify-between px-5 py-3.5 text-sm font-semibold text-gray-700"
               >
-                🧮 Calculator {showCalc ? '▲' : '▼'}
+                Calculator
+                <span className="text-xs text-gray-400">
+                  {showCalc ? '▲' : '▼'}
+                </span>
               </button>
               {showCalc && (
-                <div className="rounded-xl bg-white/5 p-3">
+                <div className="border-t border-gray-100 p-4">
                   <ScientificCalculator />
                 </div>
               )}
+            </div>
 
+            <div className="rounded-2xl bg-white shadow-sm">
               <button
                 onClick={() => setShowPeriodic(!showPeriodic)}
-                className={`w-full rounded-xl px-4 py-3 text-left text-xs font-semibold transition-all ${showPeriodic ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                className="flex w-full items-center justify-between px-5 py-3.5 text-sm font-semibold text-gray-700"
               >
-                ⚗️ Periodic Table {showPeriodic ? '▲' : '▼'}
+                Periodic Table
+                <span className="text-xs text-gray-400">
+                  {showPeriodic ? '▲' : '▼'}
+                </span>
               </button>
               {showPeriodic && (
-                <div className="rounded-xl bg-white/5 p-3">
+                <div className="border-t border-gray-100 p-4">
                   <PeriodicTableRef />
                 </div>
               )}
