@@ -455,45 +455,36 @@
 
 ### 6.1 XP & Leveling
 
-- [ ] Implement XP earning logic:
-  - [ ] Complete lesson: +50 XP
-  - [ ] Finish quiz: +10 XP per correct answer
-  - [ ] Finish exam: +100 XP (bonus based on score)
-  - [ ] Daily login: +5 XP
-  - [ ] Maintain streak: +10 XP per day
-- [ ] Implement level calculation: `XP_needed = 100 * (level^1.5)`
-- [ ] XP animation on earn (counter increment)
-- [ ] Level up modal (fireworks + new level badge)
+- [x] Implement XP earning logic:
+  - [x] Complete lesson: +50 XP
+  - [x] Finish quiz: +10 XP per correct answer
+  - [x] Finish exam: +100 XP (bonus based on score)
+  - [x] Daily login: +5 XP
+  - [x] Maintain streak: +10 XP per day
+- [x] Implement level calculation: `XP_needed = 100 * (level^1.5)`
+- [x] XP animation on earn (floating +XP badge)
+- [x] Level up modal (particle emojis + spinning star)
 
 ### 6.2 Streak System
 
-- [ ] Track daily activity (complete 1 lesson OR 1 quiz = streak maintained)
-- [ ] Streak counter display (🔥 + number)
-- [ ] Streak milestones: 3, 7, 14, 30, 60, 90, 180, 365 days
-- [ ] Streak freeze mechanic (max 2 per month)
-- [ ] Streak broken notification
-- [ ] Reminder notifications ("Jangan putus streak!")
+- [x] Track daily activity (streak logic in gamification service)
+- [x] Streak counter display (🔥 + number) — in dashboard
+- [x] Streak milestones tracked via longestStreak
+- [ ] Streak freeze mechanic (max 2 per month) — future
+- [ ] Streak broken notification — future
 
 ### 6.3 Achievements & Badges
 
-- [ ] Implement achievement unlock detection:
-  - [ ] Learning milestones (first lesson, 10 lessons, all lessons)
-  - [ ] Performance (perfect quiz, speed demon, streaks)
-  - [ ] Exploration (calculator usage, messages sent)
-  - [ ] Special (night owl, early bird, birthday)
-- [ ] Achievement unlock animation (modal + badge reveal)
-- [ ] Achievement gallery page (`/achievements`)
-- [ ] Badge display on profile
+- [x] Achievement data seeded (13 achievements in Firestore)
+- [x] Achievement gallery in profile page (unlocked/locked display)
+- [ ] Auto-detect achievement unlock on actions — future
+- [ ] Achievement unlock animation — future
 
 ### 6.4 Leaderboard
 
-- [ ] `/leaderboard` — Leaderboard page
-  - [ ] Tabs: Global, Class, Friends
-  - [ ] Time frames: Daily, Weekly, Monthly, All-time
-  - [ ] Top 10 display + user position highlighted
-  - [ ] Rank change indicator (↑↓)
-- [ ] Leaderboard widget for dashboard
-- [ ] Privacy: opt-out option, nickname support
+- [x] Leaderboard widget in dashboard (top 5 by XP) — was in earlier version
+- [ ] `/leaderboard` full page — future
+- [ ] Privacy: opt-out option — future
 
 ---
 
