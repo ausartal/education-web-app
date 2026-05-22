@@ -35,7 +35,7 @@
 ### 1.2 Design System Implementation
 
 - [ ] Implement CSS variables / design tokens di `globals.css`:
-  - [ ] Color palette (primary, secondary, semantic, grays)
+  - [ ] Color palette only light mode (primary, secondary, semantic, grays)
   - [ ] Gradient definitions
   - [ ] Typography scale (font families, sizes, weights, line-heights)
   - [ ] Spacing system (4px base unit)
@@ -908,28 +908,24 @@
 
 | Priority | Phase | Estimated Time |
 |----------|-------|---------------|
-| 🔴 P0 | Phase 1: Foundation (setup, auth, layout) | 1-2 minggu |
+| 🔴 P0 | Phase 1: Foundation | 1-2 minggu |
 | 🔴 P0 | Phase 2: UI Components | 1 minggu |
-| 🔴 P0 | Phase 3: Database, Schema & Seed | 1 minggu |
+| 🔴 P0 | Phase 3: Database & Content | 1 minggu |
 | 🟠 P1 | Phase 4: Public Pages | 3-4 hari |
-| 🟠 P1 | Phase 5: Student Features (incl. MSAT, onboarding, notifications) | 3-4 minggu |
+| 🟠 P1 | Phase 5: Student Features | 2-3 minggu |
 | 🟠 P1 | Phase 6: Gamification | 1 minggu |
 | 🟡 P2 | Phase 7: Teacher Features | 1-2 minggu |
 | 🟡 P2 | Phase 8: Admin Features | 1 minggu |
-| 🟡 P2 | Phase 9: Animations & Micro-interactions | 3-4 hari |
-| 🟢 P3 | Phase 10: Accessibility & i18n | 4-5 hari |
-| 🟢 P3 | Phase 11: Performance, PWA & Offline | 3-4 hari |
-| 🟢 P3 | Phase 12: Analytics, Monitoring & Observability | 3-4 hari |
-| 🟢 P3 | Phase 13: Testing (final audit) | 1-2 minggu |
-| 🔵 P4 | Phase 14: CI/CD, Security, DX & Deployment | 1-2 minggu |
-| ⚪ P5 | Phase 15: Future Enhancements | Ongoing |
+| 🟡 P2 | Phase 9: Animations | 3-4 hari |
+| 🟢 P3 | Phase 10: Accessibility | 3-4 hari |
+| 🟢 P3 | Phase 11: Performance | 2-3 hari |
+| 🟢 P3 | Phase 12: Analytics | 2-3 hari |
+| 🟢 P3 | Phase 13: Testing | 1-2 minggu |
+| 🔵 P4 | Phase 14: Deployment | 3-5 hari |
+| ⚪ P5 | Phase 15: Future | Ongoing |
 
-**Total Estimated MVP (Phase 1-6): ~8-10 minggu**  
-**Total Full Platform (Phase 1-14): ~14-18 minggu**
-
----
-
-> 💡 **Tips**: Phase 14 (CI/CD, Emulator, DX) bisa dimulai paralel dengan Phase 1 — setup CI pipeline dan emulator sejak awal akan mempercepat development secara keseluruhan.
+**Total Estimated MVP (Phase 1-6): ~6-8 minggu**  
+**Total Full Platform (Phase 1-14): ~12-16 minggu**
 
 ---
 
