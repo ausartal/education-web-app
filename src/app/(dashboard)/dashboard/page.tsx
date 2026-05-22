@@ -13,7 +13,8 @@ import {
   BookOpen,
   Target,
   Clock,
-  ArrowRight,
+  BarChart3,
+  PieChart,
 } from 'lucide-react';
 
 const courseTopics = [
@@ -55,6 +56,7 @@ const DashboardPage: FC = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [activeCourseIdx, setActiveCourseIdx] = useState(0);
+  const [viewMode, setViewMode] = useState<'list' | 'chart'>('list');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -155,75 +157,201 @@ const DashboardPage: FC = () => {
           <div className="animate-[fadeIn_0.7s_ease-out] rounded-3xl bg-white p-6 shadow-sm shadow-gray-100">
             <div className="mb-5 flex items-center justify-between">
               <h3 className="font-bold text-gray-900">Your Progress</h3>
-              <Link
-                href="/profile"
-                className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80"
+              {/* Toggle Switch: List ↔ Chart */}
+              <button
+                onClick={() =>
+                  setViewMode(viewMode === 'list' ? 'chart' : 'list')
+                }
+                className="relative flex h-8 w-16 items-center rounded-full bg-gray-100 p-1 transition-colors"
+                aria-label="Toggle view mode"
               >
-                Details <ArrowRight size={12} />
-              </Link>
+                <div
+                  className={`absolute h-6 w-6 rounded-full bg-white shadow-md transition-all duration-300 ${
+                    viewMode === 'chart' ? 'left-[34px]' : 'left-[4px]'
+                  }`}
+                />
+                <BarChart3
+                  size={12}
+                  className={`relative z-10 ml-1.5 transition-colors ${
+                    viewMode === 'list' ? 'text-primary' : 'text-gray-400'
+                  }`}
+                />
+                <PieChart
+                  size={12}
+                  className={`relative z-10 ml-4 transition-colors ${
+                    viewMode === 'chart' ? 'text-primary' : 'text-gray-400'
+                  }`}
+                />
+              </button>
             </div>
 
-            {/* Stats - Colorful pills */}
-            <div className="mb-6 space-y-3">
-              <div className="flex items-center gap-3 rounded-2xl bg-blue-50/80 px-4 py-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-                  <BookOpen size={16} className="text-primary" />
+            {viewMode === 'list' ? (
+              /* List View - Colorful pills */
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 rounded-2xl bg-blue-50/80 px-4 py-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+                    <BookOpen size={16} className="text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-500">Materi Selesai</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      {completedCount} of {materials.length}
+                    </p>
+                  </div>
+                  <div className="h-2 w-20 overflow-hidden rounded-full bg-blue-100">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-700"
+                      style={{
+                        width: `${materials.length > 0 ? (completedCount / materials.length) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500">Materi Selesai</p>
-                  <p className="text-sm font-bold text-gray-900">
-                    {completedCount} of {materials.length}
-                  </p>
+
+                <div className="flex items-center gap-3 rounded-2xl bg-amber-50/80 px-4 py-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
+                    <Zap size={16} className="text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-500">Total XP</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      {profile.stats.xp.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="h-2 w-20 overflow-hidden rounded-full bg-blue-100">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-700"
-                    style={{
-                      width: `${materials.length > 0 ? (completedCount / materials.length) * 100 : 0}%`,
-                    }}
-                  />
+
+                <div className="flex items-center gap-3 rounded-2xl bg-emerald-50/80 px-4 py-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
+                    <Target size={16} className="text-emerald-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-500">Quiz Completed</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      {profile.stats.totalQuizzes}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 rounded-2xl bg-violet-50/80 px-4 py-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100">
+                    <Clock size={16} className="text-violet-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-500">Time Spent</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      {Math.round(totalTimeSpent / 60)} min
+                    </p>
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center gap-3 rounded-2xl bg-amber-50/80 px-4 py-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
-                  <Zap size={16} className="text-amber-600" />
+            ) : (
+              /* Chart View - Donut + Bar */
+              <div className="space-y-5">
+                {/* Donut Chart - Materials Progress */}
+                <div className="flex items-center gap-5">
+                  <div className="relative h-24 w-24 shrink-0">
+                    <svg
+                      viewBox="0 0 36 36"
+                      className="h-full w-full -rotate-90"
+                    >
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="14"
+                        fill="none"
+                        stroke="#E5E7EB"
+                        strokeWidth="4"
+                      />
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="14"
+                        fill="none"
+                        stroke="url(#progressGradient)"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeDasharray={`${materials.length > 0 ? (completedCount / materials.length) * 88 : 0} 88`}
+                        className="transition-all duration-1000"
+                      />
+                      <defs>
+                        <linearGradient id="progressGradient">
+                          <stop offset="0%" stopColor="#1A73E8" />
+                          <stop offset="100%" stopColor="#00C2FF" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-lg font-black text-gray-900">
+                        {materials.length > 0
+                          ? Math.round(
+                              (completedCount / materials.length) * 100
+                            )
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                      <span className="text-xs text-gray-600">
+                        Completed ({completedCount})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-2.5 w-2.5 rounded-full bg-gray-200" />
+                      <span className="text-xs text-gray-600">
+                        Remaining ({materials.length - completedCount})
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500">Total XP</p>
-                  <p className="text-sm font-bold text-gray-900">
-                    {profile.stats.xp.toLocaleString()}
-                  </p>
+
+                {/* Bar Chart - Stats comparison */}
+                <div className="space-y-2.5">
+                  {[
+                    {
+                      label: 'XP',
+                      value: profile.stats.xp,
+                      max: 500,
+                      color: 'from-amber-400 to-orange-400',
+                    },
+                    {
+                      label: 'Quiz',
+                      value: profile.stats.totalQuizzes,
+                      max: 20,
+                      color: 'from-emerald-400 to-teal-400',
+                    },
+                    {
+                      label: 'Time',
+                      value: Math.round(totalTimeSpent / 60),
+                      max: 120,
+                      color: 'from-violet-400 to-purple-400',
+                    },
+                  ].map((stat) => (
+                    <div key={stat.label}>
+                      <div className="mb-1 flex justify-between text-xs">
+                        <span className="text-gray-500">{stat.label}</span>
+                        <span className="font-semibold text-gray-700">
+                          {stat.value}
+                        </span>
+                      </div>
+                      <div className="h-3 overflow-hidden rounded-full bg-gray-100">
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${stat.color} transition-all duration-1000`}
+                          style={{
+                            width: `${Math.min((stat.value / stat.max) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              <div className="flex items-center gap-3 rounded-2xl bg-emerald-50/80 px-4 py-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
-                  <Target size={16} className="text-emerald-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500">Quiz Completed</p>
-                  <p className="text-sm font-bold text-gray-900">
-                    {profile.stats.totalQuizzes}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-2xl bg-violet-50/80 px-4 py-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100">
-                  <Clock size={16} className="text-violet-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500">Time Spent</p>
-                  <p className="text-sm font-bold text-gray-900">
-                    {Math.round(totalTimeSpent / 60)} min
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Activity Graph */}
-            <div>
+            {/* Weekly Activity Graph (always visible) */}
+            <div className="mt-5 border-t border-gray-50 pt-4">
               <div className="mb-3 flex items-center gap-1.5">
                 <TrendingUp size={14} className="text-gray-400" />
                 <span className="text-xs font-medium text-gray-500">
