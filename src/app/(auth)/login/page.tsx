@@ -19,7 +19,7 @@ const LoginPage: FC = () => {
     setLoading(true);
     try {
       await signIn(email, password);
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login gagal. Coba lagi.');
     } finally {
@@ -32,7 +32,7 @@ const LoginPage: FC = () => {
     setLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login Google gagal.');
     } finally {

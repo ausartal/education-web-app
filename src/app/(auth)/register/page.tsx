@@ -26,7 +26,7 @@ const RegisterPage: FC = () => {
     setLoading(true);
     try {
       await signUp(email, password, fullName, role);
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Registrasi gagal. Coba lagi.'
@@ -41,7 +41,7 @@ const RegisterPage: FC = () => {
     setLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign up gagal.');
     } finally {
