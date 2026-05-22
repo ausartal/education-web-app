@@ -207,9 +207,9 @@ export default function Home() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="font-display text-[42px] font-extrabold uppercase leading-[1.08] tracking-tight text-[#0E1E47] sm:text-5xl lg:text-[58px]"
             >
-              Measure <span className="text-[#1A73E8]">Precisely</span>
+              Decode <span className="text-[#1A73E8]">Chemistry</span>
               <br />
-              <span className="text-[#1A73E8]">Learn</span> Accurately
+              <span className="text-[#1A73E8]">Spark</span> Curiosity
             </motion.h1>
 
             <motion.p
