@@ -63,22 +63,22 @@
 
 ### 1.4 Authentication System
 
-- [ ] Create `src/context/AuthContext.tsx` — Auth state provider
-- [ ] Implement auth functions di `src/services/auth.ts`:
-  - [ ] `signUp(email, password, role)` — Register user baru
-  - [ ] `signIn(email, password)` — Login
-  - [ ] `signInWithGoogle()` — Google OAuth
-  - [ ] `signOut()` — Logout
-  - [ ] `resetPassword(email)` — Forgot password
-- [ ] Create auth pages:
-  - [ ] `/login` — Login page
-  - [ ] `/register` — Registration page (dengan role selection)
-  - [ ] `/forgot-password` — Reset password page
-- [ ] Implement route protection:
-  - [ ] `src/components/guards/AuthGuard.tsx` — Redirect ke login jika belum auth
-  - [ ] `src/components/guards/RoleGuard.tsx` — Restrict berdasarkan role (student/teacher/admin)
-- [ ] Setup user profile creation di Firestore saat register
-- [ ] Implement session persistence (remember me)
+- [x] Create `src/context/AuthContext.tsx` — Auth state provider
+- [x] Implement auth functions di `src/services/auth.ts`:
+  - [x] `signUp(email, password, role)` — Register user baru
+  - [x] `signIn(email, password)` — Login
+  - [x] `signInWithGoogle()` — Google OAuth
+  - [x] `signOut()` — Logout
+  - [x] `resetPassword(email)` — Forgot password
+- [x] Create auth pages:
+  - [x] `/login` — Login page
+  - [x] `/register` — Registration page (dengan role selection)
+  - [x] `/forgot-password` — Reset password page
+- [x] Implement route protection:
+  - [x] `src/components/guards/AuthGuard.tsx` — Redirect ke login jika belum auth
+  - [x] `src/components/guards/RoleGuard.tsx` — Restrict berdasarkan role (student/teacher/admin)
+- [x] Setup user profile creation di Firestore saat register
+- [x] Implement session persistence (remember me)
 
 ### 1.5 Core Layout & Navigation
 
