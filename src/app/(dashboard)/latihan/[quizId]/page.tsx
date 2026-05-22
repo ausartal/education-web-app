@@ -14,10 +14,14 @@ import { getQuestionsByDifficulty } from '@/services/questions';
 import { Question, Difficulty, AnswerKey } from '@/types/firestore';
 import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
 import { PeriodicTableRef } from '@/components/tools/PeriodicTableRef';
+import { useAuth } from '@/context/AuthContext';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const QuizPage: FC = () => {
   const params = useParams();
   const router = useRouter();
+  const { profile } = useAuth();
   const difficulty = params.quizId as Difficulty;
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -80,6 +84,24 @@ const QuizPage: FC = () => {
   const handleNext = () => {
     if (currentIdx >= questions.length - 1) {
       setFinished(true);
+      // Save completion to Firestore
+      if (profile) {
+        const finalScore =
+          score + (selected === currentQ?.correctAnswer ? 1 : 0);
+        const percentage = Math.round((finalScore / questions.length) * 100);
+        const data: Record<string, unknown> = {
+          [`lastQuiz_${difficulty}`]: {
+            score: percentage,
+            completedAt: new Date().toISOString(),
+            correct: finalScore,
+            total: questions.length,
+          },
+        };
+        if (difficulty === 'easy') {
+          data.easyQuizCompleted = true;
+        }
+        updateDoc(doc(db, 'users', profile.uid), data);
+      }
       return;
     }
     setCurrentIdx((i) => i + 1);

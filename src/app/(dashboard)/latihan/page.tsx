@@ -52,6 +52,7 @@ const LatihanPage: FC = () => {
   const [showIntro, setShowIntro] = useState(false);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
   const [easyCompleted, setEasyCompleted] = useState(false);
+  const [lastScores, setLastScores] = useState<Record<string, number>>({});
 
   // Check if intro has been shown before
   useEffect(() => {
@@ -65,6 +66,13 @@ const LatihanPage: FC = () => {
       if (data?.easyQuizCompleted) {
         setEasyCompleted(true);
       }
+      // Load last scores
+      const scores: Record<string, number> = {};
+      if (data?.lastQuiz_easy) scores.easy = data.lastQuiz_easy.score;
+      if (data?.lastQuiz_moderate)
+        scores.moderate = data.lastQuiz_moderate.score;
+      if (data?.lastQuiz_hard) scores.hard = data.lastQuiz_hard.score;
+      setLastScores(scores);
     };
     check();
   }, [profile]);
@@ -158,6 +166,14 @@ const LatihanPage: FC = () => {
                 {locked && (
                   <p className="mt-3 text-xs text-white/60">
                     🔒 Selesaikan Easy terlebih dahulu
+                  </p>
+                )}
+                {lastScores[quiz.id] !== undefined && (
+                  <p className="mt-3 text-xs text-white/70">
+                    Last score:{' '}
+                    <span className="font-bold text-white">
+                      {lastScores[quiz.id]}%
+                    </span>
                   </p>
                 )}
               </button>
