@@ -142,3 +142,8 @@ export function detectAnomalies(
 
   return flags;
 }
+
+// XP formula (pure, no Firebase dependency)
+export function xpForLevel(level: number): number {
+  return Math.round(100 * Math.pow(level, 1.5));
+}
