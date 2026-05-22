@@ -56,49 +56,45 @@ const UjianPage: FC = () => {
         </p>
       </motion.div>
 
-      {/* Main Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="overflow-hidden rounded-3xl bg-white shadow-sm"
-      >
-        {/* Hero Banner */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 px-8 py-12 text-white lg:px-12">
-          {/* Decorative */}
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
-          <div className="absolute -bottom-8 right-20 h-24 w-24 rounded-full bg-white/5" />
-          <div className="absolute left-1/2 top-4 h-16 w-16 rounded-full bg-white/5" />
-
-          <div className="relative flex items-center gap-6">
-            <div className="hidden lg:block">
-              <Image
-                src="/icons/topic-calculus.svg"
-                alt=""
-                width={80}
-                height={80}
-                className="opacity-90"
-              />
-            </div>
-            <div>
-              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
-                <Zap size={12} /> Adaptive
+      {/* 2-column layout - separate cards */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+        {/* Left Card - Hero + Rules */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="overflow-hidden rounded-3xl bg-white shadow-sm"
+        >
+          {/* Hero Banner */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 px-8 py-10 text-white">
+            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+            <div className="absolute -bottom-8 right-20 h-24 w-24 rounded-full bg-white/5" />
+            <div className="relative flex items-center gap-6">
+              <div className="hidden lg:block">
+                <Image
+                  src="/icons/topic-calculus.svg"
+                  alt=""
+                  width={70}
+                  height={70}
+                  className="opacity-90"
+                />
               </div>
-              <h2 className="text-2xl font-extrabold lg:text-3xl">
-                Stoikiometri Assessment
-              </h2>
-              <p className="mt-2 max-w-md text-sm text-white/70">
-                Ujian adaptif untuk mengukur pemahaman stoikiometri secara
-                mendalam dan mengidentifikasi miskonsepsimu
-              </p>
+              <div>
+                <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+                  <Zap size={12} /> Adaptive
+                </div>
+                <h2 className="text-xl font-extrabold lg:text-2xl">
+                  Stoikiometri Assessment
+                </h2>
+                <p className="mt-1 text-sm text-white/70">
+                  Ujian adaptif untuk mengukur pemahamanmu
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Content - 2 column */}
-        <div className="grid gap-8 p-8 lg:grid-cols-[1fr_280px] lg:p-12">
-          {/* Left - Rules */}
-          <div>
+          {/* Rules */}
+          <div className="p-8">
             <h3 className="mb-4 text-sm font-bold text-gray-900">
               Peraturan Ujian
             </h3>
@@ -124,40 +120,50 @@ const UjianPage: FC = () => {
               })}
             </div>
           </div>
+        </motion.div>
 
-          {/* Right - Stats + Info + Start */}
-          <div className="space-y-5">
-            {/* Stats */}
+        {/* Right Card - Stats + Start */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-4"
+        >
+          <div className="rounded-3xl bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">
+              Detail Ujian
+            </h3>
             <div className="space-y-3">
-              <div className="rounded-2xl bg-gray-50 p-4 text-center">
+              <div className="rounded-xl bg-gray-50 p-4 text-center">
                 <p className="text-2xl font-black text-gray-900">21</p>
                 <p className="text-xs text-gray-500">Soal</p>
               </div>
-              <div className="rounded-2xl bg-gray-50 p-4 text-center">
+              <div className="rounded-xl bg-gray-50 p-4 text-center">
                 <p className="text-2xl font-black text-gray-900">3</p>
                 <p className="text-xs text-gray-500">Stage</p>
               </div>
-              <div className="rounded-2xl bg-gray-50 p-4 text-center">
+              <div className="rounded-xl bg-gray-50 p-4 text-center">
                 <p className="text-2xl font-black text-gray-900">~30</p>
                 <p className="text-xs text-gray-500">Menit</p>
               </div>
             </div>
-
-            {/* Info */}
-            <p className="rounded-xl bg-amber-50 p-4 text-xs leading-relaxed text-amber-700">
-              Soal menyesuaikan kemampuanmu. Waktu menjawab juga diukur.
-            </p>
-
-            {/* Start */}
-            <button
-              onClick={() => setShowModal(true)}
-              className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
-            >
-              Mulai Ujian
-            </button>
           </div>
-        </div>
-      </motion.div>
+
+          <div className="rounded-3xl bg-amber-50 p-5">
+            <p className="text-xs leading-relaxed text-amber-700">
+              Soal menyesuaikan kemampuanmu secara real-time. Waktu menjawab
+              juga diukur untuk analisis.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setShowModal(true)}
+            className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+          >
+            Mulai Ujian
+          </button>
+        </motion.div>
+      </div>
 
       {/* Confirmation Modal */}
       <Modal
