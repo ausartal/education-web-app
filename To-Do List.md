@@ -400,6 +400,13 @@
     - [ ] Disconnect recovery (resume from last saved)
     - [ ] Tab visibility detection (flag if user leaves tab)
     - [ ] Pattern detection (anomaly flags)
+  - [ ] **Error Recovery & Session Management**:
+    - [ ] Auto-save state setiap jawaban (realtime to Firestore)
+    - [ ] Reconnection logic (detect offline → show indicator → retry)
+    - [ ] Resume session dari last saved state saat reconnect
+    - [ ] Idle timeout handling (warning setelah 3 menit idle, auto-pause setelah 5 menit)
+    - [ ] Browser crash recovery (check incomplete sessions on login)
+    - [ ] Graceful degradation jika Firestore unavailable (local queue)
   - [ ] **Completion**:
     - [ ] Auto-submit when all 20 questions done
     - [ ] Generate final report
@@ -425,6 +432,10 @@
     - [ ] Recommended review topics
   - [ ] Comparison dengan previous attempts (if any)
   - [ ] Actions: "Retake Exam" + "Review Materi" + "Back to Dashboard"
+  - [ ] **Export & Certificate**:
+    - [ ] PDF export hasil ujian (summary + detail)
+    - [ ] Certificate of completion (downloadable, shareable)
+    - [ ] Share result to social media (optional)
 
 ### 5.6 Profile & Settings
 
@@ -438,6 +449,41 @@
   - [ ] Notification preferences
   - [ ] Privacy settings (leaderboard visibility)
   - [ ] Change password
+
+### 5.7 Onboarding Flow
+
+- [ ] First-time user welcome screen setelah register
+- [ ] Guided tour / walkthrough (highlight fitur utama)
+- [ ] Initial proficiency pre-test (optional, 5 soal untuk kalibrasi awal theta)
+- [ ] Goal setting ("Berapa menit per hari mau belajar?")
+- [ ] Topic interest selection (pilih subtopik yang mau dipelajari duluan)
+
+### 5.8 Notification System
+
+- [ ] In-app notification center (bell icon → dropdown list)
+  - [ ] Unread count badge
+  - [ ] Notification types: achievement, streak reminder, message, system
+  - [ ] Mark as read / mark all as read
+- [ ] Push notifications (Firebase Cloud Messaging):
+  - [ ] Streak reminder ("Jangan putus streak 5 hari!")
+  - [ ] New message from teacher
+  - [ ] Achievement unlocked
+  - [ ] Exam available
+- [ ] Email notifications (optional, configurable di settings)
+- [ ] Notification preferences page (enable/disable per type)
+
+### 5.9 Calculator & Reference Tools
+
+- [ ] In-app scientific calculator:
+  - [ ] Basic operations (+, -, ×, ÷)
+  - [ ] Scientific functions (log, ln, power, sqrt)
+  - [ ] Mol calculation shortcuts (gram ÷ Mr, etc.)
+  - [ ] Accessible via button atau keyboard shortcut (Space)
+- [ ] Periodic table quick reference:
+  - [ ] Searchable by element name/symbol
+  - [ ] Show Ar (atomic mass) prominently
+  - [ ] Tap to copy Ar value
+  - [ ] Collapsible panel (tidak mengganggu soal)
 
 ---
 
@@ -607,7 +653,7 @@
 
 ---
 
-## PHASE 10: ACCESSIBILITY (WCAG 2.1 AA)
+## PHASE 10: ACCESSIBILITY (WCAG 2.1 AA) & i18n
 
 - [ ] Color contrast verification (4.5:1 normal text, 3:1 large text)
 - [ ] Keyboard navigation for all interactive elements
@@ -620,10 +666,16 @@
 - [ ] Quiz keyboard shortcuts (1-5 or A-E, Enter, Space, Esc)
 - [ ] Allow zoom up to 200% without breaking layout
 - [ ] Alt text for all images
+- [ ] **Internationalization (i18n)**:
+  - [ ] Setup `next-intl` atau `next-i18next`
+  - [ ] Bahasa Indonesia (default)
+  - [ ] English (secondary)
+  - [ ] Language switcher di settings
+  - [ ] Translate semua UI strings (labels, messages, errors)
 
 ---
 
-## PHASE 11: PERFORMANCE & OPTIMIZATION
+## PHASE 11: PERFORMANCE, PWA & OPTIMIZATION
 
 - [ ] Image optimization (WebP + PNG fallback, lazy loading)
 - [ ] Code splitting per route (dynamic imports)
@@ -632,69 +684,207 @@
 - [ ] Bundle size analysis & optimization
 - [ ] Firestore query optimization (indexes, pagination)
 - [ ] FCP < 2s, TTI < 3s target on 3G
+- [ ] **PWA & Offline Support**:
+  - [ ] PWA manifest (`manifest.json` — app name, icons, theme color)
+  - [ ] Installable di mobile (Add to Home Screen)
+  - [ ] Cache materi content untuk offline reading
+  - [ ] Offline indicator (banner "Kamu sedang offline")
+  - [ ] Queue quiz/exam submissions saat offline → sync saat reconnect
+  - [ ] Stale-while-revalidate untuk images & static assets
 
 ---
 
-## PHASE 12: ANALYTICS & MONITORING
+## PHASE 12: ANALYTICS, MONITORING & OBSERVABILITY
 
 - [ ] Setup event tracking (page_view, session, learning events, gamification events)
 - [ ] Implement admin analytics dashboard (DAU, WAU, MAU, retention)
 - [ ] Learning metrics tracking (completion rate, avg score, misconceptions)
 - [ ] Setup error monitoring (Sentry)
 - [ ] Setup performance monitoring
+- [ ] **Observability**:
+  - [ ] Cloud Logging integration (structured logs)
+  - [ ] Firebase Crashlytics (crash reporting)
+  - [ ] Firebase Performance Monitoring (network latency, screen rendering)
+  - [ ] Custom analytics event plan document (semua events + properties)
+  - [ ] Alert rules (error rate spike, latency threshold)
+  - [ ] Dashboard monitoring (uptime, response times)
 
 ---
 
 ## PHASE 13: TESTING
 
-- [ ] Unit tests — Jest + React Testing Library (80%+ coverage)
-  - [ ] MSAT algorithm functions
-  - [ ] Confidence score calculation
-  - [ ] Theta estimation
+> ⚠️ **Catatan**: Testing dilakukan per-phase saat development. Phase ini adalah **final audit** untuk memastikan coverage dan edge cases tercakup.
+
+- [ ] Setup testing framework:
+  - [ ] `vitest` untuk unit & integration tests
+  - [ ] `@testing-library/react` untuk component tests
+  - [ ] `playwright` untuk E2E tests
+  - [ ] `axe-core` untuk accessibility tests
+- [ ] Unit tests (80%+ coverage):
+  - [ ] MSAT algorithm functions (difficulty adjustment, stage transitions)
+  - [ ] Confidence score calculation (all 4 quadrants)
+  - [ ] Theta estimation (boundary cases, clamping)
   - [ ] XP & level calculation
   - [ ] Auth service functions
+  - [ ] Anomaly detection logic
+  - [ ] `scripts/seed.ts` — verify seed data integrity
 - [ ] Component tests — All UI components
 - [ ] Integration tests — Critical user flows:
   - [ ] Register → Login → Dashboard
   - [ ] Start material → Complete → XP earned
   - [ ] Start quiz → Answer → Results
   - [ ] Start exam → MSAT flow → Report generated
-- [ ] E2E tests — Playwright
-  - [ ] Full student journey
+  - [ ] Offline → Reconnect → Data synced
+- [ ] E2E tests — Playwright:
+  - [ ] Full student journey (register → exam → results)
   - [ ] Teacher content creation flow
   - [ ] Admin user management
+  - [ ] MSAT adaptive flow (verify difficulty changes)
 - [ ] Accessibility tests (axe-core automated)
 - [ ] Cross-browser testing (Chrome, Firefox, Safari, Edge)
 - [ ] Mobile responsive testing (iOS Safari, Android Chrome)
 
 ---
 
-## PHASE 14: DEPLOYMENT & LAUNCH
+## PHASE 14: CI/CD, SECURITY & DEPLOYMENT
 
-### 14.1 Pre-Launch
+### 14.1 CI/CD Pipeline
 
-- [ ] Setup Vercel project (connect Git repo)
-- [ ] Configure environment variables di Vercel
-- [ ] Setup custom domain
-- [ ] SSL certificate verification
-- [ ] SEO optimization (meta tags, sitemap, robots.txt)
+- [ ] Create `.github/workflows/ci.yml`:
+  - [ ] Trigger: push to main, PR to main
+  - [ ] Steps: install → lint → typecheck → test → build
+  - [ ] Fail PR if any step fails
+- [ ] Create `.github/workflows/deploy.yml`:
+  - [ ] Deploy to Firebase Hosting (staging on PR merge to develop)
+  - [ ] Deploy to production (on release/tag)
+  - [ ] Deploy Cloud Functions
+- [ ] Branch protection rules (require CI pass before merge)
+
+### 14.2 Firebase Emulator & Local Dev
+
+- [ ] Setup Firebase Emulator Suite:
+  - [ ] Auth Emulator (port 9099)
+  - [ ] Firestore Emulator (port 8080)
+  - [ ] Functions Emulator (port 5001)
+  - [ ] Storage Emulator (port 9199)
+- [ ] Create `firebase.json` emulator config
+- [ ] npm scripts untuk local dev:
+  - [ ] `npm run dev` — Start Next.js dev server
+  - [ ] `npm run emulators` — Start Firebase emulators
+  - [ ] `npm run dev:full` — Start both (concurrently)
+  - [ ] `npm run seed` — Run seed script against emulator
+  - [ ] `npm run seed:prod` — Run seed against production (with confirmation)
+- [ ] Emulator data export/import (persist emulator state)
+
+### 14.3 Security & Rules Audit
+
+- [ ] Firestore security rules (comprehensive):
+  - [ ] Users: read own, write own profile only
+  - [ ] Materials: read all (authenticated), write teacher/admin only
+  - [ ] Question bank: read none (server-side only), write teacher/admin
+  - [ ] Exam sessions: read/write own only
+  - [ ] Messages: read/write own conversations only
+  - [ ] App config: read all, write admin only
+- [ ] Storage security rules:
+  - [ ] Material images: read all, upload teacher/admin only
+  - [ ] User avatars: read all, upload own only
+  - [ ] File size limits (max 5MB images)
+- [ ] Rate limiting (Cloud Functions):
+  - [ ] Auth attempts: max 5 per minute
+  - [ ] Exam start: max 3 per hour
+  - [ ] Message send: max 30 per minute
+- [ ] Staging rules (separate Firestore rules for staging env)
+- [ ] Security audit checklist:
+  - [ ] No sensitive data exposed to client
+  - [ ] Service account key not in repo
+  - [ ] Environment variables properly scoped
+  - [ ] CORS configured correctly
+  - [ ] Input validation on all Cloud Functions
+
+### 14.4 Firestore Indexes & Cost Controls
+
+- [ ] Create `firestore.indexes.json`:
+  - [ ] `exam_sessions`: userId + status + startedAt (desc)
+  - [ ] `question_bank`: topic + difficulty + status
+  - [ ] `user_progress`: userId + status
+  - [ ] `quiz_results`: userId + topic + completedAt (desc)
+  - [ ] `messages`: senderId + receiverId + createdAt
+- [ ] Cost monitoring & budgeting:
+  - [ ] Set Firebase budget alerts (email at 50%, 80%, 100%)
+  - [ ] Firestore read/write estimation per feature
+  - [ ] Optimize queries (avoid full collection scans)
+  - [ ] Implement pagination everywhere (limit 20-50 per query)
+  - [ ] Cache frequently accessed data (app_config, leaderboard)
+
+### 14.5 Seed Scripts & Migration
+
+- [ ] `scripts/seed.ts` — Main seed script:
+  - [ ] Seed materials (5 topics, multiple lessons each)
+  - [ ] Seed question bank (90+ questions across 3 difficulties)
+  - [ ] Seed achievements/badges
+  - [ ] Seed MSAT config
+  - [ ] Idempotent (safe to run multiple times)
+- [ ] `scripts/seed-test-users.ts` — Test accounts:
+  - [ ] 1 admin account
+  - [ ] 2 teacher accounts
+  - [ ] 5 student accounts (various progress levels)
+- [ ] `scripts/migrate.ts` — Schema migration runner:
+  - [ ] Version tracking (store current schema version in Firestore)
+  - [ ] Migration files: `migrations/001_initial.ts`, `002_add_field.ts`, etc.
+  - [ ] Rollback support (optional)
+- [ ] Document migration process di README
+
+### 14.6 Developer Experience (DX)
+
+- [ ] `src/lib/firebase.ts` — Client SDK init (with emulator detection)
+- [ ] `src/lib/firebase-admin.ts` — Admin SDK init (for API routes/functions)
+- [ ] `.env.example` — Template semua env vars yang dibutuhkan:
+  ```
+  NEXT_PUBLIC_FIREBASE_API_KEY=
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+  NEXT_PUBLIC_FIREBASE_APP_ID=
+  FIREBASE_SERVICE_ACCOUNT_KEY=
+  ```
+- [ ] `Makefile` atau npm scripts:
+  - [ ] `make start` / `npm run dev:full`
+  - [ ] `make seed` / `npm run seed`
+  - [ ] `make test` / `npm run test`
+  - [ ] `make lint` / `npm run lint`
+  - [ ] `make build` / `npm run build`
+  - [ ] `make deploy:staging` / `npm run deploy:staging`
+- [ ] VS Code workspace settings (`.vscode/settings.json`, recommended extensions)
+
+### 14.7 Documentation
+
+- [ ] `README.md` — Comprehensive:
+  - [ ] Project overview & tech stack
+  - [ ] Prerequisites (Node.js, Firebase CLI, etc.)
+  - [ ] Setup instructions (clone, install, env vars)
+  - [ ] Running locally (dev server + emulators)
+  - [ ] Seeding database
+  - [ ] Running tests
+  - [ ] Deployment process
+  - [ ] Folder structure explanation
+  - [ ] Contributing guidelines
+- [ ] `CONTRIBUTING.md` — PR process, code style, commit conventions
+- [ ] `docs/ARCHITECTURE.md` — System architecture overview
+- [ ] `docs/MSAT_ALGORITHM.md` — MSAT engine documentation (extracted from context)
+
+### 14.8 Production Launch
+
+- [ ] Setup Vercel project (connect Git repo) ATAU Firebase Hosting
+- [ ] Configure environment variables di hosting platform
+- [ ] Setup custom domain + SSL
+- [ ] SEO optimization (meta tags, sitemap.xml, robots.txt)
 - [ ] Open Graph tags untuk social sharing
-
-### 14.2 Beta Launch
-
-- [ ] Deploy ke staging environment
 - [ ] Beta testing dengan pilot group (10-20 users)
-- [ ] Collect feedback
-- [ ] Fix critical bugs
-- [ ] Performance optimization based on real usage
-
-### 14.3 Production Launch
-
+- [ ] Collect feedback & fix critical bugs
 - [ ] Production deployment
 - [ ] Post-launch monitoring (24-48 jam)
 - [ ] Hotfix process ready
-- [ ] User feedback collection mechanism
-- [ ] Iterate based on feedback
 
 ---
 
@@ -718,24 +908,28 @@
 
 | Priority | Phase | Estimated Time |
 |----------|-------|---------------|
-| 🔴 P0 | Phase 1: Foundation | 1-2 minggu |
+| 🔴 P0 | Phase 1: Foundation (setup, auth, layout) | 1-2 minggu |
 | 🔴 P0 | Phase 2: UI Components | 1 minggu |
-| 🔴 P0 | Phase 3: Database & Content | 1 minggu |
+| 🔴 P0 | Phase 3: Database, Schema & Seed | 1 minggu |
 | 🟠 P1 | Phase 4: Public Pages | 3-4 hari |
-| 🟠 P1 | Phase 5: Student Features | 2-3 minggu |
+| 🟠 P1 | Phase 5: Student Features (incl. MSAT, onboarding, notifications) | 3-4 minggu |
 | 🟠 P1 | Phase 6: Gamification | 1 minggu |
 | 🟡 P2 | Phase 7: Teacher Features | 1-2 minggu |
 | 🟡 P2 | Phase 8: Admin Features | 1 minggu |
-| 🟡 P2 | Phase 9: Animations | 3-4 hari |
-| 🟢 P3 | Phase 10: Accessibility | 3-4 hari |
-| 🟢 P3 | Phase 11: Performance | 2-3 hari |
-| 🟢 P3 | Phase 12: Analytics | 2-3 hari |
-| 🟢 P3 | Phase 13: Testing | 1-2 minggu |
-| 🔵 P4 | Phase 14: Deployment | 3-5 hari |
-| ⚪ P5 | Phase 15: Future | Ongoing |
+| 🟡 P2 | Phase 9: Animations & Micro-interactions | 3-4 hari |
+| 🟢 P3 | Phase 10: Accessibility & i18n | 4-5 hari |
+| 🟢 P3 | Phase 11: Performance, PWA & Offline | 3-4 hari |
+| 🟢 P3 | Phase 12: Analytics, Monitoring & Observability | 3-4 hari |
+| 🟢 P3 | Phase 13: Testing (final audit) | 1-2 minggu |
+| 🔵 P4 | Phase 14: CI/CD, Security, DX & Deployment | 1-2 minggu |
+| ⚪ P5 | Phase 15: Future Enhancements | Ongoing |
 
-**Total Estimated MVP (Phase 1-6): ~6-8 minggu**  
-**Total Full Platform (Phase 1-14): ~12-16 minggu**
+**Total Estimated MVP (Phase 1-6): ~8-10 minggu**  
+**Total Full Platform (Phase 1-14): ~14-18 minggu**
+
+---
+
+> 💡 **Tips**: Phase 14 (CI/CD, Emulator, DX) bisa dimulai paralel dengan Phase 1 — setup CI pipeline dan emulator sejak awal akan mempercepat development secara keseluruhan.
 
 ---
 
