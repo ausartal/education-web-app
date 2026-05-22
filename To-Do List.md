@@ -648,6 +648,49 @@
 - [ ] 🧑 MANUAL: Cross-browser testing
 - [ ] 🧑 MANUAL: Mobile responsive testing
 
+### 🧑 Manual Testing Checklist
+
+> Run `npm run dev` → open `http://localhost:3000`
+
+**Public Pages (no login):**
+- [ ] `/` — Landing Page
+- [ ] `/about` — Tentang AKURAT
+- [ ] `/privacy` — Privacy Policy
+- [ ] `/terms` — Terms of Service
+- [ ] `/contact` — Contact Form
+- [ ] `/login` — Login Page
+- [ ] `/register` — Register Page
+
+**Student Pages (login: `student@akurat.test` / `akurat123`):**
+- [ ] `/dashboard` — Dashboard (Brilliant-style carousel)
+- [ ] `/materi` — Material List
+- [ ] `/materi/[id]` — Material Reading (klik salah satu materi)
+- [ ] `/latihan` — Quiz List (3 difficulty cards)
+- [ ] `/latihan/easy` — Quiz Easy (jawab sampai selesai)
+- [ ] `/latihan/moderate` — Quiz Moderate
+- [ ] `/ujian` — Exam Rules + Start button
+- [ ] `/ujian/msat-stoikiometri/session` — MSAT Exam (21 soal adaptif)
+- [ ] `/profile` — Profile + Achievements
+- [ ] `/settings` — Settings (edit profile, language, notifications)
+- [ ] `/onboarding` — Onboarding Flow (3 steps)
+- [ ] Calculator (floating button kanan bawah, biru)
+- [ ] Periodic Table (floating button kanan bawah, hijau)
+- [ ] Notification bell (navbar, klik untuk dropdown)
+
+**Teacher Pages (login dengan akun role=teacher):**
+- [ ] `/teacher` — Teacher Dashboard
+- [ ] `/teacher/materials` — Manage Materials (create, publish/unpublish)
+- [ ] `/teacher/questions` — Manage Questions (filter, create, delete, bulk import)
+- [ ] `/teacher/students` — Student List (search, klik untuk detail)
+- [ ] `/teacher/students/[id]` — Student Detail (stats, theta chart, notes)
+- [ ] `/teacher/messages` — Messages (pilih student, kirim pesan)
+
+**Admin Pages (ubah role ke admin di Firebase Console → Firestore → users → [uid] → role: "admin"):**
+- [ ] `/admin` — Admin Dashboard (KPIs, charts)
+- [ ] `/admin/users` — User Management (search, filter, change role, delete)
+- [ ] `/admin/content` — Content Moderation (approve/reject)
+- [ ] `/admin/config` — Platform Config (edit MSAT + gamification values)
+
 ---
 
 ## PHASE 14: CI/CD, SECURITY & DEPLOYMENT
