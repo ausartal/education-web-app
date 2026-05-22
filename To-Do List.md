@@ -602,11 +602,12 @@
 - [x] Alt text for all images (throughout)
 - [x] Reduced motion support (Phase 9)
 - [x] Modal focus trap (Modal component)
-- [ ] Internationalization (i18n) — future enhancement
-  - [ ] Bahasa Indonesia (default)
-  - [ ] English (secondary)
-  - [ ] Language switcher di settings
-  - [ ] Translate semua UI strings (labels, messages, errors)
+- [x] Internationalization (i18n):
+  - [x] Setup next-intl with config
+  - [x] Bahasa Indonesia (default) — messages/id.json
+  - [x] English (secondary) — messages/en.json
+  - [x] Language switcher in settings
+  - [x] Translation keys for all UI sections
 
 ---
 
