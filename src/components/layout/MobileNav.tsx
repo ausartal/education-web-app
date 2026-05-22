@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Home, BookOpen, PenTool, GraduationCap, User } from 'lucide-react';
 
 const tabs = [
-  { href: '/', label: 'Home', icon: Home },
+  { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/materi', label: 'Materi', icon: BookOpen },
   { href: '/latihan', label: 'Latihan', icon: PenTool },
   { href: '/ujian', label: 'Ujian', icon: GraduationCap },

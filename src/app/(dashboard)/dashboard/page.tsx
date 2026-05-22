@@ -152,12 +152,12 @@ const DashboardPage: FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             Welcome back, {profile.displayName.split(' ')[0]} ✨
           </h1>
-          <p className="mt-1 text-gray-500">
+          <p className="mt-1 text-sm text-gray-500">
             Ready to learn something new today?
           </p>
         </div>
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-extrabold text-gray-900">Jump back in</h2>
+        <div className="flex items-end justify-between">
+          <h2 className="text-lg font-bold text-gray-900">Jump back in</h2>
           <div className="flex gap-2">
             <button
               onClick={() =>
@@ -423,33 +423,49 @@ const DashboardPage: FC = () => {
             )}
 
             {/* Weekly Activity Graph (always visible) */}
-            <div className="mt-5 border-t border-gray-50 pt-4">
-              <div className="mb-3 flex items-center gap-1.5">
-                <TrendingUp size={14} className="text-gray-400" />
-                <span className="text-xs font-medium text-gray-500">
-                  This Week
-                </span>
+            <div className="mt-5 border-t border-gray-50 pt-5">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp size={14} className="text-primary" />
+                  <span className="text-xs font-bold text-gray-700">
+                    This Week
+                  </span>
+                </div>
+                <span className="text-xs text-gray-400">Activity</span>
               </div>
-              <div className="flex items-end gap-2">
-                {weeklyXP.map((xp, i) => (
-                  <div
-                    key={i}
-                    className="flex flex-1 flex-col items-center gap-1.5"
-                  >
+              <div className="flex items-end gap-3">
+                {weeklyXP.map((xp, i) => {
+                  const isToday = i === (today === 0 ? 6 : today - 1);
+                  return (
                     <div
-                      className={`w-full rounded-lg transition-all duration-500 ${
-                        i === (today === 0 ? 6 : today - 1)
-                          ? 'bg-gradient-to-t from-primary to-primary-cyan'
-                          : 'bg-gradient-to-t from-primary/20 to-primary/10'
-                      }`}
-                      style={{
-                        height: `${Math.max((xp / maxXP) * 56, 6)}px`,
-                        animationDelay: `${i * 100}ms`,
-                      }}
-                    />
-                    <span className="text-[10px] text-gray-400">{days[i]}</span>
-                  </div>
-                ))}
+                      key={i}
+                      className="flex flex-1 flex-col items-center gap-2"
+                    >
+                      <span
+                        className={`text-[9px] font-semibold ${isToday ? 'text-primary' : 'text-gray-300'}`}
+                      >
+                        {xp > 0 ? xp : ''}
+                      </span>
+                      <div
+                        className={`w-full rounded-xl transition-all duration-500 ${
+                          isToday
+                            ? 'bg-gradient-to-t from-primary to-primary-cyan shadow-sm shadow-primary/20'
+                            : xp > 0
+                              ? 'bg-gradient-to-t from-gray-200 to-gray-100'
+                              : 'bg-gray-100'
+                        }`}
+                        style={{
+                          height: `${Math.max((xp / maxXP) * 64, 8)}px`,
+                        }}
+                      />
+                      <span
+                        className={`text-[10px] font-medium ${isToday ? 'text-primary' : 'text-gray-400'}`}
+                      >
+                        {days[i]}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
