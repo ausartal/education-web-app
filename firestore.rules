@@ -1,0 +1,104 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Helper: check if user owns the document
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // Helper: check user role
+    function hasRole(role) {
+      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function isTeacher() {
+      return hasRole('teacher');
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    function isTeacherOrAdmin() {
+      return isTeacher() || isAdmin();
+    }
+
+    // Users: read own, write own profile only
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // Materials: read all (authenticated), write teacher/admin only
+    match /materials/{materialId} {
+      allow read: if isAuth();
+      allow write: if isTeacherOrAdmin();
+    }
+
+    // Question bank: read none (server-side only), write teacher/admin
+    match /question_bank/{questionId} {
+      allow read: if false;
+      allow write: if isTeacherOrAdmin();
+    }
+
+    // Exam sessions: read/write own only
+    match /exam_sessions/{sessionId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuth() && resource.data.userId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Quiz results: read/write own only
+    match /quiz_results/{resultId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // User progress: read/write own only
+    match /user_progress/{progressId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow write: if isAuth() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Achievements: read all, write admin only
+    match /achievements/{achievementId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // User achievements: read/write own only
+    match /user_achievements/{docId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Messages: read/write own conversations only
+    match /messages/{messageId} {
+      allow read: if isAuth() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow create: if isAuth() && request.resource.data.senderId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // App config: read all authenticated, write admin only
+    match /app_config/{configId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+  }
+}
