@@ -517,8 +517,8 @@
   - [x] Profile card (avatar, name, email, school)
   - [x] Stats grid (XP, Streak, Lessons, Quizzes, Level)
   - [x] Exam history table (exam ID, status, theta, accuracy)
-  - [ ] Theta progression over time
-  - [ ] Notes section (teacher can add notes)
+  - [x] Theta progression over time
+  - [x] Notes section (teacher can add notes)
 
 ### 7.4 Communication
 
