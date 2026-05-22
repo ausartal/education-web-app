@@ -11,6 +11,7 @@
     "seed": "npx ts-node --project tsconfig.seed.json scripts/seed.ts"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "firebase": "^12.13.0",
     "firebase-admin": "^13.10.0",
     "framer-motion": "^12.40.0",
@@ -18,7 +19,11 @@
     "lucide-react": "^1.16.0",
     "next": "14.2.35",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@types/katex": "^0.16.8",
