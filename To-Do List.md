@@ -48,8 +48,8 @@
 
 ### 1.3 Firebase Setup
 
-- [ ] Create Firebase project di Firebase Console
-- [ ] Enable Firebase services:
+- [ ] 🧑 MANUAL: Create Firebase project di Firebase Console
+- [ ] 🧑 MANUAL: Enable Firebase services:
   - [ ] Authentication (Email/Password + Google OAuth)
   - [ ] Cloud Firestore
   - [ ] Firebase Storage (untuk gambar materi)
@@ -58,7 +58,8 @@
 - [ ] Create `src/lib/firebase.ts` — client-side Firebase initialization
 - [ ] Create `src/lib/firebase-admin.ts` — server-side admin SDK (untuk API routes)
 - [ ] Setup Firestore security rules (draft awal)
-- [ ] Generate & simpan service account key (JANGAN commit ke git)
+- [ ] 🧑 MANUAL: Generate & simpan service account key (JANGAN commit ke git)
+- [ ] 🧑 MANUAL: Isi `.env.local` dengan Firebase config values dari Console
 
 ### 1.4 Authentication System
 
@@ -250,13 +251,13 @@
 ### 3.2 Seed Data
 
 - [ ] Buat script `scripts/seed.ts` untuk populate database
-- [ ] Seed materi stoikiometri (minimal 5 topik):
+- [ ] 🧑 MANUAL: Seed materi stoikiometri (minimal 5 topik) — konten harus ditulis/review oleh ahli:
   - [ ] Konsep Mol
   - [ ] Massa Molar (Mr/Ar)
   - [ ] Konversi Mol ↔ Gram ↔ Partikel ↔ Volume Gas
   - [ ] Persamaan Reaksi & Stoikiometri
   - [ ] Limiting Reagent & Excess
-- [ ] Seed question bank (minimal 30 soal per difficulty per topik):
+- [ ] 🧑 MANUAL: Seed question bank (minimal 30 soal per difficulty per topik) — soal harus valid secara akademis:
   - [ ] 30+ soal MUDAH
   - [ ] 30+ soal MODERATE
   - [ ] 30+ soal SUSAH
@@ -465,6 +466,7 @@
   - [ ] Notification types: achievement, streak reminder, message, system
   - [ ] Mark as read / mark all as read
 - [ ] Push notifications (Firebase Cloud Messaging):
+  - [ ] 🧑 MANUAL: Enable FCM di Firebase Console
   - [ ] Streak reminder ("Jangan putus streak 5 hari!")
   - [ ] New message from teacher
   - [ ] Achievement unlocked
@@ -703,11 +705,11 @@
 - [ ] Setup performance monitoring
 - [ ] **Observability**:
   - [ ] Cloud Logging integration (structured logs)
-  - [ ] Firebase Crashlytics (crash reporting)
-  - [ ] Firebase Performance Monitoring (network latency, screen rendering)
+  - [ ] 🧑 MANUAL: Firebase Crashlytics (crash reporting) — Firebase Console setup
+  - [ ] 🧑 MANUAL: Firebase Performance Monitoring (network latency, screen rendering) — Firebase Console setup
   - [ ] Custom analytics event plan document (semua events + properties)
   - [ ] Alert rules (error rate spike, latency threshold)
-  - [ ] Dashboard monitoring (uptime, response times)
+  - [ ] 🧑 MANUAL: Dashboard monitoring (uptime, response times) — external service setup
 
 ---
 
@@ -741,8 +743,8 @@
   - [ ] Admin user management
   - [ ] MSAT adaptive flow (verify difficulty changes)
 - [ ] Accessibility tests (axe-core automated)
-- [ ] Cross-browser testing (Chrome, Firefox, Safari, Edge)
-- [ ] Mobile responsive testing (iOS Safari, Android Chrome)
+- [ ] 🧑 MANUAL: Cross-browser testing (Chrome, Firefox, Safari, Edge)
+- [ ] 🧑 MANUAL: Mobile responsive testing (iOS Safari, Android Chrome)
 
 ---
 
@@ -758,7 +760,7 @@
   - [ ] Deploy to Firebase Hosting (staging on PR merge to develop)
   - [ ] Deploy to production (on release/tag)
   - [ ] Deploy Cloud Functions
-- [ ] Branch protection rules (require CI pass before merge)
+- [ ] 🧑 MANUAL: Branch protection rules (require CI pass before merge) — GitHub Settings
 
 ### 14.2 Firebase Emulator & Local Dev
 
@@ -810,7 +812,7 @@
   - [ ] `quiz_results`: userId + topic + completedAt (desc)
   - [ ] `messages`: senderId + receiverId + createdAt
 - [ ] Cost monitoring & budgeting:
-  - [ ] Set Firebase budget alerts (email at 50%, 80%, 100%)
+  - [ ] 🧑 MANUAL: Set Firebase budget alerts (email at 50%, 80%, 100%) — Firebase Console
   - [ ] Firestore read/write estimation per feature
   - [ ] Optimize queries (avoid full collection scans)
   - [ ] Implement pagination everywhere (limit 20-50 per query)
@@ -875,15 +877,15 @@
 
 ### 14.8 Production Launch
 
-- [ ] Setup Vercel project (connect Git repo) ATAU Firebase Hosting
-- [ ] Configure environment variables di hosting platform
-- [ ] Setup custom domain + SSL
+- [ ] 🧑 MANUAL: Setup Vercel project (connect Git repo) — Vercel Dashboard
+- [ ] 🧑 MANUAL: Configure environment variables di hosting platform
+- [ ] 🧑 MANUAL: Setup custom domain + SSL
 - [ ] SEO optimization (meta tags, sitemap.xml, robots.txt)
 - [ ] Open Graph tags untuk social sharing
-- [ ] Beta testing dengan pilot group (10-20 users)
-- [ ] Collect feedback & fix critical bugs
-- [ ] Production deployment
-- [ ] Post-launch monitoring (24-48 jam)
+- [ ] 🧑 MANUAL: Beta testing dengan pilot group (10-20 users)
+- [ ] 🧑 MANUAL: Collect feedback & fix critical bugs
+- [ ] 🧑 MANUAL: Production deployment
+- [ ] 🧑 MANUAL: Post-launch monitoring (24-48 jam)
 - [ ] Hotfix process ready
 
 ---
