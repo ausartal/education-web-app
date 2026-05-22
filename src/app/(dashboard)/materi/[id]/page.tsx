@@ -199,18 +199,25 @@ const MateriDetailPage: FC = () => {
           className="min-w-0 flex-1"
         >
           {/* Title */}
-          <div className="mb-8 rounded-3xl bg-gradient-to-r from-indigo-500 to-cyan-400 p-8 text-white">
-            <p className="mb-1 text-xs font-medium uppercase tracking-wider text-white/60">
+          <div className="mb-8 rounded-3xl bg-gradient-to-r from-indigo-500 to-cyan-400 p-8 text-white lg:p-10">
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/50">
               {material.topic}
             </p>
-            <h1 className="font-display text-3xl font-extrabold">
+            <h1 className="font-display text-2xl font-extrabold lg:text-3xl">
               {material.title}
             </h1>
-            <p className="mt-2 text-sm text-white/80">{material.description}</p>
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/75">
+              {material.description}
+            </p>
+            <div className="mt-4 flex items-center gap-3 text-xs text-white/50">
+              <span>⏱ {material.estimatedTime} min</span>
+              <span>•</span>
+              <span>📖 {headings.length} sections</span>
+            </div>
           </div>
 
           {/* Markdown Content */}
-          <div className="prose prose-gray max-w-none rounded-3xl bg-white p-8 shadow-sm prose-headings:font-display prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:leading-relaxed prose-a:text-primary">
+          <div className="prose prose-gray max-w-none rounded-3xl bg-white p-8 shadow-sm lg:p-10 prose-headings:font-display prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-[15px] prose-p:leading-[1.8] prose-li:text-[15px] prose-a:text-primary">
             <ReactMarkdown
               remarkPlugins={[remarkMath, remarkGfm]}
               rehypePlugins={[rehypeKatex]}
@@ -248,50 +255,50 @@ const MateriDetailPage: FC = () => {
             </ReactMarkdown>
           </div>
 
-          {/* Mark Complete */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 flex justify-center"
-          >
-            {completed ? (
-              <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-6 py-4 text-emerald-700">
-                <CheckCircle size={20} />
-                <span className="font-semibold">Completed!</span>
-              </div>
-            ) : (
-              <button
-                onClick={handleMarkComplete}
-                className="rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 px-8 py-4 font-bold text-white shadow-lg shadow-emerald-200/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
-              >
-                Mark as Complete
-              </button>
-            )}
-          </motion.div>
+          {/* Bottom Actions Bar */}
+          <div className="mt-10 rounded-3xl bg-white p-6 shadow-sm">
+            {/* Mark Complete */}
+            <div className="mb-5 text-center">
+              {completed ? (
+                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-5 py-2.5 text-sm font-semibold text-emerald-700">
+                  <CheckCircle size={16} />
+                  Materi selesai!
+                </div>
+              ) : (
+                <button
+                  onClick={handleMarkComplete}
+                  className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 py-4 text-sm font-bold text-white shadow-lg shadow-emerald-200/40 transition-all hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:px-10"
+                >
+                  ✓ Tandai Selesai
+                </button>
+              )}
+            </div>
 
-          {/* Navigation */}
-          <div className="mt-8 flex items-center justify-between">
-            {prevMaterial ? (
-              <Link
-                href={`/materi/${prevMaterial.id}`}
-                className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all hover:-translate-x-0.5 hover:shadow-md"
-              >
-                <ChevronLeft size={16} />
-                {prevMaterial.title}
-              </Link>
-            ) : (
-              <div />
-            )}
-            {nextMaterial && (
-              <Link
-                href={`/materi/${nextMaterial.id}`}
-                className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all hover:translate-x-0.5 hover:shadow-md"
-              >
-                {nextMaterial.title}
-                <ChevronRight size={16} />
-              </Link>
-            )}
+            {/* Navigation */}
+            <div className="flex items-center justify-between border-t border-gray-100 pt-5">
+              {prevMaterial ? (
+                <Link
+                  href={`/materi/${prevMaterial.id}`}
+                  className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                >
+                  <ChevronLeft size={16} />
+                  <span className="hidden sm:inline">{prevMaterial.title}</span>
+                  <span className="sm:hidden">Previous</span>
+                </Link>
+              ) : (
+                <div />
+              )}
+              {nextMaterial && (
+                <Link
+                  href={`/materi/${nextMaterial.id}`}
+                  className="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+                >
+                  <span className="hidden sm:inline">{nextMaterial.title}</span>
+                  <span className="sm:hidden">Next</span>
+                  <ChevronRight size={16} />
+                </Link>
+              )}
+            </div>
           </div>
         </motion.article>
       </div>
