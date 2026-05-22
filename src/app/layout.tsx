@@ -3,6 +3,7 @@ import { Nunito, Ubuntu, Space_Mono } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/hooks/useToast';
 import { ToastContainer } from '@/components/ui/Toast';
+import { OfflineIndicator } from '@/components/shared/OfflineIndicator';
 import './globals.css';
 
 const nunito = Nunito({
@@ -30,6 +31,8 @@ export const metadata: Metadata = {
   title: 'AKURAT - Asesmen Kimia Ukur Adaptif Terpadu',
   description:
     'Platform edukasi berbasis AI untuk asesmen Chemistry Stoichiometry dengan Multistage Adaptive Testing',
+  manifest: '/manifest.json',
+  themeColor: '#1A73E8',
 };
 
 export default function RootLayout({
@@ -47,6 +50,7 @@ export default function RootLayout({
             <a href="#main-content" className="skip-to-content">
               Skip to content
             </a>
+            <OfflineIndicator />
             {children}
             <ToastContainer />
           </ToastProvider>
