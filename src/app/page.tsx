@@ -207,9 +207,9 @@ export default function Home() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="font-display text-[42px] font-extrabold uppercase leading-[1.08] tracking-tight text-[#0E1E47] sm:text-5xl lg:text-[58px]"
             >
-              Decode <span className="text-[#1A73E8]">Chemistry</span>
+              From <span className="text-[#1A73E8]">Curious</span>
               <br />
-              <span className="text-[#1A73E8]">Spark</span> Curiosity
+              <span className="text-[#1A73E8]">To</span> Confident
             </motion.h1>
 
             <motion.p
