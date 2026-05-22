@@ -3,9 +3,11 @@ import {
   doc,
   getDocs,
   setDoc,
+  getDoc,
   query,
   where,
   serverTimestamp,
+  increment,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { UserProgress } from '@/types/firestore';
@@ -25,13 +27,17 @@ export async function updateProgress(
   timeSpent: number
 ): Promise<void> {
   const id = `${userId}_${materialId}`;
+  const ref = doc(db, COLLECTION, id);
+  const existing = await getDoc(ref);
+
   await setDoc(
-    doc(db, COLLECTION, id),
+    ref,
     {
       userId,
       materialId,
       status,
-      timeSpent,
+      timeSpent:
+        existing.exists() && timeSpent > 0 ? increment(timeSpent) : timeSpent,
       lastAccessedAt: serverTimestamp(),
       ...(status === 'completed' ? { completedAt: serverTimestamp() } : {}),
     },
