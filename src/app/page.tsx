@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Video, BookOpen, Users } from 'lucide-react';
+import { Sparkles, BookOpen, FlaskConical } from 'lucide-react';
 
 const targetUsers = [
   'Students who want to get grading on chemistry',
@@ -101,12 +101,44 @@ const features = [
   },
 ];
 
-const onlineAvatars = [
-  '/images/hero-student-male.png',
-  '/images/hero-student-female.png',
-  '/images/hero-student-male.png',
-  '/images/hero-student-female.png',
-  '/images/hero-student-male.png',
+// Periodic table elements for hero composition
+const elements = [
+  {
+    number: 1,
+    symbol: 'H',
+    name: 'Hydrogen',
+    gradient: 'from-cyan-400 to-sky-500',
+    text: 'text-cyan-50',
+    position: 'left-[8%] top-[8%]',
+    delay: 0.55,
+  },
+  {
+    number: 8,
+    symbol: 'O',
+    name: 'Oxygen',
+    gradient: 'from-rose-400 to-red-500',
+    text: 'text-rose-50',
+    position: 'right-[6%] top-[14%]',
+    delay: 0.7,
+  },
+  {
+    number: 11,
+    symbol: 'Na',
+    name: 'Sodium',
+    gradient: 'from-violet-500 to-purple-600',
+    text: 'text-violet-50',
+    position: 'left-[2%] bottom-[28%]',
+    delay: 0.85,
+  },
+  {
+    number: 6,
+    symbol: 'C',
+    name: 'Carbon',
+    gradient: 'from-slate-700 to-gray-900',
+    text: 'text-slate-100',
+    position: 'right-[12%] bottom-[20%]',
+    delay: 1.0,
+  },
 ];
 
 export default function Home() {
@@ -137,15 +169,43 @@ export default function Home() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-[#F4F6F8] px-8 pb-0 pt-14 lg:min-h-[580px] lg:px-16 lg:pt-16"
+          className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-gradient-to-br from-[#F4F6F8] via-[#EEF1F8] to-[#E9EEFA] px-8 pb-14 pt-14 lg:min-h-[600px] lg:px-16 lg:pt-20"
         >
-          {/* Text content - left aligned, z-20 to stay above images */}
+          {/* Subtle chemistry formulas as bg decoration */}
+          <span className="pointer-events-none absolute left-[8%] top-[42%] hidden font-display text-3xl font-bold text-[#5841EA]/[0.04] lg:block">
+            H₂O
+          </span>
+          <span className="pointer-events-none absolute left-[3%] bottom-[18%] hidden font-display text-2xl font-bold text-[#1A73E8]/[0.05] lg:block">
+            CO₂
+          </span>
+          <span className="pointer-events-none absolute right-[40%] top-[20%] hidden font-display text-xl font-bold text-[#FF9500]/[0.05] lg:block">
+            NaCl
+          </span>
+          <span className="pointer-events-none absolute right-[36%] bottom-[12%] hidden font-display text-lg font-bold text-[#5841EA]/[0.04] lg:block">
+            C₆H₁₂O₆
+          </span>
+
+          {/* LEFT — Title + Copy + CTAs */}
           <div className="relative z-20 max-w-lg">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mb-5 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-[0_4px_16px_rgba(15,30,71,0.06)]"
+            >
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-[#FF9500] to-[#EE1908] text-white">
+                <Sparkles size={11} />
+              </span>
+              <span className="text-xs font-semibold text-[#0E1E47]">
+                Adaptive Chemistry Diagnosis
+              </span>
+            </motion.div>
+
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1 }}
-              className="font-display text-[40px] font-extrabold uppercase leading-[1.08] tracking-tight text-[#0E1E47] sm:text-5xl lg:text-[60px]"
+              className="font-display text-[42px] font-extrabold uppercase leading-[1.08] tracking-tight text-[#0E1E47] sm:text-5xl lg:text-[58px]"
             >
               Measure <span className="text-[#1A73E8]">Precisely</span>
               <br />
@@ -156,7 +216,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.25 }}
-              className="mt-6 max-w-[420px] text-[15px] leading-relaxed text-gray-500"
+              className="mt-6 max-w-[440px] text-[15px] leading-[1.7] text-gray-500"
             >
               Go Beyond Scores. Diagnose chemistry understanding and
               misconceptions with precision through an integrated adaptive
@@ -167,7 +227,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-10 flex flex-wrap items-center gap-4"
+              className="mt-9 flex flex-wrap items-center gap-4"
             >
               <Link
                 href="/register"
@@ -177,14 +237,13 @@ export default function Home() {
               </Link>
               <Link
                 href="/register"
-                className="rounded-xl border-2 border-[#FBD300] bg-[#FBD300] px-8 py-4 text-sm font-semibold text-[#0E1E47] shadow-lg shadow-amber-200/40 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                className="rounded-xl bg-[#FBD300] px-8 py-4 text-sm font-semibold text-[#0E1E47] shadow-lg shadow-amber-200/40 transition-all hover:-translate-y-0.5 hover:shadow-xl"
               >
                 Start Teaching
               </Link>
             </motion.div>
 
-            {/* Carousel dots */}
-            <div className="mt-12 flex items-center gap-2 pb-10">
+            <div className="mt-12 flex items-center gap-2">
               <span className="h-[3px] w-10 rounded-full bg-[#5841EA]" />
               <span className="h-[3px] w-3 rounded-full bg-gray-300" />
               <span className="h-[3px] w-3 rounded-full bg-gray-300" />
@@ -192,121 +251,134 @@ export default function Home() {
             </div>
           </div>
 
-          {/* RIGHT — Image composition (absolute positioned on desktop) */}
+          {/* RIGHT — Chemistry composition (desktop only) */}
           <div className="pointer-events-none absolute bottom-0 right-0 top-0 hidden w-[52%] lg:block">
-            {/* Yellow rounded-rect behind boy (top-right) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="absolute right-0 top-0 h-[250px] w-[240px] rounded-[32px] bg-[#FBD300] sm:h-[280px] sm:w-[270px]"
-            />
+            {/* Centerpiece atom container */}
+            <div className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2">
+              {/* Soft glow background */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#5841EA]/10 via-[#1A73E8]/10 to-[#00C2FF]/10 blur-2xl" />
+              <div className="absolute inset-8 rounded-full bg-gradient-to-br from-white to-[#F4F6F8] shadow-[0_8px_40px_rgba(88,65,234,0.08)]" />
 
-            {/* Boy student (top-right, overlapping yellow) */}
+              {/* Orbital ring 1 — horizontal */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0"
+              >
+                <div className="absolute left-1/2 top-1/2 h-[140px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#1A73E8]/25" />
+                <span className="absolute left-[calc(50%+170px)] top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#1A73E8] shadow-md shadow-[#1A73E8]/40" />
+              </motion.div>
+
+              {/* Orbital ring 2 — tilted 60deg */}
+              <motion.div
+                animate={{ rotate: -360 }}
+                transition={{ duration: 11, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 rotate-[60deg]"
+              >
+                <div className="absolute left-1/2 top-1/2 h-[140px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#FF9500]/25" />
+                <span className="absolute left-[calc(50%+170px)] top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF9500] shadow-md shadow-[#FF9500]/40" />
+              </motion.div>
+
+              {/* Orbital ring 3 — tilted -60deg */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 17, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 -rotate-[60deg]"
+              >
+                <div className="absolute left-1/2 top-1/2 h-[140px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#5841EA]/25" />
+                <span className="absolute left-[calc(50%+170px)] top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5841EA] shadow-md shadow-[#5841EA]/40" />
+              </motion.div>
+
+              {/* Nucleus — flask icon inside gradient circle */}
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
+                className="absolute left-1/2 top-1/2 flex h-[110px] w-[110px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-gradient-to-br from-[#5841EA] via-[#1A73E8] to-[#00C2FF] text-white shadow-xl shadow-[#5841EA]/30"
+              >
+                <FlaskConical size={42} strokeWidth={1.8} />
+              </motion.div>
+            </div>
+
+            {/* Floating periodic element tiles */}
+            {elements.map((el) => (
+              <motion.div
+                key={el.symbol}
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.5,
+                  delay: el.delay,
+                  type: 'spring',
+                }}
+                className={`absolute ${el.position} z-30`}
+              >
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{
+                    duration: 3 + Math.random(),
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  className={`flex h-[88px] w-[78px] flex-col justify-between rounded-2xl bg-gradient-to-br ${el.gradient} p-2.5 shadow-[0_8px_24px_rgba(15,30,71,0.12)]`}
+                >
+                  <span
+                    className={`text-[10px] font-semibold ${el.text} opacity-80`}
+                  >
+                    {el.number}
+                  </span>
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={`font-display text-2xl font-extrabold ${el.text}`}
+                    >
+                      {el.symbol}
+                    </span>
+                    <span
+                      className={`text-[9px] font-medium ${el.text} opacity-80`}
+                    >
+                      {el.name}
+                    </span>
+                  </div>
+                </motion.div>
+              </motion.div>
+            ))}
+
+            {/* Stat badge — 203+ Resources (top-right area) */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="absolute -top-6 right-[-20px] z-10 h-[320px] w-[300px] sm:h-[350px] sm:w-[330px]"
-            >
-              <Image
-                src="/images/hero-student-male.png"
-                alt="Student learning online"
-                fill
-                className="object-contain object-bottom"
-                priority
-              />
-            </motion.div>
-
-            {/* Live Class badge (near boy, top-center-left) */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.65 }}
-              className="absolute left-[8%] top-[6%] z-30 flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-6 shadow-[0_4px_16px_rgba(15,30,71,0.06)]"
+              className="absolute right-[8%] top-[44%] z-30 flex items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-5 shadow-[0_4px_16px_rgba(15,30,71,0.06)]"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF9500] text-white">
-                <Video size={16} />
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#1A73E8] to-[#00C2FF] text-white">
+                <BookOpen size={16} />
               </span>
-              <div className="leading-tight">
-                <p className="text-[10px] text-gray-400">Live</p>
-                <p className="text-sm font-extrabold text-[#0E1E47]">Class</p>
-              </div>
-            </motion.div>
-
-            {/* 203+ Learning Resources badge (below Live Class) */}
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
-              className="absolute left-[2%] top-[26%] z-30 flex items-center gap-3 rounded-full bg-white py-2.5 pl-2.5 pr-6 shadow-[0_4px_16px_rgba(15,30,71,0.06)]"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EE1908] text-white">
-                <BookOpen size={15} />
-              </span>
-              <div className="leading-tight">
-                <p className="text-lg font-extrabold text-[#0E1E47]">203+</p>
+              <div>
+                <p className="text-base font-extrabold leading-tight text-[#0E1E47]">
+                  203+
+                </p>
                 <p className="text-[11px] text-gray-500">Learning Resources</p>
               </div>
             </motion.div>
 
-            {/* Purple circle behind girl (bottom-center) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="absolute bottom-0 left-[12%] h-[240px] w-[240px] rounded-full bg-[#5841EA] sm:h-[270px] sm:w-[270px]"
-            />
-
-            {/* Girl student (bottom-center, overlapping purple) */}
+            {/* Stat badge — 96 Topics covered (bottom-left) */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="absolute -bottom-1 left-[4%] z-10 h-[320px] w-[280px] sm:h-[350px] sm:w-[310px]"
+              transition={{ duration: 0.5, delay: 0.95 }}
+              className="absolute bottom-[8%] left-[28%] z-30 flex items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-5 shadow-[0_4px_16px_rgba(15,30,71,0.06)]"
             >
-              <Image
-                src="/images/hero-student-female.png"
-                alt="Student learning with tablet"
-                fill
-                className="object-contain object-bottom"
-              />
-            </motion.div>
-
-            {/* 98 Online Student badge (bottom-right) */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.9 }}
-              className="absolute bottom-[22%] right-[4%] z-30 rounded-2xl bg-white p-4 shadow-[0_4px_16px_rgba(15,30,71,0.06)]"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FBD300] text-[#0E1E47]">
-                  <Users size={16} />
-                </span>
-                <div>
-                  <p className="text-lg font-extrabold leading-tight text-[#0E1E47]">
-                    98
-                  </p>
-                  <p className="text-[11px] text-gray-500">Online Student</p>
-                </div>
-              </div>
-              <div className="mt-2 flex -space-x-2">
-                {onlineAvatars.map((src, i) => (
-                  <span
-                    key={i}
-                    className="relative h-6 w-6 overflow-hidden rounded-full border-2 border-white bg-gray-200"
-                  >
-                    <Image src={src} alt="" fill className="object-cover" />
-                  </span>
-                ))}
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF9500] to-[#EE1908] text-white">
+                <FlaskConical size={16} />
+              </span>
+              <div>
+                <p className="text-base font-extrabold leading-tight text-[#0E1E47]">
+                  96
+                </p>
+                <p className="text-[11px] text-gray-500">Adaptive Questions</p>
               </div>
             </motion.div>
           </div>
-
-          {/* Bottom decorative white bumps */}
-          <div className="pointer-events-none absolute -bottom-24 left-[6%] h-48 w-48 rounded-full bg-white/60" />
-          <div className="pointer-events-none absolute -bottom-24 left-[28%] h-48 w-56 rounded-full bg-white/60" />
         </motion.div>
       </section>
 
