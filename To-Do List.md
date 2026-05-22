@@ -54,12 +54,12 @@
   - [ ] Cloud Firestore
   - [ ] Firebase Storage (untuk gambar materi)
   - [ ] Cloud Functions (untuk MSAT engine logic)
-- [ ] Install Firebase SDK (`firebase`, `firebase-admin`)
-- [ ] Create `src/lib/firebase.ts` — client-side Firebase initialization
-- [ ] Create `src/lib/firebase-admin.ts` — server-side admin SDK (untuk API routes)
-- [ ] Setup Firestore security rules (draft awal)
+- [x] Install Firebase SDK (`firebase`, `firebase-admin`)
+- [x] Create `src/lib/firebase.ts` — client-side Firebase initialization
+- [x] Create `src/lib/firebase-admin.ts` — server-side admin SDK (untuk API routes)
+- [x] Setup Firestore security rules (draft awal)
 - [ ] 🧑 MANUAL: Generate & simpan service account key (JANGAN commit ke git)
-- [ ] 🧑 MANUAL: Isi `.env.local` dengan Firebase config values dari Console
+- [x] 🧑 MANUAL: Isi `.env.local` dengan Firebase config values dari Console
 
 ### 1.4 Authentication System
 
