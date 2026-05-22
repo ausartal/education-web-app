@@ -15,7 +15,10 @@ const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <AuthGuard>
       <Navbar />
-      <main className="mx-auto min-h-screen max-w-7xl px-4 pb-16 pt-6 md:pb-6">
+      <main
+        id="main-content"
+        className="mx-auto min-h-screen max-w-7xl px-4 pb-16 pt-6 md:pb-6"
+      >
         {children}
       </main>
       <MobileNav />
