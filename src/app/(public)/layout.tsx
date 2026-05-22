@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react';
-import { Footer } from '@/components/layout/Footer';
+import { LandingNavbar } from '@/components/landing/LandingNavbar';
+import { LandingFooter } from '@/components/landing/LandingFooter';
 
 interface PublicLayoutProps {
   children: ReactNode;
@@ -8,8 +9,9 @@ interface PublicLayoutProps {
 const PublicLayout: FC<PublicLayoutProps> = ({ children }) => {
   return (
     <>
+      <LandingNavbar />
       <main className="min-h-screen">{children}</main>
-      <Footer />
+      <LandingFooter />
     </>
   );
 };
