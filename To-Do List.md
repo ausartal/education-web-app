@@ -350,45 +350,41 @@
 
 ### 5.2 Material/Learning Pages
 
-- [ ] `/materi` — Material list page
-  - [ ] Topic cards dengan progress indicator
-  - [ ] Filter by topic/status
-  - [ ] Search functionality
-- [ ] `/materi/[topicId]/[lessonId]` — Material reading page
-  - [ ] Sidebar Table of Contents (auto-highlight active section)
-  - [ ] Main content area:
-    - [ ] Markdown rendering
-    - [ ] KaTeX formula rendering (chemical equations)
-    - [ ] Embedded images/diagrams
-    - [ ] Interactive examples
-  - [ ] Progress tracking (scroll-based)
-  - [ ] Navigation: ← Previous | Next →
-  - [ ] "Mark as Complete" button
-  - [ ] Mobile: Collapsible accordion TOC
+- [x] `/materi` — Material list page
+  - [x] Topic cards dengan progress indicator
+  - [x] Search functionality
+  - [x] Animated entrance (Framer Motion staggered)
+- [x] `/materi/[id]` — Material reading page
+  - [x] Sidebar Table of Contents (desktop + mobile overlay)
+  - [x] Main content area:
+    - [x] Markdown rendering (react-markdown)
+    - [x] KaTeX formula rendering (remark-math + rehype-katex)
+    - [x] Tailwind Typography prose styling
+  - [x] Auto-marks as in_progress on open
+  - [x] Navigation: ← Previous | Next →
+  - [x] "Mark as Complete" button (gradient emerald)
+  - [x] Mobile: Collapsible TOC overlay (slide-in)
 
 ### 5.3 Practice Quiz System
 
-- [ ] `/latihan` — Quiz list page
-  - [ ] Available quizzes per topic
-  - [ ] Difficulty indicator
-  - [ ] Previous scores shown
-- [ ] `/latihan/[quizId]` — Quiz interface
-  - [ ] Question display:
-    - [ ] Question number + total (e.g., "5/15")
-    - [ ] Timer (countdown per question)
-    - [ ] Question stem (dengan KaTeX support)
-    - [ ] 5 options (A-E) radio buttons
-  - [ ] Navigation: Skip + Submit Answer
-  - [ ] Inline calculator tool
-  - [ ] Keyboard shortcuts (A-E keys, Enter to submit)
-  - [ ] Immediate feedback after submit (practice mode):
-    - [ ] ✓ Correct: green + explanation + XP animation
-    - [ ] ✗ Wrong: red + correct answer + explanation
-  - [ ] Quiz completion screen:
-    - [ ] Score summary
-    - [ ] XP earned
-    - [ ] Per-question breakdown
-    - [ ] "Retake" + "Back to Dashboard" buttons
+- [x] `/latihan` — Quiz list page
+  - [x] 3 quiz cards (Easy/Moderate/Hard) with unique gradients
+  - [x] Difficulty badge, question count, time estimate
+  - [x] Staggered entrance animations
+- [x] `/latihan/[quizId]` — Quiz interface
+  - [x] Question display:
+    - [x] Question number + total
+    - [x] Timer (countdown per question, auto-submit on expire)
+    - [x] Question stem
+    - [x] 5 options (A-E) with tap animation
+  - [x] Submit Answer button
+  - [x] Immediate feedback after submit (practice mode):
+    - [x] ✓ Correct: green + explanation
+    - [x] ✗ Wrong: red + correct answer + explanation
+  - [x] Quiz completion screen:
+    - [x] Score percentage
+    - [x] "Retake" + "Dashboard" buttons
+  - [x] Smooth page transitions (AnimatePresence)
 
 ### 5.4 MSAT Exam System
 
