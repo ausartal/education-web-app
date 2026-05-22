@@ -2,7 +2,7 @@
 
 > Platform Asesmen Kimia Adaptif dengan Multistage Adaptive Testing (MSAT)  
 > Tech Stack: Next.js 14 (App Router) + TypeScript + Tailwind CSS + Firebase  
-> Last Updated: 22 Mei 2026
+> Last Updated: 22 Mei 2026 (Phase 1-3 complete, Phase 4 next)
 
 ---
 
@@ -43,7 +43,7 @@
   - [x] Shadow & elevation tokens
   - [x] Animation timing & duration tokens
 - [x] Configure Tailwind `tailwind.config.ts` dengan custom theme (extend colors, fonts, spacing)
-- [x] Install Google Fonts: Poppins, Inter, Fira Code
+- [x] Install Google Fonts: Archivo Black, Ubuntu, Space Mono
 - [x] Setup KaTeX untuk rendering rumus kimia
 
 ### 1.3 Firebase Setup
@@ -169,7 +169,7 @@
 
 ### 3.1 Firestore Schema Setup
 
-- [ ] Collection: `users`
+- [x] Collection: `users`
   ```
   {
     uid, email, displayName, photoURL, role (student|teacher|admin),
@@ -179,7 +179,7 @@
     settings: { notifications, theme, language }
   }
   ```
-- [ ] Collection: `materials`
+- [x] Collection: `materials`
   ```
   {
     id, title, description, topic, subtopic, order,
@@ -188,7 +188,7 @@
     createdBy, status (draft|published), createdAt, updatedAt
   }
   ```
-- [ ] Collection: `question_bank`
+- [x] Collection: `question_bank`
   ```
   {
     id, topic, subtopic, difficulty (easy|moderate|hard),
@@ -199,7 +199,7 @@
     createdBy, status (active|inactive), createdAt
   }
   ```
-- [ ] Collection: `exam_sessions`
+- [x] Collection: `exam_sessions`
   ```
   {
     id, userId, examId, startedAt, completedAt,
@@ -211,46 +211,46 @@
     anomalyFlags[], status (in_progress|completed|abandoned|flagged)
   }
   ```
-- [ ] Collection: `quiz_results`
+- [x] Collection: `quiz_results`
   ```
   {
     id, userId, quizId, topic, score, totalQuestions,
     correctCount, timeSpent, responses[], completedAt
   }
   ```
-- [ ] Collection: `user_progress`
+- [x] Collection: `user_progress`
   ```
   {
     userId, materialId, status (not_started|in_progress|completed),
     completedAt, timeSpent, lastAccessedAt
   }
   ```
-- [ ] Collection: `achievements`
+- [x] Collection: `achievements`
   ```
   {
     id, name, description, icon, category, tier,
     condition (JSON logic), xpReward
   }
   ```
-- [ ] Collection: `user_achievements`
+- [x] Collection: `user_achievements`
   ```
   {
     userId, achievementId, unlockedAt
   }
   ```
-- [ ] Collection: `messages`
+- [x] Collection: `messages`
   ```
   {
     id, senderId, receiverId, content, readAt, createdAt
   }
   ```
-- [ ] Collection: `app_config/msat` — MSAT algorithm parameters
-- [ ] Write Firestore security rules untuk semua collections
+- [x] Collection: `app_config/msat` — MSAT algorithm parameters
+- [x] Write Firestore security rules untuk semua collections
 - [ ] Create Firestore indexes yang diperlukan
 
 ### 3.2 Seed Data
 
-- [ ] Buat script `scripts/seed.ts` untuk populate database
+- [x] Buat script `scripts/seed.ts` untuk populate database
 - [ ] 🧑 MANUAL: Seed materi stoikiometri (minimal 5 topik) — konten harus ditulis/review oleh ahli:
   - [ ] Konsep Mol
   - [ ] Massa Molar (Mr/Ar)
@@ -262,9 +262,9 @@
   - [ ] 30+ soal MODERATE
   - [ ] 30+ soal SUSAH
   - [ ] Setiap soal harus punya misconception tags
-- [ ] Seed achievements/badges data
-- [ ] Seed MSAT config parameters
-- [ ] Buat script `scripts/seed-test-users.ts` untuk test accounts
+- [x] Seed achievements/badges data
+- [x] Seed MSAT config parameters
+- [x] Buat script `scripts/seed-test-users.ts` untuk test accounts
 
 ---
 
