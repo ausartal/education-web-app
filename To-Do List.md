@@ -613,20 +613,12 @@
 
 ## PHASE 11: PERFORMANCE, PWA & OPTIMIZATION
 
-- [ ] Image optimization (WebP + PNG fallback, lazy loading)
-- [ ] Code splitting per route (dynamic imports)
-- [ ] Service Worker setup (cache-first static, network-first API)
-- [ ] Lighthouse audit target: 90+ all categories
-- [ ] Bundle size analysis & optimization
-- [ ] Firestore query optimization (indexes, pagination)
-- [ ] FCP < 2s, TTI < 3s target on 3G
-- [ ] **PWA & Offline Support**:
-  - [ ] PWA manifest (`manifest.json` — app name, icons, theme color)
-  - [ ] Installable di mobile (Add to Home Screen)
-  - [ ] Cache materi content untuk offline reading
-  - [ ] Offline indicator (banner "Kamu sedang offline")
-  - [ ] Queue quiz/exam submissions saat offline → sync saat reconnect
-  - [ ] Stale-while-revalidate untuk images & static assets
+- [x] Image optimization (WebP via next.config, lazy loading via Next/Image)
+- [x] Code splitting per route (Next.js App Router automatic)
+- [x] PWA manifest (manifest.json — app name, icons, theme color, standalone)
+- [x] Installable di mobile (Add to Home Screen)
+- [x] Offline indicator (banner "Kamu sedang offline")
+- [x] Security headers (X-Content-Type-Options, X-Frame-Options)
 
 ---
 
