@@ -79,10 +79,7 @@ async function createUserProfile(
     role: UserRole;
   }
 ): Promise<void> {
-  const profile: Omit<UserProfile, 'createdAt' | 'lastLoginAt'> & {
-    createdAt: ReturnType<typeof serverTimestamp>;
-    lastLoginAt: ReturnType<typeof serverTimestamp>;
-  } = {
+  const profile = {
     uid,
     email: data.email,
     displayName: data.displayName,
