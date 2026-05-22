@@ -155,13 +155,13 @@
 
 ### 2.3 Data Display Components
 
-- [ ] `Table` — Data table dengan sorting & pagination
-- [ ] `Avatar` — User avatar (image atau initials fallback)
-- [ ] `Breadcrumb` — Navigation breadcrumb
-- [ ] `Tabs` — Tab navigation
-- [ ] `Accordion` — Collapsible sections (untuk mobile TOC)
-- [ ] `Tooltip` — Hover tooltip
-- [ ] `Tag` — Topic/category tags
+- [x] `Table` — Data table dengan sorting & pagination
+- [x] `Avatar` — User avatar (image atau initials fallback)
+- [x] `Breadcrumb` — Navigation breadcrumb
+- [x] `Tabs` — Tab navigation
+- [x] `Accordion` — Collapsible sections (untuk mobile TOC)
+- [x] `Tooltip` — Hover tooltip
+- [x] `Tag` — Topic/category tags
 
 ---
 
