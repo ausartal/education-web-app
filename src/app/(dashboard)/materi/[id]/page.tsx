@@ -130,24 +130,26 @@ const MateriDetailPage: FC = () => {
 
       <div className="flex gap-8">
         {/* Sidebar TOC - Desktop */}
-        <aside className="hidden w-56 shrink-0 lg:block">
-          <div className="sticky top-20">
-            <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">
+        <aside className="hidden w-60 shrink-0 lg:block">
+          <div className="sticky top-20 rounded-3xl bg-white p-5 shadow-sm">
+            <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+              <span className="h-4 w-1 rounded-full bg-primary" />
               Contents
             </h4>
-            <nav className="space-y-1.5">
+            <nav className="space-y-0.5">
               {headings.map((h) => (
                 <a
                   key={h.slug}
                   href={`#${h.slug}`}
-                  className={`block rounded-lg px-3 py-1.5 text-sm transition-colors hover:bg-primary/5 hover:text-primary ${
+                  className={`group flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all hover:bg-primary/5 hover:text-primary ${
                     h.level === 1
                       ? 'font-semibold text-gray-800'
                       : h.level === 2
-                        ? 'pl-5 text-gray-600'
-                        : 'pl-8 text-gray-500'
+                        ? 'pl-6 text-gray-600'
+                        : 'pl-9 text-gray-500 text-xs'
                   }`}
                 >
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gray-300 transition-colors group-hover:bg-primary" />
                   {h.text}
                 </a>
               ))}
@@ -256,49 +258,59 @@ const MateriDetailPage: FC = () => {
           </div>
 
           {/* Bottom Actions Bar */}
-          <div className="mt-10 rounded-3xl bg-white p-6 shadow-sm">
-            {/* Mark Complete */}
-            <div className="mb-5 text-center">
-              {completed ? (
-                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-5 py-2.5 text-sm font-semibold text-emerald-700">
-                  <CheckCircle size={16} />
-                  Materi selesai!
-                </div>
-              ) : (
-                <button
-                  onClick={handleMarkComplete}
-                  className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 py-4 text-sm font-bold text-white shadow-lg shadow-emerald-200/40 transition-all hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:px-10"
-                >
-                  ✓ Tandai Selesai
-                </button>
-              )}
-            </div>
-
+          <div className="mt-10 space-y-4">
             {/* Navigation */}
-            <div className="flex items-center justify-between border-t border-gray-100 pt-5">
+            <div className="flex items-center gap-3">
               {prevMaterial ? (
                 <Link
                   href={`/materi/${prevMaterial.id}`}
-                  className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                  className="flex flex-1 items-center gap-3 rounded-2xl bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <ChevronLeft size={16} />
-                  <span className="hidden sm:inline">{prevMaterial.title}</span>
-                  <span className="sm:hidden">Previous</span>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
+                    <ChevronLeft size={18} className="text-gray-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-gray-400">Previous</p>
+                    <p className="truncate text-sm font-semibold text-gray-700">
+                      {prevMaterial.title}
+                    </p>
+                  </div>
                 </Link>
               ) : (
-                <div />
+                <div className="flex-1" />
               )}
               {nextMaterial && (
                 <Link
                   href={`/materi/${nextMaterial.id}`}
-                  className="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+                  className="flex flex-1 items-center justify-end gap-3 rounded-2xl bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <span className="hidden sm:inline">{nextMaterial.title}</span>
-                  <span className="sm:hidden">Next</span>
-                  <ChevronRight size={16} />
+                  <div className="min-w-0 text-right">
+                    <p className="text-[10px] text-gray-400">Next</p>
+                    <p className="truncate text-sm font-semibold text-gray-700">
+                      {nextMaterial.title}
+                    </p>
+                  </div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                    <ChevronRight size={18} className="text-primary" />
+                  </div>
                 </Link>
               )}
             </div>
+
+            {/* Mark Complete */}
+            {!completed ? (
+              <button
+                onClick={handleMarkComplete}
+                className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 py-4 text-center text-sm font-bold text-white shadow-lg shadow-emerald-200/40 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+              >
+                ✓ Tandai Materi Selesai
+              </button>
+            ) : (
+              <div className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 py-4 text-sm font-semibold text-emerald-700">
+                <CheckCircle size={18} />
+                Materi sudah selesai!
+              </div>
+            )}
           </div>
         </motion.article>
       </div>
