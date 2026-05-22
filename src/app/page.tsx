@@ -1,49 +1,100 @@
+'use client';
+
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
-const topics = [
-  { name: 'Konsep Mol', icon: '/images/topic-mol.png' },
-  { name: 'Atom', icon: '/images/topic-atom.png' },
-  { name: 'Stoikiometri', icon: '/images/topic-stoichiometry.png' },
-  { name: 'Reaksi Kimia', icon: '/images/topic-chemical-reaction.png' },
-  { name: 'Larutan', icon: '/images/topic-solution.png' },
-  { name: 'Tabel Periodik', icon: '/images/topic-periodic-table.png' },
+const targetUsers = [
+  'Students who want to get grading on chemistry',
+  'Students who want to prepare learn chemistry',
+  'Students who want to improve their grades',
+  'Students who have high interest in chemistry',
+  'Students who want to test their knowledge',
+];
+
+const chemistryTopics = [
+  {
+    name: 'Compound',
+    desc: 'Substances consisting of 2+ elements',
+    icon: '/images/topic-compound.png',
+  },
+  {
+    name: 'Atom',
+    desc: 'The smallest building of matter',
+    icon: '/images/topic-atom.png',
+  },
+  {
+    name: 'Periodic Table',
+    desc: 'A map that organizes all elements',
+    icon: '/images/topic-periodic-table.png',
+  },
+  {
+    name: 'Mol',
+    desc: 'Unit for counting the number of particles',
+    icon: '/images/topic-mol.png',
+  },
+  {
+    name: 'Chemical Reaction',
+    desc: 'Symbolic changes in substances in reactions',
+    icon: '/images/topic-chemical-reaction.png',
+  },
+  {
+    name: 'Stoichiometry',
+    desc: '"Calculating" in chemical reactions',
+    icon: '/images/topic-stoichiometry.png',
+  },
+  {
+    name: 'Solution',
+    desc: 'A mixture of solute and solvent',
+    icon: '/images/topic-solution.png',
+  },
 ];
 
 const features = [
   {
-    icon: '🎯',
-    title: 'Adaptive Testing',
-    description: 'Soal menyesuaikan kemampuanmu secara real-time',
-    gradient: 'from-blue-500/10 to-cyan-500/10',
+    title: 'Tutorial video',
+    description:
+      'Watch interesting and informative videos to learn various chemistry topics.',
+    icon: '/icons/feature-video-learning.svg',
+    bg: 'bg-[#EFF1FE]',
   },
   {
-    icon: '🔍',
-    title: 'Deteksi Miskonsepsi',
-    description: 'Identifikasi kesalahan pemahaman spesifik',
-    gradient: 'from-violet-500/10 to-purple-500/10',
+    title: 'Discussion forum',
+    description:
+      'Join online discussion forums to exchange ideas with other students and get help from teachers.',
+    icon: '/icons/feature-discussion-forum.svg',
+    bg: 'bg-white border border-gray-100',
   },
   {
-    icon: '📊',
-    title: 'Analisis Mendalam',
-    description: 'Profil pemahaman dan rekomendasi belajar',
-    gradient: 'from-emerald-500/10 to-teal-500/10',
+    title: 'Practice and quizzes',
+    description:
+      'Test your understanding with challenging interactive exercises and quizzes.',
+    icon: '/icons/feature-quiz-table.svg',
+    bg: 'bg-[#F1F3F8]',
   },
   {
-    icon: '🏆',
-    title: 'Gamifikasi',
-    description: 'XP, streak, dan achievements yang menyenangkan',
-    gradient: 'from-amber-500/10 to-orange-500/10',
+    title: 'Learning materials',
+    description:
+      'Access comprehensive learning materials, including notes, diagrams, and a glossary.',
+    icon: '/icons/feature-learning-materials.svg',
+    bg: 'bg-white border border-gray-100',
   },
-];
-
-const stats = [
-  { value: '96+', label: 'Soal Adaptif' },
-  { value: '5', label: 'Topik Materi' },
-  { value: '3', label: 'Level Kesulitan' },
-  { value: '21', label: 'Soal per Ujian' },
+  {
+    title: 'Guidance from experienced tutors',
+    description:
+      'Our team of experienced and professional tutors is ready to help you answer questions and provide the guidance you need.',
+    icon: '/icons/feature-community.svg',
+    bg: 'bg-[#FFF9E6]',
+  },
+  {
+    title: 'Real Assessment',
+    description:
+      'Test your understanding with challenging interactive exercises and quizzes.',
+    icon: '/icons/feature-reading-book.svg',
+    bg: 'bg-[#F1F3F8]',
+  },
 ];
 
 export default function Home() {
@@ -51,206 +102,304 @@ export default function Home() {
     <>
       <LandingNavbar />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden px-4 pb-20 pt-16 lg:px-8 lg:pb-32 lg:pt-24">
-        {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/30 to-white" />
-        <div className="absolute -right-40 top-20 h-[600px] w-[600px] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -left-40 bottom-0 h-[400px] w-[400px] rounded-full bg-cyan-500/5 blur-3xl" />
+      {/* Hero - Assessment Section */}
+      <section
+        id="assessment"
+        className="relative overflow-hidden bg-[#FFFCEF] px-4 py-20 lg:px-8 lg:py-28"
+      >
+        {/* Decorative shapes */}
+        <Image
+          src="/icons/shape-rect-blue.svg"
+          alt=""
+          width={80}
+          height={80}
+          className="absolute left-[5%] top-[15%] hidden h-20 w-20 lg:block"
+          aria-hidden
+        />
+        <Image
+          src="/icons/dot-cyan.svg"
+          alt=""
+          width={48}
+          height={48}
+          className="absolute left-[8%] top-[30%] hidden lg:block"
+          aria-hidden
+        />
+        <Image
+          src="/icons/shape-rect-purple.svg"
+          alt=""
+          width={120}
+          height={120}
+          className="absolute left-[42%] top-[20%] hidden h-32 w-32 lg:block"
+          aria-hidden
+        />
+        <Image
+          src="/icons/dot-yellow.svg"
+          alt=""
+          width={56}
+          height={56}
+          className="absolute bottom-[20%] left-[8%] hidden lg:block"
+          aria-hidden
+        />
+        <Image
+          src="/icons/star.svg"
+          alt=""
+          width={56}
+          height={56}
+          className="absolute bottom-[15%] left-[35%] hidden lg:block"
+          aria-hidden
+        />
 
-        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-16 lg:flex-row">
-          {/* Text */}
-          <div className="flex-1 text-center lg:text-left">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Platform Asesmen Kimia #1 di Indonesia
-            </div>
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-12 lg:flex-row lg:gap-16">
+          {/* Left - Quiz Mockup */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative flex-1"
+          >
+            <Image
+              src="/images/hero-quiz-mockup.png"
+              alt="AKURAT adaptive assessment showing misconception detection"
+              width={620}
+              height={480}
+              className="relative z-10 w-full max-w-xl drop-shadow-2xl"
+              priority
+            />
+          </motion.div>
 
-            <h1 className="mb-6 font-display text-4xl font-extrabold leading-[1.1] text-gray-900 lg:text-6xl">
-              Kuasai Kimia dengan{' '}
-              <span className="bg-gradient-to-r from-primary via-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                Cara Cerdas
-              </span>
+          {/* Right - Content */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="flex-1"
+          >
+            <h1 className="mb-4 font-display text-4xl font-extrabold leading-[1.15] text-gray-900 lg:text-5xl">
+              <span className="text-primary-orange">Guided</span>{' '}
+              <span className="text-gray-900">Courses With Every</span>{' '}
+              <span className="text-primary">Journey</span>
             </h1>
-
-            <p className="mb-8 max-w-lg text-base leading-relaxed text-gray-500 lg:text-lg">
-              AKURAT menggunakan AI untuk menyesuaikan soal dengan kemampuanmu,
-              mendeteksi miskonsepsi, dan membantu kamu menguasai kimia dengan
-              cara yang personal dan menyenangkan.
+            <p className="mb-8 max-w-md text-sm leading-relaxed text-gray-500">
+              Experience how AKURAT maps misconceptions in real-time
+              <br />
+              Select an answer to see the adaptive routing
             </p>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
-              <Link
-                href="/register"
-                className="group relative overflow-hidden rounded-full bg-primary px-8 py-4 text-center text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-primary/30"
-              >
-                <span className="relative z-10">Mulai Belajar Gratis</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-600 opacity-0 transition-opacity group-hover:opacity-100" />
-              </Link>
-              <Link
-                href="#features"
-                className="rounded-full border border-gray-200 px-8 py-4 text-center text-sm font-semibold text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50"
-              >
-                Lihat Fitur →
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div className="mt-12 grid grid-cols-4 gap-4 border-t border-gray-100 pt-8">
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center lg:text-left">
-                  <p className="text-2xl font-black text-gray-900 lg:text-3xl">
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-gray-500">{stat.label}</p>
-                </div>
+            {/* Target Users */}
+            <ul className="space-y-3">
+              {targetUsers.map((user, i) => (
+                <motion.li
+                  key={i}
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.15 + i * 0.05 }}
+                  className="flex items-center justify-between rounded-xl bg-white px-5 py-3.5 shadow-sm ring-1 ring-gray-100/80 transition-all hover:shadow-md hover:ring-primary/30"
+                >
+                  <span className="text-sm font-medium text-gray-800">
+                    {user}
+                  </span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-orange text-xs font-bold text-white shadow-sm">
+                    {i + 1}
+                  </span>
+                </motion.li>
               ))}
-            </div>
-          </div>
-
-          {/* Image */}
-          <div className="relative flex-1">
-            <div className="relative mx-auto w-fit">
-              <div className="absolute -inset-8 rounded-[40px] bg-gradient-to-br from-primary/10 via-cyan-500/5 to-transparent blur-2xl" />
-              <div className="relative overflow-hidden rounded-3xl bg-white p-2 shadow-2xl shadow-gray-200/50">
-                <Image
-                  src="/images/hero-quiz-mockup.png"
-                  alt="AKURAT adaptive assessment"
-                  width={500}
-                  height={380}
-                  className="rounded-2xl"
-                  priority
-                />
-              </div>
-            </div>
-          </div>
+            </ul>
+          </motion.div>
         </div>
       </section>
 
-      {/* Topics */}
-      <section className="border-y border-gray-100 bg-gray-50/50 px-4 py-10">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-8">
-          {topics.map((topic) => (
-            <div key={topic.name} className="flex items-center gap-2.5">
-              <Image src={topic.icon} alt={topic.name} width={32} height={32} />
-              <span className="text-sm font-medium text-gray-600">
-                {topic.name}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="px-4 py-20 lg:px-8 lg:py-28">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
-            <p className="mb-3 text-sm font-semibold text-primary">FITUR</p>
-            <h2 className="mb-4 font-display text-3xl font-extrabold text-gray-900 lg:text-4xl">
-              Belajar yang Disesuaikan Untukmu
+      {/* Learning Material */}
+      <section id="learning-material" className="px-4 py-20 lg:px-8 lg:py-28">
+        <div className="mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16 text-center"
+          >
+            <h2 className="mb-3 font-display text-3xl font-extrabold text-gray-900 lg:text-4xl">
+              Chemistry Materials We Teach
             </h2>
-            <p className="mx-auto max-w-xl text-gray-500">
-              Bukan sekadar latihan soal — AKURAT memahami cara berpikirmu dan
-              menyesuaikan pengalaman belajar secara personal.
+            <p className="mx-auto max-w-2xl text-sm leading-relaxed text-gray-500">
+              Here, we offer a variety of chemistry materials designed for all
+              levels, from beginner to advanced. Our material covers a variety
+              of fundamental topics in chemistry.
             </p>
+          </motion.div>
+
+          {/* Row 1 - 4 cards */}
+          <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {chemistryTopics.slice(0, 4).map((topic, i) => (
+              <motion.div
+                key={topic.name}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-center gap-4 rounded-2xl bg-gray-50 px-5 py-5 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
+              >
+                <Image
+                  src={topic.icon}
+                  alt={topic.name}
+                  width={56}
+                  height={56}
+                  className="shrink-0"
+                />
+                <div className="min-w-0">
+                  <h3 className="font-display text-sm font-bold text-gray-900">
+                    {topic.name}
+                  </h3>
+                  <p className="text-xs leading-relaxed text-gray-500 line-clamp-2">
+                    {topic.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className={`group rounded-3xl bg-gradient-to-br ${f.gradient} p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}
+          {/* Row 2 - 3 cards centered */}
+          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {chemistryTopics.slice(4).map((topic, i) => (
+              <motion.div
+                key={topic.name}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 + i * 0.05 }}
+                className="flex items-center gap-4 rounded-2xl bg-gray-50 px-5 py-5 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg"
               >
-                <span className="mb-4 block text-4xl">{f.icon}</span>
-                <h3 className="mb-2 font-display text-base font-bold text-gray-900">
-                  {f.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-gray-600">
-                  {f.description}
-                </p>
-              </div>
+                <Image
+                  src={topic.icon}
+                  alt={topic.name}
+                  width={56}
+                  height={56}
+                  className="shrink-0"
+                />
+                <div className="min-w-0">
+                  <h3 className="font-display text-sm font-bold text-gray-900">
+                    {topic.name}
+                  </h3>
+                  <p className="text-xs leading-relaxed text-gray-500 line-clamp-2">
+                    {topic.desc}
+                  </p>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="bg-gray-50/50 px-4 py-20 lg:px-8 lg:py-28">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="mb-3 text-sm font-semibold text-primary">CARA KERJA</p>
-          <h2 className="mb-16 font-display text-3xl font-extrabold text-gray-900 lg:text-4xl">
-            3 Langkah Mudah
-          </h2>
+      {/* Learning Resources */}
+      <section
+        id="learning-resources"
+        className="bg-gray-50/40 px-4 py-20 lg:px-8 lg:py-28"
+      >
+        <div className="mx-auto max-w-6xl">
+          {/* Header */}
+          <div className="mb-14 grid gap-6 lg:grid-cols-2">
+            <motion.h2
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="font-display text-3xl font-extrabold leading-tight text-gray-900 lg:text-4xl"
+            >
+              What do you get at
+              <br />
+              <span className="text-primary">AKURAT?</span>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="self-end text-sm leading-relaxed text-gray-500"
+            >
+              AKURAT is an online learning platform specifically designed to
+              help you learn chemistry easily, fun and effectively. We offer a
+              variety of learning programs tailored to your needs and learning
+              level.
+            </motion.p>
+          </div>
 
-          <div className="grid gap-12 sm:grid-cols-3">
-            {[
-              {
-                step: '01',
-                title: 'Pelajari Materi',
-                desc: 'Baca materi interaktif dengan rumus kimia dan contoh soal',
-              },
-              {
-                step: '02',
-                title: 'Ujian Adaptif',
-                desc: 'Sistem menyesuaikan kesulitan berdasarkan jawabanmu',
-              },
-              {
-                step: '03',
-                title: 'Lihat Analisis',
-                desc: 'Dapatkan profil pemahaman dan rekomendasi belajar',
-              },
-            ].map((item) => (
-              <div key={item.step}>
-                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                  <span className="font-display text-xl font-black text-primary">
-                    {item.step}
-                  </span>
+          {/* Feature Grid */}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature, i) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className={`group rounded-3xl p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${feature.bg}`}
+              >
+                <div className="mb-6 flex h-32 items-center justify-center">
+                  <Image
+                    src={feature.icon}
+                    alt={feature.title}
+                    width={140}
+                    height={140}
+                    className="transition-transform duration-300 group-hover:scale-105"
+                  />
                 </div>
                 <h3 className="mb-2 font-display text-lg font-bold text-gray-900">
-                  {item.title}
+                  {feature.title}
                 </h3>
-                <p className="text-sm text-gray-500">{item.desc}</p>
-              </div>
+                <p className="text-sm leading-relaxed text-gray-500">
+                  {feature.description}
+                </p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonial / Social Proof */}
-      <section className="px-4 py-20 lg:px-8 lg:py-28">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-8 flex justify-center gap-1">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <span key={i} className="text-2xl">
-                ⭐
-              </span>
-            ))}
-          </div>
-          <blockquote className="mb-6 font-display text-2xl font-bold leading-relaxed text-gray-900 lg:text-3xl">
-            &ldquo;AKURAT membantu saya memahami stoikiometri yang selama ini
-            terasa sulit. Soalnya adaptif dan penjelasannya sangat jelas.&rdquo;
-          </blockquote>
-          <p className="text-sm text-gray-500">— Siswa SMA, pengguna AKURAT</p>
-        </div>
-      </section>
-
-      {/* CTA */}
+      {/* Final CTA */}
       <section className="px-4 py-20 lg:px-8">
-        <div className="mx-auto max-w-4xl overflow-hidden rounded-[32px] bg-gradient-to-br from-primary via-blue-600 to-cyan-500 p-12 text-center text-white shadow-2xl shadow-primary/20 lg:p-16">
-          <h2 className="mb-4 font-display text-3xl font-extrabold lg:text-4xl">
-            Siap Kuasai Kimia?
-          </h2>
-          <p className="mb-8 text-white/80 lg:text-lg">
-            Bergabung sekarang dan rasakan belajar kimia yang personal, adaptif,
-            dan menyenangkan.
-          </p>
-          <Link
-            href="/register"
-            className="inline-block rounded-full bg-white px-10 py-4 text-sm font-bold text-primary shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
-          >
-            Daftar Gratis Sekarang
-          </Link>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative mx-auto max-w-5xl overflow-hidden rounded-[40px] bg-gradient-to-br from-primary via-blue-600 to-primary-cyan p-12 text-center text-white shadow-2xl shadow-primary/20 lg:p-20"
+        >
+          {/* Decorative */}
+          <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10" />
+          <div className="absolute -bottom-12 -left-12 h-56 w-56 rounded-full bg-white/10" />
+          <Image
+            src="/icons/star.svg"
+            alt=""
+            width={32}
+            height={32}
+            className="absolute right-12 top-8 opacity-60"
+            aria-hidden
+          />
+
+          <div className="relative">
+            <h2 className="mb-4 font-display text-3xl font-extrabold leading-tight lg:text-5xl">
+              Ready to Master Chemistry?
+            </h2>
+            <p className="mx-auto mb-8 max-w-xl text-sm text-white/80 lg:text-base">
+              Join AKURAT today and experience personalized, adaptive learning
+              that helps you understand chemistry deeply.
+            </p>
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/register"
+                className="rounded-full bg-white px-10 py-4 text-sm font-bold text-primary shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
+              >
+                Get Started Free
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-full border-2 border-white/30 bg-white/10 px-10 py-4 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              >
+                Sign In
+              </Link>
+            </div>
+          </div>
+        </motion.div>
       </section>
 
       <LandingFooter />
