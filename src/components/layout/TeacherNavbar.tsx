@@ -30,6 +30,7 @@ export const TeacherNavbar: FC = () => {
             alt="AKURAT"
             width={32}
             height={32}
+            className="h-8 w-8 object-contain"
           />
           <span className="font-display text-lg text-gray-900">AKURAT</span>
           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
