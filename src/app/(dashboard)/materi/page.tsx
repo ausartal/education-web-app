@@ -119,6 +119,7 @@ const MateriPage: FC = () => {
           const isInProgress = status === 'in_progress';
           const isCurrent =
             !isCompleted &&
+            !isInProgress &&
             (i === 0 || getStatus(materials[i - 1].id) === 'completed');
           const isLocked = !isCompleted && !isInProgress && !isCurrent;
           const style = topicStyles[i % topicStyles.length];
