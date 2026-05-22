@@ -95,67 +95,67 @@ const UjianPage: FC = () => {
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-8 lg:p-12">
-          {/* Stats */}
-          <div className="mb-8 grid grid-cols-3 gap-4">
-            <div className="rounded-2xl bg-gray-50 p-4 text-center">
-              <p className="text-2xl font-black text-gray-900">21</p>
-              <p className="text-xs text-gray-500">Soal</p>
-            </div>
-            <div className="rounded-2xl bg-gray-50 p-4 text-center">
-              <p className="text-2xl font-black text-gray-900">3</p>
-              <p className="text-xs text-gray-500">Stage</p>
-            </div>
-            <div className="rounded-2xl bg-gray-50 p-4 text-center">
-              <p className="text-2xl font-black text-gray-900">~30</p>
-              <p className="text-xs text-gray-500">Menit</p>
-            </div>
-          </div>
-
-          {/* Rules */}
-          <h3 className="mb-4 text-sm font-bold text-gray-900">
-            Peraturan Ujian
-          </h3>
-          <div className="mb-8 space-y-3">
-            {rules.map((rule, i) => {
-              const Icon = rule.icon;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + i * 0.05 }}
-                  className="flex items-center gap-4 rounded-xl bg-gray-50 px-5 py-3.5"
-                >
-                  <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${rule.color}`}
+        {/* Content - 2 column */}
+        <div className="grid gap-8 p-8 lg:grid-cols-[1fr_280px] lg:p-12">
+          {/* Left - Rules */}
+          <div>
+            <h3 className="mb-4 text-sm font-bold text-gray-900">
+              Peraturan Ujian
+            </h3>
+            <div className="space-y-3">
+              {rules.map((rule, i) => {
+                const Icon = rule.icon;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + i * 0.05 }}
+                    className="flex items-center gap-4 rounded-xl bg-gray-50 px-5 py-3.5"
                   >
-                    <Icon size={18} />
-                  </div>
-                  <span className="text-sm text-gray-700">{rule.text}</span>
-                </motion.div>
-              );
-            })}
+                    <div
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${rule.color}`}
+                    >
+                      <Icon size={18} />
+                    </div>
+                    <span className="text-sm text-gray-700">{rule.text}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Info */}
-          <div className="mb-8 rounded-2xl bg-amber-50 p-5">
-            <p className="text-sm leading-relaxed text-amber-800">
-              <strong>Penting:</strong> Ujian ini menggunakan sistem adaptif.
-              Jika kamu menjawab benar, soal berikutnya akan lebih sulit. Jika
-              salah, soal akan lebih mudah. Sistem juga mengukur waktu
-              menjawabmu untuk menentukan tingkat kepercayaan diri.
+          {/* Right - Stats + Info + Start */}
+          <div className="space-y-5">
+            {/* Stats */}
+            <div className="space-y-3">
+              <div className="rounded-2xl bg-gray-50 p-4 text-center">
+                <p className="text-2xl font-black text-gray-900">21</p>
+                <p className="text-xs text-gray-500">Soal</p>
+              </div>
+              <div className="rounded-2xl bg-gray-50 p-4 text-center">
+                <p className="text-2xl font-black text-gray-900">3</p>
+                <p className="text-xs text-gray-500">Stage</p>
+              </div>
+              <div className="rounded-2xl bg-gray-50 p-4 text-center">
+                <p className="text-2xl font-black text-gray-900">~30</p>
+                <p className="text-xs text-gray-500">Menit</p>
+              </div>
+            </div>
+
+            {/* Info */}
+            <p className="rounded-xl bg-amber-50 p-4 text-xs leading-relaxed text-amber-700">
+              Soal menyesuaikan kemampuanmu. Waktu menjawab juga diukur.
             </p>
-          </div>
 
-          {/* Start Button */}
-          <button
-            onClick={() => setShowModal(true)}
-            className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
-          >
-            Mulai Ujian
-          </button>
+            {/* Start */}
+            <button
+              onClick={() => setShowModal(true)}
+              className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+            >
+              Mulai Ujian
+            </button>
+          </div>
         </div>
       </motion.div>
 
