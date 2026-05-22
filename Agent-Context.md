@@ -1,6 +1,6 @@
 # AKURAT — AI Agent Context & Handoff Document
 
-> Last Updated: 23 Mei 2026
+> Last Updated: 23 Mei 2026 (125 commits, Phase 1-13 complete, UI polished)
 > This document is for AI agents working on this project. It captures the current state, preferences, and conventions.
 
 ---
