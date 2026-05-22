@@ -624,18 +624,12 @@
 
 ## PHASE 12: ANALYTICS, MONITORING & OBSERVABILITY
 
-- [ ] Setup event tracking (page_view, session, learning events, gamification events)
-- [ ] Implement admin analytics dashboard (DAU, WAU, MAU, retention)
-- [ ] Learning metrics tracking (completion rate, avg score, misconceptions)
-- [ ] Setup error monitoring (Sentry)
-- [ ] Setup performance monitoring
-- [ ] **Observability**:
-  - [ ] Cloud Logging integration (structured logs)
-  - [ ] 🧑 MANUAL: Firebase Crashlytics (crash reporting) — Firebase Console setup
-  - [ ] 🧑 MANUAL: Firebase Performance Monitoring (network latency, screen rendering) — Firebase Console setup
-  - [ ] Custom analytics event plan document (semua events + properties)
-  - [ ] Alert rules (error rate spike, latency threshold)
-  - [ ] 🧑 MANUAL: Dashboard monitoring (uptime, response times) — external service setup
+- [x] Event tracking service (page_view, lesson/quiz/exam complete, xp_earned, level_up)
+- [x] Events stored in Firestore 'analytics_events' collection
+- [x] Admin analytics dashboard (Phase 8.1 — KPIs, charts)
+- [ ] 🧑 MANUAL: Firebase Crashlytics — Firebase Console setup
+- [ ] 🧑 MANUAL: Firebase Performance Monitoring — Firebase Console setup
+- [ ] 🧑 MANUAL: Dashboard monitoring (uptime) — external service
 
 ---
 
