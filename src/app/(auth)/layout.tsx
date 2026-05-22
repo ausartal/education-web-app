@@ -99,18 +99,14 @@ const AuthLayout: FC<AuthLayoutProps> = ({ children }) => {
 
         {/* Center Logo */}
         <div className="relative z-10 flex h-full items-center justify-center px-8">
-          <div className="flex items-center gap-4">
-            <Image
-              src="/icons/logo-icon.png"
-              alt="AKURAT"
-              width={80}
-              height={80}
-              className="h-20 w-20"
-            />
-            <span className="font-display text-[56px] font-extrabold tracking-tight text-[#0E1E47]">
-              AKURAT
-            </span>
-          </div>
+          <Image
+            src="/icons/logo-horizontal.png"
+            alt="AKURAT"
+            width={280}
+            height={60}
+            className="h-auto w-[280px]"
+            priority
+          />
         </div>
       </div>
 

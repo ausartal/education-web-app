@@ -38,9 +38,9 @@ export const LandingNavbar: FC = () => {
           <Image
             src="/icons/logo-icon.png"
             alt="AKURAT"
-            width={36}
-            height={36}
-            className="h-9 w-9"
+            width={32}
+            height={32}
+            className="h-8 w-8 object-contain"
           />
           <span className="font-display text-xl font-extrabold tracking-tight text-[#0E1E47]">
             AKURAT
