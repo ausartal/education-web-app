@@ -247,7 +247,9 @@ const QuizPage: FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`mt-6 rounded-2xl p-5 ${
-                isCorrect ? 'bg-emerald-50' : 'bg-rose-50'
+                isCorrect
+                  ? 'animate-[bounceIn_0.4s_ease-out] bg-emerald-50'
+                  : 'animate-[shake_0.4s_ease-out] bg-rose-50'
               }`}
             >
               <p
