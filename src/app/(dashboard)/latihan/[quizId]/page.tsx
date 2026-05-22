@@ -126,7 +126,7 @@ const QuizPage: FC = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
       </div>
     );
   }
@@ -242,17 +242,14 @@ const QuizPage: FC = () => {
                 {shuffledOptions.map((key) => {
                   const isSelected = selected === key;
                   const isAnswer = key === currentQ.correctAnswer;
-                  let style =
-                    'bg-white border-gray-200 hover:border-primary/40 text-gray-800';
+                  let style = 'bg-white hover:border-primary/40 text-gray-800';
                   if (submitted) {
-                    if (isAnswer)
-                      style =
-                        'bg-emerald-50 border-emerald-400 text-emerald-800';
+                    if (isAnswer) style = 'bg-emerald-50 text-emerald-800';
                     else if (isSelected && !isAnswer)
-                      style = 'bg-rose-50 border-rose-400 text-rose-800';
-                    else style = 'bg-gray-50 border-gray-100 text-gray-400';
+                      style = 'bg-rose-50 text-rose-800';
+                    else style = 'bg-gray-50 text-gray-400';
                   } else if (isSelected) {
-                    style = 'bg-primary/5 border-primary text-gray-900';
+                    style = 'bg-primary/5 text-gray-900';
                   }
                   return (
                     <motion.button
@@ -260,7 +257,7 @@ const QuizPage: FC = () => {
                       whileTap={!submitted ? { scale: 0.97 } : {}}
                       onClick={() => !submitted && setSelected(key)}
                       disabled={submitted}
-                      className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-all ${style}`}
+                      className={`flex items-center gap-3 rounded-xl px-4 py-3.5 text-left transition-all ${style}`}
                     >
                       <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
@@ -357,7 +354,7 @@ const QuizPage: FC = () => {
                 </span>
               </button>
               {showCalc && (
-                <div className="border-t border-gray-100 p-4">
+                <div className="border-t p-4">
                   <ScientificCalculator />
                 </div>
               )}
@@ -374,7 +371,7 @@ const QuizPage: FC = () => {
                 </span>
               </button>
               {showPeriodic && (
-                <div className="border-t border-gray-100 p-4">
+                <div className="border-t p-4">
                   <PeriodicTableRef />
                 </div>
               )}
