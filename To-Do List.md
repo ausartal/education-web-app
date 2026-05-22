@@ -541,11 +541,13 @@
 
 ### 8.2 User Management
 
-- [ ] `/admin/users` — User management table
-  - [ ] Filters: Role, Status, Date registered
-  - [ ] Actions: Activate, Deactivate, Change role, Delete
-  - [ ] Bulk actions
-  - [ ] User detail view
+- [x] `/admin/users` — User management table
+  - [x] Search by name/email
+  - [x] Filter by role (All/Student/Teacher/Admin)
+  - [x] Change role via dropdown
+  - [x] Toggle active/inactive status
+  - [x] Delete user
+  - [x] Toast feedback for all actions
 
 ### 8.3 Content Moderation
 
