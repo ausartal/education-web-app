@@ -4,9 +4,10 @@ import { FC, FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock } from 'lucide-react';
-import { signIn, signInWithGoogle } from '@/services/auth';
+import { signIn, signInWithGoogle, getUserProfile } from '@/services/auth';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { useToast } from '@/hooks/useToast';
+import { auth } from '@/lib/firebase';
 
 const LoginPage: FC = () => {
   const router = useRouter();
@@ -22,7 +23,8 @@ const LoginPage: FC = () => {
     setLoading(true);
     try {
       await signIn(email, password);
-      router.push('/dashboard');
+      const profile = await getUserProfile(auth.currentUser!.uid);
+      router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
     } catch (err) {
       const msg = getAuthErrorMessage(err);
       if (msg) setError(msg);
@@ -36,7 +38,8 @@ const LoginPage: FC = () => {
     setLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
+      const profile = await getUserProfile(auth.currentUser!.uid);
+      router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
     } catch (err) {
       const msg = getAuthErrorMessage(err);
       if (msg) setError(msg);

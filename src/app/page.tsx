@@ -101,14 +101,14 @@ const features = [
 ];
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/dashboard');
+      router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, profile, loading, router]);
 
   if (loading || user) {
     return (
