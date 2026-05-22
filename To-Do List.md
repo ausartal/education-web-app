@@ -82,23 +82,23 @@
 
 ### 1.5 Core Layout & Navigation
 
-- [ ] Create `src/components/layout/Navbar.tsx` — Desktop top navigation
-  - [ ] Logo + brand name "AKURAT"
-  - [ ] Nav links (Dashboard, Materi, Latihan, Ujian)
-  - [ ] Notification bell icon
-  - [ ] User avatar dropdown (Profile, Settings, Logout)
-  - [ ] Sticky positioning
-- [ ] Create `src/components/layout/MobileNav.tsx` — Bottom tab bar (mobile)
-  - [ ] 5 tabs: Home, Materi, Latihan, Ujian, Profil
-  - [ ] Active state indicator
-  - [ ] Icon + label
-- [ ] Create `src/components/layout/Sidebar.tsx` — Optional sidebar untuk teacher/admin
-- [ ] Create `src/components/layout/Footer.tsx`
-- [ ] Create layout wrappers:
-  - [ ] `src/app/(public)/layout.tsx` — Public pages (landing, login)
-  - [ ] `src/app/(dashboard)/layout.tsx` — Authenticated pages
-  - [ ] `src/app/(admin)/layout.tsx` — Admin pages
-- [ ] Implement responsive breakpoints (sm: 640, md: 768, lg: 1024, xl: 1280)
+- [x] Create `src/components/layout/Navbar.tsx` — Desktop top navigation
+  - [x] Logo + brand name "AKURAT"
+  - [x] Nav links (Dashboard, Materi, Latihan, Ujian)
+  - [x] Notification bell icon
+  - [x] User avatar dropdown (Profile, Settings, Logout)
+  - [x] Sticky positioning
+- [x] Create `src/components/layout/MobileNav.tsx` — Bottom tab bar (mobile)
+  - [x] 5 tabs: Home, Materi, Latihan, Ujian, Profil
+  - [x] Active state indicator
+  - [x] Icon + label
+- [x] Create `src/components/layout/Sidebar.tsx` — Optional sidebar untuk teacher/admin
+- [x] Create `src/components/layout/Footer.tsx`
+- [x] Create layout wrappers:
+  - [x] `src/app/(public)/layout.tsx` — Public pages (landing, login)
+  - [x] `src/app/(dashboard)/layout.tsx` — Authenticated pages
+  - [x] `src/app/(admin)/layout.tsx` — Admin pages
+- [x] Implement responsive breakpoints (sm: 640, md: 768, lg: 1024, xl: 1280)
 
 ---
 
