@@ -1,0 +1,77 @@
+[
+  {
+    "title": "Konsep Mol",
+    "description": "Memahami konsep mol sebagai satuan jumlah zat dalam kimia",
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "order": 1,
+    "estimatedTime": 15,
+    "prerequisites": [],
+    "learningObjectives": [
+      "Menjelaskan definisi mol",
+      "Menghitung jumlah mol dari jumlah partikel",
+      "Memahami hubungan antara mol, massa, dan bilangan Avogadro"
+    ],
+    "content": "# Konsep Mol\n\nMol adalah satuan SI untuk jumlah zat yang menyatakan banyaknya partikel (atom, molekul, ion, atau elektron) dalam suatu zat.\n\n## Bilangan Avogadro\n\n**Bilangan Avogadro (Nₐ) = 6,022 × 10²³ partikel/mol**\n\n1 mol zat apapun selalu mengandung 6,022 × 10²³ partikel.\n\n### Contoh Bilangan Avogadro:\n\n- 1 mol H₂O = 6,022 × 10²³ molekul air\n- 1 mol O₂ = 6,022 × 10²³ molekul oksigen\n- 1 mol NaCl = 6,022 × 10²³ formula unit NaCl\n- 1 mol electron = 6,022 × 10²³ elektron\n\n## Rumus Dasar Mol\n\n### 1. Menghitung Mol dari Jumlah Partikel\n\n**n = N / Nₐ**\n\nDimana:\n- n = jumlah mol\n- N = jumlah partikel\n- Nₐ = bilangan Avogadro (6,022 × 10²³)\n\n### 2. Menghitung Jumlah Partikel\n\n**N = n × Nₐ**\n\n### 3. Menghitung Mol dari Massa\n\n**n = m / Mr**\n\nDimana:\n- n = jumlah mol\n- m = massa zat (gram)\n- Mr = massa molar (g/mol)\n\n## Contoh Perhitungan\n\n### Contoh 1: Mol dari Jumlah Partikel\n\n2 mol O₂ mengandung berapa molekul?\n\nJawab:\nN = n × Nₐ\nN = 2 × 6,022 × 10²³\nN = 1,2044 × 10²⁴ molekul\n\n### Contoh 2: Jumlah Partikel dari Mol\n\nBerapa mol dalam 1,2044 × 10²⁴ atom C?\n\nJawab:\nn = N / Nₐ\nn = 1,2044 × 10²⁴ / 6,022 × 10²³\nn = 2 mol\n\n## Tabel Perbandingan\n\n| Jumlah Mol | Jumlah Partikel | Contoh |\n|-----------|-----------------|--------|\n| 1 mol | 6,022 × 10²³ | 1 mol H₂O |\n| 2 mol | 1,2044 × 10²⁴ | 2 mol O₂ |\n| 0,5 mol | 3,011 × 10²³ | 0,5 mol NaCl |\n| 3 mol | 1,8066 × 10²⁴ | 3 mol CH₄ |\n\n## Poin Penting\n\n✓ Bilangan Avogadro adalah konstanta universal untuk semua zat\n✓ 1 mol selalu = 6,022 × 10²³ partikel, berapapun jenis zatnya\n✓ Mol adalah jembatan antara skala makro (gram) dan skala mikro (partikel)\n✓ Pemahaman mol sangat penting untuk perhitungan stoichiometri"
+  },
+  {
+    "title": "Massa Molar dan Perhitungan Mol",
+    "description": "Menentukan massa molar dan menghitung jumlah mol dari massa zat",
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "order": 2,
+    "estimatedTime": 20,
+    "prerequisites": ["konsep-mol"],
+    "learningObjectives": [
+      "Menentukan massa molar dari rumus kimia",
+      "Menghitung jumlah mol dari massa zat",
+      "Menghitung massa dari jumlah mol"
+    ],
+    "content": "# Massa Molar dan Perhitungan Mol\n\nMassa molar adalah massa dari 1 mol zat, dinyatakan dalam satuan g/mol.\n\n## Menentukan Massa Molar\n\nMassa molar = jumlah proton dan neutron dalam 1 atom atau molekul\n\n### Tabel Massa Atom Relatif (Ar)\n\n| Unsur | Ar | Unsur | Ar |\n|-------|----|----|----|\n| H | 1 | C | 12 |\n| O | 16 | N | 14 |\n| S | 32 | Cl | 35,5 |\n| Na | 23 | Ca | 40 |\n| Mg | 24 | K | 39 |\n\n### Contoh Menentukan Massa Molar\n\n**Contoh 1: H₂O (Air)**\n\nMr H₂O = (2 × H) + (1 × O)\nMr H₂O = (2 × 1) + (1 × 16)\nMr H₂O = 2 + 16 = 18\n\n∴ Massa molar H₂O = 18 g/mol\n\n**Contoh 2: CaCO₃ (Kalsium Karbonat)**\n\nMr CaCO₃ = (1 × Ca) + (1 × C) + (3 × O)\nMr CaCO₃ = (1 × 40) + (1 × 12) + (3 × 16)\nMr CaCO₃ = 40 + 12 + 48 = 100\n\n∴ Massa molar CaCO₃ = 100 g/mol\n\n**Contoh 3: H₂SO₄ (Asam Sulfat)**\n\nMr H₂SO₄ = (2 × H) + (1 × S) + (4 × O)\nMr H₂SO₄ = (2 × 1) + (1 × 32) + (4 × 16)\nMr H₂SO₄ = 2 + 32 + 64 = 98\n\n∴ Massa molar H₂SO₄ = 98 g/mol\n\n## Hubungan antara Mol, Massa, dan Partikel\n\n### Segitiga Perhitungan Mol\n\n```\n        Mol\n       /   \\\\\n      /     \\\\\n    Massa - Partikel\n```\n\n### Rumus Dasar\n\n**n = m / Mr**\n\n**m = n × Mr**\n\n**n = N / Nₐ**\n\n**N = n × Nₐ**\n\n## Contoh Soal\n\n### Soal 1: Hitung mol dari massa\n\nBerapa mol dalam 36 g H₂O?\n\nDiketahui: m = 36 g, Mr H₂O = 18 g/mol\n\nJawab:\nn = m / Mr\nn = 36 / 18\nn = 2 mol\n\n### Soal 2: Hitung massa dari mol\n\nBerapa gram 2 mol CaCO₃?\n\nDiketahui: n = 2 mol, Mr CaCO₃ = 100 g/mol\n\nJawab:\nm = n × Mr\nm = 2 × 100\nm = 200 g\n\n### Soal 3: Soal kombinasi\n\nBerapa jumlah partikel dalam 44 g CO₂?\n\nDiketahui: m = 44 g, Mr CO₂ = 44 g/mol\n\nJawab:\n- Hitung mol: n = m / Mr = 44 / 44 = 1 mol\n- Hitung partikel: N = n × Nₐ = 1 × 6,022 × 10²³ = 6,022 × 10²³ molekul\n\n## Tips Menghitung\n\n✓ Selalu tentukan Mr terlebih dahulu\n✓ Perhatikan satuan (gram untuk massa)\n✓ Gunakan bilangan Avogadro hanya ketika mencari jumlah partikel\n✓ Bulatkan jawaban sesuai dengan angka penting yang diberikan"
+  },
+  {
+    "title": "Persamaan Kimia dan Penyetaraan",
+    "description": "Memahami persamaan kimia dan cara menyetarakan persamaan reaksi",
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "order": 3,
+    "estimatedTime": 25,
+    "prerequisites": ["konsep-mol", "massa-molar"],
+    "learningObjectives": [
+      "Menulis persamaan kimia dari nama reaksi",
+      "Menyetarakan persamaan kimia dengan metode cobalakukan",
+      "Memahami informasi yang terkandung dalam persamaan kimia"
+    ],
+    "content": "# Persamaan Kimia dan Penyetaraan\n\n## Definisi Persamaan Kimia\n\nPersamaan kimia adalah representasi simbolis dari suatu reaksi kimia yang menunjukkan reaktan, produk, dan koefisien steikiometri.\n\n## Bentuk Umum Persamaan Kimia\n\n**Reaktan → Produk**\n\nAtau lebih lengkap:\n\n**aA + bB → cC + dD**\n\nDimana:\n- A, B = reaktan (pereaksi)\n- C, D = produk\n- a, b, c, d = koefisien steikiometri\n\n## Contoh Persamaan Kimia\n\n### 1. Pembakaran Karbon\n\n**C + O₂ → CO₂**\n\n### 2. Pembakaran Metana\n\n**CH₄ + O₂ → CO₂ + H₂O**\n\n### 3. Reaksi Asam-Basa\n\n**HCl + NaOH → NaCl + H₂O**\n\n## Cara Menyetarakan Persamaan Kimia\n\n### Metode Cobalakukan (Trial and Error)\n\n**Langkah-langkah:**\n\n1. Tulis persamaan reaksi yang belum setara\n2. Hitung jumlah atom setiap unsur di ruas kiri dan kanan\n3. Tambahkan koefisien hingga jumlah atom seimbang\n4. Pastikan koefisien menggunakan angka terkecil\n\n### Contoh: Penyetaraan CH₄ + O₂ → CO₂ + H₂O\n\n**Langkah 1:** Hitung atom sebelum penyetaraan\n\nRuas kiri:\n- C: 1\n- H: 4\n- O: 2\n\nRuas kanan:\n- C: 1\n- H: 2\n- O: 3\n\n**Langkah 2:** H tidak setara, beri koefisien 2 pada H₂O\n\nCH₄ + O₂ → CO₂ + 2H₂O\n\nHitung kembali:\n- H kiri: 4 (dari CH₄)\n- H kanan: 4 (dari 2H₂O)\n✓ H setara\n\n**Langkah 3:** O tidak setara\n\nRuas kanan: O = 2 (dari CO₂) + 2 (dari 2H₂O) = 4\n\nBeri koefisien 2 pada O₂:\nCH₄ + 2O₂ → CO₂ + 2H₂O\n\n**Verifikasi akhir:**\n\nRuas kiri:\n- C: 1 ✓\n- H: 4 ✓\n- O: 4 ✓\n\nRuas kanan:\n- C: 1 ✓\n- H: 4 ✓\n- O: 2 + 2 = 4 ✓\n\n**Persamaan setara: CH₄ + 2O₂ → CO₂ + 2H₂O**\n\n## Informasi dalam Persamaan Kimia\n\nPersamaan kimia yang setara memberikan informasi penting:\n\n### Contoh: 2H₂ + O₂ → 2H₂O\n\nInformasi yang terkandung:\n\n| Informasi | Nilai |\n|-----------|-------|\n| Mol H₂ : Mol O₂ : Mol H₂O | 2 : 1 : 2 |\n| Volume H₂ : Volume O₂ : Volume H₂O | 2 : 1 : 2 |\n| Partikel H₂ : Partikel O₂ : Partikel H₂O | 2 : 1 : 2 |\n| Masa H₂ : Massa O₂ : Massa H₂O | 4 : 32 : 36 |\n\n## Soal Latihan\n\n### Soal 1: Setarakan persamaan\n\nFe + O₂ → Fe₂O₃\n\nJawab:\n4Fe + 3O₂ → 2Fe₂O₃\n\n### Soal 2: Setarakan persamaan\n\nC₃H₈ + O₂ → CO₂ + H₂O\n\nJawab:\nC₃H₈ + 5O₂ → 3CO₂ + 4H₂O\n\n## Tips Menyetarakan\n\n✓ Mulai dari unsur yang paling kompleks\n✓ Oksigen dan hidrogen biasanya disesuaikan terakhir\n✓ Gunakan bilangan bulat terkecil\n✓ Jangan mengubah rumus kimia, hanya tambahkan koefisien"
+  },
+  {
+    "title": "Stoikiometri Dasar dan Perhitungan",
+    "description": "Menerapkan persamaan kimia untuk perhitungan stoikiometri dasar",
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "order": 4,
+    "estimatedTime": 30,
+    "prerequisites": ["konsep-mol", "massa-molar", "persamaan-kimia"],
+    "learningObjectives": [
+      "Menggunakan persamaan setara untuk menghitung mol produk",
+      "Menghitung massa produk dari massa reaktan",
+      "Menyelesaikan soal stoikiometri bertingkat"
+    ],
+    "content": "# Stoikiometri Dasar dan Perhitungan\n\n## Definisi Stoikiometri\n\nStoikiometri adalah cabang kimia yang mempelajari hubungan kuantitatif antara reaktan dan produk dalam reaksi kimia.\n\n## Konsep Dasar\n\nPersamaan kimia yang setara menunjukkan perbandingan mol antara reaktan dan produk.\n\n### Contoh: 2H₂ + O₂ → 2H₂O\n\nArtinya:\n- 2 mol H₂ bereaksi dengan 1 mol O₂\n- menghasilkan 2 mol H₂O\n\n## Langkah-Langkah Menyelesaikan Soal Stoikiometri\n\n### Tahap 1: Pahami Pertanyaan\n- Diketahui apa?\n- Ditanya apa?\n- Persamaan reaksi apa?\n\n### Tahap 2: Pastikan Persamaan Setara\n- Hitung jumlah atom setiap unsur\n- Tambahkan koefisien jika perlu\n\n### Tahap 3: Konversi Massa ke Mol\n- Jika diketahui massa, hitung mol terlebih dahulu\n- Gunakan rumus: n = m / Mr\n\n### Tahap 4: Gunakan Perbandingan Mol\n- Lihat koefisien dalam persamaan setara\n- Hitung mol produk atau reaktan\n\n### Tahap 5: Konversi Kembali ke Massa (jika perlu)\n- Gunakan rumus: m = n × Mr\n\n## Contoh Perhitungan 1: Mol ke Mol\n\n**Soal:** Berapa mol CO₂ yang dihasilkan dari pembakaran 2 mol CH₄?\n\nReaksi: CH₄ + 2O₂ → CO₂ + 2H₂O\n\n**Penyelesaian:**\n\nDari persamaan:\n- 1 mol CH₄ → 1 mol CO₂\n- 2 mol CH₄ → 2 mol CO₂\n\nJawab: 2 mol CO₂\n\n## Contoh Perhitungan 2: Massa ke Mol ke Mol\n\n**Soal:** Berapa mol CO₂ yang dihasilkan dari pembakaran 32 g CH₄?\n(Mr CH₄ = 16 g/mol)\n\nReaksi: CH₄ + 2O₂ → CO₂ + 2H₂O\n\n**Penyelesaian:**\n\n**Langkah 1:** Konversi massa CH₄ ke mol\nn(CH₄) = m / Mr = 32 / 16 = 2 mol\n\n**Langkah 2:** Gunakan perbandingan mol dari persamaan\nDari persamaan: 1 mol CH₄ → 1 mol CO₂\n2 mol CH₄ → 2 mol CO₂\n\nn(CO₂) = 2 mol\n\nJawab: 2 mol CO₂\n\n## Contoh Perhitungan 3: Massa ke Massa (Paling Umum)\n\n**Soal:** Berapa gram CO₂ yang dihasilkan dari pembakaran 32 g CH₄?\n(Mr CH₄ = 16, Mr CO₂ = 44)\n\nReaksi: CH₄ + 2O₂ → CO₂ + 2H₂O\n\n**Penyelesaian:**\n\n**Langkah 1:** Konversi massa CH₄ ke mol\nn(CH₄) = 32 / 16 = 2 mol\n\n**Langkah 2:** Gunakan perbandingan mol\n1 mol CH₄ → 1 mol CO₂\n2 mol CH₄ → 2 mol CO₂\n\nn(CO₂) = 2 mol\n\n**Langkah 3:** Konversi mol CO₂ ke massa\nm(CO₂) = n × Mr = 2 × 44 = 88 g\n\nJawab: 88 g CO₂\n\n## Contoh Perhitungan 4: Reaktan Berbeda\n\n**Soal:** Berapa gram Fe₂O₃ yang dihasilkan dari 112 g Fe?\n(Mr Fe = 56, Mr O = 16, Mr Fe₂O₃ = 160)\n\nReaksi: 4Fe + 3O₂ → 2Fe₂O₃\n\n**Penyelesaian:**\n\n**Langkah 1:** Konversi massa Fe ke mol\nn(Fe) = 112 / 56 = 2 mol\n\n**Langkah 2:** Gunakan perbandingan mol\n4 mol Fe → 2 mol Fe₂O₃\n2 mol Fe → ? mol Fe₂O₃\n\nn(Fe₂O₃) = (2 × 2) / 4 = 1 mol\n\n**Langkah 3:** Konversi mol Fe₂O₃ ke massa\nm(Fe₂O₃) = 1 × 160 = 160 g\n\nJawab: 160 g Fe₂O₃\n\n## Diagram Alur Perhitungan Stoikiometri\n\n```\nMassa Reaktan\n      ↓\n[÷ Mr] → Mol Reaktan\n      ↓\n[× Perbandingan Mol] → Mol Produk\n      ↓\n[× Mr] → Massa Produk\n```\n\n## Poin Penting\n\n✓ Persamaan harus setara sebelum perhitungan\n✓ Perbandingan mol diambil dari koefisien persamaan\n✓ Jangan lupa konversi massa ↔ mol\n✓ Perhatikan Mr setiap zat dengan cermat\n✓ Latihan banyak untuk mahir"
+  },
+  {
+    "title": "Konsentrasi Larutan dan Perhitungan",
+    "description": "Memahami cara menyatakan konsentrasi larutan dan melakukan perhitungan terkait",
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "order": 5,
+    "estimatedTime": 25,
+    "prerequisites": ["konsep-mol", "massa-molar"],
+    "learningObjectives": [
+      "Menentukan konsentrasi larutan dalam berbagai satuan",
+      "Melakukan perhitungan pengenceran larutan",
+      "Menyelesaikan soal konsentrasi yang berkaitan dengan stoikiometri"
+    ],
+    "content": "# Konsentrasi Larutan dan Perhitungan\n\n## Definisi Konsentrasi\n\nKonsentrasi adalah ukuran jumlah solut (zat terlarut) dalam larutan, biasanya dinyatakan per unit volume larutan.\n\n## Cara Menyatakan Konsentrasi\n\n### 1. Molaritas (M)\n\n**Molaritas = mol solut / liter larutan**\n\nAtau:\n\n**M = n / V (liter)**\n\nSatuan: **mol/L atau M (Molar)**\n\n#### Contoh:\n- Larutan 1 M NaCl artinya 1 mol NaCl dilarutkan dalam air hingga volume 1 liter\n- Larutan 0,5 M H₂SO₄ artinya 0,5 mol H₂SO₄ dilarutkan dalam air hingga volume 1 liter\n\n### 2. Molalitas (m)\n\n**Molalitas = mol solut / kg pelarut**\n\n**m = n / kg pelarut**\n\nSatuan: **mol/kg atau m (molal)**\n\n#### Contoh:\n- Larutan 1 m NaCl artinya 1 mol NaCl dalam 1 kg air\n\n### 3. Persentase Berat (%b/b)\n\n**%b/b = (massa solut / massa larutan) × 100%**\n\n#### Contoh:\n- Larutan 20% NaCl mengandung 20 g NaCl dalam 100 g larutan\n\n### 4. Persentase Volume (%v/v)\n\n**%v/v = (volume solut / volume larutan) × 100%**\n\n#### Contoh:\n- Larutan 30% etanol mengandung 30 mL etanol dalam 100 mL larutan\n\n## Hubungan Molaritas dengan Mol dan Volume\n\n**M = n / V**\n\n**n = M × V**\n\n**V = n / M**\n\nDimana V dalam liter (L)\n\n## Contoh Perhitungan Molaritas\n\n### Soal 1: Hitung Molaritas\n\n**Diketahui:** 58,5 g NaCl dilarutkan dalam air hingga volume 1 liter\n(Mr NaCl = 58,5 g/mol)\n\n**Ditanya:** Hitung molaritas larutan!\n\n**Penyelesaian:**\n\nLangkah 1: Hitung mol NaCl\nn = m / Mr = 58,5 / 58,5 = 1 mol\n\nLangkah 2: Hitung molaritas\nM = n / V = 1 / 1 = 1 M\n\nJawab: Molaritas larutan = 1 M\n\n### Soal 2: Hitung Massa Solut\n\n**Diketahui:** Akan dibuat 500 mL larutan H₂SO₄ 2 M\n(Mr H₂SO₄ = 98 g/mol)\n\n**Ditanya:** Berapa gram H₂SO₄ yang diperlukan?\n\n**Penyelesaian:**\n\nLangkah 1: Ubah volume ke liter\nV = 500 mL = 0,5 L\n\nLangkah 2: Hitung mol H₂SO₄\nn = M × V = 2 × 0,5 = 1 mol\n\nLangkah 3: Hitung massa H₂SO₄\nm = n × Mr = 1 × 98 = 98 g\n\nJawab: Diperlukan 98 g H₂SO₄\n\n## Pengenceran Larutan\n\n**Prinsip:** Jumlah mol solut tetap saat pengenceran\n\n**Rumus:**\n\n**M₁ × V₁ = M₂ × V₂**\n\nDimana:\n- M₁ = molaritas larutan pekat\n- V₁ = volume larutan pekat\n- M₂ = molaritas larutan encer\n- V₂ = volume larutan encer akhir\n\n### Contoh Pengenceran\n\n**Soal:** Berapa mL larutan H₂SO₄ 1 M harus diambil untuk membuat 100 mL larutan H₂SO₄ 0,1 M?\n\n**Penyelesaian:**\n\nM₁ × V₁ = M₂ × V₂\n1 × V₁ = 0,1 × 100\nV₁ = 10 mL\n\nJawab: Ambil 10 mL larutan 1 M, tambahkan air hingga volume 100 mL\n\n## Tabel Ringkasan Satuan Konsentrasi\n\n| Satuan | Rumus | Keterangan |\n|--------|-------|------------|\n| Molaritas (M) | M = n/V | V dalam liter |\n| Molalitas (m) | m = n/kg pelarut | Pelarut dalam kg |\n| %b/b | (m solut/m larutan) × 100% | Dalam persen |\n| %v/v | (V solut/V larutan) × 100% | Dalam persen |\n\n## Poin Penting\n\n✓ Molaritas adalah cara paling umum menyatakan konsentrasi di lab\n✓ Volume harus dalam liter untuk perhitungan molaritas\n✓ Dalam pengenceran, jumlah mol zat tidak berubah\n✓ Rumus M₁V₁ = M₂V₂ sangat penting untuk pengenceran\n✓ Perbedaan molalitas dan molaritas: molalitas gunakan pelarut, molaritas gunakan larutan"
+  }
+]

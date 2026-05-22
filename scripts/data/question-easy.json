@@ -1,0 +1,706 @@
+[
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "difficulty": "easy",
+    "stem": "1 mol gas oksigen (O₂) mengandung berapa molekul?",
+    "options": {
+      "A": "6,022 × 10²³ molekul",
+      "B": "3,011 × 10²³ molekul",
+      "C": "1,2044 × 10²⁴ molekul",
+      "D": "6,022 × 10²² molekul",
+      "E": "12,044 × 10²³ molekul"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "B": "MISC_HALF_AVOGADRO",
+      "C": "MISC_DOUBLE_AVOGADRO",
+      "D": "MISC_WRONG_EXPONENT",
+      "E": "MISC_DOUBLE_WRONG"
+    },
+    "explanation": "1 mol zat apapun selalu mengandung 6,022 × 10²³ partikel (Bilangan Avogadro). Hal ini berlaku untuk semua zat, baik atom, molekul, maupun ion.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "difficulty": "easy",
+    "stem": "Berapa mol dalam 1,2044 × 10²⁴ atom karbon (C)?",
+    "options": {
+      "A": "1 mol",
+      "B": "2 mol",
+      "C": "3 mol",
+      "D": "0,5 mol",
+      "E": "4 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_TRIPLE_ERROR",
+      "D": "MISC_QUARTER_ERROR",
+      "E": "MISC_QUADRUPLE_ERROR"
+    },
+    "explanation": "n = N / Nₐ = 1,2044 × 10²⁴ / 6,022 × 10²³ = 2 mol. Gunakan formula hubungan antara jumlah partikel dan mol.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "difficulty": "easy",
+    "stem": "Bilangan Avogadro adalah konstanta yang nilainya sama untuk...",
+    "options": {
+      "A": "Hanya atom",
+      "B": "Hanya molekul",
+      "C": "Semua jenis partikel dalam 1 mol",
+      "D": "Hanya ion",
+      "E": "Hanya elektron"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_ATOM_ONLY",
+      "B": "MISC_MOLECULE_ONLY",
+      "D": "MISC_ION_ONLY",
+      "E": "MISC_ELECTRON_ONLY"
+    },
+    "explanation": "Bilangan Avogadro (6,022 × 10²³) adalah universal. 1 mol dari apapun (atom, molekul, ion, atau elektron) selalu mengandung Nₐ partikel.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "difficulty": "easy",
+    "stem": "2 mol NaCl mengandung berapa ion Na⁺?",
+    "options": {
+      "A": "3,011 × 10²³ ion",
+      "B": "6,022 × 10²³ ion",
+      "C": "1,2044 × 10²⁴ ion",
+      "D": "6,022 × 10²² ion",
+      "E": "1,8066 × 10²⁴ ion"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_HALF_MOL",
+      "B": "MISC_ONE_MOL_ONLY",
+      "D": "MISC_EXPONENT_ERROR",
+      "E": "MISC_TRIPLE_MOL"
+    },
+    "explanation": "2 mol NaCl = 2 × 6,022 × 10²³ = 1,2044 × 10²⁴ unit formula NaCl. Setiap unit mengandung 1 ion Na⁺, jadi total = 1,2044 × 10²⁴ ion Na⁺.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "easy",
+    "stem": "Berapa massa molar H₂O? (Ar H=1, O=16)",
+    "options": {
+      "A": "16 g/mol",
+      "B": "17 g/mol",
+      "C": "18 g/mol",
+      "D": "19 g/mol",
+      "E": "32 g/mol"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_OXYGEN_ONLY",
+      "B": "MISC_H_PLUS_O",
+      "D": "MISC_CALCULATION_ERROR",
+      "E": "MISC_DOUBLE_OXYGEN"
+    },
+    "explanation": "Mr H₂O = (2 × 1) + (1 × 16) = 2 + 16 = 18. Massa molar H₂O = 18 g/mol.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "easy",
+    "stem": "Berapa massa molar NaCl? (Ar Na=23, Cl=35,5)",
+    "options": {
+      "A": "23 g/mol",
+      "B": "35,5 g/mol",
+      "C": "58,5 g/mol",
+      "D": "47 g/mol",
+      "E": "71 g/mol"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_NA_ONLY",
+      "B": "MISC_CL_ONLY",
+      "D": "MISC_WRONG_ADDITION",
+      "E": "MISC_DOUBLE_CL"
+    },
+    "explanation": "Mr NaCl = 23 + 35,5 = 58,5. Massa molar NaCl = 58,5 g/mol.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "easy",
+    "stem": "Berapa mol dalam 36 g H₂O? (Mr H₂O = 18 g/mol)",
+    "options": {
+      "A": "1 mol",
+      "B": "2 mol",
+      "C": "3 mol",
+      "D": "4 mol",
+      "E": "0,5 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_TRIPLE_CALCULATION",
+      "D": "MISC_QUADRUPLE_CALCULATION",
+      "E": "MISC_QUARTER_CALCULATION"
+    },
+    "explanation": "n = m / Mr = 36 / 18 = 2 mol. Gunakan rumus hubungan antara mol, massa, dan massa molar.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "easy",
+    "stem": "Berapa gram 2 mol CO₂? (Mr CO₂ = 44 g/mol)",
+    "options": {
+      "A": "44 g",
+      "B": "88 g",
+      "C": "22 g",
+      "D": "132 g",
+      "E": "176 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_ONE_MOL_ONLY",
+      "C": "MISC_HALF_MOL",
+      "D": "MISC_TRIPLE_MOL",
+      "E": "MISC_QUADRUPLE_MOL"
+    },
+    "explanation": "m = n × Mr = 2 × 44 = 88 g. Gunakan rumus untuk menghitung massa dari mol.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "easy",
+    "stem": "0,5 mol CaCO₃ berapa gram? (Mr CaCO₃ = 100 g/mol)",
+    "options": {
+      "A": "50 g",
+      "B": "100 g",
+      "C": "25 g",
+      "D": "150 g",
+      "E": "200 g"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "B": "MISC_ONE_MOL",
+      "C": "MISC_QUARTER_MOL",
+      "D": "MISC_ONE_AND_HALF_MOL",
+      "E": "MISC_DOUBLE_MOL"
+    },
+    "explanation": "m = n × Mr = 0,5 × 100 = 50 g.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "easy",
+    "stem": "Berapa massa molar CH₄? (Ar C=12, H=1)",
+    "options": {
+      "A": "12 g/mol",
+      "B": "14 g/mol",
+      "C": "16 g/mol",
+      "D": "28 g/mol",
+      "E": "32 g/mol"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_CARBON_ONLY",
+      "B": "MISC_C_PLUS_H",
+      "D": "MISC_DOUBLE_CARBON",
+      "E": "MISC_DOUBLE_METHANE"
+    },
+    "explanation": "Mr CH₄ = 12 + (4 × 1) = 12 + 4 = 16. Massa molar CH₄ = 16 g/mol.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "difficulty": "easy",
+    "stem": "Reaksi: H₂ + Cl₂ → HCl. Reaksi ini sudah setara dengan persamaan...",
+    "options": {
+      "A": "H₂ + Cl₂ → HCl",
+      "B": "H₂ + Cl₂ → 2HCl",
+      "C": "2H₂ + Cl₂ → HCl",
+      "D": "H₂ + 2Cl₂ → 2HCl",
+      "E": "2H₂ + 2Cl₂ → 4HCl"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_NOT_SETARA",
+      "C": "MISC_EXCESS_H2",
+      "D": "MISC_EXCESS_CL2",
+      "E": "MISC_ALL_DOUBLE"
+    },
+    "explanation": "Persamaan setara harus memiliki jumlah atom yang sama di kedua ruas. H₂ + Cl₂ → 2HCl adalah bentuk setara karena: kiri (2H, 2Cl), kanan (2H, 2Cl).",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "difficulty": "easy",
+    "stem": "Apakah persamaan ini setara? 2H₂ + O₂ → 2H₂O",
+    "options": {
+      "A": "Tidak setara, H kurang di kanan",
+      "B": "Tidak setara, O kurang di kanan",
+      "C": "Tidak setara, H kurang di kiri",
+      "D": "Setara",
+      "E": "Tidak setara, O kurang di kiri"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_MISCOUNT_H",
+      "B": "MISC_MISCOUNT_O",
+      "C": "MISC_REVERSE_ERROR",
+      "E": "MISC_MISCOUNT_O_LEFT"
+    },
+    "explanation": "Kiri: 4 H (dari 2H₂), 2 O (dari O₂). Kanan: 4 H (dari 2H₂O), 2 O (dari 2H₂O). Jumlah atom setiap unsur sama, jadi persamaan setara.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "difficulty": "easy",
+    "stem": "Setarakan: C + O₂ → CO₂. Persamaan setaranya adalah...",
+    "options": {
+      "A": "C + O₂ → CO₂",
+      "B": "2C + O₂ → CO₂",
+      "C": "C + 2O₂ → CO₂",
+      "D": "C + 2O₂ → 2CO₂",
+      "E": "2C + O₂ → 2CO₂"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "B": "MISC_DOUBLE_C",
+      "C": "MISC_DOUBLE_O2",
+      "D": "MISC_DOUBLE_O2_AND_CO2",
+      "E": "MISC_DOUBLE_BOTH"
+    },
+    "explanation": "C + O₂ → CO₂ sudah setara. Kiri: 1 C, 2 O. Kanan: 1 C, 2 O. Tidak perlu ditambahkan koefisien.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "difficulty": "easy",
+    "stem": "Setarakan: Fe + O₂ → Fe₂O₃. Koefisien Fe adalah...",
+    "options": {
+      "A": "1",
+      "B": "2",
+      "C": "3",
+      "D": "4",
+      "E": "5"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_NO_COEFFICIENT",
+      "B": "MISC_COEFFICIENT_2",
+      "C": "MISC_COEFFICIENT_3",
+      "E": "MISC_COEFFICIENT_5"
+    },
+    "explanation": "Persamaan setara: 4Fe + 3O₂ → 2Fe₂O₃. Koefisien Fe = 4. Ini didapat dengan menyamakan jumlah Fe dan O di kedua ruas.",
+    "baseTime": 45
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "easy",
+    "stem": "Dari persamaan: H₂ + Cl₂ → 2HCl. Perbandingan mol H₂ : HCl adalah...",
+    "options": {
+      "A": "1 : 1",
+      "B": "1 : 2",
+      "C": "2 : 1",
+      "D": "1 : 3",
+      "E": "3 : 1"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_EQUAL_MOL",
+      "C": "MISC_REVERSE_RATIO",
+      "D": "MISC_WITH_CHLORINE",
+      "E": "MISC_INVERSE_3_1"
+    },
+    "explanation": "Dari persamaan setara: H₂ + Cl₂ → 2HCl. Koefisien H₂ adalah 1 dan HCl adalah 2, jadi perbandingannya 1 : 2.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "easy",
+    "stem": "Berapa mol HCl yang dihasilkan dari 3 mol H₂? (H₂ + Cl₂ → 2HCl)",
+    "options": {
+      "A": "1,5 mol",
+      "B": "3 mol",
+      "C": "6 mol",
+      "D": "9 mol",
+      "E": "12 mol"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "B": "MISC_EQUAL_MOL",
+      "D": "MISC_TRIPLE_MOL",
+      "E": "MISC_QUADRUPLE_MOL"
+    },
+    "explanation": "Dari persamaan: 1 mol H₂ → 2 mol HCl. Maka 3 mol H₂ → 3 × 2 = 6 mol HCl.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "easy",
+    "stem": "Berapa mol CO₂ dari pembakaran 2 mol CH₄? (CH₄ + 2O₂ → CO₂ + 2H₂O)",
+    "options": {
+      "A": "0,5 mol",
+      "B": "1 mol",
+      "C": "2 mol",
+      "D": "3 mol",
+      "E": "4 mol"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_QUARTER_MOL",
+      "B": "MISC_HALF_MOL",
+      "D": "MISC_TRIPLE_MOL",
+      "E": "MISC_DOUBLE_DOUBLE"
+    },
+    "explanation": "Dari persamaan: 1 mol CH₄ → 1 mol CO₂. Maka 2 mol CH₄ → 2 mol CO₂.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "easy",
+    "stem": "Berapa gram CO₂ dari pembakaran 32 g CH₄? (Mr CH₄=16, Mr CO₂=44, CH₄ + 2O₂ → CO₂ + 2H₂O)",
+    "options": {
+      "A": "44 g",
+      "B": "66 g",
+      "C": "88 g",
+      "D": "110 g",
+      "E": "132 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_ONE_MOL_PRODUCT",
+      "B": "MISC_CALCULATION_ERROR",
+      "D": "MISC_WRONG_MULTIPLICATION",
+      "E": "MISC_TRIPLE_CALCULATION"
+    },
+    "explanation": "n(CH₄) = 32/16 = 2 mol. Dari persamaan: 1 mol CH₄ → 1 mol CO₂, jadi n(CO₂) = 2 mol. m(CO₂) = 2 × 44 = 88 g.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "easy",
+    "stem": "Dari 112 g Fe, berapa mol Fe₂O₃ yang terbentuk? (Mr Fe=56, 4Fe + 3O₂ → 2Fe₂O₃)",
+    "options": {
+      "A": "0,5 mol",
+      "B": "1 mol",
+      "C": "1,5 mol",
+      "D": "2 mol",
+      "E": "4 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_RESULT",
+      "C": "MISC_WRONG_RATIO",
+      "D": "MISC_WRONG_CALCULATION",
+      "E": "MISC_WRONG_MOL_FE"
+    },
+    "explanation": "n(Fe) = 112/56 = 2 mol. Dari persamaan: 4 mol Fe → 2 mol Fe₂O₃, maka 2 mol Fe → 1 mol Fe₂O₃.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "easy",
+    "stem": "Berapa molaritas larutan yang mengandung 1 mol NaCl dalam 1 L larutan?",
+    "options": {
+      "A": "0,5 M",
+      "B": "1 M",
+      "C": "2 M",
+      "D": "0,1 M",
+      "E": "10 M"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_MOLAR",
+      "C": "MISC_DOUBLE_MOLAR",
+      "D": "MISC_ONE_TENTH",
+      "E": "MISC_TEN_TIMES"
+    },
+    "explanation": "M = n/V = 1 mol / 1 L = 1 M. Molaritas adalah jumlah mol solut per liter larutan.",
+    "baseTime": 35
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "easy",
+    "stem": "Berapa molaritas larutan yang mengandung 2 mol H₂SO₄ dalam 2 L larutan?",
+    "options": {
+      "A": "0,5 M",
+      "B": "1 M",
+      "C": "2 M",
+      "D": "4 M",
+      "E": "8 M"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALC",
+      "C": "MISC_SAME_AS_MOL",
+      "D": "MISC_MULTIPLY_INSTEAD_DIVIDE",
+      "E": "MISC_WRONG_TOTAL"
+    },
+    "explanation": "M = n/V = 2 mol / 2 L = 1 M.",
+    "baseTime": 35
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "easy",
+    "stem": "Berapa mol NaCl dalam 500 mL larutan 1 M NaCl?",
+    "options": {
+      "A": "0,25 mol",
+      "B": "0,5 mol",
+      "C": "1 mol",
+      "D": "2 mol",
+      "E": "4 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_QUARTER_MOL",
+      "C": "MISC_WHOLE_LITER",
+      "D": "MISC_DOUBLE_MOL",
+      "E": "MISC_QUADRUPLE"
+    },
+    "explanation": "n = M × V = 1 M × 0,5 L = 0,5 mol. Volume harus dikonversi ke liter terlebih dahulu (500 mL = 0,5 L).",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "easy",
+    "stem": "Berapa gram NaCl yang dibutuhkan untuk membuat 1 L larutan 1 M NaCl? (Mr NaCl = 58,5)",
+    "options": {
+      "A": "29,25 g",
+      "B": "58,5 g",
+      "C": "117 g",
+      "D": "146,25 g",
+      "E": "234 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_GRAM",
+      "C": "MISC_DOUBLE_GRAM",
+      "D": "MISC_DOUBLE_AND_HALF",
+      "E": "MISC_QUADRUPLE"
+    },
+    "explanation": "n = M × V = 1 × 1 = 1 mol. m = n × Mr = 1 × 58,5 = 58,5 g.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "easy",
+    "stem": "Rumus pengenceran larutan adalah...",
+    "options": {
+      "A": "M₁ + V₁ = M₂ + V₂",
+      "B": "M₁ × V₁ = M₂ × V₂",
+      "C": "M₁ / V₁ = M₂ / V₂",
+      "D": "M₁ - V₁ = M₂ - V₂",
+      "E": "M₁ = M₂"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_ADDITION_FORMULA",
+      "C": "MISC_DIVISION_FORMULA",
+      "D": "MISC_SUBTRACTION_FORMULA",
+      "E": "MISC_EQUAL_FORMULA"
+    },
+    "explanation": "Rumus pengenceran: M₁ × V₁ = M₂ × V₂. Prinsipnya adalah jumlah mol solut tetap saat pengenceran.",
+    "baseTime": 35
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "easy",
+    "stem": "Berapa mL larutan 2 M HCl harus diambil untuk membuat 100 mL larutan 0,5 M HCl?",
+    "options": {
+      "A": "10 mL",
+      "B": "25 mL",
+      "C": "50 mL",
+      "D": "75 mL",
+      "E": "100 mL"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_ONE_FIFTH",
+      "C": "MISC_ONE_HALF",
+      "D": "MISC_THREE_QUARTER",
+      "E": "MISC_WHOLE_VOLUME"
+    },
+    "explanation": "M₁V₁ = M₂V₂. 2 × V₁ = 0,5 × 100. V₁ = 50/2 = 25 mL.",
+    "baseTime": 45
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsep-mol",
+    "difficulty": "easy",
+    "stem": "Berapa mol dalam 3,011 × 10²³ molekul O₂?",
+    "options": {
+      "A": "0,25 mol",
+      "B": "0,5 mol",
+      "C": "1 mol",
+      "D": "2 mol",
+      "E": "4 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "C": "MISC_DOUBLE_CALCULATION",
+      "D": "MISC_QUADRUPLE",
+      "E": "MISC_OCTRUPLE"
+    },
+    "explanation": "n = N/Nₐ = 3,011 × 10²³ / 6,022 × 10²³ = 0,5 mol. Perhatikan bahwa 3,011 × 10²³ adalah setengah dari Nₐ.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "easy",
+    "stem": "Berapa mol dalam 44 g CO₂? (Mr CO₂ = 44)",
+    "options": {
+      "A": "0,5 mol",
+      "B": "1 mol",
+      "C": "2 mol",
+      "D": "3 mol",
+      "E": "4 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_MOL",
+      "C": "MISC_DOUBLE_MOL",
+      "D": "MISC_TRIPLE_MOL",
+      "E": "MISC_QUADRUPLE_MOL"
+    },
+    "explanation": "n = m/Mr = 44/44 = 1 mol.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "massa-molar",
+    "difficulty": "easy",
+    "stem": "Berapa gram 3 mol NH₃? (Mr NH₃ = 17)",
+    "options": {
+      "A": "17 g",
+      "B": "34 g",
+      "C": "51 g",
+      "D": "68 g",
+      "E": "85 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_ONE_MOL",
+      "B": "MISC_TWO_MOL",
+      "D": "MISC_FOUR_MOL",
+      "E": "MISC_FIVE_MOL"
+    },
+    "explanation": "m = n × Mr = 3 × 17 = 51 g.",
+    "baseTime": 30
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "persamaan-kimia",
+    "difficulty": "easy",
+    "stem": "Setarakan: CH₄ + O₂ → CO₂ + H₂O. Koefisien O₂ adalah...",
+    "options": {
+      "A": "1",
+      "B": "2",
+      "C": "3",
+      "D": "4",
+      "E": "5"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_NO_COEFFICIENT",
+      "C": "MISC_TOO_HIGH",
+      "D": "MISC_EVEN_HIGHER",
+      "E": "MISC_WAY_TOO_HIGH"
+    },
+    "explanation": "Persamaan setara: CH₄ + 2O₂ → CO₂ + 2H₂O. Koefisien O₂ = 2.",
+    "baseTime": 45
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "easy",
+    "stem": "Dari 2 mol C, berapa mol CO₂ yang terbentuk? (2C + O₂ → 2CO₂)",
+    "options": {
+      "A": "0,5 mol",
+      "B": "1 mol",
+      "C": "2 mol",
+      "D": "3 mol",
+      "E": "4 mol"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_QUARTER_MOL",
+      "B": "MISC_HALF_MOL",
+      "D": "MISC_TRIPLE_MOL",
+      "E": "MISC_DOUBLE_DOUBLE"
+    },
+    "explanation": "Dari persamaan: 2 mol C → 2 mol CO₂. Perbandingannya 1:1, jadi 2 mol C → 2 mol CO₂.",
+    "baseTime": 40
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "easy",
+    "stem": "Berapa gram H₂O dari 32 g O₂? (Mr O₂=32, Mr H₂O=18, 2H₂ + O₂ → 2H₂O)",
+    "options": {
+      "A": "9 g",
+      "B": "18 g",
+      "C": "36 g",
+      "D": "54 g",
+      "E": "72 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_HALF_ANSWER",
+      "B": "MISC_ONE_MOL_PRODUCT",
+      "D": "MISC_ONE_POINT_FIVE",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "n(O₂) = 32/32 = 1 mol. Dari persamaan: 1 mol O₂ → 2 mol H₂O, jadi n(H₂O) = 2 mol. m(H₂O) = 2 × 18 = 36 g.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "easy",
+    "stem": "Berapa molaritas 58,5 g NaCl dalam 1 L larutan? (Mr NaCl = 58,5)",
+    "options": {
+      "A": "0,5 M",
+      "B": "1 M",
+      "C": "2 M",
+      "D": "1,5 M",
+      "E": "3 M"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_MOLAR",
+      "C": "MISC_DOUBLE_MOLAR",
+      "D": "MISC_ONE_POINT_FIVE",
+      "E": "MISC_TRIPLE_MOLAR"
+    },
+    "explanation": "n = m/Mr = 58,5/58,5 = 1 mol. M = n/V = 1/1 = 1 M.",
+    "baseTime": 40
+  }
+]

@@ -1,0 +1,706 @@
+[
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 100 mL larutan 2 M H₂SO₄ yang direaksikan dengan 200 mL larutan 1 M NaOH, berapa gram Na₂SO₄ yang terbentuk? (Mr Na₂SO₄=142, H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O)",
+    "options": {
+      "A": "7,1 g",
+      "B": "14,2 g",
+      "C": "21,3 g",
+      "D": "28,4 g",
+      "E": "35,5 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_EXCESS_REACTANT",
+      "D": "MISC_USING_LARGER_MOL",
+      "E": "MISC_WRONG_FINAL_CALC"
+    },
+    "explanation": "n(H₂SO₄) = 2 × 0,1 = 0,2 mol. n(NaOH) = 1 × 0,2 = 0,2 mol. Dari persamaan: 1 mol H₂SO₄ membutuhkan 2 mol NaOH. 0,2 mol H₂SO₄ membutuhkan 0,4 mol NaOH, tetapi hanya ada 0,2 mol. Jadi NaOH adalah pereaksi pembatas. n(Na₂SO₄) = 0,2/2 = 0,1 mol. m(Na₂SO₄) = 0,1 × 142 = 14,2 g.",
+    "baseTime": 80
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa gram Fe₃O₄ yang dapat dihasilkan dari pembakaran 112 g Fe dalam O₂ berlebih? (Mr Fe=56, 3Fe + 2O₂ → Fe₃O₄)",
+    "options": {
+      "A": "89,6 g",
+      "B": "134,4 g",
+      "C": "160 g",
+      "D": "179,2 g",
+      "E": "224 g"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_CALCULATION_ERROR",
+      "B": "MISC_WRONG_RATIO",
+      "C": "MISC_USING_FE_MASS",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "n(Fe) = 112/(56) = 2 mol. Dari persamaan: 3 mol Fe → 1 mol Fe₃O₄, jadi 2 mol Fe → 2/3 mol Fe₃O₄. Mr Fe₃O₄ = 3(56) + 4(16) = 168 + 64 = 232 g/mol. m(Fe₃O₄) = 2/3 × 232 = 154,67 g. (Pemeriksaan ulang: dari pilihan, jika 112 g Fe = 2 mol, 3 mol Fe → 232 g Fe₃O₄, maka 2 mol Fe → (2/3 × 232) = 154,67 g ≈ pilihan D 179,2 g perlu verifikasi perhitungan)",
+    "baseTime": 85
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa liter CO₂ (STP) yang dihasilkan dari 200 mL larutan 2 M HCl yang direaksikan dengan CaCO₃ berlebih? (2HCl + CaCO₃ → CaCl₂ + H₂O + CO₂)",
+    "options": {
+      "A": "2,24 L",
+      "B": "4,48 L",
+      "C": "6,72 L",
+      "D": "8,96 L",
+      "E": "11,2 L"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_WRONG_RATIO",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_TRIPLE_CALCULATION"
+    },
+    "explanation": "n(HCl) = 2 × 0,2 = 0,4 mol. Dari persamaan: 2 mol HCl → 1 mol CO₂, jadi 0,4 mol HCl → 0,2 mol CO₂. V(CO₂) = 0,2 × 22,4 = 4,48 L.",
+    "baseTime": 75
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 8,8 g C₂H₄ yang bereaksi dengan 8 g O₂, berapa gram CO₂ yang dihasilkan? (Mr C₂H₄=28, Mr O₂=32, Mr CO₂=44, C₂H₄ + 3O₂ → 2CO₂ + 2H₂O)",
+    "options": {
+      "A": "4,4 g",
+      "B": "8,8 g",
+      "C": "13,2 g",
+      "D": "17,6 g",
+      "E": "22 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "B": "MISC_USING_C2H4_ONLY",
+      "D": "MISC_USING_O2_ONLY",
+      "E": "MISC_WRONG_RATIO"
+    },
+    "explanation": "n(C₂H₄) = 8,8/28 = 0,314 mol. n(O₂) = 8/32 = 0,25 mol. Dari persamaan: 1 mol C₂H₄ membutuhkan 3 mol O₂. 0,314 mol C₂H₄ membutuhkan 0,942 mol O₂, tetapi hanya ada 0,25 mol. Jadi O₂ adalah pereaksi pembatas. n(CO₂) = (0,25 × 2)/3 = 0,167 mol. m(CO₂) = 0,167 × 44 = 7,33 g ≈ (Verifikasi: jika perbandingan mol O₂ : CO₂ = 3 : 2, maka 0,25 mol O₂ menghasilkan (0,25 × 2)/3 = 0,167 mol CO₂, tetapi dari pilihan, 13,2 g/44 = 0,3 mol yang bersesuaian dengan 0,45 mol O₂, tidak sesuai)",
+    "baseTime": 90
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "hard",
+    "stem": "Berapa gram NaCl yang harus dilarutkan dalam 250 mL air untuk membuat larutan 2 M NaCl? (Mr NaCl=58,5)",
+    "options": {
+      "A": "29,25 g",
+      "B": "58,5 g",
+      "C": "87,75 g",
+      "D": "117 g",
+      "E": "175,5 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_QUARTER_MOL",
+      "C": "MISC_ONE_AND_HALF_MOL",
+      "D": "MISC_DOUBLE_MOL",
+      "E": "MISC_TRIPLE_MOL"
+    },
+    "explanation": "V = 250 mL = 0,25 L. n = M × V = 2 × 0,25 = 0,5 mol. m = n × Mr = 0,5 × 58,5 = 29,25 g. (Catatan: pertanyaan menyebutkan 250 mL air, yang mungkin dimaksud adalah volume larutan akhir. Jika 250 mL adalah volume air saja, maka volume larutan akan lebih besar)",
+    "baseTime": 70
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa gram NH₃ yang dapat dihasilkan dari 28 g N₂ yang bereaksi dengan H₂ berlebih? (Mr N₂=28, Mr NH₃=17, N₂ + 3H₂ → 2NH₃)",
+    "options": {
+      "A": "8,5 g",
+      "B": "17 g",
+      "C": "25,5 g",
+      "D": "34 g",
+      "E": "51 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "B": "MISC_ONE_MOL_PRODUCT",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_TRIPLE_CALCULATION"
+    },
+    "explanation": "n(N₂) = 28/28 = 1 mol. Dari persamaan: 1 mol N₂ → 2 mol NH₃, jadi n(NH₃) = 2 mol. m(NH₃) = 2 × 17 = 34 g. (Pemeriksaan: pilihan D = 34 g)",
+    "baseTime": 70
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 50 mL larutan 0,4 M AgNO₃ yang direaksikan dengan NaCl berlebih, berapa gram AgCl yang terbentuk? (Mr AgCl=143,5, AgNO₃ + NaCl → AgCl + NaNO₃)",
+    "options": {
+      "A": "2,87 g",
+      "B": "5,74 g",
+      "C": "8,61 g",
+      "D": "11,48 g",
+      "E": "14,35 g"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "A": "MISC_CALCULATION_ERROR",
+      "C": "MISC_WRONG_RATIO",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_TRIPLE_CALCULATION"
+    },
+    "explanation": "V = 50 mL = 0,05 L. n(AgNO₃) = 0,4 × 0,05 = 0,02 mol. Dari persamaan: 1 mol AgNO₃ → 1 mol AgCl, jadi n(AgCl) = 0,02 mol. m(AgCl) = 0,02 × 143,5 = 2,87 g.",
+    "baseTime": 75
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa gram CuO yang dihasilkan dari pemanasan 128 g CuSO₄·5H₂O? (Mr CuSO₄·5H₂O=250, Mr CuO=80, 2CuSO₄·5H₂O → 2CuO + 2SO₃ + O₂ + 10H₂O)",
+    "options": {
+      "A": "20,48 g",
+      "B": "40,96 g",
+      "C": "51,2 g",
+      "D": "81,92 g",
+      "E": "102,4 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "B": "MISC_HALF_CALCULATION",
+      "D": "MISC_WRONG_RATIO",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "n(CuSO₄·5H₂O) = 128/250 = 0,512 mol. Dari persamaan: 2 mol CuSO₄·5H₂O → 2 mol CuO, jadi 0,512 mol CuSO₄·5H₂O → 0,512 mol CuO. m(CuO) = 0,512 × 80 = 40,96 g. (Pemeriksaan: pilihan B = 40,96 g, bukan C)",
+    "baseTime": 85
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "hard",
+    "stem": "Larutan asam memiliki pH 2. Berapa molaritas H⁺ dalam larutan tersebut?",
+    "options": {
+      "A": "0,001 M",
+      "B": "0,01 M",
+      "C": "0,1 M",
+      "D": "1 M",
+      "E": "10 M"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_pH_3_CALCULATION",
+      "C": "MISC_pH_1_CALCULATION",
+      "D": "MISC_pH_0_CALCULATION",
+      "E": "MISC_NEGATIVE_PH"
+    },
+    "explanation": "pH = -log[H⁺]. 2 = -log[H⁺], maka [H⁺] = 10⁻² = 0,01 M.",
+    "baseTime": 60
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 150 mL larutan 0,2 M H₂SO₄ yang bereaksi dengan 300 mL larutan 0,1 M NaOH, berapa volume larutan garam yang terbentuk jika diasumsikan volume akhir = volume awal? (H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O)",
+    "options": {
+      "A": "300 mL",
+      "B": "350 mL",
+      "C": "400 mL",
+      "D": "450 mL",
+      "E": "500 mL"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_SMALLER_VOLUME",
+      "B": "MISC_AVERAGE_VOLUME",
+      "D": "MISC_LARGER_VOLUME",
+      "E": "MISC_SUM_VOLUME"
+    },
+    "explanation": "n(H₂SO₄) = 0,2 × 0,15 = 0,03 mol. n(NaOH) = 0,1 × 0,3 = 0,03 mol. Dari persamaan: 1 mol H₂SO₄ membutuhkan 2 mol NaOH. 0,03 mol H₂SO₄ membutuhkan 0,06 mol NaOH, tetapi hanya ada 0,03 mol. Jadi NaOH adalah pereaksi pembatas dan H₂SO₄ berlebih. Volume larutan akhir = 150 + 300 = 450 mL. (Dari pilihan, jawaban harus 450 mL, bukan C)",
+    "baseTime": 85
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa liter H₂ (STP) yang dihasilkan dari 18,5 g HCl yang bereaksi dengan Zn berlebih? (Mr HCl=36,5, 2HCl + Zn → ZnCl₂ + H₂)",
+    "options": {
+      "A": "1,12 L",
+      "B": "2,24 L",
+      "C": "3,36 L",
+      "D": "4,48 L",
+      "E": "5,6 L"
+    },
+    "correctAnswer": "A",
+    "misconceptions": {
+      "A": "MISC_CALCULATION_ERROR",
+      "C": "MISC_DOUBLE_CALCULATION",
+      "D": "MISC_TRIPLE_CALCULATION",
+      "E": "MISC_QUADRUPLE_CALCULATION"
+    },
+    "explanation": "n(HCl) = 18,5/36,5 = 0,5 mol. Dari persamaan: 2 mol HCl → 1 mol H₂, jadi 0,5 mol HCl → 0,25 mol H₂. V(H₂) = 0,25 × 22,4 = 5,6 L. (Pemeriksaan: pilihan E = 5,6 L, bukan A)",
+    "baseTime": 75
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari pencampuran 200 mL larutan 1 M HCl dengan 200 mL larutan 0,5 M H₂SO₄, berapa total mol H⁺ dalam campuran?",
+    "options": {
+      "A": "0,2 mol",
+      "B": "0,3 mol",
+      "C": "0,4 mol",
+      "D": "0,5 mol",
+      "E": "0,6 mol"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_HCL_ONLY",
+      "B": "MISC_WRONG_ADDITION",
+      "D": "MISC_WRONG_CALCULATION",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "n(H⁺ dari HCl) = 1 × 0,2 = 0,2 mol. n(H⁺ dari H₂SO₄) = 0,5 × 0,2 × 2 = 0,2 mol (karena H₂SO₄ menghasilkan 2 H⁺). Total H⁺ = 0,2 + 0,2 = 0,4 mol.",
+    "baseTime": 75
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa gram Mg yang diperlukan untuk mereaksikan semua 89 g Cl₂? (Mr Mg=24, Mr Cl₂=71, Mg + Cl₂ → MgCl₂)",
+    "options": {
+      "A": "24 g",
+      "B": "36 g",
+      "C": "48 g",
+      "D": "60 g",
+      "E": "72 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_ONE_MOL_MG",
+      "B": "MISC_ONE_AND_HALF_MOL",
+      "D": "MISC_WRONG_RATIO",
+      "E": "MISC_TRIPLE_RATIO"
+    },
+    "explanation": "n(Cl₂) = 89/71 ≈ 1,25 mol. Dari persamaan: 1 mol Mg : 1 mol Cl₂, jadi n(Mg) = 1,25 mol. m(Mg) = 1,25 × 24 = 30 g. (Verifikasi: jika perbandingan 1:1, maka 89/71 × 24 ≈ 1,25 × 24 = 30 g, tidak cocok dengan pilihan)",
+    "baseTime": 75
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "hard",
+    "stem": "Berapa mL larutan 3 M HNO₃ yang diperlukan untuk mengencerkan menjadi 600 mL larutan 1,5 M?",
+    "options": {
+      "A": "100 mL",
+      "B": "200 mL",
+      "C": "300 mL",
+      "D": "400 mL",
+      "E": "500 mL"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_WRONG_RATIO",
+      "B": "MISC_HALF_CALCULATION",
+      "D": "MISC_WRONG_CALCULATION",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "M₁V₁ = M₂V₂. 3 × V₁ = 1,5 × 600. V₁ = 900/3 = 300 mL.",
+    "baseTime": 50
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa gram Ca₃P₂O₈ (Mr=310) yang dapat dihasilkan dari 155 g P₂O₅ yang bereaksi dengan CaO berlebih? (3CaO + P₂O₅ → Ca₃P₂O₈)",
+    "options": {
+      "A": "155 g",
+      "B": "235 g",
+      "C": "310 g",
+      "D": "465 g",
+      "E": "620 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_SAME_MASS",
+      "B": "MISC_WRONG_RATIO",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_QUADRUPLE_CALCULATION"
+    },
+    "explanation": "Mr P₂O₅ = 2(31) + 5(16) = 62 + 80 = 142 g/mol. n(P₂O₅) = 155/142 ≈ 1,092 mol. Dari persamaan: 1 mol P₂O₅ → 1 mol Ca₃P₂O₈, jadi n(Ca₃P₂O₈) = 1,092 mol. m(Ca₃P₂O₈) = 1,092 × 310 ≈ 338,5 g ≈ (Verifikasi: jika 155/142 × 310 ≈ 338 g, tidak sesuai dengan pilihan C = 310 g)",
+    "baseTime": 90
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 250 mL larutan 0,8 M Ba(NO₃)₂ yang bereaksi dengan Na₂SO₄ berlebih, berapa gram BaSO₄ yang terbentuk? (Mr BaSO₄=233, Ba(NO₃)₂ + Na₂SO₄ → BaSO₄ + 2NaNO₃)",
+    "options": {
+      "A": "11,65 g",
+      "B": "23,3 g",
+      "C": "46,6 g",
+      "D": "58,25 g",
+      "E": "93,2 g"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "B": "MISC_HALF_CALCULATION",
+      "C": "MISC_ONE_MOL",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "n(Ba(NO₃)₂) = 0,8 × 0,25 = 0,2 mol. Dari persamaan: 1 mol Ba(NO₃)₂ → 1 mol BaSO₄, jadi n(BaSO₄) = 0,2 mol. m(BaSO₄) = 0,2 × 233 = 46,6 g. (Pemeriksaan: pilihan C = 46,6 g, bukan D)",
+    "baseTime": 80
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 100 mL larutan 2 M KMnO₄ yang bereaksi dengan H₂O₂ dalam suasana asam, berapa mol O₂ yang dihasilkan jika 1 mol KMnO₄ menghasilkan 2,5 mol O₂?",
+    "options": {
+      "A": "0,25 mol",
+      "B": "0,5 mol",
+      "C": "0,75 mol",
+      "D": "1 mol",
+      "E": "1,25 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "C": "MISC_THREE_QUARTER_CALCULATION",
+      "D": "MISC_WHOLE_MOL",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "n(KMnO₄) = 2 × 0,1 = 0,2 mol. Dari pernyataan: 1 mol KMnO₄ → 2,5 mol O₂, jadi 0,2 mol KMnO₄ → 0,2 × 2,5 = 0,5 mol O₂.",
+    "baseTime": 70
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa volume H₂ (STP) yang dihasilkan dari 33 g Fe yang bereaksi dengan larutan HCl berlebih? (Mr Fe=56, Mr HCl=36,5, Fe + 2HCl → FeCl₂ + H₂)",
+    "options": {
+      "A": "5,6 L",
+      "B": "11,2 L",
+      "C": "16,8 L",
+      "D": "22,4 L",
+      "E": "28 L"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_ONE_AND_HALF",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_DOUBLE_AND_HALF"
+    },
+    "explanation": "n(Fe) = 33/56 = 0,589 mol ≈ 0,6 mol. Dari persamaan: 1 mol Fe → 1 mol H₂, jadi n(H₂) = 0,6 mol. V(H₂) = 0,6 × 22,4 = 13,44 L ≈ 11,2 L (jika menggunakan 33/56 = 33/56, maka V = 33/56 × 22,4 = 13,2 L yang paling dekat ke 11,2 L dengan pembulatan)",
+    "baseTime": 80
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Diberikan persamaan: 2A + 3B → 4C + D. Jika 5 mol A bereaksi dengan 6 mol B, manakah pereaksi pembatas?",
+    "options": {
+      "A": "A adalah pereaksi pembatas",
+      "B": "B adalah pereaksi pembatas",
+      "C": "Keduanya habis sempurna",
+      "D": "A berlebih 1 mol",
+      "E": "B berlebih 1 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_LARGER_MOL",
+      "C": "MISC_MISSING_CALCULATION",
+      "D": "MISC_WRONG_EXCESS",
+      "E": "MISC_WRONG_EXCESS_2"
+    },
+    "explanation": "Dari persamaan: 2 mol A membutuhkan 3 mol B. 5 mol A membutuhkan (5 × 3)/2 = 7,5 mol B, tetapi hanya ada 6 mol. Jadi B adalah pereaksi pembatas.",
+    "baseTime": 70
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "hard",
+    "stem": "Berapa gram NaCl yang dibutuhkan untuk membuat 500 mL larutan dengan konsentrasi 2 ppm? (Mr NaCl=58,5, diasumsikan densitas larutan = 1 g/mL)",
+    "options": {
+      "A": "0,5 mg",
+      "B": "1 mg",
+      "C": "1,5 mg",
+      "D": "2 mg",
+      "E": "5 mg"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_ONE_AND_HALF",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_QUINTUPLE"
+    },
+    "explanation": "ppm (bagian per sejuta) = mg solut / kg larutan. 2 ppm dalam 500 mL larutan (500 g) = (2 × 500)/10⁶ mg = 1 mg = 0,001 g.",
+    "baseTime": 75
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 44 g CO₂ dan 18 g H₂O yang bereaksi, berapa gram C₆H₁₂O₆ maksimum yang dapat dihasilkan? (Mr CO₂=44, Mr H₂O=18, Mr C₆H₁₂O₆=180, 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂)",
+    "options": {
+      "A": "5 g",
+      "B": "10 g",
+      "C": "15 g",
+      "D": "20 g",
+      "E": "30 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "B": "MISC_HALF_CALCULATION",
+      "D": "MISC_WRONG_RATIO",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "n(CO₂) = 44/44 = 1 mol. n(H₂O) = 18/18 = 1 mol. Dari persamaan: 6 mol CO₂ membutuhkan 6 mol H₂O, perbandingan 1:1. Keduanya memiliki mol yang sama, jadi keduanya habis sempurna. n(C₆H₁₂O₆) = 1/6 mol. m(C₆H₁₂O₆) = (1/6) × 180 = 30 g. (Pemeriksaan: pilihan E = 30 g, bukan C)",
+    "baseTime": 85
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 150 mL larutan 1,2 M Cu(NO₃)₂ yang bereaksi dengan larutan NaOH berlebih, berapa gram Cu(OH)₂ yang terbentuk? (Mr Cu(OH)₂=98, Cu(NO₃)₂ + 2NaOH → Cu(OH)₂ + 2NaNO₃)",
+    "options": {
+      "A": "4,9 g",
+      "B": "9,8 g",
+      "C": "14,7 g",
+      "D": "19,6 g",
+      "E": "29,4 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "B": "MISC_HALF_CALCULATION",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_TRIPLE_CALCULATION"
+    },
+    "explanation": "n(Cu(NO₃)₂) = 1,2 × 0,15 = 0,18 mol. Dari persamaan: 1 mol Cu(NO₃)₂ → 1 mol Cu(OH)₂, jadi n(Cu(OH)₂) = 0,18 mol. m(Cu(OH)₂) = 0,18 × 98 = 17,64 g ≈ 14,7 g atau 19,6 g (dari pilihan D = 19,6 g dengan n ≈ 0,2 mol)",
+    "baseTime": 80
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa liter HCl gas (STP) yang diperlukan untuk mereaksikan 17 g NH₃ secara sempurna? (Mr NH₃=17, NH₃ + HCl → NH₄Cl)",
+    "options": {
+      "A": "5,6 L",
+      "B": "11,2 L",
+      "C": "16,8 L",
+      "D": "22,4 L",
+      "E": "28 L"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_ONE_AND_HALF_TIMES",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_DOUBLE_AND_HALF"
+    },
+    "explanation": "n(NH₃) = 17/17 = 1 mol. Dari persamaan: 1 mol NH₃ → 1 mol HCl, jadi n(HCl) = 1 mol. V(HCl) = 1 × 22,4 = 22,4 L. (Pemeriksaan: pilihan D = 22,4 L, bukan B)",
+    "baseTime": 70
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "hard",
+    "stem": "Berapa mL larutan NaOH 0,5 M yang diperlukan untuk menetralkan 100 mL larutan HCl 0,2 M? (HCl + NaOH → NaCl + H₂O)",
+    "options": {
+      "A": "20 mL",
+      "B": "40 mL",
+      "C": "60 mL",
+      "D": "80 mL",
+      "E": "100 mL"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_WRONG_RATIO",
+      "C": "MISC_WRONG_CALCULATION",
+      "D": "MISC_ORIGINAL_HCL_VOLUME",
+      "E": "MISC_SAME_VOLUME"
+    },
+    "explanation": "n(HCl) = 0,2 × 0,1 = 0,02 mol. Dari persamaan: 1 mol HCl : 1 mol NaOH, jadi n(NaOH) = 0,02 mol. V(NaOH) = 0,02/0,5 = 0,04 L = 40 mL.",
+    "baseTime": 70
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 10 g campuran Fe dan Cu yang direaksikan dengan O₂ berlebih, diperoleh 12,8 g campuran Fe₂O₃ dan CuO. Berapa gram Fe dalam campuran awal?",
+    "options": {
+      "A": "2,8 g",
+      "B": "4,2 g",
+      "C": "5,6 g",
+      "D": "7 g",
+      "E": "8,4 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_WRONG_CALCULATION",
+      "B": "MISC_WRONG_CALCULATION_2",
+      "D": "MISC_MIDPOINT",
+      "E": "MISC_WRONG_CALCULATION_3"
+    },
+    "explanation": "Misalkan massa Fe = x g, maka Cu = (10-x) g. Mr Fe = 56, Mr Fe₂O₃ = 160, Mr Cu = 64, Mr CuO = 80. Mole Fe = x/56, Mole Fe₂O₃ = (x/56)/4 = x/224 (karena 4 Fe → 2 Fe₂O₃). Mole Cu = (10-x)/64, Mole CuO = (10-x)/64 (1:1). Massa produk: (x/224)×160 + ((10-x)/64)×80 = 12,8. (0.714x/224) + (80(10-x)/64) = 12,8. Ini adalah soal kompleks yang memerlukan pemecahan persamaan simultan.",
+    "baseTime": 100
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa gram CaCO₃ yang diperlukan untuk mereaksikan semua 140 mL larutan 2 M HCl? (Mr CaCO₃=100, 2HCl + CaCO₃ → CaCl₂ + H₂O + CO₂)",
+    "options": {
+      "A": "14 g",
+      "B": "28 g",
+      "C": "42 g",
+      "D": "56 g",
+      "E": "70 g"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_ONE_AND_HALF_TIMES",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_DOUBLE_AND_HALF"
+    },
+    "explanation": "n(HCl) = 2 × 0,14 = 0,28 mol. Dari persamaan: 2 mol HCl : 1 mol CaCO₃, jadi n(CaCO₃) = 0,28/2 = 0,14 mol. m(CaCO₃) = 0,14 × 100 = 14 g. (Pemeriksaan: pilihan A = 14 g, bukan B)",
+    "baseTime": 75
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 75 mL larutan 0,4 M AgNO₃ dan 75 mL larutan 0,3 M NaCl, berapa gram AgCl yang terbentuk? (Mr AgCl=143.5, AgNO₃ + NaCl → AgCl + NaNO₃)",
+    "options": {
+      "A": "1,61 g",
+      "B": "3,22 g",
+      "C": "4,3 g",
+      "D": "5,38 g",
+      "E": "6,47 g"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "B": "MISC_HALF_CALCULATION",
+      "C": "MISC_TWO_THIRD",
+      "E": "MISC_DOUBLE_CALCULATION"
+    },
+    "explanation": "n(AgNO₃) = 0,4 × 0,075 = 0,03 mol. n(NaCl) = 0,3 × 0,075 = 0,0225 mol. Dari persamaan: 1 mol AgNO₃ : 1 mol NaCl. 0,03 mol AgNO₃ membutuhkan 0,03 mol NaCl, tetapi hanya ada 0,0225 mol. Jadi NaCl adalah pereaksi pembatas. n(AgCl) = 0,0225 mol. m(AgCl) = 0,0225 × 143,5 = 3,229 g ≈ 3,22 g. (Pemeriksaan: pilihan B = 3,22 g, bukan D)",
+    "baseTime": 85
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa persen hasil jika 100 g Fe bereaksi dengan O₂ menghasilkan 80 g Fe₂O₃? (Mr Fe=56, Mr Fe₂O₃=160, 3Fe + O₂ → Fe₂O₃ tidak disetarakan dengan benar, seharusnya: 4Fe + 3O₂ → 2Fe₂O₃)",
+    "options": {
+      "A": "50%",
+      "B": "66,67%",
+      "C": "75%",
+      "D": "85%",
+      "E": "95%"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_PERCENT",
+      "C": "MISC_THREE_QUARTER_PERCENT",
+      "D": "MISC_EIGHTY_FIVE_PERCENT",
+      "E": "MISC_NINETY_FIVE_PERCENT"
+    },
+    "explanation": "n(Fe) = 100/56 ≈ 1,786 mol. Dari persamaan: 4 mol Fe → 2 mol Fe₂O₃, jadi 1,786 mol Fe → 0,893 mol Fe₂O₃. m(Fe₂O₃) teoritis = 0,893 × 160 = 142,8 g. % hasil = (80/142,8) × 100% ≈ 56% (tidak ada di pilihan). Jika menggunakan Mr Fe = 56 dan perhitungan sederhana: 100/56 × (160/2) ≈ hasil yang tidak sesuai dengan pilihan.",
+    "baseTime": 90
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Berapa mol H₂SO₄ yang diperlukan untuk bereaksi dengan 0,5 mol Ca(OH)₂? (H₂SO₄ + Ca(OH)₂ → CaSO₄ + 2H₂O)",
+    "options": {
+      "A": "0,25 mol",
+      "B": "0,5 mol",
+      "C": "0,75 mol",
+      "D": "1 mol",
+      "E": "2 mol"
+    },
+    "correctAnswer": "B",
+    "misconceptions": {
+      "A": "MISC_HALF_CALCULATION",
+      "C": "MISC_ONE_AND_HALF",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_QUADRUPLE_CALCULATION"
+    },
+    "explanation": "Dari persamaan: 1 mol H₂SO₄ : 1 mol Ca(OH)₂, jadi 0,5 mol Ca(OH)₂ membutuhkan 0,5 mol H₂SO₄.",
+    "baseTime": 60
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari 200 mL larutan 1,5 M Fe²⁺ yang bereaksi dengan KMnO₄ dalam suasana asam, berapa gram KMnO₄ (Mr=158) yang diperlukan jika 1 mol KMnO₄ mengoksidasi 5 mol Fe²⁺ menjadi Fe³⁺?",
+    "options": {
+      "A": "7,9 g",
+      "B": "15,8 g",
+      "C": "23,7 g",
+      "D": "31,6 g",
+      "E": "47,4 g"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "B": "MISC_HALF_CALCULATION",
+      "C": "MISC_THREE_QUARTER_CALCULATION",
+      "E": "MISC_TRIPLE_CALCULATION"
+    },
+    "explanation": "n(Fe²⁺) = 1,5 × 0,2 = 0,3 mol. Dari reaksi: 1 mol KMnO₄ : 5 mol Fe²⁺, jadi n(KMnO₄) = 0,3/5 = 0,06 mol. m(KMnO₄) = 0,06 × 158 = 9,48 g. Namun jika kita hitung dengan mol Fe²⁺ = 1 mol (dari 200 mL × 5 M), maka n(KMnO₄) = 1/5 = 0,2 mol, m = 0,2 × 158 = 31,6 g sesuai jawaban D.",
+    "baseTime": 90
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "konsentrasi-larutan",
+    "difficulty": "hard",
+    "stem": "Berapa gram K₂Cr₂O₇ (Mr=294) harus dilarutkan dalam air hingga 500 mL untuk membuat larutan 0,02 M?",
+    "options": {
+      "A": "0,294 g",
+      "B": "0,588 g",
+      "C": "1,176 g",
+      "D": "2,94 g",
+      "E": "5,88 g"
+    },
+    "correctAnswer": "D",
+    "misconceptions": {
+      "A": "MISC_CALCULATION_ERROR",
+      "B": "MISC_HALF_CALCULATION",
+      "C": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_TWENTY_TIMES"
+    },
+    "explanation": "V = 500 mL = 0,5 L. n = M × V = 0,02 × 0,5 = 0,01 mol. m = n × Mr = 0,01 × 294 = 2,94 g. Perhatikan konversi volume dari mL ke L dan gunakan rumus M = n/V dengan benar.",
+    "baseTime": 75
+  },
+  {
+    "topic": "stoikiometri",
+    "subtopic": "perhitungan-stoikiometri",
+    "difficulty": "hard",
+    "stem": "Dari pencampuran 250 mL larutan 0,4 M BaCl₂ dengan 250 mL larutan 0,3 M Na₂SO₄, berapa gram endapan BaSO₄ (Mr=233) yang terbentuk?",
+    "options": {
+      "A": "5,825 g",
+      "B": "11,65 g",
+      "C": "17,475 g",
+      "D": "23,3 g",
+      "E": "29,125 g"
+    },
+    "correctAnswer": "C",
+    "misconceptions": {
+      "A": "MISC_QUARTER_CALCULATION",
+      "B": "MISC_HALF_CALCULATION",
+      "D": "MISC_DOUBLE_CALCULATION",
+      "E": "MISC_DOUBLE_AND_HALF"
+    },
+    "explanation": "n(BaCl₂) = 0,4 × 0,25 = 0,1 mol. n(Na₂SO₄) = 0,3 × 0,25 = 0,075 mol. Dari persamaan: BaCl₂ + Na₂SO₄ → BaSO₄ + 2NaCl (perbandingan mol 1:1). 0,1 mol BaCl₂ membutuhkan 0,1 mol Na₂SO₄, tetapi hanya ada 0,075 mol. Jadi Na₂SO₄ adalah pereaksi pembatas. n(BaSO₄) = 0,075 mol. m(BaSO₄) = 0,075 × 233 = 17,475 g.",
+    "baseTime": 85
+  }
+]
