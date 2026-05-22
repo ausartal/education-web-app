@@ -136,22 +136,22 @@
 
 ### 2.2 Feedback & Progress Components
 
-- [ ] `ProgressBar` — Linear progress
-  - [ ] Label + percentage
-  - [ ] Gradient fill
-  - [ ] Animated width transition
-  - [ ] Color change at 100%
-- [ ] `CircularProgress` — SVG circular progress (untuk achievements)
-- [ ] `Skeleton` — Loading placeholder
-  - [ ] Shimmer animation
-  - [ ] Variants: text, card, avatar, table row
-- [ ] `Spinner` — Loading spinner
-- [ ] `Badge` — Status badges
-  - [ ] Variants: success, warning, gray, primary
-  - [ ] Pill shape (radius-full)
-- [ ] `AchievementBadge` — Circular badge dengan tier (gold/silver/bronze)
-- [ ] `EmptyState` — Illustration + message + CTA button
-- [ ] `ErrorState` — Friendly error display
+- [x] `ProgressBar` — Linear progress
+  - [x] Label + percentage
+  - [x] Gradient fill
+  - [x] Animated width transition
+  - [x] Color change at 100%
+- [x] `CircularProgress` — SVG circular progress (untuk achievements)
+- [x] `Skeleton` — Loading placeholder
+  - [x] Shimmer animation
+  - [x] Variants: text, card, avatar, table row
+- [x] `Spinner` — Loading spinner
+- [x] `Badge` — Status badges
+  - [x] Variants: success, warning, gray, primary
+  - [x] Pill shape (radius-full)
+- [x] `AchievementBadge` — Circular badge dengan tier (gold/silver/bronze)
+- [x] `EmptyState` — Illustration + message + CTA button
+- [x] `ErrorState` — Friendly error display
 
 ### 2.3 Data Display Components
 
