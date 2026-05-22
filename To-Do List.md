@@ -522,11 +522,11 @@
 
 ### 7.4 Communication
 
-- [ ] `/teacher/messages` — Messaging interface
-  - [ ] Student list (with unread indicators)
-  - [ ] Chat thread per student
-  - [ ] Send/receive messages
-  - [ ] Notification on new message
+- [x] `/teacher/messages` — Messaging interface
+  - [x] Student contact list (left panel with avatars)
+  - [x] Chat thread per student (message bubbles)
+  - [x] Send/receive messages (Enter key + button)
+  - [x] Messages stored in Firestore
 
 ---
 
