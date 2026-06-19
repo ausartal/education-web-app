@@ -218,3 +218,22 @@ export interface AppConfig {
     levelFormula: string;
   };
 }
+
+// ===== AUDIT LOGS =====
+export type AuditAction =
+  | 'create_user' | 'update_user' | 'delete_user'
+  | 'change_role' | 'toggle_active'
+  | 'create_material' | 'update_material' | 'delete_material'
+  | 'create_question' | 'update_question' | 'delete_question'
+  | 'update_config' | 'delete_exam';
+
+export interface AuditLog {
+  id: string;
+  actorId: string;
+  actorRole: UserRole;
+  action: AuditAction;
+  targetId: string;
+  targetType: 'user' | 'material' | 'question' | 'config' | 'exam';
+  details: Record<string, unknown>;
+  timestamp: Timestamp;
+}
