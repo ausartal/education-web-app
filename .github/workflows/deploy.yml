@@ -41,3 +41,5 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: akurat-76834
           channelId: live
+        env:
+          FIREBASE_CLI_EXPERIMENTS: webframeworks
