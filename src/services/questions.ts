@@ -15,6 +15,7 @@ export async function getQuestionsByDifficulty(
   difficulty: Difficulty,
   count: number
 ): Promise<Question[]> {
+  if (!topic || !difficulty) return [];
   const q = query(
     collection(db, COLLECTION),
     where('topic', '==', topic),
@@ -27,6 +28,7 @@ export async function getQuestionsByDifficulty(
 }
 
 export async function getQuestionsByTopic(topic: string): Promise<Question[]> {
+  if (!topic) return [];
   const q = query(
     collection(db, COLLECTION),
     where('topic', '==', topic),

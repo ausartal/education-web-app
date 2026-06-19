@@ -15,6 +15,7 @@ import { UserProgress } from '@/types/firestore';
 const COLLECTION = 'user_progress';
 
 export async function getUserProgress(userId: string): Promise<UserProgress[]> {
+  if (!userId) return [];
   const q = query(collection(db, COLLECTION), where('userId', '==', userId));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as UserProgress);

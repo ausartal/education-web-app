@@ -47,6 +47,7 @@ const QuizPage: FC = () => {
 
   // Fetch questions
   useEffect(() => {
+    if (!difficulty) return;
     const fetch = async () => {
       const qs = await getQuestionsByDifficulty('stoikiometri', difficulty, 10);
       setQuestions(qs);
