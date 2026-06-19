@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -Command \"$changes = git -C 'C:\\Users\\ahmad\\Documents\\College\\Projects\\education-web-app' status --short 2>$null; if ($changes) { git -C 'C:\\Users\\ahmad\\Documents\\College\\Projects\\education-web-app' add -- . ':!.env.local' ':!*.env*' 2>$null; $files = (git -C 'C:\\Users\\ahmad\\Documents\\College\\Projects\\education-web-app' diff --cached --name-only 2>$null) -join ', '; if ($files) { $msg = 'chore: update ' + ($files.Split(',')[0].Trim()); git -C 'C:\\Users\\ahmad\\Documents\\College\\Projects\\education-web-app' commit -m $msg 2>$null; git -C 'C:\\Users\\ahmad\\Documents\\College\\Projects\\education-web-app' push origin HEAD 2>$null } }\""
+          }
+        ]
+      }
+    ]
+  }
+}

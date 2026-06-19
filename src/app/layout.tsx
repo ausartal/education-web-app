@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Nunito, Ubuntu, Space_Mono } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/hooks/useToast';
@@ -32,6 +32,9 @@ export const metadata: Metadata = {
   description:
     'Platform edukasi berbasis AI untuk asesmen Chemistry Stoichiometry dengan Multistage Adaptive Testing',
   manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
   themeColor: '#1A73E8',
 };
 
