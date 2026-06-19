@@ -5,8 +5,8 @@ import {
   LayoutDashboard, Users, FileText, Settings,
   GraduationCap, ClipboardList, BarChart3, BookOpen, Terminal,
 } from 'lucide-react';
-import { Navbar } from '@/components/layout/Navbar';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { AuthGuard } from '@/components/guards/AuthGuard';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 
@@ -22,16 +22,16 @@ const adminLinks = [
   { href: '/admin/logs', label: 'Audit Log', icon: ClipboardList },
 ];
 
-interface AdminLayoutProps { children: ReactNode; }
-
-const AdminLayout: FC<AdminLayoutProps> = ({ children }) => {
+const AdminLayout: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={['admin']}>
-        <Navbar />
-        <div className="flex min-h-[calc(100vh-4rem)]">
-          <Sidebar links={adminLinks} title="Admin Panel" />
-          <main className="flex-1 overflow-x-hidden p-6">{children}</main>
+        <div className="flex h-screen overflow-hidden bg-gray-50">
+          <AdminSidebar links={adminLinks} />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <AdminTopbar />
+            <main className="flex-1 overflow-y-auto p-6">{children}</main>
+          </div>
         </div>
       </RoleGuard>
     </AuthGuard>

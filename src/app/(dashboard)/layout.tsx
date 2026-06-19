@@ -7,6 +7,7 @@ import { TeacherNavbar } from '@/components/layout/TeacherNavbar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { TeacherMobileNav } from '@/components/layout/TeacherMobileNav';
 import { AuthGuard } from '@/components/guards/AuthGuard';
+import { AdminPreviewBanner } from '@/components/admin/AdminPreviewBanner';
 import { useAuth } from '@/context/AuthContext';
 
 interface DashboardLayoutProps {
@@ -29,6 +30,7 @@ const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
         {children}
       </main>
       {isTeacher ? <TeacherMobileNav /> : <MobileNav />}
+      <AdminPreviewBanner />
     </AuthGuard>
   );
 };
