@@ -27,15 +27,19 @@ export async function GET(req: NextRequest) {
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
 
-  const [usersSnap, examsSnap, questionsSnap, logsSnap] = await Promise.all([
+  const [usersSnap, examsSnap, questionsSnap, materialsSnap, progressSnap, logsSnap] = await Promise.all([
     adminDb.collection('users').get(),
     adminDb.collection('exam_sessions').get(),
     adminDb.collection('question_bank').get(),
+    adminDb.collection('materials').get(),
+    adminDb.collection('user_progress').get(),
     adminDb.collection('audit_logs').orderBy('timestamp', 'desc').limit(200).get(),
   ]);
 
-  // Build 7-day keys oldest→newest
+  // 7-day keys oldest→newest
   const dayKeys: string[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
@@ -45,22 +49,30 @@ export async function GET(req: NextRequest) {
 
   // User registrations per day
   const regByDay = { ...zero };
+  let todayUsers = 0, yesterdayUsers = 0;
   usersSnap.docs.forEach(d => {
     const date = tsToDate(d.data().createdAt as Record<string, number>);
-    if (date && date >= sevenDaysAgo) {
+    if (!date) return;
+    if (date >= sevenDaysAgo) {
       const key = date.toISOString().split('T')[0];
       if (key in regByDay) regByDay[key]++;
     }
+    if (date >= todayStart) todayUsers++;
+    else if (date >= yesterdayStart) yesterdayUsers++;
   });
 
   // Exams per day
   const examsByDay = { ...zero };
+  let todayExams = 0, yesterdayExams = 0;
   examsSnap.docs.forEach(d => {
     const date = tsToDate(d.data().startedAt as Record<string, number>);
-    if (date && date >= sevenDaysAgo) {
+    if (!date) return;
+    if (date >= sevenDaysAgo) {
       const key = date.toISOString().split('T')[0];
       if (key in examsByDay) examsByDay[key]++;
     }
+    if (date >= todayStart) todayExams++;
+    else if (date >= yesterdayStart) yesterdayExams++;
   });
 
   // Audit activity per day
@@ -76,13 +88,28 @@ export async function GET(req: NextRequest) {
   // Question stats
   const questionsByDifficulty = { easy: 0, moderate: 0, hard: 0 };
   const questionsByStatus = { active: 0, inactive: 0 };
+  const lowAccuracyQuestions: Array<{
+    id: string; stem: string; difficulty: string;
+    avgCorrectRate: number; usageCount: number; topic: string;
+  }> = [];
   questionsSnap.docs.forEach(d => {
     const data = d.data();
     const diff = data.difficulty as keyof typeof questionsByDifficulty;
     const status = data.status as keyof typeof questionsByStatus;
     if (diff in questionsByDifficulty) questionsByDifficulty[diff]++;
     if (status in questionsByStatus) questionsByStatus[status]++;
+    if (data.usageCount > 0 && (data.avgCorrectRate ?? 1) < 0.45) {
+      lowAccuracyQuestions.push({
+        id: d.id,
+        stem: (data.stem as string ?? '').slice(0, 80),
+        difficulty: data.difficulty,
+        avgCorrectRate: Math.round((data.avgCorrectRate ?? 0) * 100),
+        usageCount: data.usageCount,
+        topic: data.topic ?? '',
+      });
+    }
   });
+  lowAccuracyQuestions.sort((a, b) => a.avgCorrectRate - b.avgCorrectRate);
 
   // Top 5 users by XP
   const topUsers = usersSnap.docs
@@ -125,6 +152,46 @@ export async function GET(req: NextRequest) {
       )
     : 0;
 
+  // Recent 8 completed exam sessions
+  const userMap = Object.fromEntries(usersSnap.docs.map(d => [d.id, d.data().displayName ?? d.id.slice(0, 8)]));
+  const recentExams = examsSnap.docs
+    .filter(d => d.data().status === 'completed' && d.data().completedAt)
+    .sort((a, b) => {
+      const ta = tsToDate(a.data().completedAt as Record<string, number>)?.getTime() ?? 0;
+      const tb = tsToDate(b.data().completedAt as Record<string, number>)?.getTime() ?? 0;
+      return tb - ta;
+    })
+    .slice(0, 8)
+    .map(d => {
+      const data = d.data();
+      const completedAt = tsToDate(data.completedAt as Record<string, number>);
+      return {
+        id: d.id,
+        userId: data.userId,
+        userName: userMap[data.userId] ?? data.userId?.slice(0, 8),
+        examId: data.examId,
+        theta: typeof data.theta === 'number' ? data.theta.toFixed(2) : '0.00',
+        accuracy: data.result?.accuracy ? Math.round(data.result.accuracy * 100) : 0,
+        proficiencyLevel: data.result?.proficiencyLevel ?? '—',
+        completedAt: completedAt?.toISOString() ?? null,
+        flagged: data.anomalyFlags?.length > 0,
+      };
+    });
+
+  // Material progress stats
+  const materialProgressMap: Record<string, number> = {};
+  progressSnap.docs.forEach(d => {
+    const mid = d.data().materialId;
+    if (mid) materialProgressMap[mid] = (materialProgressMap[mid] || 0) + 1;
+  });
+  const materialStats = materialsSnap.docs.map(d => ({
+    id: d.id,
+    title: d.data().title ?? '—',
+    status: d.data().status ?? 'draft',
+    topic: d.data().topic ?? '—',
+    progressCount: materialProgressMap[d.id] ?? 0,
+  })).sort((a, b) => b.progressCount - a.progressCount);
+
   return NextResponse.json({
     dayKeys,
     userRegistrationsByDay: regByDay,
@@ -137,10 +204,16 @@ export async function GET(req: NextRequest) {
     roleDistribution,
     avgXp,
     avgAccuracy,
+    recentExams,
+    lowAccuracyQuestions: lowAccuracyQuestions.slice(0, 5),
+    materialStats: materialStats.slice(0, 8),
+    today: { users: todayUsers, exams: todayExams },
+    yesterday: { users: yesterdayUsers, exams: yesterdayExams },
     totals: {
       users: usersSnap.size,
       exams: examsSnap.size,
       questions: questionsSnap.size,
+      materials: materialsSnap.size,
       completedExams: examStatus.completed,
       activeQuestions: questionsByStatus.active,
       activeUsers: usersSnap.docs.filter(d => d.data().isActive).length,
