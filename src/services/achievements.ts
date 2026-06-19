@@ -18,6 +18,7 @@ export async function getAchievements(): Promise<Achievement[]> {
 export async function getUserAchievements(
   userId: string
 ): Promise<UserAchievement[]> {
+  if (!userId) return [];
   const q = query(
     collection(db, 'user_achievements'),
     where('userId', '==', userId)

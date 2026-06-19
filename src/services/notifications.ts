@@ -26,6 +26,7 @@ export interface Notification {
 export async function getNotifications(
   userId: string
 ): Promise<Notification[]> {
+  if (!userId) return [];
   const q = query(
     collection(db, 'notifications'),
     where('userId', '==', userId),
@@ -40,6 +41,7 @@ export async function markAsRead(notificationId: string): Promise<void> {
 }
 
 export async function markAllAsRead(userId: string): Promise<void> {
+  if (!userId) return;
   const q = query(
     collection(db, 'notifications'),
     where('userId', '==', userId),

@@ -27,6 +27,7 @@ const StudentDetail: FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!studentId) return;
     const fetch = async () => {
       const snap = await getDoc(doc(db, 'users', studentId));
       if (snap.exists()) {
