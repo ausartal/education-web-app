@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import type { Metadata, Viewport } from 'next';
 import { Nunito, Ubuntu, Space_Mono } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
