@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, ReactNode } from 'react';
-import { LayoutDashboard, Users, FileText, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, GraduationCap, ClipboardList } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { AuthGuard } from '@/components/guards/AuthGuard';
@@ -10,8 +10,10 @@ import { RoleGuard } from '@/components/guards/RoleGuard';
 const adminLinks = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Pengguna', icon: Users },
+  { href: '/admin/teachers', label: 'Guru', icon: GraduationCap },
   { href: '/admin/content', label: 'Konten', icon: FileText },
   { href: '/admin/config', label: 'Pengaturan', icon: Settings },
+  { href: '/admin/logs', label: 'Audit Log', icon: ClipboardList },
 ];
 
 interface AdminLayoutProps {
