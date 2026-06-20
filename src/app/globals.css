@@ -5,10 +5,10 @@
 @layer base {
   :root {
     /* ===== PRIMARY COLORS ===== */
-    --primary-blue: #1a73e8;
-    --primary-cyan: #00c2ff;
-    --primary-orange: #ff9500;
-    --primary-bg: #edf2f2;
+    --primary-blue: #4f6ef7;
+    --primary-cyan: #38bdf8;
+    --primary-orange: #f97316;
+    --primary-bg: #f7f5f2;
 
     /* ===== SUCCESS ===== */
     --success-green: #00b84d;
@@ -115,12 +115,12 @@
     --radius-full: 9999px;
 
     /* ===== SHADOWS ===== */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
-    --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.15);
-    --shadow-2xl: 0 20px 60px rgba(0, 0, 0, 0.2);
+    --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.09), 0 4px 10px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.11), 0 6px 14px rgba(0, 0, 0, 0.06);
+    --shadow-2xl: 0 20px 56px rgba(0, 0, 0, 0.14), 0 10px 20px rgba(0, 0, 0, 0.08);
 
     /* Colored Shadows */
     --shadow-primary: 0 4px 20px rgba(26, 115, 232, 0.25);
