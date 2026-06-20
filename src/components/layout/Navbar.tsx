@@ -25,15 +25,14 @@ export const Navbar: FC = () => {
     <header className="sticky top-0 z-50 hidden h-16 border-b border-gray-200 bg-white shadow-xs md:block">
       <nav className="mx-auto flex h-full max-w-7xl items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center">
           <Image
-            src="/icons/logo-icon.png"
+            src="/icons/Akurat_Logo_Text.svg"
             alt="AKURAT"
-            width={32}
-            height={32}
-            className="h-8 w-8 object-contain"
+            width={120}
+            height={45}
+            className="h-8 w-auto object-contain"
           />
-          <span className="font-display text-lg text-gray-900">AKURAT</span>
         </Link>
 
         {/* Nav Links */}

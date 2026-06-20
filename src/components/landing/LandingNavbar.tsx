@@ -34,17 +34,14 @@ export const LandingNavbar: FC = () => {
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-20 lg:px-8">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center">
           <Image
-            src="/icons/logo-icon.png"
+            src="/icons/Akurat_Logo_Text.svg"
             alt="AKURAT"
-            width={32}
-            height={32}
-            className="h-8 w-8 object-contain"
+            width={130}
+            height={49}
+            className="h-9 w-auto object-contain"
           />
-          <span className="font-display text-xl font-extrabold tracking-tight text-[#0E1E47]">
-            AKURAT
-          </span>
         </Link>
 
         {/* Desktop Nav */}
