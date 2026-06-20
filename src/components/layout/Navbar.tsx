@@ -11,6 +11,7 @@ import { NotificationDropdown } from './NotificationDropdown';
 
 const navLinks = [
   { href: '/dashboard', label: 'Home' },
+  { href: '/kelas', label: 'Kelas' },
   { href: '/materi', label: 'Materi' },
   { href: '/latihan', label: 'Latihan' },
   { href: '/ujian', label: 'Ujian' },

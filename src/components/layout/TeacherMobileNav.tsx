@@ -3,14 +3,14 @@
 import { FC } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, HelpCircle, Users, MessageCircle } from 'lucide-react';
+import { Home, BookOpen, HelpCircle, Users, ClipboardList, School } from 'lucide-react';
 
 const teacherTabs = [
   { href: '/teacher', label: 'Home', icon: Home },
+  { href: '/teacher/kelas', label: 'Kelas', icon: School },
+  { href: '/teacher/ujian', label: 'Ujian', icon: ClipboardList },
   { href: '/teacher/materials', label: 'Materi', icon: BookOpen },
-  { href: '/teacher/questions', label: 'Soal', icon: HelpCircle },
   { href: '/teacher/students', label: 'Siswa', icon: Users },
-  { href: '/teacher/messages', label: 'Pesan', icon: MessageCircle },
 ];
 
 export const TeacherMobileNav: FC = () => {

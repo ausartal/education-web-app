@@ -3,13 +3,13 @@
 import { FC } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, PenTool, GraduationCap, User } from 'lucide-react';
+import { Home, School, GraduationCap, BookOpen, User } from 'lucide-react';
 
 const tabs = [
   { href: '/dashboard', label: 'Home', icon: Home },
-  { href: '/materi', label: 'Materi', icon: BookOpen },
-  { href: '/latihan', label: 'Latihan', icon: PenTool },
+  { href: '/kelas', label: 'Kelas', icon: School },
   { href: '/ujian', label: 'Ujian', icon: GraduationCap },
+  { href: '/materi', label: 'Materi', icon: BookOpen },
   { href: '/profile', label: 'Profil', icon: User },
 ];
 
