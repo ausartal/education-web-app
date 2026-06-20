@@ -38,9 +38,9 @@ export const LandingNavbar: FC = () => {
           <Image
             src="/icons/Akurat_Logo_Text.svg"
             alt="AKURAT"
-            width={130}
-            height={49}
-            className="h-9 w-auto object-contain"
+            width={150}
+            height={56}
+            className="h-11 w-auto object-contain"
           />
         </Link>
 

@@ -5,18 +5,14 @@
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#EDF2F2",
-  "theme_color": "#1A73E8",
+  "theme_color": "#7133FD",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icons/logo-icon.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/logo-icon.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/icons/Akurat_Logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

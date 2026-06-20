@@ -34,6 +34,25 @@ export const metadata: Metadata = {
   description:
     'Platform edukasi berbasis AI untuk asesmen Chemistry Stoichiometry dengan Multistage Adaptive Testing',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icons/Akurat_Logo.svg',
+    apple: '/icons/Akurat_Logo.svg',
+    shortcut: '/icons/Akurat_Logo.svg',
+  },
+  openGraph: {
+    title: 'AKURAT - Asesmen Kimia Ukur Adaptif Terpadu',
+    description:
+      'Platform edukasi berbasis AI untuk asesmen Chemistry Stoichiometry dengan Multistage Adaptive Testing',
+    images: [{ url: '/icons/Akurat_Logo_Text.svg', width: 1600, height: 600, alt: 'AKURAT' }],
+    type: 'website',
+    siteName: 'AKURAT',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AKURAT - Asesmen Kimia Ukur Adaptif Terpadu',
+    description: 'Platform edukasi berbasis AI untuk asesmen Chemistry Stoichiometry',
+    images: ['/icons/Akurat_Logo_Text.svg'],
+  },
 };
 
 export const viewport: Viewport = {

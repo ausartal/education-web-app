@@ -104,7 +104,7 @@ const AuthLayout: FC<AuthLayoutProps> = ({ children }) => {
             alt="AKURAT"
             width={280}
             height={105}
-            className="h-auto w-[220px]"
+            className="h-auto w-[260px]"
             priority
           />
         </div>

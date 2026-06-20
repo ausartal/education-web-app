@@ -29,9 +29,9 @@ export const TeacherNavbar: FC = () => {
           <Image
             src="/icons/Akurat_Logo_Text.svg"
             alt="AKURAT"
-            width={120}
-            height={45}
-            className="h-8 w-auto object-contain"
+            width={140}
+            height={53}
+            className="h-10 w-auto object-contain"
           />
           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
             Guru

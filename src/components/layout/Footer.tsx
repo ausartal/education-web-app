@@ -12,9 +12,9 @@ export const Footer: FC = () => {
             <Image
               src="/icons/Akurat_Logo_Text.svg"
               alt="AKURAT"
-              width={90}
-              height={34}
-              className="h-6 w-auto object-contain"
+              width={110}
+              height={41}
+              className="h-8 w-auto object-contain"
             />
           </div>
 

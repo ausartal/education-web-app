@@ -29,9 +29,9 @@ export const Navbar: FC = () => {
           <Image
             src="/icons/Akurat_Logo_Text.svg"
             alt="AKURAT"
-            width={120}
-            height={45}
-            className="h-8 w-auto object-contain"
+            width={140}
+            height={53}
+            className="h-10 w-auto object-contain"
           />
         </Link>
 
