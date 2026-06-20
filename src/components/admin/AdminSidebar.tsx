@@ -20,7 +20,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ links }) => {
     <aside className="flex w-60 shrink-0 flex-col border-r border-gray-200 bg-white">
       {/* Brand */}
       <div className="flex flex-col gap-1.5 border-b border-gray-100 px-5 py-4">
-        <Image src="/icons/Akurat_Logo_Text.svg" alt="AKURAT" width={110} height={41} className="h-7 w-auto object-contain" />
+        <Image src="/icons/Akurat_Logo_Text.svg" alt="AKURAT" width={130} height={49} className="h-9 w-auto object-contain" />
         <span className="inline-flex w-fit items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
           <Shield size={9} /> Admin Panel
         </span>

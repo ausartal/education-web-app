@@ -13,9 +13,9 @@ export const LandingFooter: FC = () => {
               <Image
                 src="/icons/Akurat_Logo_Text.svg"
                 alt="AKURAT"
-                width={160}
-                height={60}
-                className="h-12 w-auto object-contain"
+                width={200}
+                height={75}
+                className="h-16 w-auto object-contain"
               />
             </div>
             <p className="text-sm leading-relaxed text-gray-500">
