@@ -8,14 +8,14 @@ export const Footer: FC = () => {
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
           {/* Brand */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             <Image
-              src="/icons/logo-icon.png"
+              src="/icons/Akurat_Logo_Text.svg"
               alt="AKURAT"
-              width={24}
-              height={24}
+              width={90}
+              height={34}
+              className="h-6 w-auto object-contain"
             />
-            <span className="font-display text-sm text-gray-900">AKURAT</span>
           </div>
 
           {/* Links */}

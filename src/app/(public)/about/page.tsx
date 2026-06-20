@@ -32,7 +32,7 @@ export default function AboutPage() {
       {/* Hero */}
       <div className="mb-16 text-center">
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary to-primary-cyan shadow-lg shadow-primary/20">
-          <Image src="/icons/logo-icon.png" alt="" width={40} height={40} />
+          <Image src="/icons/Akurat_Logo_White.svg" alt="" width={48} height={48} className="h-12 w-12 object-contain" />
         </div>
         <h1 className="mb-4 font-display text-4xl font-extrabold text-gray-900">
           Tentang AKURAT

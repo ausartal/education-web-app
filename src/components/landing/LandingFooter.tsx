@@ -9,16 +9,14 @@ export const LandingFooter: FC = () => {
         <div className="grid gap-12 lg:grid-cols-[1fr_2fr] lg:gap-16">
           {/* Brand */}
           <div>
-            <div className="mb-5 flex items-center gap-3">
+            <div className="mb-5">
               <Image
-                src="/icons/logo-icon.png"
+                src="/icons/Akurat_Logo_Text.svg"
                 alt="AKURAT"
-                width={48}
-                height={48}
+                width={160}
+                height={60}
+                className="h-12 w-auto object-contain"
               />
-              <span className="font-display text-2xl font-extrabold tracking-tight text-gray-900">
-                AKURAT
-              </span>
             </div>
             <p className="text-sm leading-relaxed text-gray-500">
               Opening the Door to Chemical Knowledge

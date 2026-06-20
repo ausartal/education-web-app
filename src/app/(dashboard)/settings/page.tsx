@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/useToast';
 import { signOut } from '@/services/auth';
 import { useRouter } from 'next/navigation';
-import { User, Bell, Globe, Shield, LogOut } from 'lucide-react';
+import { User, Bell, Globe, Shield, LogOut, LayoutDashboard, ChevronRight } from 'lucide-react';
 
 const SettingsPage: FC = () => {
   const { profile } = useAuth();
@@ -63,6 +63,34 @@ const SettingsPage: FC = () => {
         </h1>
 
         <div className="space-y-6">
+          {/* Admin Panel Access — hanya untuk role admin */}
+          {profile.role === 'admin' && (
+            <div className="rounded-3xl bg-gradient-to-br from-violet-600 to-purple-700 p-7 shadow-lg shadow-violet-200">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+                  <Shield size={18} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-white">Admin Panel</h2>
+                  <p className="text-xs text-violet-200">Akses khusus administrator</p>
+                </div>
+              </div>
+              <p className="mb-5 text-xs leading-relaxed text-violet-100">
+                Kamu memiliki akses penuh ke dashboard admin untuk mengelola pengguna, konten, dan konfigurasi sistem.
+              </p>
+              <button
+                onClick={() => router.push('/admin')}
+                className="flex w-full items-center justify-between rounded-2xl bg-white px-5 py-3.5 transition-all hover:bg-violet-50"
+              >
+                <div className="flex items-center gap-3">
+                  <LayoutDashboard size={18} className="text-violet-600" />
+                  <span className="text-sm font-bold text-violet-700">Masuk ke Admin Dashboard</span>
+                </div>
+                <ChevronRight size={18} className="text-violet-400" />
+              </button>
+            </div>
+          )}
+
           {/* Profile */}
           <div className="rounded-3xl bg-white p-7 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
