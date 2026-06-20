@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import React, { FC, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserRole } from '@/types/firestore';
 import { useToast } from '@/hooks/useToast';
@@ -18,8 +18,10 @@ interface UserRow {
   role: UserRole;
   isActive: boolean;
   stats?: { xp?: number; level?: number; streak?: number; longestStreak?: number; totalLessons?: number; totalQuizzes?: number };
-  createdAt?: { seconds?: number };
-  lastLoginAt?: { seconds?: number };
+  createdAt?: string | null;
+  lastLoginAt?: string | null;
+  profile?: Record<string, string>;
+  settings?: { notifications?: boolean; language?: string };
   examSessions: number;
   examCompleted: number;
   examAvgScore: number;
@@ -36,9 +38,9 @@ const roleColors: Record<UserRole, string> = {
 interface CreateUserForm { email: string; password: string; displayName: string; role: UserRole; }
 const defaultForm: CreateUserForm = { email: '', password: '', displayName: '', role: 'student' };
 
-function fmtDate(ts?: { seconds?: number }): string {
-  if (!ts?.seconds) return '—';
-  return new Date(ts.seconds * 1000).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+function fmtDate(iso?: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function EditableStat({
@@ -159,22 +161,24 @@ const AdminUsers: FC = () => {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const getToken = useCallback(async () => {
-    if (!user) throw new Error('Not authenticated');
-    return user.getIdToken();
-  }, [user]);
-
   const fetchUsers = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const token = await getToken();
+      const token = await user.getIdToken();
       const res = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) throw new Error('Fetch failed');
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail ?? errBody.error ?? `HTTP ${res.status}`);
+      }
       const data = await res.json();
       setUsers(data.users as UserRow[]);
-    } catch { addToast('error', 'Gagal memuat data pengguna'); }
+    } catch (err) {
+      console.error('[fetchUsers]', err);
+      addToast('error', err instanceof Error ? err.message : 'Gagal memuat data pengguna');
+    }
     finally { setLoading(false); }
-  }, [getToken, addToast]);
+  }, [user, addToast]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -193,7 +197,7 @@ const AdminUsers: FC = () => {
 
   const handleChangeRole = async (uid: string, newRole: UserRole) => {
     try {
-      const token = await getToken();
+      const token = await user!.getIdToken();
       const res = await fetch(`/api/admin/users/${uid}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -207,7 +211,7 @@ const AdminUsers: FC = () => {
 
   const handleToggleActive = async (uid: string, current: boolean) => {
     try {
-      const token = await getToken();
+      const token = await user!.getIdToken();
       const res = await fetch(`/api/admin/users/${uid}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -220,7 +224,7 @@ const AdminUsers: FC = () => {
   };
 
   const handleUpdateStats = async (uid: string, field: string, value: number) => {
-    const token = await getToken();
+    const token = await user!.getIdToken();
     const res = await fetch(`/api/admin/users/${uid}`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -234,7 +238,7 @@ const AdminUsers: FC = () => {
   const handleDelete = async (uid: string) => {
     if (!confirm('Hapus pengguna ini secara permanen?')) return;
     try {
-      const token = await getToken();
+      const token = await user!.getIdToken();
       const res = await fetch(`/api/admin/users/${uid}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error();
       setUsers(prev => prev.filter(u => u.uid !== uid));
@@ -247,7 +251,7 @@ const AdminUsers: FC = () => {
     if (action === 'delete' && !confirm(`Hapus ${selected.size} pengguna?`)) return;
     setBulkLoading(true);
     try {
-      const token = await getToken();
+      const token = await user!.getIdToken();
       const body: Record<string, unknown> = { action, uids: Array.from(selected) };
       if (role) body.role = role;
       const res = await fetch('/api/admin/bulk', {
@@ -268,7 +272,7 @@ const AdminUsers: FC = () => {
     e.preventDefault();
     setCreating(true);
     try {
-      const token = await getToken();
+      const token = await user!.getIdToken();
       const res = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -286,7 +290,7 @@ const AdminUsers: FC = () => {
 
   const handleExport = async (fmt: string) => {
     try {
-      const token = await getToken();
+      const token = await user!.getIdToken();
       const res = await fetch(`/api/admin/export?collection=users&format=${fmt}`, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error();
       const blob = await res.blob();
@@ -412,8 +416,8 @@ const AdminUsers: FC = () => {
           </thead>
           <tbody>
             {filtered.map((u, i) => (
-              <>
-                <motion.tr key={u.uid} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
+              <React.Fragment key={u.uid}>
+                <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
                   className={`cursor-pointer border-b border-gray-50 hover:bg-gray-50 ${selected.has(u.uid) ? 'bg-primary/5' : ''}`}
                   onClick={() => setExpandedId(expandedId === u.uid ? null : u.uid)}>
                   <td className="px-4 py-3" onClick={e => { e.stopPropagation(); toggleSelect(u.uid); }}>
@@ -471,9 +475,9 @@ const AdminUsers: FC = () => {
                   </td>
                 </motion.tr>
                 {expandedId === u.uid && (
-                  <UserExpandedRow key={`${u.uid}-exp`} u={u} onUpdateStats={handleUpdateStats} />
+                  <UserExpandedRow u={u} onUpdateStats={handleUpdateStats} />
                 )}
-              </>
+              </React.Fragment>
             ))}
           </tbody>
         </table>
