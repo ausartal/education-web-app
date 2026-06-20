@@ -23,6 +23,11 @@ interface AnalyticsData {
   totals: {
     users: number; exams: number; questions: number;
     completedExams: number; activeQuestions: number; activeUsers: number;
+    classes?: number; examSchedules?: number;
+  };
+  msat?: {
+    avgScore: number;
+    comprehensionDistribution: Record<string, number>;
   };
 }
 
@@ -285,6 +290,46 @@ const AdminAnalytics: FC = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* MSAT Comprehension Distribution */}
+      {data.msat && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+          className="rounded-3xl bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between mb-4">
+            <p className="text-sm font-bold text-gray-900">Distribusi Pemahaman MSAT</p>
+            <div className="rounded-xl bg-fuchsia-50 px-3 py-1.5 text-center">
+              <p className="font-display text-lg font-black text-fuchsia-700">{data.msat.avgScore}</p>
+              <p className="text-[10px] text-gray-500">Skor Rata2</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {[
+              { key: 'paham_konsep', label: 'Paham Konsep', color: '#10B981' },
+              { key: 'paham_sebagian', label: 'Paham Sebagian', color: '#3B82F6' },
+              { key: 'tidak_paham', label: 'Tidak Paham', color: '#F59E0B' },
+              { key: 'miskonsepsi', label: 'Miskonsepsi', color: '#EF4444' },
+              { key: 'hasil_nebak', label: 'Hasil Nebak', color: '#8B5CF6' },
+            ].map(c => {
+              const total = Object.values(data.msat!.comprehensionDistribution).reduce((a, b) => a + b, 0);
+              return (
+                <HBar key={c.key} label={c.label}
+                  value={data.msat!.comprehensionDistribution[c.key] ?? 0}
+                  total={Math.max(total, 1)} color={c.color} />
+              );
+            })}
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
+            <div className="rounded-xl bg-gray-50 p-3 text-center">
+              <p className="font-display text-lg font-black text-gray-900">{data.totals.classes ?? 0}</p>
+              <p className="text-[10px] text-gray-500">Total Kelas</p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-3 text-center">
+              <p className="font-display text-lg font-black text-gray-900">{data.totals.examSchedules ?? 0}</p>
+              <p className="text-[10px] text-gray-500">Jadwal Ujian</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Top Users */}
       {data.topUsers.length > 0 && (
