@@ -1,11 +1,12 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import { FC, useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Users, ClipboardList, Copy, Check, BookOpen, ClipboardCheck,
   PlusCircle, Trash2, Calendar, Edit3, X, ExternalLink, Clock, ChevronRight,
+  MessageCircle, Send, Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -19,8 +20,20 @@ interface ExamItem { id: string; title: string; examToken: string; status: strin
 interface MaterialItem { id: string; title: string; description: string; topic: string; estimatedTime: number; status: string; createdByName: string; }
 interface Assignment { id: string; title: string; description: string; dueDate: string | null; maxScore: number; status: string; }
 interface ClassDetail { id: string; name: string; subject: string; joinCode: string; teacherId: string; studentIds: string[]; }
+interface ChatMessage { id: string; senderId: string; senderName: string; senderRole: string; text: string; createdAt: unknown; }
 
-type Tab = 'siswa' | 'materi' | 'ujian' | 'tugas';
+type Tab = 'siswa' | 'materi' | 'ujian' | 'tugas' | 'chat';
+
+const tsToDate = (ts: unknown): Date | null => {
+  if (!ts) return null;
+  if (ts instanceof Date) return ts;
+  if (typeof ts === 'object' && ts !== null) {
+    const t = ts as Record<string, unknown>;
+    const secs = (t['seconds'] ?? t['_seconds']) as number | undefined;
+    if (typeof secs === 'number') return new Date(secs * 1000);
+  }
+  return null;
+};
 
 const fmtDate = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
@@ -31,7 +44,7 @@ const fmtDateTime = (iso?: string | null) =>
 const TeacherClassDetailPage: FC = () => {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { addToast } = useToast();
 
   const [cls, setCls] = useState<ClassDetail | null>(null);
@@ -53,6 +66,13 @@ const TeacherClassDetailPage: FC = () => {
   const [showCreateAsgn, setShowCreateAsgn] = useState(false);
   const [asgnForm, setAsgnForm] = useState({ title: '', description: '', dueDate: '', maxScore: 100 });
   const [savingAsgn, setSavingAsgn] = useState(false);
+
+  // Chat
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatText, setChatText] = useState('');
+  const [sendingChat, setSendingChat] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatUnsub = useRef<(() => void) | null>(null);
 
   const authToken = useCallback(async () => {
     if (!user) throw new Error('Not authenticated');
@@ -115,6 +135,44 @@ const TeacherClassDetailPage: FC = () => {
     if (tab === 'materi' && cls) fetchClassMaterials();
     if (tab === 'tugas') fetchAssignments();
   }, [tab, cls, fetchClassMaterials, fetchAssignments]);
+
+  // Realtime chat subscription (teacher)
+  useEffect(() => {
+    if (tab !== 'chat' || !cls) return;
+    let active = true;
+    (async () => {
+      const { collection, query, orderBy, limit, onSnapshot } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      const q = query(collection(db, 'class_chats', id, 'messages'), orderBy('createdAt', 'asc'), limit(200));
+      const unsub = onSnapshot(q, snap => {
+        if (!active) return;
+        setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatMessage)));
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+      });
+      chatUnsub.current = unsub;
+    })();
+    return () => { active = false; chatUnsub.current?.(); chatUnsub.current = null; };
+  }, [tab, cls, id]);
+
+  const handleSendChat = async () => {
+    const text = chatText.trim();
+    if (!text || !user || !profile) return;
+    setSendingChat(true);
+    try {
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      await addDoc(collection(db, 'class_chats', id, 'messages'), {
+        senderId: user.uid,
+        senderName: profile.displayName || 'Guru',
+        senderRole: 'teacher',
+        text,
+        createdAt: serverTimestamp(),
+      });
+      setChatText('');
+    } finally {
+      setSendingChat(false);
+    }
+  };
 
   const copyCode = () => {
     if (!cls) return;
@@ -222,6 +280,7 @@ const TeacherClassDetailPage: FC = () => {
     { key: 'materi', label: 'Materi', icon: <BookOpen size={15} /> },
     { key: 'ujian', label: 'Ujian', icon: <ClipboardList size={15} />, count: exams.length },
     { key: 'tugas', label: 'Tugas', icon: <ClipboardCheck size={15} /> },
+    { key: 'chat', label: 'Chat', icon: <MessageCircle size={15} /> },
   ];
 
   const unpinnedMaterials = allMaterials.filter(
@@ -651,6 +710,72 @@ const TeacherClassDetailPage: FC = () => {
               </AnimatePresence>
             </motion.div>
           )}
+          {/* CHAT tab */}
+          {tab === 'chat' && (
+            <motion.div key="chat" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="flex h-[520px] flex-col rounded-2xl bg-white shadow-sm">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {messages.length === 0 && (
+                  <div className="flex h-full flex-col items-center justify-center text-center">
+                    <MessageCircle size={36} className="mb-3 text-gray-200" />
+                    <p className="text-sm font-medium text-gray-400">Belum ada pesan</p>
+                    <p className="text-xs text-gray-300">Mulai percakapan dengan siswa</p>
+                  </div>
+                )}
+                {messages.map(msg => {
+                  const isMe = msg.senderId === user?.uid;
+                  const time = tsToDate(msg.createdAt);
+                  return (
+                    <div key={msg.id} className={`flex gap-2.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
+                        msg.senderRole === 'teacher' ? 'bg-emerald-500' : 'bg-primary'
+                      }`}>
+                        {msg.senderName?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
+                        <div className="flex items-center gap-1.5">
+                          {!isMe && <span className="text-[10px] font-semibold text-gray-500">{msg.senderName}</span>}
+                          {msg.senderRole === 'teacher' && (
+                            <span className="rounded-full bg-emerald-100 px-1.5 py-px text-[9px] font-bold text-emerald-700">Guru</span>
+                          )}
+                        </div>
+                        <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                          isMe ? 'rounded-tr-sm bg-emerald-500 text-white' : 'rounded-tl-sm bg-gray-100 text-gray-800'
+                        }`}>
+                          {msg.text}
+                        </div>
+                        {time && (
+                          <span className="text-[9px] text-gray-300">
+                            {time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={chatEndRef} />
+              </div>
+              <div className="border-t border-gray-100 p-3">
+                <div className="flex gap-2">
+                  <input
+                    value={chatText}
+                    onChange={e => setChatText(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
+                    placeholder="Tulis pesan ke siswa..."
+                    className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                  />
+                  <button
+                    onClick={handleSendChat}
+                    disabled={sendingChat || !chatText.trim()}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white disabled:opacity-40 hover:opacity-90 transition-opacity"
+                  >
+                    {sendingChat ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </div>
     </RoleGuard>
