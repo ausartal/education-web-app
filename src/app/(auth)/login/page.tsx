@@ -18,6 +18,12 @@ const LoginPage: FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  function redirectByRole(role?: string) {
+    if (role === 'admin') router.push('/admin');
+    else if (role === 'teacher') router.push('/teacher');
+    else router.push('/dashboard');
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
@@ -25,7 +31,7 @@ const LoginPage: FC = () => {
     try {
       await signIn(email, password);
       const profile = await getUserProfile(auth.currentUser!.uid);
-      router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
+      redirectByRole(profile?.role);
     } catch (err) {
       const msg = getAuthErrorMessage(err);
       if (msg) setError(msg);
@@ -40,7 +46,7 @@ const LoginPage: FC = () => {
     try {
       await signInWithGoogle();
       const profile = await getUserProfile(auth.currentUser!.uid);
-      router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
+      redirectByRole(profile?.role);
     } catch (err) {
       const msg = getAuthErrorMessage(err);
       if (msg) setError(msg);
