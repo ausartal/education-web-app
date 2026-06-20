@@ -38,9 +38,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   // Get exam schedules for this class
   const examSnap = await adminDb.collection('exam_schedules')
     .where('classId', '==', params.id)
-    .orderBy('createdAt', 'desc')
     .get();
-  const exams = examSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const getSeconds = (ts: unknown) => (ts as { _seconds?: number })?._seconds ?? 0;
+  const exams = (examSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Array<Record<string, unknown>>)
+    .sort((a, b) => getSeconds(b.createdAt) - getSeconds(a.createdAt));
 
   return NextResponse.json({
     class: { id: snap.id, ...data },

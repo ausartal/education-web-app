@@ -31,8 +31,10 @@ export async function GET(req: NextRequest) {
   if (module) query = query.where('module', '==', module);
   if (status) query = query.where('status', '==', status);
 
-  const snap = await query.orderBy('createdAt', 'desc').get();
-  const questions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await query.get();
+  const questions = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Array<Record<string, unknown>>;
+  const getSeconds = (ts: unknown) => (ts as { _seconds?: number })?._seconds ?? 0;
+  questions.sort((a, b) => getSeconds(b.createdAt) - getSeconds(a.createdAt));
 
   return NextResponse.json({ questions });
 }
