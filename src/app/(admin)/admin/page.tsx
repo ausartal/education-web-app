@@ -6,7 +6,7 @@ import {
   Users, GraduationCap, BookOpen, ClipboardList,
   TrendingUp, Zap, RefreshCw, Download, Terminal,
   ChevronRight, AlertTriangle, CheckCircle, ArrowUp, ArrowDown, Minus,
-  Target, Activity, FileText, BarChart3,
+  Target, Activity, FileText, BarChart3, FlaskConical, School,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -38,6 +38,11 @@ interface AnalyticsData {
   totals: {
     users: number; exams: number; questions: number; materials: number;
     completedExams: number; activeQuestions: number; activeUsers: number;
+    classes?: number; examSchedules?: number;
+  };
+  msat?: {
+    avgScore: number;
+    comprehensionDistribution: Record<string, number>;
   };
 }
 
@@ -179,6 +184,17 @@ const AdminDashboard: FC = () => {
       sub: 'per siswa', delta: null, color: 'text-orange-600', bg: 'bg-orange-50',
       href: '/admin/analytics', chart: null,
     },
+    {
+      icon: School, label: 'Kelas', value: data.totals.classes ?? 0,
+      sub: `${data.totals.examSchedules ?? 0} jadwal ujian`,
+      delta: null, color: 'text-cyan-600', bg: 'bg-cyan-50',
+      href: '/admin/ujian', chart: null,
+    },
+    {
+      icon: FlaskConical, label: 'Skor MSAT Rata2', value: data.msat?.avgScore ?? 0,
+      sub: 'dari ujian selesai', delta: null, color: 'text-fuchsia-600', bg: 'bg-fuchsia-50',
+      href: '/admin/ujian', chart: null,
+    },
   ];
 
   const examCompletionRate = data.totals.exams > 0
@@ -208,7 +224,7 @@ const AdminDashboard: FC = () => {
       </motion.div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-8">
         {kpis.map((kpi, i) => {
           const Icon = kpi.icon;
           return (
@@ -391,6 +407,7 @@ const AdminDashboard: FC = () => {
               {[
                 { label: 'Pengguna', icon: Users, href: '/admin/users', color: 'bg-blue-50 text-primary' },
                 { label: 'Soal', icon: BookOpen, href: '/admin/questions', color: 'bg-amber-50 text-amber-700' },
+                { label: 'MSAT', icon: FlaskConical, href: '/admin/ujian', color: 'bg-fuchsia-50 text-fuchsia-700' },
                 { label: 'Analitik', icon: BarChart3, href: '/admin/analytics', color: 'bg-violet-50 text-violet-700' },
                 { label: 'CLI', icon: Terminal, href: '/admin/cli', color: 'bg-gray-800 text-white' },
               ].map(a => {
