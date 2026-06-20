@@ -21,7 +21,7 @@ export async function PATCH(
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
-  const allowed = ['role', 'isActive', 'displayName', 'profile'];
+  const allowed = ['role', 'isActive', 'displayName', 'profile', 'stats'];
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {
     if (key in body) updates[key] = body[key];

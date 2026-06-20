@@ -30,13 +30,15 @@ export async function GET(req: NextRequest) {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
 
-  const [usersSnap, examsSnap, questionsSnap, materialsSnap, progressSnap, logsSnap] = await Promise.all([
+  const [usersSnap, examsSnap, questionsSnap, materialsSnap, progressSnap, logsSnap, classesSnap, schedulesSnap] = await Promise.all([
     adminDb.collection('users').get(),
     adminDb.collection('exam_sessions').get(),
     adminDb.collection('question_bank').get(),
     adminDb.collection('materials').get(),
     adminDb.collection('user_progress').get(),
     adminDb.collection('audit_logs').orderBy('timestamp', 'desc').limit(200).get(),
+    adminDb.collection('classes').get(),
+    adminDb.collection('exam_schedules').get(),
   ]);
 
   // 7-day keys oldest→newest
@@ -152,6 +154,23 @@ export async function GET(req: NextRequest) {
       )
     : 0;
 
+  // MSAT stats
+  const msatComprehensionDist: Record<string, number> = {
+    paham_konsep: 0, paham_sebagian: 0, tidak_paham: 0, miskonsepsi: 0, hasil_nebak: 0,
+  };
+  let msatScoreSum = 0, msatScoreCount = 0;
+  examsSnap.docs.forEach(d => {
+    const data = d.data();
+    if (data.status !== 'completed') return;
+    if (typeof data.numericScore === 'number') { msatScoreSum += data.numericScore; msatScoreCount++; }
+    const dr = data.domainResponses as Record<string, { comprehensionCategory: string }> ?? {};
+    for (const resp of Object.values(dr)) {
+      const cat = resp.comprehensionCategory;
+      if (cat && cat in msatComprehensionDist) msatComprehensionDist[cat]++;
+    }
+  });
+  const avgMsatScore = msatScoreCount > 0 ? Math.round(msatScoreSum / msatScoreCount) : 0;
+
   // Recent 8 completed exam sessions
   const userMap = Object.fromEntries(usersSnap.docs.map(d => [d.id, d.data().displayName ?? d.id.slice(0, 8)]));
   const recentExams = examsSnap.docs
@@ -217,6 +236,12 @@ export async function GET(req: NextRequest) {
       completedExams: examStatus.completed,
       activeQuestions: questionsByStatus.active,
       activeUsers: usersSnap.docs.filter(d => d.data().isActive).length,
+      classes: classesSnap.size,
+      examSchedules: schedulesSnap.size,
+    },
+    msat: {
+      avgScore: avgMsatScore,
+      comprehensionDistribution: msatComprehensionDist,
     },
   });
 }
