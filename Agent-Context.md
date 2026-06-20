@@ -1,6 +1,6 @@
 # AKURAT — AI Agent Context & Handoff Document
 
-> Last Updated: 23 Mei 2026 (126 commits, Phase 1-13 complete, UI polished)
+> Last Updated: 20 Juni 2026 (Phase 1-14 sebagian complete, live di Firebase Hosting)
 > This document is for AI agents working on this project.
 
 ---
@@ -9,8 +9,9 @@
 
 **AKURAT** (Asesmen Kimia Ukur Adaptif Terpadu) — Platform edukasi kimia berbasis AI dengan Multistage Adaptive Testing (MSAT).
 
-**Status**: Phase 1-13 complete. Phase 14 (CI/CD & Deploy) remaining. UI polish ongoing.
-**Live test**: `npm run dev` → `http://localhost:3000`
+**Status**: Phase 1-13 complete + fitur kelas, chat realtime, perbaikan bug, optimasi performa. Live di Firebase Hosting.
+**Live URL**: https://akurat-76834.web.app
+**Local dev**: `npm run dev` → `http://localhost:3000`
 **Test account**: `student@akurat.test` / `akurat123`
 **Repository**: https://github.com/ausartal/education-web-app.git
 
@@ -27,7 +28,7 @@
 | Animation | Framer Motion |
 | Icons | Lucide React + custom SVGs in `/public/icons/` |
 | Backend | Firebase (Firestore, Auth, Storage) |
-| Deployment | Vercel (production) + Firebase Hosting (staging) |
+| Deployment | Firebase Hosting (production, webframeworks preview) |
 | Testing | Vitest (18 unit tests passing) |
 | Linting | ESLint + Prettier (singleQuote, semi, es5 trailing comma) |
 | Markdown | react-markdown + remark-math + rehype-katex + remark-gfm |
@@ -94,10 +95,12 @@ src/
 │   │   ├── materi/      → Material list (Duolingo-style) + reading page (markdown + KaTeX)
 │   │   ├── latihan/     → Practice quiz list + quiz interface (2-col, light mode)
 │   │   ├── ujian/       → MSAT exam page + session (2-col, no difficulty shown)
+│   │   ├── kelas/       → Student class list + detail (tabs: Materi, Ujian, Tugas, Chat)
 │   │   ├── profile/     → User profile + achievements
-│   │   ├── settings/    → Profile, notifications, language, privacy, logout
+│   │   ├── settings/    → Profile, notifications, language, privacy, logout + admin link
 │   │   ├── onboarding/  → 3-step welcome flow (progress bar)
 │   │   └── teacher/     → Teacher dashboard, materials, questions, students, messages
+│   │       └── kelas/   → Teacher class detail (tabs: Siswa, Materi, Ujian, Tugas, Chat)
 │   ├── (admin)/         → Admin dashboard, users, content, config (RoleGuard + Sidebar)
 │   ├── (public)/        → About, Privacy, Terms, Contact (with LandingNavbar + Footer)
 │   └── page.tsx         → Landing page (redirects to /dashboard if logged in)
@@ -107,6 +110,7 @@ src/
 │   ├── shared/          → ProgressBar, Badge, Skeleton, XPAnimation, OfflineIndicator
 │   ├── landing/         → LandingNavbar, HeroSection, LandingFooter, etc.
 │   ├── guards/          → AuthGuard, RoleGuard
+│   ├── teacher/         → RichEditor (Markdown+KaTeX), MarkdownPreview (lazy-loaded, dynamic import)
 │   └── tools/           → ScientificCalculator, PeriodicTableRef (inline, not floating)
 ├── services/            → auth, materials, questions, progress, exam, achievements, gamification, notifications, analytics, config
 ├── lib/                 → firebase.ts, firebase-admin.ts, msat-engine.ts, auth-errors.ts
@@ -137,9 +141,11 @@ src/
 
 ## 6. DATABASE (Firestore)
 
-Collections: `users`, `materials`, `question_bank`, `exam_sessions`, `quiz_results`, `user_progress`, `achievements`, `user_achievements`, `messages`, `notifications`, `app_config`, `analytics_events`
+Collections: `users`, `materials`, `question_bank`, `exam_sessions`, `quiz_results`, `user_progress`, `achievements`, `user_achievements`, `messages`, `notifications`, `app_config`, `analytics_events`, `classes`, `class_chats/{classId}/messages`, `exam_schedules`, `assignments`
 
 **Seeded data**: 96 questions (32/difficulty), 5 materials, 13 achievements, MSAT config, gamification config, 1 test user.
+
+**Class system**: Kelas memiliki `teacherId`, `studentIds[]`, `materialIds[]`. Chat disimpan di subcollection `class_chats/{classId}/messages`. Siswa bergabung via kode kelas (classCode). Enrollment check dilakukan server-side (API route) dengan direct doc fetch — bukan compound query — untuk menghindari kebutuhan Firestore composite index.
 
 **User document extra fields**: `latihanIntroSeen`, `easyQuizCompleted`, `moderateQuizCompleted`, `lastQuiz_easy`, `lastQuiz_moderate`, `lastQuiz_hard`, `teacherNotes`, `settings.dailyGoal`, `settings.selectedTopics`, `settings.onboardingComplete`
 
@@ -158,22 +164,35 @@ Collections: `users`, `materials`, `question_bank`, `exam_sessions`, `quiz_resul
 
 ---
 
-## 8. WHAT'S LEFT
+## 8. RECENTLY COMPLETED (Juni 2026)
 
-### Phase 14 (CI/CD & Deploy)
-- GitHub Actions CI/CD pipeline
-- Vercel deployment
-- Firebase Hosting staging
-- Security rules audit
+- **Fitur Kelas Siswa** — Tab Materi, Ujian, Tugas, Chat realtime di `/kelas/[classId]`
+- **Fitur Kelas Guru** — Tab Siswa, Materi, Ujian, Tugas, Chat di `/teacher/kelas/[id]`
+- **Bug fix enrollment** — `GET /api/student/classes/[classId]` direfaktor ulang menggunakan direct doc fetch + JS `.includes()` (menghindari Firestore composite index error)
+- **Bug fix assignments** — Hapus `orderBy` dari Firestore query, sort di JS setelah fetch
+- **Lazy-load MarkdownPreview** — `next/dynamic` untuk react-markdown + rehype-katex (~80kB hemat)
+- **Performance** — `compress: true`, AVIF format, 30-day cache TTL, immutable headers untuk static assets
+- **Logo AKURAT** — SVG baru di `/public/icons/`
+- **Admin access** — Link "Masuk ke Admin Dashboard" di Settings (hanya tampil untuk role admin)
+- **Firebase Hosting deploy** — Live di https://akurat-76834.web.app
+
+## 9. WHAT'S LEFT
+
+### Phase 14 (CI/CD)
+- GitHub Actions CI/CD pipeline (belum dibuat)
+- Firestore security rules audit yang komprehensif
+- Firestore indexes file (`firestore.indexes.json`) untuk query yang butuh composite index
 
 ### UI Polish (ongoing)
-- Check all pages in To-Do List manual testing checklist
-- Mobile responsive testing
+- Profile page visual improvement
+- Exam results page visual improvement
+- Teacher/Admin pages visual consistency
+- Mobile responsive check (semua halaman)
 - Cross-browser testing
 
 ---
 
-## 9. HOW TO CONTINUE
+## 10. HOW TO CONTINUE
 
 1. Read this file + `To-Do List.md` for context
 2. Run `npm run dev` to see current state

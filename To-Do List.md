@@ -2,7 +2,7 @@
 
 > Platform Asesmen Kimia Adaptif dengan Multistage Adaptive Testing (MSAT)  
 > Tech Stack: Next.js 14 (App Router) + TypeScript + Tailwind CSS + Firebase  
-> Last Updated: 23 Mei 2026 (Phase 1-13 complete, UI polish in progress)
+> Last Updated: 20 Juni 2026 (Phase 1-13 complete + fitur kelas, chat realtime, optimasi, live di Firebase Hosting)
 
 ---
 
@@ -619,6 +619,10 @@
 - [x] Installable di mobile (Add to Home Screen)
 - [x] Offline indicator (banner "Kamu sedang offline")
 - [x] Security headers (X-Content-Type-Options, X-Frame-Options)
+- [x] Gzip compression (`compress: true` di next.config)
+- [x] AVIF format (prioritas sebelum WebP untuk kompresi lebih baik)
+- [x] Long-term cache headers (immutable untuk `/_next/static`, 30-day TTL untuk images dan icons)
+- [x] Lazy-load MarkdownPreview via `next/dynamic` (react-markdown + rehype-katex ~80kB diload on-demand)
 
 ---
 
@@ -806,30 +810,30 @@
 
 ### 14.7 Documentation
 
-- [ ] `README.md` — Comprehensive:
-  - [ ] Project overview & tech stack
-  - [ ] Prerequisites (Node.js, Firebase CLI, etc.)
-  - [ ] Setup instructions (clone, install, env vars)
-  - [ ] Running locally (dev server + emulators)
-  - [ ] Seeding database
-  - [ ] Running tests
-  - [ ] Deployment process
-  - [ ] Folder structure explanation
-  - [ ] Contributing guidelines
+- [x] `README.md` — Comprehensive (ditulis ulang 20 Juni 2026):
+  - [x] Project overview & tech stack
+  - [x] Prerequisites (Node.js, Firebase CLI, etc.)
+  - [x] Setup instructions (clone, install, env vars)
+  - [x] Running locally (dev server)
+  - [x] Deployment process (Firebase Hosting)
+  - [x] Folder structure explanation
+  - [x] Database schema (Firestore collections)
+  - [x] User roles
+  - [x] Scripts utilitas
 - [ ] `CONTRIBUTING.md` — PR process, code style, commit conventions
 - [ ] `docs/ARCHITECTURE.md` — System architecture overview
 - [ ] `docs/MSAT_ALGORITHM.md` — MSAT engine documentation (extracted from context)
 
 ### 14.8 Production Launch
 
-- [ ] 🧑 MANUAL: Setup Vercel project (connect Git repo) — Vercel Dashboard
-- [ ] 🧑 MANUAL: Configure environment variables di hosting platform
+- [x] 🧑 MANUAL: Setup Firebase Hosting project (Firebase Console, webframeworks preview)
+- [x] 🧑 MANUAL: Configure environment variables (FIREBASE_SERVICE_ACCOUNT_KEY di .env.local)
 - [ ] 🧑 MANUAL: Setup custom domain + SSL
 - [ ] SEO optimization (meta tags, sitemap.xml, robots.txt)
 - [ ] Open Graph tags untuk social sharing
 - [ ] 🧑 MANUAL: Beta testing dengan pilot group (10-20 users)
 - [ ] 🧑 MANUAL: Collect feedback & fix critical bugs
-- [ ] 🧑 MANUAL: Production deployment
+- [x] 🧑 MANUAL: Production deployment — **LIVE: https://akurat-76834.web.app**
 - [ ] 🧑 MANUAL: Post-launch monitoring (24-48 jam)
 - [ ] Hotfix process ready
 
@@ -897,6 +901,21 @@
 - [x] About/Privacy/Terms/Contact (professional card-based design)
 - [x] Navigation fixes (Home→/dashboard, logo→/dashboard, redirect after login)
 - [x] Favicon updated to AKURAT logo
+
+### Completed Features (Juni 2026)
+- [x] **Logo AKURAT** — SVG baru (Akurat_Logo.svg, Akurat_Logo_Black/White, Akurat_Text.svg) di `/public/icons/`
+- [x] **Admin access dari Settings** — Link "Masuk ke Admin Dashboard" hanya tampil untuk role admin
+- [x] **Fitur Kelas Siswa** — Halaman `/kelas/[classId]` dengan tab: Materi, Ujian, Tugas, Chat realtime
+- [x] **Fitur Kelas Guru** — Halaman `/teacher/kelas/[id]` dengan tab: Siswa, Materi, Ujian, Tugas, Chat realtime
+- [x] **Chat Realtime** — Firestore `onSnapshot` di subcollection `class_chats/{classId}/messages`; bubble warna berbeda: guru = emerald, siswa = primary
+- [x] **Bug fix enrollment** — API `/api/student/classes/[classId]` direfaktor: direct doc fetch + JS includes (tanpa composite index)
+- [x] **Bug fix assignments** — Hapus `orderBy` dari Firestore query di teacher + student API, sort JS setelah fetch
+- [x] **Bug fix admin routes** — Hapus `__session` cookie check dari middleware yang memblokir `/api/admin/*`
+- [x] **Admin dashboard redesign** — Modern layout, KPI cards, improved visual hierarchy
+- [x] **Teacher super app** — Rich editor, materi dengan permissions, class tabs, tugas
+- [x] **MarkdownPreview lazy-loaded** — `next/dynamic` untuk react-markdown + rehype-katex (load on-demand)
+- [x] **Performance optimization** — compress, AVIF, 30-day cache TTL, immutable headers static assets
+- [x] **Firebase Hosting deploy** — Live di https://akurat-76834.web.app
 
 ### Remaining Polish
 - [ ] Profile page visual improvement
