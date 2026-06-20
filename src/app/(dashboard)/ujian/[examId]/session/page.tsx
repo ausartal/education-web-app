@@ -13,6 +13,7 @@ import { AnswerKey, MSATTierPath } from '@/types/firestore';
 // ── Types ──────────────────────────────────────────────────────────
 interface QuestionData {
   id: string;
+  domainName?: string;
   stem: string;
   options: Record<AnswerKey, string>;
   correctAnswer: AnswerKey;
@@ -115,9 +116,10 @@ const ExamSessionPage: FC = () => {
     const raw = sessionStorage.getItem(`exam_init_${sessionId}`);
     if (!raw) return;
     sessionStorage.removeItem(`exam_init_${sessionId}`);
-    const { schedule, questions: qs } = JSON.parse(raw) as {
+    const { schedule, questions: qs, completedDomains: cd = 0 } = JSON.parse(raw) as {
       schedule: { title: string; durationMinutes: number; domainIds: string[] };
       questions: Record<string, Record<string, QuestionData>>;
+      completedDomains?: number;
     };
 
     const dl = schedule.domainIds;
@@ -129,22 +131,23 @@ const ExamSessionPage: FC = () => {
 
     const typedQ = qs as unknown as Record<string, DomainQuestions>;
     const dur = schedule.durationMinutes;
+    const startIdx = Math.min(cd, dl.length - 1);
 
     setDomainList(dl);
     setDomainNames(dn);
     setQuestions(typedQ);
     setDurationMinutes(dur);
     setTimeLeft(dur * 60);
-    setCurrentDomainIdx(0);
-    setCompletedDomains(0);
+    setCurrentDomainIdx(startIdx);
+    setCompletedDomains(cd);
 
     localStorage.setItem(SESSION_KEY(sessionId), JSON.stringify({
       domainList: dl, domainNames: dn, questions: typedQ,
-      durationMinutes: dur, completedDomains: 0, currentDomainIdx: 0,
+      durationMinutes: dur, completedDomains: cd, currentDomainIdx: startIdx,
       timeLeft: dur * 60,
     }));
 
-    initDomainProgress(0, dl, dn, typedQ);
+    initDomainProgress(startIdx, dl, dn, typedQ);
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);

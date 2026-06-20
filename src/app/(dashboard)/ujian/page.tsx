@@ -40,16 +40,17 @@ const UjianPage: FC = () => {
         return;
       }
 
-      if (data.resumed) {
-        router.push(`/ujian/${data.sessionId}/session`);
-        return;
-      }
-
       // Store full question data in sessionStorage for the session page to consume
       sessionStorage.setItem(`exam_init_${data.sessionId}`, JSON.stringify({
         schedule: data.schedule,
         questions: data.questions,
+        completedDomains: data.completedDomains ?? 0,
       }));
+
+      if (data.resumed) {
+        router.push(`/ujian/${data.sessionId}/session`);
+        return;
+      }
 
       setScheduleInfo({
         title: data.schedule.title,
