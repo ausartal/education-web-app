@@ -43,11 +43,40 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isTeacherOrAdmin() && notAdminCreated(resource.data));
     }
 
-    // EXAM SESSIONS
+    // CLASSES (MSAT system)
+    match /classes/{docId} {
+      allow read: if isTeacherOrAdmin()
+        || (isAuth() && resource.data.studentIds.hasAny([uid()]));
+      allow create: if isTeacherOrAdmin();
+      allow update: if isAdmin()
+        || (isTeacherOrAdmin() && resource.data.teacherId == uid());
+      allow delete: if isAdmin()
+        || (isTeacherOrAdmin() && resource.data.teacherId == uid());
+    }
+
+    // EXAM SCHEDULES (MSAT system)
+    match /exam_schedules/{docId} {
+      allow read: if isTeacherOrAdmin() || isAuth();
+      allow create: if isTeacherOrAdmin();
+      allow update: if isAdmin()
+        || (isTeacherOrAdmin() && resource.data.teacherId == uid());
+      allow delete: if isAdmin()
+        || (isTeacherOrAdmin() && resource.data.teacherId == uid());
+    }
+
+    // EXAM QUESTIONS bank (MSAT system)
+    match /exam_questions/{docId} {
+      allow read: if isTeacherOrAdmin();
+      allow create: if isTeacherOrAdmin();
+      allow update: if isTeacherOrAdmin();
+      allow delete: if isTeacherOrAdmin();
+    }
+
+    // EXAM SESSIONS (MSAT system) — note: uses studentId, not userId
     match /exam_sessions/{docId} {
-      allow read: if isOwner(resource.data.userId) || isTeacherOrAdmin();
-      allow create: if isActiveUser() && request.resource.data.userId == uid();
-      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isOwner(resource.data.studentId) || isTeacherOrAdmin();
+      allow create: if false; // created server-side only via Admin SDK
+      allow update: if false; // updated server-side only via Admin SDK
       allow delete: if isAdmin();
     }
 
