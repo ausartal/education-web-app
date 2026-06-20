@@ -225,7 +225,10 @@ export type AuditAction =
   | 'change_role' | 'toggle_active'
   | 'create_material' | 'update_material' | 'delete_material'
   | 'create_question' | 'update_question' | 'delete_question'
-  | 'update_config' | 'delete_exam';
+  | 'update_config' | 'delete_exam'
+  | 'create_class' | 'update_class' | 'delete_class'
+  | 'create_exam_schedule' | 'update_exam_schedule' | 'delete_exam_schedule'
+  | 'join_class' | 'start_exam' | 'complete_exam';
 
 export interface AuditLog {
   id: string;
@@ -233,7 +236,116 @@ export interface AuditLog {
   actorRole: UserRole;
   action: AuditAction;
   targetId: string;
-  targetType: 'user' | 'material' | 'question' | 'config' | 'exam';
+  targetType: 'user' | 'material' | 'question' | 'config' | 'exam' | 'class' | 'exam_schedule' | 'exam_session';
   details: Record<string, unknown>;
   timestamp: Timestamp;
+}
+
+// ===== CLASS SYSTEM =====
+export type ClassStatus = 'active' | 'archived';
+
+export interface Class {
+  id: string;
+  teacherId: string;
+  name: string;
+  subject: string;
+  joinCode: string; // 6-char uppercase alphanumeric
+  studentIds: string[];
+  status: ClassStatus;
+  createdAt: Timestamp;
+}
+
+// ===== EXAM SCHEDULE =====
+export type ExamScheduleStatus = 'draft' | 'active' | 'closed';
+
+export interface ExamSchedule {
+  id: string;
+  teacherId: string;
+  classId: string;
+  title: string;
+  module: string; // e.g. 'stoikiometri'
+  domainIds: string[]; // which domain IDs to include (e.g. ['tp1','tp2'])
+  examToken: string; // 6-char token students enter
+  scheduledAt: Timestamp;
+  durationMinutes: number; // default 50
+  status: ExamScheduleStatus;
+  createdAt: Timestamp;
+}
+
+// ===== MSAT EXAM QUESTIONS =====
+export type MSATTierPath =
+  | 'anchor'         // T1, always sedang
+  | 'mudah'          // T2 path (T1 wrong)
+  | 'sukar'          // T2 path (T1 right)
+  | 'sangat_mudah'   // T3 path (T1 wrong, T2 wrong)
+  | 'sedang_a'       // T3 path (T1 wrong, T2 right)
+  | 'sedang_b'       // T3 path (T1 right, T2 wrong)
+  | 'sangat_sukar';  // T3 path (T1 right, T2 right)
+
+export type MSATDifficulty = 'sangat_mudah' | 'mudah' | 'sedang' | 'sukar' | 'sangat_sukar';
+export type CognitiveLevel = 'C1' | 'C2' | 'C3' | 'C4';
+
+export interface ExamQuestion {
+  id: string;
+  domainId: string;
+  domainName: string;
+  module: string;
+  tier: 1 | 2 | 3;
+  tierPath: MSATTierPath;
+  difficulty: MSATDifficulty;
+  cognitiveLevel: CognitiveLevel;
+  stem: string;
+  options: { A: string; B: string; C: string; D: string; E?: string };
+  correctAnswer: AnswerKey;
+  explanation: string;
+  status: 'active' | 'inactive';
+  createdBy: string;
+  createdAt: Timestamp;
+  usageCount: number;
+  avgCorrectRate: number;
+}
+
+// ===== MSAT EXAM SESSIONS =====
+export type ComprehensionCategory =
+  | 'paham_konsep'
+  | 'paham_sebagian'
+  | 'tidak_paham'
+  | 'miskonsepsi'
+  | 'hasil_nebak';
+
+export type CRIResponse = 'yakin' | 'tidak_yakin';
+
+export interface MSATTierResponse {
+  questionId: string;
+  selectedAnswer: AnswerKey;
+  isCorrect: boolean;
+  timeSpentMs: number;
+}
+
+export interface MSATDomainResponse {
+  domainId: string;
+  domainName: string;
+  tier1: MSATTierResponse;
+  tier2: MSATTierResponse & { path: 'mudah' | 'sukar' };
+  tier3: MSATTierResponse & { path: MSATTierPath };
+  pattern: string; // e.g. 'BBB', 'SBB', 'BSS', etc.
+  cri: CRIResponse;
+  comprehensionCategory: ComprehensionCategory;
+  domainScore: number; // 0-100
+}
+
+export interface MSATExamSession {
+  id: string;
+  studentId: string;
+  examScheduleId: string;
+  classId: string;
+  teacherId: string;
+  startedAt: Timestamp;
+  completedAt: Timestamp | null;
+  durationMinutes: number;
+  status: 'in_progress' | 'completed' | 'abandoned' | 'flagged';
+  currentDomainIndex: number;
+  domainResponses: MSATDomainResponse[];
+  numericScore: number | null; // 0-120
+  anomalyFlags: string[];
 }

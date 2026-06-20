@@ -2,164 +2,178 @@
 
 import { FC, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Shield, Clock, Brain, AlertTriangle, Zap } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
+import { KeyRound, AlertCircle, Loader2, Shield, Brain, Clock, RotateCcw } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const UjianPage: FC = () => {
   const router = useRouter();
-  const [showModal, setShowModal] = useState(false);
+  const { user } = useAuth();
+  const [token, setToken] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [step, setStep] = useState<'entry' | 'confirm'>('entry');
+  const [scheduleInfo, setScheduleInfo] = useState<{ title: string; durationMinutes: number; domainCount: number; sessionId?: string; resumed?: boolean } | null>(null);
+
+  const handleValidate = async () => {
+    if (!token.trim() || !user) return;
+    setLoading(true);
+    setError('');
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/exam-sessions/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ examToken: token.trim().toUpperCase() }),
+      });
+      const data = await res.json();
+
+      if (res.status === 409 && data.completed) {
+        // Already completed, go straight to results
+        router.push(`/ujian/${data.sessionId}/results`);
+        return;
+      }
+
+      if (!res.ok) {
+        setError(data.error || 'Token tidak valid');
+        setLoading(false);
+        return;
+      }
+
+      if (data.resumed) {
+        router.push(`/ujian/${data.sessionId}/session`);
+        return;
+      }
+
+      // Store full question data in sessionStorage for the session page to consume
+      sessionStorage.setItem(`exam_init_${data.sessionId}`, JSON.stringify({
+        schedule: data.schedule,
+        questions: data.questions,
+      }));
+
+      setScheduleInfo({
+        title: data.schedule.title,
+        durationMinutes: data.schedule.durationMinutes,
+        domainCount: data.schedule.domainIds?.length || 0,
+        sessionId: data.sessionId,
+      });
+      setStep('confirm');
+    } catch {
+      setError('Terjadi kesalahan. Coba lagi.');
+    }
+    setLoading(false);
+  };
+
+  const handleStart = () => {
+    if (scheduleInfo?.sessionId) {
+      router.push(`/ujian/${scheduleInfo.sessionId}/session`);
+    }
+  };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        {/* Hero */}
-        <div className="relative mb-8 overflow-hidden rounded-[32px] bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-10 text-white lg:p-14">
-          <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10" />
-          <div className="absolute -bottom-10 left-1/3 h-32 w-32 rounded-full bg-white/5" />
+    <div className="mx-auto max-w-lg px-4 py-12">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
 
-          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-5">
-              <Image
-                src="/icons/topic-calculus.svg"
-                alt=""
-                width={64}
-                height={64}
-                className="hidden opacity-80 lg:block"
-              />
-              <div>
-                <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
-                  <Zap size={12} /> Adaptive Testing
-                </div>
-                <h1 className="font-display text-2xl font-extrabold lg:text-3xl">
-                  Stoikiometri Assessment
-                </h1>
-                <p className="mt-1 text-sm text-white/60">
-                  Ujian adaptif yang mengukur pemahamanmu secara mendalam
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-8 text-center">
-              <div>
-                <p className="text-3xl font-black">21</p>
-                <p className="text-[11px] text-white/60">Soal</p>
-              </div>
-              <div className="h-10 w-px bg-white/20" />
-              <div>
-                <p className="text-3xl font-black">3</p>
-                <p className="text-[11px] text-white/60">Stage</p>
-              </div>
-              <div className="h-10 w-px bg-white/20" />
-              <div>
-                <p className="text-3xl font-black">~30</p>
-                <p className="text-[11px] text-white/60">Menit</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Rules - 2x2 grid */}
-        <div className="mb-6 grid gap-3 sm:grid-cols-2">
-          {[
-            {
-              icon: Brain,
-              text: 'Kesulitan menyesuaikan jawabanmu secara real-time',
-              color: 'text-violet-500 bg-violet-50',
-            },
-            {
-              icon: Clock,
-              text: 'Setiap soal memiliki batas waktu tersendiri',
-              color: 'text-blue-500 bg-blue-50',
-            },
-            {
-              icon: Shield,
-              text: 'Tidak bisa kembali ke soal sebelumnya',
-              color: 'text-amber-500 bg-amber-50',
-            },
-            {
-              icon: AlertTriangle,
-              text: 'Jangan tinggalkan tab selama ujian',
-              color: 'text-rose-500 bg-rose-50',
-            },
-          ].map((rule, i) => {
-            const Icon = rule.icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.05 }}
-                className="flex items-center gap-4 rounded-2xl bg-white px-5 py-4 shadow-sm"
-              >
-                <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${rule.color}`}
-                >
-                  <Icon size={18} />
-                </div>
-                <span className="text-sm text-gray-700">{rule.text}</span>
-              </motion.div>
-            );
-          })}
-
-          {/* Info card - spans full width */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="rounded-2xl bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-5 sm:col-span-2"
-          >
-            <p className="text-center text-sm font-medium leading-relaxed text-indigo-700">
-              Sistem mengukur <strong>kecepatan</strong> dan{' '}
-              <strong>ketepatan</strong> jawabanmu untuk menghasilkan profil
-              pemahaman yang akurat.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Bottom - Button centered */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mx-auto max-w-md text-center"
-        >
-          <button
-            onClick={() => setShowModal(true)}
-            className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:-translate-y-0.5 hover:shadow-xl"
-          >
-            Mulai Ujian
-          </button>
-        </motion.div>
-      </motion.div>
-
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="Konfirmasi"
-        footer={
+        {step === 'entry' ? (
           <>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Belum Siap
-            </Button>
-            <Button
-              onClick={() => router.push('/ujian/msat-stoikiometri/session')}
-            >
-              Ya, Mulai
-            </Button>
+            {/* Hero */}
+            <div className="mb-8 rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-700 p-8 text-center text-white">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20">
+                <KeyRound size={32} />
+              </div>
+              <h1 className="mb-2 font-display text-2xl font-extrabold">Masuk Ujian</h1>
+              <p className="text-sm text-white/70">Masukkan token ujian yang diberikan oleh gurumu</p>
+            </div>
+
+            {/* Token Input */}
+            <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
+              <label className="mb-2 block text-sm font-semibold text-gray-700">Token Ujian</label>
+              <input
+                value={token}
+                onChange={e => { setToken(e.target.value.toUpperCase()); setError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleValidate()}
+                placeholder="Contoh: ABC123"
+                maxLength={8}
+                className="mb-4 w-full rounded-xl border border-gray-200 px-4 py-3 text-center font-mono text-2xl font-black tracking-widest text-violet-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+              />
+              {error && (
+                <div className="mb-4 flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  <AlertCircle size={16} />
+                  {error}
+                </div>
+              )}
+              <button
+                onClick={handleValidate}
+                disabled={loading || token.trim().length < 4}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3.5 text-sm font-bold text-white shadow-sm transition-all disabled:opacity-40 hover:bg-violet-700"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : null}
+                {loading ? 'Memeriksa...' : 'Masuk Ujian'}
+              </button>
+            </div>
+
+            {/* Rules */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { icon: Brain, text: 'Soal adaptif menyesuaikan kemampuanmu', color: 'text-violet-500 bg-violet-50' },
+                { icon: Clock, text: 'Durasi ujian 50 menit', color: 'text-blue-500 bg-blue-50' },
+                { icon: RotateCcw, text: 'Backtrack diizinkan dalam tiap kompetensi', color: 'text-emerald-500 bg-emerald-50' },
+                { icon: Shield, text: 'Jangan tinggalkan tab selama ujian', color: 'text-amber-500 bg-amber-50' },
+              ].map((rule, i) => {
+                const Icon = rule.icon;
+                return (
+                  <div key={i} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${rule.color}`}>
+                      <Icon size={16} />
+                    </div>
+                    <span className="text-xs text-gray-600">{rule.text}</span>
+                  </div>
+                );
+              })}
+            </div>
           </>
-        }
-      >
-        <p className="text-sm text-gray-600">
-          Setelah dimulai, ujian tidak bisa di-pause. Pastikan koneksi stabil
-          dan kamu dalam kondisi fokus.
-        </p>
-      </Modal>
+        ) : (
+          <>
+            {/* Confirmation */}
+            <div className="mb-8 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 text-center text-white">
+              <h2 className="mb-1 font-display text-xl font-extrabold">{scheduleInfo?.title}</h2>
+              <p className="text-sm text-white/80">Token diverifikasi ✓</p>
+            </div>
+
+            <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
+              <div className="mb-6 grid grid-cols-2 gap-4">
+                <div className="rounded-xl bg-gray-50 p-4 text-center">
+                  <p className="text-2xl font-black text-gray-900">{(scheduleInfo?.domainCount || 0) * 3}</p>
+                  <p className="text-xs text-gray-500">Total Soal</p>
+                </div>
+                <div className="rounded-xl bg-gray-50 p-4 text-center">
+                  <p className="text-2xl font-black text-gray-900">{scheduleInfo?.durationMinutes}</p>
+                  <p className="text-xs text-gray-500">Menit</p>
+                </div>
+              </div>
+
+              <div className="mb-6 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                ⚠ Setelah dimulai, ujian tidak bisa di-pause. Pastikan koneksi internet stabil.
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setStep('entry'); setScheduleInfo(null); }}
+                  className="flex-1 rounded-xl bg-gray-100 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-200"
+                >
+                  Kembali
+                </button>
+                <button
+                  onClick={handleStart}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-bold text-white shadow-sm hover:opacity-90"
+                >
+                  Mulai Sekarang
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </motion.div>
     </div>
   );
 };

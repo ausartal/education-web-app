@@ -11,10 +11,11 @@ import { NotificationDropdown } from './NotificationDropdown';
 
 const teacherNavLinks = [
   { href: '/teacher', label: 'Dashboard' },
+  { href: '/teacher/kelas', label: 'Kelas' },
+  { href: '/teacher/ujian', label: 'Ujian' },
   { href: '/teacher/materials', label: 'Materi' },
   { href: '/teacher/questions', label: 'Soal' },
   { href: '/teacher/students', label: 'Siswa' },
-  { href: '/teacher/messages', label: 'Pesan' },
 ];
 
 export const TeacherNavbar: FC = () => {
