@@ -17,25 +17,32 @@ export const MobileNav: FC = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white md:hidden">
-      <ul className="flex h-14 items-center justify-around">
-        {tabs.map((tab) => {
-          const isActive = pathname === tab.href;
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-stone-200/60 bg-white/90 backdrop-blur-md md:hidden">
+      <ul className="flex h-[60px] items-center justify-around px-2">
+        {tabs.map(tab => {
+          const isActive = pathname === tab.href || pathname.startsWith(tab.href + '/');
           const Icon = tab.icon;
-
           return (
             <li key={tab.href}>
               <Link
                 href={tab.href}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1 text-xs transition-colors ${
-                  isActive
-                    ? 'text-primary'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className="flex flex-col items-center gap-0.5 px-3 py-1.5 text-[10px] font-medium transition-colors"
                 aria-label={tab.label}
               >
-                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-                <span className="font-medium">{tab.label}</span>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
+                  isActive
+                    ? 'bg-violet-100'
+                    : 'bg-transparent'
+                }`}>
+                  <Icon
+                    size={19}
+                    strokeWidth={isActive ? 2.5 : 1.8}
+                    className={isActive ? 'text-violet-600' : 'text-stone-400'}
+                  />
+                </div>
+                <span className={isActive ? 'text-violet-600 font-semibold' : 'text-stone-400'}>
+                  {tab.label}
+                </span>
               </Link>
             </li>
           );

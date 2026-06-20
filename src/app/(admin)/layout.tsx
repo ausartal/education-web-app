@@ -27,7 +27,7 @@ const AdminLayout: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={['admin']}>
-        <div className="flex h-screen overflow-hidden bg-gray-50">
+        <div className="flex h-screen overflow-hidden bg-[#F7F5F2]">
           <AdminSidebar links={adminLinks} />
           <div className="flex flex-1 flex-col overflow-hidden">
             <AdminTopbar />

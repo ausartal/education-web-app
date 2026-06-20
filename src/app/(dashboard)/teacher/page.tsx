@@ -80,12 +80,13 @@ const TeacherDashboard: FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 border border-emerald-100/60 px-6 py-5"
         >
-          <h1 className="font-display text-2xl font-extrabold text-gray-900">
-            Selamat datang, {profile.displayName.split(' ')[0]}
+          <p className="text-xs font-medium text-emerald-500 mb-0.5">Panel Guru</p>
+          <h1 className="font-display text-2xl font-extrabold text-stone-900">
+            Halo, {profile.displayName.split(' ')[0]} 👋
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-stone-500">
             Kelola kelas dan pantau perkembangan siswa Anda
           </p>
         </motion.div>
@@ -97,25 +98,25 @@ const TeacherDashboard: FC = () => {
           transition={{ delay: 0.1 }}
           className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4"
         >
-          <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 p-5 text-white shadow-md">
-            <Users size={22} className="mb-3 opacity-80" />
-            <p className="text-3xl font-black">{students.length}</p>
-            <p className="mt-1 text-xs font-medium opacity-80">Total Siswa</p>
+          <div className="rounded-2xl bg-sky-50 border border-sky-100 p-5">
+            <Users size={20} className="mb-3 text-sky-500" />
+            <p className="text-3xl font-black text-sky-700">{students.length}</p>
+            <p className="mt-1 text-xs font-semibold text-sky-500">Total Siswa</p>
           </div>
-          <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 p-5 text-white shadow-md">
-            <BookOpen size={22} className="mb-3 opacity-80" />
-            <p className="text-3xl font-black">{materialCount}</p>
-            <p className="mt-1 text-xs font-medium opacity-80">Materi</p>
+          <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-5">
+            <BookOpen size={20} className="mb-3 text-emerald-500" />
+            <p className="text-3xl font-black text-emerald-700">{materialCount}</p>
+            <p className="mt-1 text-xs font-semibold text-emerald-500">Materi</p>
           </div>
-          <div className="rounded-2xl bg-gradient-to-br from-violet-500 to-purple-400 p-5 text-white shadow-md">
-            <HelpCircle size={22} className="mb-3 opacity-80" />
-            <p className="text-3xl font-black">{questionCount}</p>
-            <p className="mt-1 text-xs font-medium opacity-80">Bank Soal</p>
+          <div className="rounded-2xl bg-violet-50 border border-violet-100 p-5">
+            <HelpCircle size={20} className="mb-3 text-violet-500" />
+            <p className="text-3xl font-black text-violet-700">{questionCount}</p>
+            <p className="mt-1 text-xs font-semibold text-violet-500">Bank Soal</p>
           </div>
-          <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-400 p-5 text-white shadow-md">
-            <TrendingUp size={22} className="mb-3 opacity-80" />
-            <p className="text-3xl font-black">{avgXP}</p>
-            <p className="mt-1 text-xs font-medium opacity-80">Rata-rata XP</p>
+          <div className="rounded-2xl bg-amber-50 border border-amber-100 p-5">
+            <TrendingUp size={20} className="mb-3 text-amber-500" />
+            <p className="text-3xl font-black text-amber-700">{avgXP}</p>
+            <p className="mt-1 text-xs font-semibold text-amber-500">Rata-rata XP</p>
           </div>
         </motion.div>
 
@@ -128,51 +129,42 @@ const TeacherDashboard: FC = () => {
         >
           <Link
             href="/teacher/materials"
-            className="group flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+            className="group flex items-center gap-4 rounded-2xl bg-white border border-stone-100 p-5 shadow-xs transition-all hover:shadow-md hover:border-emerald-100"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
-              <BookOpen size={22} className="text-emerald-600" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+              <BookOpen size={20} className="text-emerald-600" />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-900">Kelola Materi</p>
-              <p className="text-xs text-gray-500">Tambah & edit konten</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-stone-800">Kelola Materi</p>
+              <p className="text-xs text-stone-400">Tambah & edit konten</p>
             </div>
-            <ArrowRight
-              size={18}
-              className="text-gray-300 transition-colors group-hover:text-emerald-500"
-            />
+            <ArrowRight size={16} className="text-stone-300 transition-colors group-hover:text-emerald-500 shrink-0" />
           </Link>
           <Link
             href="/teacher/questions"
-            className="group flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+            className="group flex items-center gap-4 rounded-2xl bg-white border border-stone-100 p-5 shadow-xs transition-all hover:shadow-md hover:border-violet-100"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100">
-              <HelpCircle size={22} className="text-violet-600" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50">
+              <HelpCircle size={20} className="text-violet-600" />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-900">Kelola Soal</p>
-              <p className="text-xs text-gray-500">Bank soal & ujian</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-stone-800">Kelola Soal</p>
+              <p className="text-xs text-stone-400">Bank soal & ujian</p>
             </div>
-            <ArrowRight
-              size={18}
-              className="text-gray-300 transition-colors group-hover:text-violet-500"
-            />
+            <ArrowRight size={16} className="text-stone-300 transition-colors group-hover:text-violet-500 shrink-0" />
           </Link>
           <Link
             href="/teacher/messages"
-            className="group flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+            className="group flex items-center gap-4 rounded-2xl bg-white border border-stone-100 p-5 shadow-xs transition-all hover:shadow-md hover:border-amber-100"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100">
-              <MessageCircle size={22} className="text-amber-600" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+              <MessageCircle size={20} className="text-amber-600" />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-900">Pesan</p>
-              <p className="text-xs text-gray-500">Komunikasi dengan siswa</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-stone-800">Pesan</p>
+              <p className="text-xs text-stone-400">Komunikasi dengan siswa</p>
             </div>
-            <ArrowRight
-              size={18}
-              className="text-gray-300 transition-colors group-hover:text-amber-500"
-            />
+            <ArrowRight size={16} className="text-stone-300 transition-colors group-hover:text-amber-500 shrink-0" />
           </Link>
         </motion.div>
 
@@ -181,53 +173,60 @@ const TeacherDashboard: FC = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="rounded-3xl bg-white p-6 shadow-sm"
+          className="rounded-2xl bg-white border border-stone-100 shadow-xs overflow-hidden"
         >
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="font-display text-base font-bold text-gray-900">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
+            <h2 className="font-display text-sm font-bold text-stone-800">
               Siswa Teratas
             </h2>
             <Link
               href="/teacher/students"
-              className="text-xs font-semibold text-primary hover:underline"
+              className="text-[12px] font-semibold text-violet-600 hover:text-violet-800"
             >
               Lihat Semua
             </Link>
           </div>
 
           {topStudents.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-400">
+            <p className="py-10 text-center text-sm text-stone-400">
               Belum ada data siswa
             </p>
           ) : (
-            <div className="space-y-3">
-              {topStudents.map((s, i) => (
-                <Link
-                  key={s.uid}
-                  href={`/teacher/students/${s.uid}`}
-                  className="flex items-center gap-4 rounded-xl p-3 transition-colors hover:bg-gray-50"
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan-400 text-xs font-bold text-white">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900">
-                      {s.displayName}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {s.totalLessons} pelajaran selesai
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-amber-600">
-                      {s.xp} XP
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Aktif {s.lastLoginAt}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+            <div className="divide-y divide-stone-50">
+              {topStudents.map((s, i) => {
+                const rankColors = [
+                  'bg-amber-100 text-amber-700',
+                  'bg-stone-100 text-stone-600',
+                  'bg-orange-100 text-orange-700',
+                ];
+                return (
+                  <Link
+                    key={s.uid}
+                    href={`/teacher/students/${s.uid}`}
+                    className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-stone-50"
+                  >
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${rankColors[i] ?? 'bg-stone-100 text-stone-500'}`}>
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-stone-800 truncate">
+                        {s.displayName}
+                      </p>
+                      <p className="text-xs text-stone-400">
+                        {s.totalLessons} pelajaran selesai
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-amber-600">
+                        {s.xp} XP
+                      </p>
+                      <p className="text-xs text-stone-400">
+                        {s.lastLoginAt}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </motion.div>

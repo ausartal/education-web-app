@@ -170,31 +170,31 @@ const AdminDashboard: FC = () => {
     {
       icon: Users, label: 'Total Pengguna', value: data.totals.users,
       sub: `${data.totals.activeUsers} aktif`, href: '/admin/users',
-      color: 'text-blue-600', iconBg: 'bg-blue-50',
-      accent: 'from-blue-500 to-indigo-600',
+      cardBg: 'bg-sky-50 border border-sky-100/80',
+      numColor: 'text-sky-700', labelColor: 'text-sky-600', subColor: 'text-sky-400', iconColor: 'text-sky-500',
       trend: <Trend today={data.today.users} yesterday={data.yesterday.users} label="baru" />,
-      spark: <SparkBar data={data.userRegistrationsByDay} color="#3B82F6" />,
+      spark: <SparkBar data={data.userRegistrationsByDay} color="#0284C7" />,
     },
     {
       icon: ClipboardList, label: 'Ujian Selesai', value: data.totals.completedExams,
       sub: `${data.totals.exams} total sesi`, href: '/admin/analytics',
-      color: 'text-violet-600', iconBg: 'bg-violet-50',
-      accent: 'from-violet-500 to-purple-600',
+      cardBg: 'bg-violet-50 border border-violet-100/80',
+      numColor: 'text-violet-700', labelColor: 'text-violet-600', subColor: 'text-violet-400', iconColor: 'text-violet-500',
       trend: <Trend today={data.today.exams} yesterday={data.yesterday.exams} label="ujian" />,
       spark: <SparkBar data={data.examsByDay} color="#7C3AED" />,
     },
     {
       icon: BookOpen, label: 'Soal Aktif', value: data.totals.activeQuestions,
       sub: `${data.totals.questions} total soal`, href: '/admin/questions',
-      color: 'text-amber-600', iconBg: 'bg-amber-50',
-      accent: 'from-amber-400 to-orange-500',
+      cardBg: 'bg-amber-50 border border-amber-100/80',
+      numColor: 'text-amber-700', labelColor: 'text-amber-600', subColor: 'text-amber-400', iconColor: 'text-amber-500',
       trend: null, spark: null,
     },
     {
       icon: FlaskConical, label: 'Skor MSAT Rata-rata', value: data.msat?.avgScore ?? 0,
       sub: 'dari sesi selesai', href: '/admin/ujian',
-      color: 'text-fuchsia-600', iconBg: 'bg-fuchsia-50',
-      accent: 'from-fuchsia-500 to-pink-600',
+      cardBg: 'bg-rose-50 border border-rose-100/80',
+      numColor: 'text-rose-700', labelColor: 'text-rose-600', subColor: 'text-rose-400', iconColor: 'text-rose-500',
       trend: null, spark: null,
     },
   ];
@@ -211,28 +211,30 @@ const AdminDashboard: FC = () => {
 
       {/* ── HEADER ── */}
       <motion.div {...fade(0)}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 py-5 text-white shadow-lg">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(99,102,241,0.15)_0%,transparent_60%)]" />
-        <div className="relative flex items-center justify-between">
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-50 via-indigo-50 to-sky-50 px-7 py-6 border border-violet-100/60">
+        {/* Decorative blobs */}
+        <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-violet-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-8 right-32 h-32 w-32 rounded-full bg-sky-200/30 blur-2xl" />
+        <div className="relative flex items-center justify-between gap-4">
           <div>
-            <p className="mb-0.5 flex items-center gap-2 text-xs font-medium text-slate-400">
-              <Calendar size={12} />
+            <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-violet-400">
+              <Calendar size={11} />
               {nowStr}
             </p>
-            <h1 className="font-display text-2xl font-extrabold tracking-tight">
-              Selamat datang, {profile?.displayName?.split(' ')[0] ?? 'Admin'} 👋
+            <h1 className="font-display text-2xl font-extrabold tracking-tight text-stone-900">
+              Halo, {profile?.displayName?.split(' ')[0] ?? 'Admin'} 👋
             </h1>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-stone-500">
               {data.totals.users} pengguna terdaftar · {data.totals.activeUsers} aktif hari ini
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
-            <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Sistem Online
             </span>
             <button onClick={() => fetchAll(true)} disabled={refreshing}
-              className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition-colors hover:bg-white/10 disabled:opacity-50">
+              className="flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-medium text-stone-500 shadow-xs transition-colors hover:bg-stone-50 disabled:opacity-50">
               <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
               {lastRefresh.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
             </button>
@@ -247,20 +249,17 @@ const AdminDashboard: FC = () => {
           return (
             <motion.div key={k.label} {...fade(0.05 + i * 0.05)}>
               <Link href={k.href}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-gray-200 block h-full">
+                className={`group flex flex-col justify-between rounded-2xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-md block h-full ${k.cardBg}`}>
                 <div className="flex items-start justify-between">
-                  <div className={`inline-flex rounded-xl p-2.5 ${k.iconBg}`}>
-                    <Icon size={18} className={k.color} />
-                  </div>
-                  {k.spark && <div className="w-20">{k.spark}</div>}
+                  <Icon size={20} className={k.iconColor} />
+                  {k.spark && <div className="w-20 opacity-70">{k.spark}</div>}
                 </div>
-                <div className="mt-3">
-                  <p className="font-display text-3xl font-black tracking-tight text-gray-900">{k.value}</p>
-                  <p className="mt-0.5 text-[13px] font-semibold text-gray-600">{k.label}</p>
-                  <p className="text-[11px] text-gray-400">{k.sub}</p>
+                <div className="mt-4">
+                  <p className={`font-display text-3xl font-black tracking-tight ${k.numColor}`}>{k.value}</p>
+                  <p className={`mt-0.5 text-[13px] font-semibold ${k.labelColor}`}>{k.label}</p>
+                  <p className={`text-[11px] ${k.subColor}`}>{k.sub}</p>
                   {k.trend && <div className="mt-2">{k.trend}</div>}
                 </div>
-                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${k.accent} opacity-0 transition-opacity group-hover:opacity-100`} />
               </Link>
             </motion.div>
           );
@@ -273,14 +272,12 @@ const AdminDashboard: FC = () => {
           const Icon = k.icon;
           return (
             <Link key={k.label} href={k.href}
-              className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-md">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-50">
-                <Icon size={16} className={k.color} />
-              </div>
+              className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-xs border border-stone-100 transition-all hover:shadow-md hover:border-stone-200">
+              <Icon size={17} className={k.color} />
               <div className="min-w-0">
-                <p className="font-display text-lg font-extrabold text-gray-900 leading-none">{k.value}</p>
-                <p className="truncate text-xs font-medium text-gray-500">{k.label}</p>
-                <p className="text-[10px] text-gray-400">{k.sub}</p>
+                <p className="font-display text-lg font-extrabold text-stone-900 leading-none">{k.value}</p>
+                <p className="truncate text-xs font-medium text-stone-500">{k.label}</p>
+                <p className="text-[10px] text-stone-400">{k.sub}</p>
               </div>
             </Link>
           );
@@ -289,7 +286,7 @@ const AdminDashboard: FC = () => {
 
       {/* ── CHARTS ROW ── */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <motion.div {...fade(0.3)} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+        <motion.div {...fade(0.3)} className="rounded-2xl bg-white p-5 shadow-xs border border-stone-100">
           <div className="mb-1 flex items-center justify-between">
             <p className="text-sm font-bold text-gray-800">Pengguna Baru</p>
             <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600">
@@ -300,7 +297,7 @@ const AdminDashboard: FC = () => {
           <BarChart data={data.userRegistrationsByDay} color="#3B82F6" />
         </motion.div>
 
-        <motion.div {...fade(0.35)} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+        <motion.div {...fade(0.35)} className="rounded-2xl bg-white p-5 shadow-xs border border-stone-100">
           <div className="mb-1 flex items-center justify-between">
             <p className="text-sm font-bold text-gray-800">Sesi Ujian</p>
             <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-600">
@@ -311,7 +308,7 @@ const AdminDashboard: FC = () => {
           <BarChart data={data.examsByDay} color="#7C3AED" />
         </motion.div>
 
-        <motion.div {...fade(0.4)} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+        <motion.div {...fade(0.4)} className="rounded-2xl bg-white p-5 shadow-xs border border-stone-100">
           <p className="mb-1 text-sm font-bold text-gray-800">Distribusi</p>
           <p className="mb-4 text-[11px] text-gray-400">Pengguna & tingkat soal</p>
           <div className="space-y-3">
@@ -344,8 +341,8 @@ const AdminDashboard: FC = () => {
       <div className="grid gap-4 lg:grid-cols-3">
 
         {/* Recent Exams – spans 2 cols */}
-        <motion.div {...fade(0.45)} className="lg:col-span-2 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-          <div className="flex items-center justify-between border-b border-gray-50 px-5 py-4">
+        <motion.div {...fade(0.45)} className="lg:col-span-2 rounded-2xl bg-white shadow-xs border border-stone-100">
+          <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-50">
                 <Activity size={14} className="text-violet-600" />
@@ -430,7 +427,7 @@ const AdminDashboard: FC = () => {
         <motion.div {...fade(0.5)} className="flex flex-col gap-4">
 
           {/* Exam status card */}
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+          <div className="rounded-2xl bg-white p-5 shadow-xs border border-stone-100">
             <p className="mb-4 text-sm font-bold text-gray-900">Status Ujian</p>
             <div className="flex items-center gap-5">
               {/* Ring */}
@@ -470,21 +467,21 @@ const AdminDashboard: FC = () => {
           </div>
 
           {/* Quick actions */}
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-            <p className="mb-3 text-sm font-bold text-gray-900">Aksi Cepat</p>
+          <div className="rounded-2xl bg-white p-5 shadow-xs border border-stone-100">
+            <p className="mb-3 text-sm font-bold text-stone-800">Aksi Cepat</p>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Pengguna', icon: Users, href: '/admin/users', from: 'from-blue-500', to: 'to-indigo-600' },
-                { label: 'Bank Soal', icon: BookOpen, href: '/admin/questions', from: 'from-amber-400', to: 'to-orange-500' },
-                { label: 'MSAT', icon: FlaskConical, href: '/admin/ujian', from: 'from-fuchsia-500', to: 'to-pink-600' },
-                { label: 'Analitik', icon: BarChart3, href: '/admin/analytics', from: 'from-violet-500', to: 'to-purple-600' },
-                { label: 'Konten', icon: FileText, href: '/admin/content', from: 'from-teal-500', to: 'to-cyan-600' },
-                { label: 'Terminal', icon: Terminal, href: '/admin/cli', from: 'from-gray-700', to: 'to-slate-800' },
+                { label: 'Pengguna', icon: Users, href: '/admin/users', bg: 'bg-sky-50 hover:bg-sky-100 text-sky-700' },
+                { label: 'Bank Soal', icon: BookOpen, href: '/admin/questions', bg: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
+                { label: 'MSAT', icon: FlaskConical, href: '/admin/ujian', bg: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
+                { label: 'Analitik', icon: BarChart3, href: '/admin/analytics', bg: 'bg-violet-50 hover:bg-violet-100 text-violet-700' },
+                { label: 'Konten', icon: FileText, href: '/admin/content', bg: 'bg-teal-50 hover:bg-teal-100 text-teal-700' },
+                { label: 'Terminal', icon: Terminal, href: '/admin/cli', bg: 'bg-stone-100 hover:bg-stone-200 text-stone-700' },
               ].map(a => {
                 const Icon = a.icon;
                 return (
                   <Link key={a.label} href={a.href}
-                    className={`flex items-center gap-2 rounded-xl bg-gradient-to-br ${a.from} ${a.to} p-3 text-xs font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md`}>
+                    className={`flex items-center gap-2 rounded-xl p-3 text-xs font-semibold transition-all hover:-translate-y-0.5 ${a.bg}`}>
                     <Icon size={13} /> {a.label}
                   </Link>
                 );
@@ -498,8 +495,8 @@ const AdminDashboard: FC = () => {
       <div className="grid gap-4 lg:grid-cols-3">
 
         {/* Problematic questions */}
-        <motion.div {...fade(0.55)} className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-          <div className="flex items-center justify-between border-b border-gray-50 px-5 py-4">
+        <motion.div {...fade(0.55)} className="rounded-2xl bg-white shadow-xs border border-stone-100">
+          <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
                 <AlertTriangle size={14} className="text-amber-500" />
@@ -538,8 +535,8 @@ const AdminDashboard: FC = () => {
         </motion.div>
 
         {/* Popular materials */}
-        <motion.div {...fade(0.6)} className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-          <div className="flex items-center justify-between border-b border-gray-50 px-5 py-4">
+        <motion.div {...fade(0.6)} className="rounded-2xl bg-white shadow-xs border border-stone-100">
+          <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
                 <FileText size={14} className="text-blue-500" />
@@ -594,8 +591,8 @@ const AdminDashboard: FC = () => {
         </motion.div>
 
         {/* Top users */}
-        <motion.div {...fade(0.65)} className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-          <div className="flex items-center justify-between border-b border-gray-50 px-5 py-4">
+        <motion.div {...fade(0.65)} className="rounded-2xl bg-white shadow-xs border border-stone-100">
+          <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
                 <TrendingUp size={14} className="text-amber-500" />
