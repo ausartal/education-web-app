@@ -40,31 +40,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Kamu tidak terdaftar di kelas ini. Minta gurumu untuk menambahkanmu atau bergabung lewat kode kelas.' }, { status: 403 });
   }
 
-  // Check if student already has an in-progress session for this schedule
-  const existingSnap = await adminDb.collection('exam_sessions')
-    .where('examScheduleId', '==', scheduleDoc.id)
-    .where('studentId', '==', decoded.uid)
-    .where('status', '==', 'in_progress')
-    .limit(1)
-    .get();
-
-  if (!existingSnap.empty) {
-    return NextResponse.json({ sessionId: existingSnap.docs[0].id, resumed: true });
-  }
-
-  // Check if already completed
-  const completedSnap = await adminDb.collection('exam_sessions')
-    .where('examScheduleId', '==', scheduleDoc.id)
-    .where('studentId', '==', decoded.uid)
-    .where('status', '==', 'completed')
-    .limit(1)
-    .get();
-
-  if (!completedSnap.empty) {
-    return NextResponse.json({ error: 'Kamu sudah mengerjakan ujian ini', completed: true, sessionId: completedSnap.docs[0].id }, { status: 409 });
-  }
-
-  // Load exam questions for all domains in this schedule
+  // Load exam questions for all domains in this schedule (needed for both new and resumed sessions)
   const domainIds: string[] = schedule.domainIds || [];
   const questionsSnap = await adminDb.collection('exam_questions')
     .where('module', '==', schedule.module)
@@ -78,6 +54,7 @@ export async function POST(req: NextRequest) {
     if (!questionsByDomain[q.domainId]) questionsByDomain[q.domainId] = {};
     questionsByDomain[q.domainId][q.tierPath] = {
       id: d.id,
+      domainName: q.domainName,
       stem: q.stem,
       options: q.options,
       correctAnswer: q.correctAnswer,
@@ -99,6 +76,40 @@ export async function POST(req: NextRequest) {
       error: `Bank soal ujian belum lengkap untuk domain: ${missingDomains.join(', ')}`,
       missingDomains,
     }, { status: 422 });
+  }
+
+  const schedulePayload = { id: scheduleDoc.id, title: schedule.title, durationMinutes: schedule.durationMinutes, domainIds };
+
+  // Check if student already has an in-progress session for this schedule
+  const existingSnap = await adminDb.collection('exam_sessions')
+    .where('examScheduleId', '==', scheduleDoc.id)
+    .where('studentId', '==', decoded.uid)
+    .where('status', '==', 'in_progress')
+    .limit(1)
+    .get();
+
+  if (!existingSnap.empty) {
+    const existingSession = existingSnap.docs[0].data();
+    const completedDomains = (existingSession.domainResponses || []).length;
+    return NextResponse.json({
+      sessionId: existingSnap.docs[0].id,
+      resumed: true,
+      completedDomains,
+      schedule: schedulePayload,
+      questions: questionsByDomain,
+    });
+  }
+
+  // Check if already completed
+  const completedSnap = await adminDb.collection('exam_sessions')
+    .where('examScheduleId', '==', scheduleDoc.id)
+    .where('studentId', '==', decoded.uid)
+    .where('status', '==', 'completed')
+    .limit(1)
+    .get();
+
+  if (!completedSnap.empty) {
+    return NextResponse.json({ error: 'Kamu sudah mengerjakan ujian ini', completed: true, sessionId: completedSnap.docs[0].id }, { status: 409 });
   }
 
   // Create session
@@ -127,7 +138,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     sessionId: docRef.id,
-    schedule: { id: scheduleDoc.id, title: schedule.title, durationMinutes: schedule.durationMinutes, domainIds },
+    schedule: schedulePayload,
     questions: questionsByDomain,
     resumed: false,
   }, { status: 201 });
