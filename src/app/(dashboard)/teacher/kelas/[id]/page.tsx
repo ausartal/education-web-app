@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Users, ClipboardList, Copy, Check, BookOpen, ClipboardCheck,
-  PlusCircle, Trash2, Calendar, Edit3, X, ExternalLink, Clock, ChevronRight,
+  PlusCircle, Trash2, Calendar, X, ExternalLink, Clock, ChevronRight,
   MessageCircle, Send, Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
