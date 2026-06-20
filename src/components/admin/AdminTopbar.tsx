@@ -10,6 +10,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/users': 'Manajemen Pengguna',
   '/admin/teachers': 'Manajemen Guru',
   '/admin/questions': 'Bank Soal',
+  '/admin/ujian': 'MSAT Ujian',
   '/admin/content': 'Manajemen Konten',
   '/admin/cli': 'CLI Terminal',
   '/admin/config': 'Pengaturan Platform',

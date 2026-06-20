@@ -184,10 +184,11 @@ export async function GET(req: NextRequest) {
     .map(d => {
       const data = d.data();
       const completedAt = tsToDate(data.completedAt as Record<string, number>);
+      const uid = (data.userId ?? data.studentId) as string | undefined;
       return {
         id: d.id,
-        userId: data.userId,
-        userName: userMap[data.userId] ?? data.userId?.slice(0, 8),
+        userId: uid,
+        userName: userMap[uid ?? ''] ?? uid?.slice(0, 8),
         examId: data.examId,
         theta: typeof data.theta === 'number' ? data.theta.toFixed(2) : '0.00',
         accuracy: data.result?.accuracy ? Math.round(data.result.accuracy * 100) : 0,
