@@ -5,8 +5,9 @@ import { motion } from 'framer-motion';
 import {
   Users, GraduationCap, BookOpen, ClipboardList,
   TrendingUp, Zap, RefreshCw, Download, Terminal,
-  ChevronRight, AlertTriangle, CheckCircle, ArrowUp, ArrowDown, Minus,
+  ChevronRight, AlertTriangle, CheckCircle, ArrowUp, ArrowDown,
   Target, Activity, FileText, BarChart3, FlaskConical, School,
+  Minus, Calendar,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -40,10 +41,7 @@ interface AnalyticsData {
     completedExams: number; activeQuestions: number; activeUsers: number;
     classes?: number; examSchedules?: number;
   };
-  msat?: {
-    avgScore: number;
-    comprehensionDistribution: Record<string, number>;
-  };
+  msat?: { avgScore: number; comprehensionDistribution: Record<string, number> };
 }
 
 function fmtDay(iso: string) {
@@ -54,74 +52,91 @@ function fmtDateTime(iso: string | null) {
   return new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-function Delta({ today, yesterday, label }: { today: number; yesterday: number; label: string }) {
+function Trend({ today, yesterday, label }: { today: number; yesterday: number; label: string }) {
   const diff = today - yesterday;
-  const sign = diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+  if (diff === 0) return <span className="flex items-center gap-0.5 text-[11px] text-gray-400"><Minus size={10} /> Sama dengan kemarin</span>;
+  const up = diff > 0;
   return (
-    <div className={`flex items-center gap-1 text-[10px] font-semibold ${sign === 'up' ? 'text-emerald-600' : sign === 'down' ? 'text-rose-500' : 'text-gray-400'}`}>
-      {sign === 'up' ? <ArrowUp size={10} /> : sign === 'down' ? <ArrowDown size={10} /> : <Minus size={10} />}
+    <span className={`flex items-center gap-0.5 text-[11px] font-medium ${up ? 'text-emerald-600' : 'text-rose-500'}`}>
+      {up ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
       {Math.abs(diff)} {label} vs kemarin
-    </div>
+    </span>
   );
 }
 
-function MiniBar({ data, color }: { data: Record<string, number>; color: string }) {
+function SparkBar({ data, color }: { data: Record<string, number>; color: string }) {
   const vals = Object.values(data);
   const max = Math.max(...vals, 1);
   return (
-    <div className="flex items-end gap-0.5 h-8">
+    <div className="flex items-end gap-[2px] h-7">
       {vals.map((v, i) => (
-        <div key={i} className="flex-1 rounded-sm min-h-[2px]"
-          style={{ height: `${Math.max((v / max) * 28, v > 0 ? 4 : 2)}px`, background: color, opacity: 0.7 + (i / vals.length) * 0.3 }} />
+        <div key={i} className="flex-1 rounded-[2px]"
+          style={{
+            height: `${Math.max((v / max) * 100, v > 0 ? 15 : 5)}%`,
+            background: color,
+            opacity: 0.4 + (i / (vals.length - 1)) * 0.6,
+          }} />
       ))}
     </div>
   );
 }
 
-function BarChart({ data, color, height = 96 }: { data: Record<string, number>; color: string; height?: number }) {
+function BarChart({ data, color }: { data: Record<string, number>; color: string }) {
   const vals = Object.values(data);
   const keys = Object.keys(data);
   const max = Math.max(...vals, 1);
   return (
-    <div className="flex items-end gap-1" style={{ height }}>
+    <div className="flex items-end gap-1.5 h-28 pt-4">
       {vals.map((v, i) => (
         <div key={keys[i]} className="flex flex-1 flex-col items-center gap-1">
-          {v > 0 && <span className="text-[9px] font-semibold text-gray-500">{v}</span>}
-          <div className="w-full rounded-t-md" style={{ height: `${Math.max((v / max) * (height - 20), v > 0 ? 6 : 2)}px`, background: color }} />
-          <span className="text-[9px] text-gray-400 truncate w-full text-center">{fmtDay(keys[i])}</span>
+          {v > 0 && <span className="text-[9px] font-bold text-gray-500">{v}</span>}
+          <div className="w-full rounded-t-[3px] transition-all"
+            style={{
+              height: `${Math.max((v / max) * 80, v > 0 ? 8 : 2)}px`,
+              background: color,
+              opacity: 0.6 + (i / (vals.length - 1)) * 0.4,
+            }} />
+          <span className="text-[9px] text-gray-400 truncate w-full text-center leading-none">{fmtDay(keys[i])}</span>
         </div>
       ))}
     </div>
   );
 }
 
-const proficiencyColors: Record<string, string> = {
-  rendah: 'bg-rose-50 text-rose-700',
-  sedang: 'bg-amber-50 text-amber-700',
-  tinggi: 'bg-blue-50 text-blue-700',
-  sangat_tinggi: 'bg-emerald-50 text-emerald-700',
+const proficiencyStyle: Record<string, string> = {
+  rendah: 'bg-rose-50 text-rose-600 border border-rose-100',
+  sedang: 'bg-amber-50 text-amber-600 border border-amber-100',
+  tinggi: 'bg-blue-50 text-blue-600 border border-blue-100',
+  sangat_tinggi: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
 };
-const difficultyColors: Record<string, string> = {
+const diffStyle: Record<string, string> = {
   easy: 'bg-emerald-50 text-emerald-700',
   moderate: 'bg-amber-50 text-amber-700',
-  hard: 'bg-rose-50 text-rose-700',
+  hard: 'bg-rose-50 text-rose-600',
 };
+
+const fade = (delay: number) => ({
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.35, delay, ease: 'easeOut' as const },
+});
 
 const AdminDashboard: FC = () => {
   const { user, profile } = useAuth();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (silent = false) => {
     if (!user) return;
-    setLoading(true);
+    if (!silent) setLoading(true); else setRefreshing(true);
     try {
       const token = await user.getIdToken();
       const res = await fetch('/api/admin/analytics', { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) { setData(await res.json()); setLastRefresh(new Date()); }
     } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+    finally { setLoading(false); setRefreshing(false); }
   }, [user]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
@@ -137,156 +152,186 @@ const AdminDashboard: FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const nowStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
   if (loading) return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-primary/20 border-t-primary" />
+      <p className="text-xs text-gray-400">Memuat data dashboard…</p>
     </div>
   );
-
   if (!data) return null;
-
-  const kpis = [
-    {
-      icon: Users, label: 'Total Pengguna', value: data.totals.users,
-      sub: `${data.totals.activeUsers} aktif`,
-      delta: <Delta today={data.today.users} yesterday={data.yesterday.users} label="baru" />,
-      color: 'text-primary', bg: 'bg-blue-50', href: '/admin/users',
-      chart: <MiniBar data={data.userRegistrationsByDay} color="#1A73E8" />,
-    },
-    {
-      icon: GraduationCap, label: 'Siswa', value: data.roleDistribution.student,
-      sub: `${data.roleDistribution.teacher} guru`,
-      delta: null, color: 'text-emerald-600', bg: 'bg-emerald-50', href: '/admin/users',
-      chart: null,
-    },
-    {
-      icon: ClipboardList, label: 'Ujian Selesai', value: data.totals.completedExams,
-      sub: `${data.totals.exams} total sesi`,
-      delta: <Delta today={data.today.exams} yesterday={data.yesterday.exams} label="ujian" />,
-      color: 'text-violet-600', bg: 'bg-violet-50', href: '/admin/analytics',
-      chart: <MiniBar data={data.examsByDay} color="#7C3AED" />,
-    },
-    {
-      icon: BookOpen, label: 'Soal Aktif', value: data.totals.activeQuestions,
-      sub: `${data.totals.questions} total`,
-      delta: null, color: 'text-amber-600', bg: 'bg-amber-50', href: '/admin/questions',
-      chart: null,
-    },
-    {
-      icon: Target, label: 'Akurasi Rata2', value: `${data.avgAccuracy}%`,
-      sub: 'ujian selesai', delta: null, color: 'text-teal-600', bg: 'bg-teal-50',
-      href: '/admin/analytics', chart: null,
-    },
-    {
-      icon: Zap, label: 'Rata-rata XP', value: data.avgXp,
-      sub: 'per siswa', delta: null, color: 'text-orange-600', bg: 'bg-orange-50',
-      href: '/admin/analytics', chart: null,
-    },
-    {
-      icon: School, label: 'Kelas', value: data.totals.classes ?? 0,
-      sub: `${data.totals.examSchedules ?? 0} jadwal ujian`,
-      delta: null, color: 'text-cyan-600', bg: 'bg-cyan-50',
-      href: '/admin/ujian', chart: null,
-    },
-    {
-      icon: FlaskConical, label: 'Skor MSAT Rata2', value: data.msat?.avgScore ?? 0,
-      sub: 'dari ujian selesai', delta: null, color: 'text-fuchsia-600', bg: 'bg-fuchsia-50',
-      href: '/admin/ujian', chart: null,
-    },
-  ];
 
   const examCompletionRate = data.totals.exams > 0
     ? Math.round((data.totals.completedExams / data.totals.exams) * 100) : 0;
 
+  const nowStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  /* ── KPI definitions ── */
+  const primaryKpis = [
+    {
+      icon: Users, label: 'Total Pengguna', value: data.totals.users,
+      sub: `${data.totals.activeUsers} aktif`, href: '/admin/users',
+      color: 'text-blue-600', iconBg: 'bg-blue-50',
+      accent: 'from-blue-500 to-indigo-600',
+      trend: <Trend today={data.today.users} yesterday={data.yesterday.users} label="baru" />,
+      spark: <SparkBar data={data.userRegistrationsByDay} color="#3B82F6" />,
+    },
+    {
+      icon: ClipboardList, label: 'Ujian Selesai', value: data.totals.completedExams,
+      sub: `${data.totals.exams} total sesi`, href: '/admin/analytics',
+      color: 'text-violet-600', iconBg: 'bg-violet-50',
+      accent: 'from-violet-500 to-purple-600',
+      trend: <Trend today={data.today.exams} yesterday={data.yesterday.exams} label="ujian" />,
+      spark: <SparkBar data={data.examsByDay} color="#7C3AED" />,
+    },
+    {
+      icon: BookOpen, label: 'Soal Aktif', value: data.totals.activeQuestions,
+      sub: `${data.totals.questions} total soal`, href: '/admin/questions',
+      color: 'text-amber-600', iconBg: 'bg-amber-50',
+      accent: 'from-amber-400 to-orange-500',
+      trend: null, spark: null,
+    },
+    {
+      icon: FlaskConical, label: 'Skor MSAT Rata-rata', value: data.msat?.avgScore ?? 0,
+      sub: 'dari sesi selesai', href: '/admin/ujian',
+      color: 'text-fuchsia-600', iconBg: 'bg-fuchsia-50',
+      accent: 'from-fuchsia-500 to-pink-600',
+      trend: null, spark: null,
+    },
+  ];
+
+  const secondaryKpis = [
+    { icon: GraduationCap, label: 'Siswa', value: data.roleDistribution.student, sub: `${data.roleDistribution.teacher} guru`, color: 'text-emerald-600', href: '/admin/users' },
+    { icon: Target, label: 'Akurasi Rata-rata', value: `${data.avgAccuracy}%`, sub: 'ujian selesai', color: 'text-teal-600', href: '/admin/analytics' },
+    { icon: School, label: 'Kelas', value: data.totals.classes ?? 0, sub: `${data.totals.examSchedules ?? 0} jadwal ujian`, color: 'text-cyan-600', href: '/admin/ujian' },
+    { icon: Zap, label: 'XP Rata-rata', value: data.avgXp, sub: 'per siswa', color: 'text-orange-500', href: '/admin/analytics' },
+  ];
+
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-        className="flex items-start justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-extrabold text-gray-900">
-            Selamat datang, {profile?.displayName?.split(' ')[0] ?? 'Admin'}
-          </h1>
-          <p className="mt-0.5 text-sm text-gray-500">{nowStr}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-            <CheckCircle size={11} /> Sistem Online
-          </span>
-          <button onClick={fetchAll}
-            className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50">
-            <RefreshCw size={13} />
-            {lastRefresh.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-          </button>
+    <div className="space-y-5 pb-6">
+
+      {/* ── HEADER ── */}
+      <motion.div {...fade(0)}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 py-5 text-white shadow-lg">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(99,102,241,0.15)_0%,transparent_60%)]" />
+        <div className="relative flex items-center justify-between">
+          <div>
+            <p className="mb-0.5 flex items-center gap-2 text-xs font-medium text-slate-400">
+              <Calendar size={12} />
+              {nowStr}
+            </p>
+            <h1 className="font-display text-2xl font-extrabold tracking-tight">
+              Selamat datang, {profile?.displayName?.split(' ')[0] ?? 'Admin'} 👋
+            </h1>
+            <p className="mt-1 text-sm text-slate-400">
+              {data.totals.users} pengguna terdaftar · {data.totals.activeUsers} aktif hari ini
+            </p>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Sistem Online
+            </span>
+            <button onClick={() => fetchAll(true)} disabled={refreshing}
+              className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition-colors hover:bg-white/10 disabled:opacity-50">
+              <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
+              {lastRefresh.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+            </button>
+          </div>
         </div>
       </motion.div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-8">
-        {kpis.map((kpi, i) => {
-          const Icon = kpi.icon;
+      {/* ── PRIMARY KPI CARDS ── */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {primaryKpis.map((k, i) => {
+          const Icon = k.icon;
           return (
-            <motion.div key={kpi.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Link href={kpi.href}
-                className="group flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md block">
-                <div className="flex items-center justify-between">
-                  <div className={`inline-flex rounded-xl p-2 ${kpi.bg}`}>
-                    <Icon size={16} className={kpi.color} />
+            <motion.div key={k.label} {...fade(0.05 + i * 0.05)}>
+              <Link href={k.href}
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-gray-200 block h-full">
+                <div className="flex items-start justify-between">
+                  <div className={`inline-flex rounded-xl p-2.5 ${k.iconBg}`}>
+                    <Icon size={18} className={k.color} />
                   </div>
-                  {kpi.chart}
+                  {k.spark && <div className="w-20">{k.spark}</div>}
                 </div>
-                <div>
-                  <p className="font-display text-xl font-black text-gray-900">{kpi.value}</p>
-                  <p className="text-[11px] font-semibold text-gray-700">{kpi.label}</p>
-                  <p className="text-[10px] text-gray-400">{kpi.sub}</p>
-                  {kpi.delta && <div className="mt-1">{kpi.delta}</div>}
+                <div className="mt-3">
+                  <p className="font-display text-3xl font-black tracking-tight text-gray-900">{k.value}</p>
+                  <p className="mt-0.5 text-[13px] font-semibold text-gray-600">{k.label}</p>
+                  <p className="text-[11px] text-gray-400">{k.sub}</p>
+                  {k.trend && <div className="mt-2">{k.trend}</div>}
                 </div>
+                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${k.accent} opacity-0 transition-opacity group-hover:opacity-100`} />
               </Link>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Charts Row */}
+      {/* ── SECONDARY KPI STRIP ── */}
+      <motion.div {...fade(0.25)} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {secondaryKpis.map(k => {
+          const Icon = k.icon;
+          return (
+            <Link key={k.label} href={k.href}
+              className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-md">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-50">
+                <Icon size={16} className={k.color} />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-lg font-extrabold text-gray-900 leading-none">{k.value}</p>
+                <p className="truncate text-xs font-medium text-gray-500">{k.label}</p>
+                <p className="text-[10px] text-gray-400">{k.sub}</p>
+              </div>
+            </Link>
+          );
+        })}
+      </motion.div>
+
+      {/* ── CHARTS ROW ── */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-xs font-bold text-gray-700">Pengguna Baru (7 Hari)</p>
-            <span className="text-xs text-gray-400">{Object.values(data.userRegistrationsByDay).reduce((a,b)=>a+b,0)} total</span>
+        <motion.div {...fade(0.3)} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+          <div className="mb-1 flex items-center justify-between">
+            <p className="text-sm font-bold text-gray-800">Pengguna Baru</p>
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600">
+              {Object.values(data.userRegistrationsByDay).reduce((a, b) => a + b, 0)} total · 7 hari
+            </span>
           </div>
-          <BarChart data={data.userRegistrationsByDay} color="linear-gradient(to top, #1A73E8, #60A5FA)" />
+          <p className="mb-3 text-[11px] text-gray-400">Registrasi harian</p>
+          <BarChart data={data.userRegistrationsByDay} color="#3B82F6" />
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-xs font-bold text-gray-700">Ujian per Hari (7 Hari)</p>
-            <span className="text-xs text-gray-400">{Object.values(data.examsByDay).reduce((a,b)=>a+b,0)} total</span>
+
+        <motion.div {...fade(0.35)} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+          <div className="mb-1 flex items-center justify-between">
+            <p className="text-sm font-bold text-gray-800">Sesi Ujian</p>
+            <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-600">
+              {Object.values(data.examsByDay).reduce((a, b) => a + b, 0)} total · 7 hari
+            </span>
           </div>
-          <BarChart data={data.examsByDay} color="linear-gradient(to top, #7C3AED, #C4B5FD)" />
+          <p className="mb-3 text-[11px] text-gray-400">Ujian per hari</p>
+          <BarChart data={data.examsByDay} color="#7C3AED" />
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <p className="mb-3 text-xs font-bold text-gray-700">Distribusi Pengguna & Soal</p>
-          <div className="space-y-2.5">
+
+        <motion.div {...fade(0.4)} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+          <p className="mb-1 text-sm font-bold text-gray-800">Distribusi</p>
+          <p className="mb-4 text-[11px] text-gray-400">Pengguna & tingkat soal</p>
+          <div className="space-y-3">
             {[
-              { label: 'Siswa', val: data.roleDistribution.student, total: data.totals.users, color: '#1A73E8' },
-              { label: 'Guru', val: data.roleDistribution.teacher, total: data.totals.users, color: '#059669' },
-              { label: 'Soal Mudah', val: data.questionsByDifficulty.easy, total: data.totals.questions, color: '#10B981' },
-              { label: 'Soal Sedang', val: data.questionsByDifficulty.moderate, total: data.totals.questions, color: '#F59E0B' },
-              { label: 'Soal Sulit', val: data.questionsByDifficulty.hard, total: data.totals.questions, color: '#EF4444' },
+              { label: 'Siswa', val: data.roleDistribution.student, total: data.totals.users, color: '#3B82F6', pill: 'bg-blue-50 text-blue-600' },
+              { label: 'Guru', val: data.roleDistribution.teacher, total: data.totals.users, color: '#10B981', pill: 'bg-emerald-50 text-emerald-600' },
+              { label: 'Soal Mudah', val: data.questionsByDifficulty.easy, total: data.totals.questions, color: '#10B981', pill: 'bg-emerald-50 text-emerald-600' },
+              { label: 'Soal Sedang', val: data.questionsByDifficulty.moderate, total: data.totals.questions, color: '#F59E0B', pill: 'bg-amber-50 text-amber-600' },
+              { label: 'Soal Sulit', val: data.questionsByDifficulty.hard, total: data.totals.questions, color: '#EF4444', pill: 'bg-rose-50 text-rose-600' },
             ].map(r => {
               const pct = r.total ? Math.round((r.val / r.total) * 100) : 0;
               return (
                 <div key={r.label}>
-                  <div className="mb-1 flex justify-between text-[10px]">
-                    <span className="text-gray-600">{r.label}</span>
-                    <span className="font-semibold text-gray-700">{r.val} <span className="font-normal text-gray-400">({pct}%)</span></span>
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-[11px] font-medium text-gray-600">{r.label}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${r.pill}`}>{r.val} · {pct}%</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: r.color }} />
+                  <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                    <div className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%`, background: r.color }} />
                   </div>
                 </div>
               );
@@ -295,65 +340,81 @@ const AdminDashboard: FC = () => {
         </motion.div>
       </div>
 
-      {/* Middle Row: Recent Exams + Exam Stats */}
+      {/* ── MAIN CONTENT ROW ── */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Recent Exam Sessions */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-          className="lg:col-span-2 rounded-3xl bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+
+        {/* Recent Exams – spans 2 cols */}
+        <motion.div {...fade(0.45)} className="lg:col-span-2 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center justify-between border-b border-gray-50 px-5 py-4">
             <div className="flex items-center gap-2">
-              <Activity size={15} className="text-violet-600" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-50">
+                <Activity size={14} className="text-violet-600" />
+              </div>
               <p className="text-sm font-bold text-gray-900">Ujian Terbaru</p>
             </div>
-            <Link href="/admin/analytics" className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+            <Link href="/admin/analytics"
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-blue-50">
               Semua <ChevronRight size={12} />
             </Link>
           </div>
           {data.recentExams.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-400">Belum ada ujian selesai</p>
+            <div className="flex flex-col items-center justify-center py-14 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-50">
+                <ClipboardList size={22} className="text-gray-300" />
+              </div>
+              <p className="text-sm font-semibold text-gray-400">Belum ada ujian selesai</p>
+              <p className="mt-1 text-xs text-gray-300">Data akan muncul setelah siswa menyelesaikan ujian</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-gray-100 text-[10px] text-gray-400">
-                    <th className="pb-2 text-left font-medium">Pengguna</th>
-                    <th className="pb-2 text-left font-medium">Theta</th>
-                    <th className="pb-2 text-left font-medium">Akurasi</th>
-                    <th className="pb-2 text-left font-medium">Level</th>
-                    <th className="pb-2 text-left font-medium">Waktu</th>
-                    <th className="pb-2 text-left font-medium"></th>
+                  <tr className="border-b border-gray-50 bg-gray-50/50 text-[11px] text-gray-400">
+                    <th className="px-5 py-3 text-left font-semibold">Pengguna</th>
+                    <th className="px-4 py-3 text-left font-semibold">Theta</th>
+                    <th className="px-4 py-3 text-left font-semibold">Akurasi</th>
+                    <th className="px-4 py-3 text-left font-semibold">Profisiensi</th>
+                    <th className="px-4 py-3 text-left font-semibold">Selesai</th>
+                    <th className="px-3 py-3" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {data.recentExams.map(ex => (
-                    <tr key={ex.id} className="hover:bg-gray-50">
-                      <td className="py-2 pr-3">
-                        <p className="font-semibold text-gray-900">{ex.userName}</p>
-                        <p className="text-[9px] text-gray-400">{ex.examId}</p>
+                    <tr key={ex.id} className="transition-colors hover:bg-gray-50/80">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-purple-600 text-[10px] font-bold text-white">
+                            {ex.userName?.charAt(0).toUpperCase() ?? '?'}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">{ex.userName}</p>
+                            <p className="text-[10px] text-gray-400">{ex.examId?.slice(0, 12)}…</p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="py-2 pr-3">
-                        <span className={`font-bold ${parseFloat(ex.theta) >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                      <td className="px-4 py-3">
+                        <span className={`font-bold tabular-nums ${parseFloat(ex.theta) >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                           {parseFloat(ex.theta) >= 0 ? '+' : ''}{ex.theta}
                         </span>
                       </td>
-                      <td className="py-2 pr-3">
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100">
-                            <div className="h-full rounded-full bg-violet-500" style={{ width: `${ex.accuracy}%` }} />
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-14 overflow-hidden rounded-full bg-gray-100">
+                            <div className="h-full rounded-full bg-violet-400" style={{ width: `${ex.accuracy}%` }} />
                           </div>
-                          <span className="font-semibold text-gray-700">{ex.accuracy}%</span>
+                          <span className="tabular-nums font-semibold text-gray-700">{ex.accuracy}%</span>
                         </div>
                       </td>
-                      <td className="py-2 pr-3">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${proficiencyColors[ex.proficiencyLevel] ?? 'bg-gray-100 text-gray-500'}`}>
-                          {ex.proficiencyLevel}
+                      <td className="px-4 py-3">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${proficiencyStyle[ex.proficiencyLevel] ?? 'bg-gray-100 text-gray-500'}`}>
+                          {ex.proficiencyLevel || '—'}
                         </span>
                       </td>
-                      <td className="py-2 pr-3 text-[10px] text-gray-400 whitespace-nowrap">{fmtDateTime(ex.completedAt)}</td>
-                      <td className="py-2">
+                      <td className="px-4 py-3 text-[11px] text-gray-400 whitespace-nowrap">{fmtDateTime(ex.completedAt)}</td>
+                      <td className="px-3 py-3">
                         {ex.flagged && (
                           <span title="Anomali terdeteksi">
-                            <AlertTriangle size={12} className="text-amber-500" />
+                            <AlertTriangle size={12} className="text-amber-400" />
                           </span>
                         )}
                       </td>
@@ -365,35 +426,43 @@ const AdminDashboard: FC = () => {
           )}
         </motion.div>
 
-        {/* Exam status + completion rate */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="flex flex-col gap-4">
-          {/* Completion rate */}
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
-            <p className="mb-3 text-xs font-bold text-gray-700">Tingkat Penyelesaian Ujian</p>
-            <div className="flex items-center gap-4">
-              <div className="relative h-16 w-16 shrink-0">
-                <svg viewBox="0 0 36 36" className="h-16 w-16 -rotate-90">
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3" />
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#7C3AED" strokeWidth="3"
-                    strokeDasharray={`${examCompletionRate} ${100 - examCompletionRate}`}
+        {/* Right column: Completion ring + Quick actions */}
+        <motion.div {...fade(0.5)} className="flex flex-col gap-4">
+
+          {/* Exam status card */}
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+            <p className="mb-4 text-sm font-bold text-gray-900">Status Ujian</p>
+            <div className="flex items-center gap-5">
+              {/* Ring */}
+              <div className="relative h-[72px] w-[72px] shrink-0">
+                <svg viewBox="0 0 36 36" className="h-full w-full -rotate-90">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#F3F4F6" strokeWidth="4" />
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="url(#ringGrad)" strokeWidth="4"
+                    strokeDasharray={`${examCompletionRate * 0.88} ${88 - examCompletionRate * 0.88}`}
                     strokeLinecap="round" />
+                  <defs>
+                    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#8B5CF6" />
+                      <stop offset="100%" stopColor="#06B6D4" />
+                    </linearGradient>
+                  </defs>
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-gray-900">
-                  {examCompletionRate}%
-                </span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-lg font-black text-gray-900 leading-none">{examCompletionRate}%</span>
+                  <span className="text-[9px] text-gray-400 leading-none">selesai</span>
+                </div>
               </div>
-              <div className="space-y-1">
+              <div className="flex-1 space-y-2">
                 {[
                   { label: 'Selesai', val: data.examStatusDistribution.completed ?? 0, color: 'bg-emerald-400' },
                   { label: 'Berlangsung', val: data.examStatusDistribution.in_progress ?? 0, color: 'bg-blue-400' },
                   { label: 'Ditinggalkan', val: data.examStatusDistribution.abandoned ?? 0, color: 'bg-gray-300' },
                   { label: 'Ditandai', val: data.examStatusDistribution.flagged ?? 0, color: 'bg-amber-400' },
                 ].map(s => (
-                  <div key={s.label} className="flex items-center gap-2 text-[10px]">
-                    <div className={`h-2 w-2 rounded-full ${s.color}`} />
-                    <span className="text-gray-600">{s.label}</span>
-                    <span className="font-bold text-gray-900 ml-auto">{s.val}</span>
+                  <div key={s.label} className="flex items-center gap-2">
+                    <div className={`h-2 w-2 shrink-0 rounded-full ${s.color}`} />
+                    <span className="flex-1 text-[11px] text-gray-500">{s.label}</span>
+                    <span className="text-[11px] font-bold text-gray-800 tabular-nums">{s.val}</span>
                   </div>
                 ))}
               </div>
@@ -401,21 +470,22 @@ const AdminDashboard: FC = () => {
           </div>
 
           {/* Quick actions */}
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
-            <p className="mb-3 text-xs font-bold text-gray-700">Aksi Cepat</p>
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+            <p className="mb-3 text-sm font-bold text-gray-900">Aksi Cepat</p>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Pengguna', icon: Users, href: '/admin/users', color: 'bg-blue-50 text-primary' },
-                { label: 'Soal', icon: BookOpen, href: '/admin/questions', color: 'bg-amber-50 text-amber-700' },
-                { label: 'MSAT', icon: FlaskConical, href: '/admin/ujian', color: 'bg-fuchsia-50 text-fuchsia-700' },
-                { label: 'Analitik', icon: BarChart3, href: '/admin/analytics', color: 'bg-violet-50 text-violet-700' },
-                { label: 'CLI', icon: Terminal, href: '/admin/cli', color: 'bg-gray-800 text-white' },
+                { label: 'Pengguna', icon: Users, href: '/admin/users', from: 'from-blue-500', to: 'to-indigo-600' },
+                { label: 'Bank Soal', icon: BookOpen, href: '/admin/questions', from: 'from-amber-400', to: 'to-orange-500' },
+                { label: 'MSAT', icon: FlaskConical, href: '/admin/ujian', from: 'from-fuchsia-500', to: 'to-pink-600' },
+                { label: 'Analitik', icon: BarChart3, href: '/admin/analytics', from: 'from-violet-500', to: 'to-purple-600' },
+                { label: 'Konten', icon: FileText, href: '/admin/content', from: 'from-teal-500', to: 'to-cyan-600' },
+                { label: 'Terminal', icon: Terminal, href: '/admin/cli', from: 'from-gray-700', to: 'to-slate-800' },
               ].map(a => {
                 const Icon = a.icon;
                 return (
                   <Link key={a.label} href={a.href}
-                    className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold transition-all hover:-translate-y-0.5 ${a.color}`}>
-                    <Icon size={14} /> {a.label}
+                    className={`flex items-center gap-2 rounded-xl bg-gradient-to-br ${a.from} ${a.to} p-3 text-xs font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md`}>
+                    <Icon size={13} /> {a.label}
                   </Link>
                 );
               })}
@@ -424,130 +494,153 @@ const AdminDashboard: FC = () => {
         </motion.div>
       </div>
 
-      {/* Bottom Row: Low accuracy questions + Material stats + Top users */}
+      {/* ── BOTTOM ROW ── */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Low accuracy questions */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+
+        {/* Problematic questions */}
+        <motion.div {...fade(0.55)} className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center justify-between border-b border-gray-50 px-5 py-4">
             <div className="flex items-center gap-2">
-              <AlertTriangle size={14} className="text-amber-500" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
+                <AlertTriangle size={14} className="text-amber-500" />
+              </div>
               <p className="text-sm font-bold text-gray-900">Soal Bermasalah</p>
             </div>
-            <Link href="/admin/questions" className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+            <Link href="/admin/questions"
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-blue-50">
               Kelola <ChevronRight size={12} />
             </Link>
           </div>
-          {data.lowAccuracyQuestions.length === 0 ? (
-            <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700">
-              <CheckCircle size={13} /> Semua soal dalam kondisi baik
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {data.lowAccuracyQuestions.map(q => (
-                <div key={q.id} className="rounded-xl bg-amber-50/60 p-3">
-                  <p className="text-xs text-gray-800 line-clamp-2">{q.stem}</p>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${difficultyColors[q.difficulty] ?? ''}`}>
-                      {q.difficulty}
-                    </span>
-                    <span className="text-[10px] text-rose-600 font-bold">{q.avgCorrectRate}% benar</span>
-                    <span className="text-[10px] text-gray-400">{q.usageCount}× dipakai</span>
-                  </div>
+          <div className="p-5">
+            {data.lowAccuracyQuestions.length === 0 ? (
+              <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-4">
+                <CheckCircle size={16} className="shrink-0 text-emerald-500" />
+                <div>
+                  <p className="text-xs font-semibold text-emerald-700">Semua soal dalam kondisi baik</p>
+                  <p className="text-[10px] text-emerald-600">Tidak ada soal dengan akurasi rendah</p>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {data.lowAccuracyQuestions.map(q => (
+                  <div key={q.id} className="rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+                    <p className="text-xs leading-relaxed text-gray-700 line-clamp-2">{q.stem}</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${diffStyle[q.difficulty] ?? ''}`}>{q.difficulty}</span>
+                      <span className="text-[10px] font-bold text-rose-600">{q.avgCorrectRate}% benar</span>
+                      <span className="text-[10px] text-gray-400 ml-auto">{q.usageCount}× dipakai</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </motion.div>
 
-        {/* Material stats */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+        {/* Popular materials */}
+        <motion.div {...fade(0.6)} className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center justify-between border-b border-gray-50 px-5 py-4">
             <div className="flex items-center gap-2">
-              <FileText size={14} className="text-blue-500" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
+                <FileText size={14} className="text-blue-500" />
+              </div>
               <p className="text-sm font-bold text-gray-900">Materi Terpopuler</p>
             </div>
-            <Link href="/admin/content" className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+            <Link href="/admin/content"
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-blue-50">
               Kelola <ChevronRight size={12} />
             </Link>
           </div>
-          {data.materialStats.length === 0 ? (
-            <p className="py-4 text-center text-xs text-gray-400">Belum ada materi</p>
-          ) : (
-            <div className="space-y-2">
-              {data.materialStats.slice(0, 6).map((m, i) => {
-                const maxCount = data.materialStats[0]?.progressCount || 1;
-                const pct = Math.round((m.progressCount / maxCount) * 100);
-                return (
-                  <div key={m.id}>
-                    <div className="mb-0.5 flex items-center justify-between">
-                      <p className="truncate text-xs font-medium text-gray-800 max-w-[160px]">{m.title}</p>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${m.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+          <div className="p-5">
+            {data.materialStats.length === 0 ? (
+              <div className="flex flex-col items-center py-8 text-center">
+                <FileText size={24} className="mb-2 text-gray-200" />
+                <p className="text-xs text-gray-400">Belum ada materi tersedia</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {data.materialStats.slice(0, 5).map(m => {
+                  const maxCount = data.materialStats[0]?.progressCount || 1;
+                  const pct = Math.round((m.progressCount / maxCount) * 100);
+                  return (
+                    <div key={m.id}>
+                      <div className="mb-1.5 flex items-center gap-2">
+                        <p className="flex-1 truncate text-xs font-semibold text-gray-800">{m.title}</p>
+                        <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${m.status === 'published' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
                           {m.status === 'published' ? 'Live' : 'Draft'}
                         </span>
-                        <span className="text-[10px] font-bold text-gray-600">{m.progressCount}</span>
+                        <span className="shrink-0 text-[11px] font-bold text-gray-500">{m.progressCount}</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                        <div className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 transition-all duration-700"
+                          style={{ width: `${pct}%` }} />
                       </div>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-                      <div className="h-full rounded-full bg-blue-400" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            )}
+            <div className="mt-4 flex gap-2 border-t border-gray-50 pt-4">
+              <button onClick={() => handleExport('users')}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gray-50 py-2 text-[10px] font-semibold text-gray-500 transition-colors hover:bg-gray-100">
+                <Download size={10} /> Users CSV
+              </button>
+              <button onClick={() => handleExport('question_bank')}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gray-50 py-2 text-[10px] font-semibold text-gray-500 transition-colors hover:bg-gray-100">
+                <Download size={10} /> Soal CSV
+              </button>
             </div>
-          )}
-          {/* Export buttons */}
-          <div className="mt-4 flex gap-2 border-t border-gray-50 pt-3">
-            <button onClick={() => handleExport('users')}
-              className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-gray-50 py-1.5 text-[10px] font-semibold text-gray-600 hover:bg-gray-100">
-              <Download size={10} /> Users CSV
-            </button>
-            <button onClick={() => handleExport('question_bank')}
-              className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-gray-50 py-1.5 text-[10px] font-semibold text-gray-600 hover:bg-gray-100">
-              <Download size={10} /> Soal CSV
-            </button>
           </div>
         </motion.div>
 
-        {/* Top users leaderboard */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+        {/* Top users */}
+        <motion.div {...fade(0.65)} className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center justify-between border-b border-gray-50 px-5 py-4">
             <div className="flex items-center gap-2">
-              <TrendingUp size={14} className="text-amber-500" />
-              <p className="text-sm font-bold text-gray-900">Top Pengguna (XP)</p>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
+                <TrendingUp size={14} className="text-amber-500" />
+              </div>
+              <p className="text-sm font-bold text-gray-900">Top Pengguna</p>
             </div>
-            <Link href="/admin/analytics" className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
-              Lebih <ChevronRight size={12} />
+            <Link href="/admin/analytics"
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-blue-50">
+              Semua <ChevronRight size={12} />
             </Link>
           </div>
-          <div className="space-y-2">
-            {data.topUsers.map((u, i) => {
-              const medals = ['🥇', '🥈', '🥉', '4', '5'];
-              const maxXp = data.topUsers[0]?.xp || 1;
-              const pct = Math.round((u.xp / maxXp) * 100);
-              return (
-                <div key={u.uid} className="flex items-center gap-2.5">
-                  <span className="w-4 text-xs text-center">{i < 3 ? medals[i] : <span className="text-gray-400 text-[10px]">{i + 1}</span>}</span>
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-300 text-[10px] font-black text-white">
-                    {u.displayName?.charAt(0).toUpperCase() ?? '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <p className="truncate text-xs font-semibold text-gray-800">{u.displayName}</p>
-                      <span className="text-[10px] font-bold text-amber-600 shrink-0 ml-1">{u.xp}</span>
+          <div className="p-5">
+            {data.topUsers.length === 0 ? (
+              <div className="flex flex-col items-center py-8 text-center">
+                <Zap size={24} className="mb-2 text-gray-200" />
+                <p className="text-xs text-gray-400">Belum ada data XP siswa</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {data.topUsers.map((u, i) => {
+                  const maxXp = data.topUsers[0]?.xp || 1;
+                  const pct = Math.round((u.xp / maxXp) * 100);
+                  const medals = ['🥇', '🥈', '🥉'];
+                  return (
+                    <div key={u.uid} className="flex items-center gap-3">
+                      <span className="w-5 shrink-0 text-center text-sm">
+                        {i < 3 ? medals[i] : <span className="text-xs font-bold text-gray-400">{i + 1}</span>}
+                      </span>
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-300 text-[11px] font-black text-white shadow-sm">
+                        {u.displayName?.charAt(0).toUpperCase() ?? '?'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="truncate text-xs font-semibold text-gray-800">{u.displayName}</p>
+                          <span className="shrink-0 ml-2 text-[11px] font-bold text-amber-500 tabular-nums">{u.xp} XP</span>
+                        </div>
+                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                          <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-300"
+                            style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-                      <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-300" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {data.topUsers.length === 0 && (
-              <p className="py-4 text-center text-xs text-gray-400">Belum ada data XP</p>
+                  );
+                })}
+              </div>
             )}
           </div>
         </motion.div>
