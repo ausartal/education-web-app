@@ -36,27 +36,28 @@ export async function GET(req: NextRequest) {
 
   try {
     const classId = new URL(req.url).searchParams.get('classId');
-    let query = adminDb.collection('assignments').orderBy('createdAt', 'desc');
-    // scope by classId if provided, otherwise return all for this teacher
+    // No orderBy on compound queries to avoid requiring composite index; sort in JS instead
     const snap = classId
-      ? await adminDb.collection('assignments').where('classId', '==', classId).orderBy('createdAt', 'desc').get()
-      : await query.where('teacherId', '==', teacher.uid).get();
+      ? await adminDb.collection('assignments').where('classId', '==', classId).get()
+      : await adminDb.collection('assignments').where('teacherId', '==', teacher.uid).get();
 
-    const assignments = snap.docs.map(d => {
-      const data = d.data();
-      return {
-        id: d.id,
-        classId: (data.classId as string) ?? '',
-        teacherId: (data.teacherId as string) ?? '',
-        title: (data.title as string) ?? '',
-        description: (data.description as string) ?? '',
-        dueDate: (data.dueDate as string) ?? null,
-        maxScore: (data.maxScore as number) ?? 100,
-        status: (data.status as string) ?? 'draft',
-        createdAt: tsToIso(data.createdAt),
-        updatedAt: tsToIso(data.updatedAt),
-      };
-    });
+    const assignments = snap.docs
+      .map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          classId: (data.classId as string) ?? '',
+          teacherId: (data.teacherId as string) ?? '',
+          title: (data.title as string) ?? '',
+          description: (data.description as string) ?? '',
+          dueDate: (data.dueDate as string) ?? null,
+          maxScore: (data.maxScore as number) ?? 100,
+          status: (data.status as string) ?? 'draft',
+          createdAt: tsToIso(data.createdAt),
+          updatedAt: tsToIso(data.updatedAt),
+        };
+      })
+      .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
 
     return NextResponse.json({ assignments });
   } catch (err) {
