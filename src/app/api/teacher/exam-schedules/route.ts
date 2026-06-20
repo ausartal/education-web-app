@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     .where('teacherId', '==', teacher.uid);
   if (classId) query = query.where('classId', '==', classId);
 
-  const snap = await query.orderBy('createdAt', 'desc').get();
+  const snap = await query.get();
 
   // For each schedule, count sessions
   const schedules = await Promise.all(snap.docs.map(async (d) => {
@@ -50,6 +50,9 @@ export async function GET(req: NextRequest) {
       avgScore,
     };
   }));
+
+  const getSeconds = (ts: unknown) => (ts as { _seconds?: number })?._seconds ?? 0;
+  (schedules as Array<Record<string, unknown>>).sort((a, b) => getSeconds(b.createdAt) - getSeconds(a.createdAt));
 
   return NextResponse.json({ schedules });
 }

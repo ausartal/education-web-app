@@ -34,7 +34,6 @@ export async function GET(req: NextRequest, { params }: { params: { scheduleId: 
   // Get all sessions for this schedule
   const sessionsSnap = await adminDb.collection('exam_sessions')
     .where('examScheduleId', '==', params.scheduleId)
-    .orderBy('completedAt', 'desc')
     .get();
 
   // Get student names
@@ -43,7 +42,13 @@ export async function GET(req: NextRequest, { params }: { params: { scheduleId: 
   const userMap: Record<string, string> = {};
   userDocs.forEach(d => { if (d.exists) userMap[d.id] = d.data()!.displayName || d.id.slice(0, 8); });
 
-  const sessions = sessionsSnap.docs.map(d => {
+  const sortedDocs = [...sessionsSnap.docs].sort((a, b) => {
+    const ta = tsToDate(a.data().completedAt as Record<string, number>)?.getTime() ?? 0;
+    const tb = tsToDate(b.data().completedAt as Record<string, number>)?.getTime() ?? 0;
+    return tb - ta;
+  });
+
+  const sessions = sortedDocs.map(d => {
     const data = d.data();
     const completedAt = tsToDate(data.completedAt as Record<string, number>);
     return {

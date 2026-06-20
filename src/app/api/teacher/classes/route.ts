@@ -27,7 +27,6 @@ export async function GET(req: NextRequest) {
 
   const snap = await adminDb.collection('classes')
     .where('teacherId', '==', teacher.uid)
-    .orderBy('createdAt', 'desc')
     .get();
 
   const classes = await Promise.all(snap.docs.map(async (d) => {
@@ -39,6 +38,9 @@ export async function GET(req: NextRequest) {
       .where('classId', '==', d.id).get();
     return { id: d.id, ...data, studentCount, examCount: examSnap.size };
   }));
+
+  const getSeconds = (ts: unknown) => (ts as { _seconds?: number })?._seconds ?? 0;
+  (classes as Array<Record<string, unknown>>).sort((a, b) => getSeconds(b.createdAt) - getSeconds(a.createdAt));
 
   return NextResponse.json({ classes });
 }
