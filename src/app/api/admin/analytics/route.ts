@@ -6,9 +6,8 @@ export const dynamic = 'force-dynamic';
 async function verifyAdmin(req: NextRequest) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.slice(7);
   try {
-    const decoded = await adminAuth.verifyIdToken(token);
+    const decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
     const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
     if (!userDoc.exists || userDoc.data()?.role !== 'admin') return null;
     return decoded;
@@ -27,32 +26,65 @@ export async function GET(req: NextRequest) {
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
 
-  const [usersSnap, examsSnap, questionsSnap, materialsSnap, progressSnap, logsSnap, classesSnap, schedulesSnap] = await Promise.all([
-    adminDb.collection('users').get(),
-    adminDb.collection('exam_sessions').get(),
-    adminDb.collection('question_bank').get(),
-    adminDb.collection('materials').get(),
-    adminDb.collection('user_progress').get(),
-    adminDb.collection('audit_logs').orderBy('timestamp', 'desc').limit(200).get(),
-    adminDb.collection('classes').get(),
-    adminDb.collection('exam_schedules').get(),
-  ]);
+  // Fetch semua collections secara paralel, masing-masing dengan field projection minimal
+  const [usersSnap, examsSnap, questionsSnap, materialsSnap, progressSnap, logsSnap, classesCount, schedulesCount] =
+    await Promise.all([
+      // Users: hanya field yang dipakai di analytics
+      adminDb.collection('users')
+        .select('role', 'isActive', 'displayName', 'createdAt', 'stats')
+        .get(),
 
-  // 7-day keys oldest→newest
+      // Exam sessions: batasi ke 6 bulan terakhir saja untuk statistics
+      // Full history tidak perlu untuk dashboard; jika butuh semua pakai export
+      adminDb.collection('exam_sessions')
+        .where('startedAt', '>=', sixMonthsAgo)
+        .select('status', 'startedAt', 'completedAt', 'userId', 'studentId',
+                'examId', 'theta', 'result', 'numericScore', 'domainResponses', 'anomalyFlags')
+        .get(),
+
+      // Questions: hanya field statistik
+      adminDb.collection('question_bank')
+        .select('difficulty', 'status', 'stem', 'avgCorrectRate', 'usageCount', 'topic')
+        .get(),
+
+      // Materials: hanya field yang ditampilkan
+      adminDb.collection('materials')
+        .select('title', 'status', 'topic')
+        .get(),
+
+      // User progress: hanya materialId untuk hitung per-materi
+      adminDb.collection('user_progress')
+        .select('materialId')
+        .get(),
+
+      // Audit logs: tetap limit 200 terbaru
+      adminDb.collection('audit_logs')
+        .orderBy('timestamp', 'desc')
+        .limit(200)
+        .select('timestamp')
+        .get(),
+
+      // Classes & schedules: hanya butuh count
+      adminDb.collection('classes').count().get(),
+      adminDb.collection('exam_schedules').count().get(),
+    ]);
+
+  // ── 7-day keys ────────────────────────────────────────────────────────────
   const dayKeys: string[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
     dayKeys.push(d.toISOString().split('T')[0]);
   }
-  const zero = Object.fromEntries(dayKeys.map(k => [k, 0]));
+  const zero = Object.fromEntries(dayKeys.map((k) => [k, 0]));
 
-  // User registrations per day
+  // ── User registrations ────────────────────────────────────────────────────
   const regByDay = { ...zero };
   let todayUsers = 0, yesterdayUsers = 0;
-  usersSnap.docs.forEach(d => {
+  usersSnap.docs.forEach((d) => {
     const date = tsToDate(d.data().createdAt as Record<string, number>);
     if (!date) return;
     if (date >= sevenDaysAgo) {
@@ -63,10 +95,10 @@ export async function GET(req: NextRequest) {
     else if (date >= yesterdayStart) yesterdayUsers++;
   });
 
-  // Exams per day
+  // ── Exam sessions per day ─────────────────────────────────────────────────
   const examsByDay = { ...zero };
   let todayExams = 0, yesterdayExams = 0;
-  examsSnap.docs.forEach(d => {
+  examsSnap.docs.forEach((d) => {
     const date = tsToDate(d.data().startedAt as Record<string, number>);
     if (!date) return;
     if (date >= sevenDaysAgo) {
@@ -77,9 +109,9 @@ export async function GET(req: NextRequest) {
     else if (date >= yesterdayStart) yesterdayExams++;
   });
 
-  // Audit activity per day
+  // ── Audit activity per day ────────────────────────────────────────────────
   const auditByDay = { ...zero };
-  logsSnap.docs.forEach(d => {
+  logsSnap.docs.forEach((d) => {
     const date = tsToDate(d.data().timestamp as Record<string, number>);
     if (date && date >= sevenDaysAgo) {
       const key = date.toISOString().split('T')[0];
@@ -87,14 +119,14 @@ export async function GET(req: NextRequest) {
     }
   });
 
-  // Question stats
+  // ── Questions ─────────────────────────────────────────────────────────────
   const questionsByDifficulty = { easy: 0, moderate: 0, hard: 0 };
   const questionsByStatus = { active: 0, inactive: 0 };
   const lowAccuracyQuestions: Array<{
     id: string; stem: string; difficulty: string;
     avgCorrectRate: number; usageCount: number; topic: string;
   }> = [];
-  questionsSnap.docs.forEach(d => {
+  questionsSnap.docs.forEach((d) => {
     const data = d.data();
     const diff = data.difficulty as keyof typeof questionsByDifficulty;
     const status = data.status as keyof typeof questionsByStatus;
@@ -113,104 +145,90 @@ export async function GET(req: NextRequest) {
   });
   lowAccuracyQuestions.sort((a, b) => a.avgCorrectRate - b.avgCorrectRate);
 
-  // Top 5 users by XP
-  const topUsers = usersSnap.docs
-    .map(d => ({
-      uid: d.id,
-      displayName: d.data().displayName || 'Unknown',
-      role: d.data().role,
-      xp: d.data().stats?.xp || 0,
-      level: d.data().stats?.level || 1,
-    }))
-    .sort((a, b) => b.xp - a.xp)
-    .slice(0, 5);
-
-  // Exam status distribution
-  const examStatus = { in_progress: 0, completed: 0, abandoned: 0, flagged: 0 };
-  examsSnap.docs.forEach(d => {
-    const s = d.data().status as keyof typeof examStatus;
-    if (s in examStatus) examStatus[s]++;
-  });
-
-  // Role distribution
+  // ── Roles & top users ─────────────────────────────────────────────────────
   const roleDistribution = { student: 0, teacher: 0, admin: 0 };
-  usersSnap.docs.forEach(d => {
-    const r = d.data().role as keyof typeof roleDistribution;
+  const topUsers: Array<{ uid: string; displayName: string; role: string; xp: number; level: number }> = [];
+  let activeUsers = 0, xpSum = 0, studentCount = 0;
+
+  usersSnap.docs.forEach((d) => {
+    const data = d.data();
+    const r = data.role as keyof typeof roleDistribution;
     if (r in roleDistribution) roleDistribution[r]++;
+    if (data.isActive) activeUsers++;
+    if (r === 'student') { xpSum += data.stats?.xp ?? 0; studentCount++; }
+    topUsers.push({ uid: d.id, displayName: data.displayName ?? '?', role: data.role, xp: data.stats?.xp ?? 0, level: data.stats?.level ?? 1 });
   });
+  topUsers.sort((a, b) => b.xp - a.xp);
+  const avgXp = studentCount > 0 ? Math.round(xpSum / studentCount) : 0;
 
-  // Average XP across students
-  const students = usersSnap.docs.filter(d => d.data().role === 'student');
-  const avgXp = students.length
-    ? Math.round(students.reduce((s, d) => s + (d.data().stats?.xp || 0), 0) / students.length)
-    : 0;
-
-  // Recent exam performance (accuracy of completed exams)
-  const completedExams = examsSnap.docs.filter(d => d.data().status === 'completed');
-  const avgAccuracy = completedExams.length
-    ? Math.round(
-        completedExams.reduce((s, d) => s + (d.data().result?.accuracy || 0), 0) /
-          completedExams.length * 100
-      )
-    : 0;
-
-  // MSAT stats
+  // ── Exam aggregations ─────────────────────────────────────────────────────
+  const examStatus = { in_progress: 0, completed: 0, abandoned: 0, flagged: 0 };
+  let accuracySum = 0, accuracyCount = 0;
+  let msatScoreSum = 0, msatScoreCount = 0;
   const msatComprehensionDist: Record<string, number> = {
     paham_konsep: 0, paham_sebagian: 0, tidak_paham: 0, miskonsepsi: 0, hasil_nebak: 0,
   };
-  let msatScoreSum = 0, msatScoreCount = 0;
-  examsSnap.docs.forEach(d => {
+
+  examsSnap.docs.forEach((d) => {
     const data = d.data();
-    if (data.status !== 'completed') return;
-    if (typeof data.numericScore === 'number') { msatScoreSum += data.numericScore; msatScoreCount++; }
-    const dr = data.domainResponses as Record<string, { comprehensionCategory: string }> ?? {};
-    for (const resp of Object.values(dr)) {
-      const cat = resp.comprehensionCategory;
-      if (cat && cat in msatComprehensionDist) msatComprehensionDist[cat]++;
+    const s = data.status as keyof typeof examStatus;
+    if (s in examStatus) examStatus[s]++;
+    if (data.status === 'completed') {
+      if (data.result?.accuracy != null) { accuracySum += data.result.accuracy; accuracyCount++; }
+      if (typeof data.numericScore === 'number') { msatScoreSum += data.numericScore; msatScoreCount++; }
+      const dr = data.domainResponses as Record<string, { comprehensionCategory: string }> ?? {};
+      for (const resp of Object.values(dr)) {
+        const cat = resp.comprehensionCategory;
+        if (cat && cat in msatComprehensionDist) msatComprehensionDist[cat]++;
+      }
     }
   });
+  const avgAccuracy = accuracyCount > 0 ? Math.round((accuracySum / accuracyCount) * 100) : 0;
   const avgMsatScore = msatScoreCount > 0 ? Math.round(msatScoreSum / msatScoreCount) : 0;
 
-  // Recent 8 completed exam sessions
-  const userMap = Object.fromEntries(usersSnap.docs.map(d => [d.id, d.data().displayName ?? d.id.slice(0, 8)]));
+  // ── Recent 8 completed exams ──────────────────────────────────────────────
+  const userDisplayMap = Object.fromEntries(
+    usersSnap.docs.map((d) => [d.id, d.data().displayName ?? d.id.slice(0, 8)])
+  );
   const recentExams = examsSnap.docs
-    .filter(d => d.data().status === 'completed' && d.data().completedAt)
+    .filter((d) => d.data().status === 'completed' && d.data().completedAt)
     .sort((a, b) => {
       const ta = tsToDate(a.data().completedAt as Record<string, number>)?.getTime() ?? 0;
       const tb = tsToDate(b.data().completedAt as Record<string, number>)?.getTime() ?? 0;
       return tb - ta;
     })
     .slice(0, 8)
-    .map(d => {
+    .map((d) => {
       const data = d.data();
-      const completedAt = tsToDate(data.completedAt as Record<string, number>);
       const uid = (data.userId ?? data.studentId) as string | undefined;
       return {
         id: d.id,
         userId: uid,
-        userName: userMap[uid ?? ''] ?? uid?.slice(0, 8),
+        userName: userDisplayMap[uid ?? ''] ?? uid?.slice(0, 8),
         examId: data.examId,
         theta: typeof data.theta === 'number' ? data.theta.toFixed(2) : '0.00',
-        accuracy: data.result?.accuracy ? Math.round(data.result.accuracy * 100) : 0,
+        accuracy: data.result?.accuracy != null ? Math.round(data.result.accuracy * 100) : 0,
         proficiencyLevel: data.result?.proficiencyLevel ?? '—',
-        completedAt: completedAt?.toISOString() ?? null,
-        flagged: data.anomalyFlags?.length > 0,
+        completedAt: tsToDate(data.completedAt as Record<string, number>)?.toISOString() ?? null,
+        flagged: (data.anomalyFlags?.length ?? 0) > 0,
       };
     });
 
-  // Material progress stats
+  // ── Material progress stats ───────────────────────────────────────────────
   const materialProgressMap: Record<string, number> = {};
-  progressSnap.docs.forEach(d => {
-    const mid = d.data().materialId;
-    if (mid) materialProgressMap[mid] = (materialProgressMap[mid] || 0) + 1;
+  progressSnap.docs.forEach((d) => {
+    const mid = d.data().materialId as string;
+    if (mid) materialProgressMap[mid] = (materialProgressMap[mid] ?? 0) + 1;
   });
-  const materialStats = materialsSnap.docs.map(d => ({
-    id: d.id,
-    title: d.data().title ?? '—',
-    status: d.data().status ?? 'draft',
-    topic: d.data().topic ?? '—',
-    progressCount: materialProgressMap[d.id] ?? 0,
-  })).sort((a, b) => b.progressCount - a.progressCount);
+  const materialStats = materialsSnap.docs
+    .map((d) => ({
+      id: d.id,
+      title: d.data().title ?? '—',
+      status: d.data().status ?? 'draft',
+      topic: d.data().topic ?? '—',
+      progressCount: materialProgressMap[d.id] ?? 0,
+    }))
+    .sort((a, b) => b.progressCount - a.progressCount);
 
   return NextResponse.json({
     dayKeys,
@@ -219,7 +237,7 @@ export async function GET(req: NextRequest) {
     auditActivityByDay: auditByDay,
     questionsByDifficulty,
     questionsByStatus,
-    topUsers,
+    topUsers: topUsers.slice(0, 5),
     examStatusDistribution: examStatus,
     roleDistribution,
     avgXp,
@@ -236,9 +254,9 @@ export async function GET(req: NextRequest) {
       materials: materialsSnap.size,
       completedExams: examStatus.completed,
       activeQuestions: questionsByStatus.active,
-      activeUsers: usersSnap.docs.filter(d => d.data().isActive).length,
-      classes: classesSnap.size,
-      examSchedules: schedulesSnap.size,
+      activeUsers,
+      classes: classesCount.data().count,
+      examSchedules: schedulesCount.data().count,
     },
     msat: {
       avgScore: avgMsatScore,
