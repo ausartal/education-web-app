@@ -87,10 +87,8 @@ export const LevelUpModal: FC<LevelUpModalProps> = ({
                 opacity: 0,
               }}
               transition={{ duration: 1.5, delay: Math.random() * 0.3 }}
-              className="absolute text-2xl"
-            >
-              {['✨', '⭐', '🎉', '🌟'][i % 4]}
-            </motion.div>
+              className={`absolute h-2.5 w-2.5 rounded-full ${['bg-amber-400', 'bg-orange-400', 'bg-yellow-300', 'bg-primary'][i % 4]}`}
+            />
           ))}
 
           {/* Modal */}

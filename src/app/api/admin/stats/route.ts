@@ -6,8 +6,7 @@ export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  // Gunakan .select() untuk hanya ambil field yang dibutuhkan
-  // Gunakan .count() untuk koleksi yang hanya perlu angka total
+  // Use .select() to fetch only required fields; .count() for collections where only the total is needed
   const [usersSnap, materialsCount, questionsCount, examsCount] = await Promise.all([
     adminDb.collection('users').select('role', 'isActive', 'displayName', 'email', 'createdAt').get(),
     adminDb.collection('materials').count().get(),

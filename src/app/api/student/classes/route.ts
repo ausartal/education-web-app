@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Satu query untuk semua kelas yang diikuti siswa
+  // Single query for all classes the student is enrolled in
   const snap = await adminDb
     .collection('classes')
     .where('studentIds', 'array-contains', decoded.uid)
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const classIds = snap.docs.map((d) => d.id);
   const classDataMap = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()]));
 
-  // Batch fetch teacher names — satu get() per teacher UNIK (bukan per kelas)
+  // Batch fetch teacher names — one get() per unique teacher, not per class
   const uniqueTeacherIds = [...new Set(snap.docs.map((d) => d.data().teacherId as string))];
   const teacherDocs = await Promise.all(
     uniqueTeacherIds.map((tid) => adminDb.collection('users').doc(tid).get())
@@ -37,8 +37,8 @@ export async function GET(req: NextRequest) {
     uniqueTeacherIds.map((tid, i) => [tid, teacherDocs[i].data()?.displayName ?? 'Guru'])
   );
 
-  // Satu query untuk semua jadwal ujian aktif dari semua kelas sekaligus
-  // Firestore 'in' mendukung maks 30 nilai
+  // Single query for all active exam schedules across every class
+  // Firestore 'in' supports a maximum of 30 values
   const examCountMap: Record<string, number> = Object.fromEntries(classIds.map((id) => [id, 0]));
   const chunkSize = 30;
   for (let i = 0; i < classIds.length; i += chunkSize) {
