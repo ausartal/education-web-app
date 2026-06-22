@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
     const assignments = snap.docs
       .map(d => {
         const data = d.data();
+        const subs = (data.submissions as Record<string, unknown>) ?? {};
         return {
           id: d.id,
           classId: (data.classId as string) ?? '',
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest) {
           dueDate: (data.dueDate as string) ?? null,
           maxScore: (data.maxScore as number) ?? 100,
           status: (data.status as string) ?? 'draft',
+          submissionCount: Object.keys(subs).length,
           createdAt: tsToIso(data.createdAt),
           updatedAt: tsToIso(data.updatedAt),
         };

@@ -13,12 +13,15 @@ import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { RichEditor } from '@/components/teacher/RichEditor';
 import { useToast } from '@/hooks/useToast';
+import { stripMarkdown } from '@/lib/strip-html';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Student { uid: string; displayName: string; email: string; xp: number; }
 interface ExamItem { id: string; title: string; examToken: string; status: string; completedCount: number; sessionCount: number; startTime?: string; endTime?: string; }
 interface MaterialItem { id: string; title: string; description: string; topic: string; estimatedTime: number; status: string; createdByName: string; }
-interface Assignment { id: string; title: string; description: string; dueDate: string | null; maxScore: number; status: string; }
+interface Assignment { id: string; title: string; description: string; dueDate: string | null; maxScore: number; status: string; submissionCount?: number; }
+interface SubmissionEntry { studentId: string; studentName: string; text: string; submittedAt: string | null; }
+interface SubmissionsData { submitted: SubmissionEntry[]; notSubmitted: { studentId: string; studentName: string }[]; }
 interface ClassDetail { id: string; name: string; subject: string; joinCode: string; teacherId: string; studentIds: string[]; }
 interface ChatMessage { id: string; senderId: string; senderName: string; senderRole: string; text: string; createdAt: unknown; }
 
@@ -66,6 +69,9 @@ const TeacherClassDetailPage: FC = () => {
   const [showCreateAsgn, setShowCreateAsgn] = useState(false);
   const [asgnForm, setAsgnForm] = useState({ title: '', description: '', dueDate: '', maxScore: 100 });
   const [savingAsgn, setSavingAsgn] = useState(false);
+  const [viewSubmissions, setViewSubmissions] = useState<Assignment | null>(null);
+  const [submissionsData, setSubmissionsData] = useState<SubmissionsData | null>(null);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 
   // Chat
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -244,6 +250,21 @@ const TeacherClassDetailPage: FC = () => {
       addToast('error', err instanceof Error ? err.message : 'Gagal membuat tugas');
     } finally {
       setSavingAsgn(false);
+    }
+  };
+
+  const handleViewSubmissions = async (asgn: Assignment) => {
+    setViewSubmissions(asgn);
+    setSubmissionsData(null);
+    setLoadingSubmissions(true);
+    try {
+      const t = await authToken();
+      const res = await fetch(`/api/teacher/assignments/${asgn.id}`, {
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      if (res.ok) setSubmissionsData(await res.json());
+    } finally {
+      setLoadingSubmissions(false);
     }
   };
 
@@ -582,6 +603,7 @@ const TeacherClassDetailPage: FC = () => {
                 <div className="space-y-3">
                   {assignments.map((a, i) => {
                     const isOverdue = a.dueDate && new Date(a.dueDate) < new Date();
+                    const plainDesc = a.description ? stripMarkdown(a.description) : '';
                     return (
                       <motion.div
                         key={a.id}
@@ -600,8 +622,8 @@ const TeacherClassDetailPage: FC = () => {
                                 {isOverdue ? 'Lewat batas' : a.status === 'published' ? 'Aktif' : 'Draf'}
                               </span>
                             </div>
-                            {a.description && (
-                              <p className="mt-1 line-clamp-2 text-xs text-gray-500">{a.description}</p>
+                            {plainDesc && (
+                              <p className="mt-1 line-clamp-2 text-xs text-gray-500">{plainDesc}</p>
                             )}
                             <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
                               {a.dueDate && (
@@ -611,6 +633,13 @@ const TeacherClassDetailPage: FC = () => {
                               )}
                               <span>Nilai maks: {a.maxScore}</span>
                             </div>
+                            <button
+                              onClick={() => handleViewSubmissions(a)}
+                              className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+                            >
+                              <ClipboardCheck size={12} />
+                              {a.submissionCount ?? 0} pengumpulan · Lihat Detail
+                            </button>
                           </div>
                           <div className="flex items-center gap-1">
                             <button
@@ -626,6 +655,80 @@ const TeacherClassDetailPage: FC = () => {
                   })}
                 </div>
               )}
+
+              {/* Submissions Modal */}
+              <AnimatePresence>
+                {viewSubmissions && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
+                    onClick={e => { if (e.target === e.currentTarget) setViewSubmissions(null); }}
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      className="w-full max-w-lg rounded-2xl bg-white shadow-2xl"
+                    >
+                      <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">Pengumpulan Tugas</h3>
+                          <p className="text-xs text-gray-400">{viewSubmissions.title}</p>
+                        </div>
+                        <button onClick={() => setViewSubmissions(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                      </div>
+                      <div className="max-h-[60vh] overflow-y-auto">
+                        {loadingSubmissions ? (
+                          <div className="flex justify-center py-10"><div className="h-7 w-7 animate-spin rounded-full border-4 border-amber-400 border-t-transparent" /></div>
+                        ) : submissionsData ? (
+                          <>
+                            {submissionsData.submitted.length > 0 && (
+                              <div className="p-4">
+                                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-emerald-600">Sudah Mengumpulkan ({submissionsData.submitted.length})</p>
+                                <div className="space-y-2">
+                                  {submissionsData.submitted.map(s => (
+                                    <div key={s.studentId} className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <p className="text-sm font-semibold text-gray-800">{s.studentName}</p>
+                                        {s.submittedAt && (
+                                          <span className="text-[10px] text-gray-400">{fmtDateTime(s.submittedAt)}</span>
+                                        )}
+                                      </div>
+                                      {s.text && (
+                                        <p className="mt-1.5 text-xs text-gray-600 whitespace-pre-wrap">{s.text}</p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {submissionsData.notSubmitted.length > 0 && (
+                              <div className="border-t border-gray-50 p-4">
+                                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-red-500">Belum Mengumpulkan ({submissionsData.notSubmitted.length})</p>
+                                <div className="space-y-1.5">
+                                  {submissionsData.notSubmitted.map(s => (
+                                    <div key={s.studentId} className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
+                                      <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                                        {s.studentName.charAt(0).toUpperCase()}
+                                      </div>
+                                      <p className="text-sm text-gray-600">{s.studentName}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {submissionsData.submitted.length === 0 && submissionsData.notSubmitted.length === 0 && (
+                              <p className="py-10 text-center text-sm text-gray-400">Belum ada siswa di kelas ini</p>
+                            )}
+                          </>
+                        ) : null}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Create Assignment Modal */}
               <AnimatePresence>

@@ -119,6 +119,8 @@ export async function GET(
   const assignments = asgnSnap.docs
     .map(d => {
       const a = d.data();
+      const subs = (a.submissions as Record<string, Record<string, unknown>>) ?? {};
+      const mySub = subs[decoded.uid];
       return {
         id: d.id,
         title: a.title as string,
@@ -127,6 +129,10 @@ export async function GET(
         maxScore: (a.maxScore as number) ?? 100,
         status: (a.status as string) ?? 'published',
         createdAt: tsToIso(a.createdAt),
+        submissionCount: Object.keys(subs).length,
+        mySubmission: mySub
+          ? { text: (mySub.text as string) ?? '', submittedAt: tsToIso(mySub.submittedAt) }
+          : null,
       };
     })
     .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
