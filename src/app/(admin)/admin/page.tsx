@@ -221,7 +221,7 @@ const AdminDashboard: FC = () => {
               {nowStr}
             </p>
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-stone-900">
-              Halo, {profile?.displayName?.split(' ')[0] ?? 'Admin'} 👋
+              Halo, {profile?.displayName?.split(' ')[0] ?? 'Admin'}
             </h1>
             <p className="mt-1 text-sm text-stone-500">
               {data.totals.users} pengguna terdaftar · {data.totals.activeUsers} aktif hari ini

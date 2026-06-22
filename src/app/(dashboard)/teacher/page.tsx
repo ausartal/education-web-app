@@ -84,7 +84,7 @@ const TeacherDashboard: FC = () => {
         >
           <p className="text-xs font-medium text-emerald-500 mb-0.5">Panel Guru</p>
           <h1 className="font-display text-2xl font-extrabold text-stone-900">
-            Halo, {profile.displayName.split(' ')[0]} 👋
+            Halo, {profile.displayName.split(' ')[0]}
           </h1>
           <p className="mt-1 text-sm text-stone-500">
             Kelola kelas dan pantau perkembangan siswa Anda

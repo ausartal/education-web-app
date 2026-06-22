@@ -166,7 +166,7 @@ const DashboardPage: FC = () => {
       <div className="mb-8 grid animate-[fadeIn_0.5s_ease-out] gap-8 lg:grid-cols-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, {profile.displayName.split(' ')[0]} ✨
+            Welcome back, {profile.displayName.split(' ')[0]}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
             Ready to learn something new today?

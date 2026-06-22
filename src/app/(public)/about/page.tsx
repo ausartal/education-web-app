@@ -1,26 +1,27 @@
 import { Metadata } from 'next';
 import Image from 'next/image';
+import { Target, Microscope, Gamepad2, BarChart2 } from 'lucide-react';
 
 export const metadata: Metadata = { title: 'Tentang AKURAT' };
 
 const values = [
   {
-    icon: '🎯',
+    icon: <Target size={24} className="text-primary" />,
     title: 'Adaptif',
     desc: 'Menyesuaikan dengan kemampuan setiap siswa',
   },
   {
-    icon: '🔬',
+    icon: <Microscope size={24} className="text-indigo-500" />,
     title: 'Berbasis Riset',
     desc: 'Dibangun di atas teori IRT dan MSAT',
   },
   {
-    icon: '🎮',
+    icon: <Gamepad2 size={24} className="text-emerald-500" />,
     title: 'Menyenangkan',
     desc: 'Gamifikasi yang memotivasi belajar',
   },
   {
-    icon: '📊',
+    icon: <BarChart2 size={24} className="text-amber-500" />,
     title: 'Data-Driven',
     desc: 'Analisis mendalam untuk setiap siswa',
   },
@@ -67,7 +68,7 @@ export default function AboutPage() {
               key={v.title}
               className="rounded-2xl bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
             >
-              <span className="mb-3 block text-3xl">{v.icon}</span>
+              <div className="mb-3">{v.icon}</div>
               <h3 className="mb-1 font-display text-sm font-bold text-gray-900">
                 {v.title}
               </h3>

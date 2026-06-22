@@ -12,7 +12,7 @@ export const WelcomeHero: FC<WelcomeHeroProps> = ({ name, streak }) => {
     <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-primary to-primary-cyan p-6 text-white lg:p-8">
       <div>
         <h1 className="mb-1 text-2xl font-bold">
-          Halo, {name.split(' ')[0]}! 👋
+          Halo, {name.split(' ')[0]}!
         </h1>
         <p className="mb-4 text-sm text-white/80">
           Ayo lanjutkan belajar hari ini

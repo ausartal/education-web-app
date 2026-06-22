@@ -9,7 +9,7 @@ import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CheckCircle, List, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Clock, List, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getMaterial, getMaterials } from '@/services/materials';
 import { updateProgress } from '@/services/progress';
@@ -212,9 +212,9 @@ const MateriDetailPage: FC = () => {
               {material.description}
             </p>
             <div className="mt-4 flex items-center gap-3 text-xs text-white/50">
-              <span>⏱ {material.estimatedTime} min</span>
+              <span className="flex items-center gap-1"><Clock size={11} /> {material.estimatedTime} min</span>
               <span>•</span>
-              <span>📖 {headings.length} sections</span>
+              <span className="flex items-center gap-1"><List size={11} /> {headings.length} sections</span>
             </div>
           </div>
 

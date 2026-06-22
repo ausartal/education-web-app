@@ -20,45 +20,38 @@ export async function GET(req: NextRequest) {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
 
-  // Fetch semua collections secara paralel, masing-masing dengan field projection minimal
+  // Fetch all collections in parallel with minimal field projections to reduce read cost
   const [usersSnap, examsSnap, questionsSnap, materialsSnap, progressSnap, logsSnap, classesCount, schedulesCount] =
     await Promise.all([
-      // Users: hanya field yang dipakai di analytics
       adminDb.collection('users')
         .select('role', 'isActive', 'displayName', 'createdAt', 'stats')
         .get(),
 
-      // Exam sessions: batasi ke 6 bulan terakhir saja untuk statistics
-      // Full history tidak perlu untuk dashboard; jika butuh semua pakai export
+      // Limit exam sessions to the last 6 months — full history is not needed for the dashboard
       adminDb.collection('exam_sessions')
         .where('startedAt', '>=', sixMonthsAgo)
         .select('status', 'startedAt', 'completedAt', 'userId', 'studentId',
                 'examId', 'theta', 'result', 'numericScore', 'domainResponses', 'anomalyFlags')
         .get(),
 
-      // Questions: hanya field statistik
       adminDb.collection('question_bank')
         .select('difficulty', 'status', 'stem', 'avgCorrectRate', 'usageCount', 'topic')
         .get(),
 
-      // Materials: hanya field yang ditampilkan
       adminDb.collection('materials')
         .select('title', 'status', 'topic')
         .get(),
 
-      // User progress: hanya materialId untuk hitung per-materi
       adminDb.collection('user_progress')
         .select('materialId')
         .get(),
 
-      // Audit logs: tetap limit 200 terbaru
       adminDb.collection('audit_logs')
         .orderBy('timestamp', 'desc')
         .limit(200)
         .select('timestamp')
         .get(),
 
-      // Classes & schedules: hanya butuh count
       adminDb.collection('classes').count().get(),
       adminDb.collection('exam_schedules').count().get(),
     ]);
