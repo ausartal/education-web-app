@@ -1,21 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
+import { verifyTeacher } from '@/lib/auth-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
-
-async function verifyTeacher(req: NextRequest) {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.slice(7);
-  try {
-    const decoded = await adminAuth.verifyIdToken(token);
-    const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
-    const role = userDoc.data()?.role;
-    if (!userDoc.exists || (role !== 'teacher' && role !== 'admin')) return null;
-    return { ...decoded, role: role as string, displayName: (userDoc.data()?.displayName as string) ?? '' };
-  } catch { return null; }
-}
 
 // PATCH /api/teacher/materials/[id] — update material (with permission check + audit log)
 export async function PATCH(

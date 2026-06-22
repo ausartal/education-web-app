@@ -1,20 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { verifyAdmin } from '@/lib/auth-helpers';
 import { UserRole } from '@/types/firestore';
 
 export const dynamic = 'force-dynamic';
-
-async function verifyAdmin(req: NextRequest) {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.slice(7);
-  try {
-    const decoded = await adminAuth.verifyIdToken(token);
-    const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
-    if (!userDoc.exists || userDoc.data()?.role !== 'admin') return null;
-    return decoded;
-  } catch { return null; }
-}
 
 export async function POST(req: NextRequest) {
   const admin = await verifyAdmin(req);

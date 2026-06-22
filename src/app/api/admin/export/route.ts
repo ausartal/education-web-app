@@ -1,29 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
+import { verifyAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 const ALLOWED = ['users', 'question_bank', 'exam_sessions', 'audit_logs'] as const;
 type AllowedCollection = (typeof ALLOWED)[number];
 
-// Field projection per koleksi — hanya ambil kolom yang relevan untuk export
 const EXPORT_FIELDS: Record<AllowedCollection, string[]> = {
   users: ['displayName', 'email', 'role', 'isActive', 'createdAt', 'lastLoginAt', 'stats'],
   question_bank: ['stem', 'difficulty', 'topic', 'status', 'avgCorrectRate', 'usageCount', 'createdAt'],
   exam_sessions: ['userId', 'studentId', 'examId', 'status', 'theta', 'result', 'startedAt', 'completedAt', 'anomalyFlags'],
   audit_logs: ['actorId', 'actorRole', 'action', 'targetId', 'targetType', 'timestamp'],
 };
-
-async function verifyAdmin(req: NextRequest) {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  try {
-    const decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
-    const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
-    if (!userDoc.exists || userDoc.data()?.role !== 'admin') return null;
-    return decoded;
-  } catch { return null; }
-}
 
 function flattenDoc(obj: unknown, prefix = ''): Record<string, string> {
   const result: Record<string, string> = {};

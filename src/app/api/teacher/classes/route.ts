@@ -1,21 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
+import { verifyTeacher } from '@/lib/auth-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
-
-async function verifyTeacher(req: NextRequest) {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.slice(7);
-  try {
-    const decoded = await adminAuth.verifyIdToken(token);
-    const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
-    const role = userDoc.data()?.role;
-    if (!userDoc.exists || (role !== 'teacher' && role !== 'admin')) return null;
-    return decoded;
-  } catch { return null; }
-}
 
 function generateJoinCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -29,15 +17,28 @@ export async function GET(req: NextRequest) {
     .where('teacherId', '==', teacher.uid)
     .get();
 
-  const classes = await Promise.all(snap.docs.map(async (d) => {
-    const data = d.data();
-    // Count students
-    const studentCount = (data.studentIds || []).length;
-    // Count exams
+  if (snap.empty) return NextResponse.json({ classes: [] });
+
+  const classIds = snap.docs.map((d) => d.id);
+
+  // Batch fetch exam counts via 'in' — replaces N separate queries
+  const examCountMap: Record<string, number> = Object.fromEntries(classIds.map((id) => [id, 0]));
+  for (let i = 0; i < classIds.length; i += 30) {
+    const chunk = classIds.slice(i, i + 30);
     const examSnap = await adminDb.collection('exam_schedules')
-      .where('classId', '==', d.id).get();
-    return { id: d.id, ...data, studentCount, examCount: examSnap.size };
-  }));
+      .where('classId', 'in', chunk)
+      .select('classId')
+      .get();
+    examSnap.docs.forEach((d) => {
+      const cid = d.data().classId as string;
+      examCountMap[cid] = (examCountMap[cid] ?? 0) + 1;
+    });
+  }
+
+  const classes = snap.docs.map((d) => {
+    const data = d.data();
+    return { id: d.id, ...data, studentCount: (data.studentIds || []).length, examCount: examCountMap[d.id] ?? 0 };
+  });
 
   const getSeconds = (ts: unknown) => (ts as { _seconds?: number })?._seconds ?? 0;
   (classes as Array<Record<string, unknown>>).sort((a, b) => getSeconds(b.createdAt) - getSeconds(a.createdAt));

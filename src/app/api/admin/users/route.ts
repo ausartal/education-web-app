@@ -1,20 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { verifyAdmin } from '@/lib/auth-helpers';
 import { UserRole } from '@/types/firestore';
 
 export const dynamic = 'force-dynamic';
-
-async function verifyAdmin(req: NextRequest) {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.slice(7);
-  try {
-    const decoded = await adminAuth.verifyIdToken(token);
-    const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
-    if (!userDoc.exists || userDoc.data()?.role !== 'admin') return null;
-    return decoded;
-  } catch { return null; }
-}
 
 function tsToIso(ts: unknown): string | null {
   if (!ts) return null;
@@ -36,10 +25,14 @@ export async function GET(req: NextRequest) {
 
   try {
     const [usersSnap, sessionsSnap, quizSnap, progressSnap] = await Promise.all([
-      adminDb.collection('users').get(),
-      adminDb.collection('exam_sessions').get(),
-      adminDb.collection('quiz_results').get().catch(() => null),
-      adminDb.collection('user_progress').get().catch(() => null),
+      adminDb.collection('users')
+        .select('displayName', 'email', 'photoURL', 'role', 'isActive', 'createdAt', 'lastLoginAt', 'profile', 'stats', 'settings')
+        .get(),
+      adminDb.collection('exam_sessions')
+        .select('studentId', 'userId', 'status', 'numericScore', 'result')
+        .get(),
+      adminDb.collection('quiz_results').select('userId').get().catch(() => null),
+      adminDb.collection('user_progress').select('userId').get().catch(() => null),
     ]);
 
     // Aggregate per-user exam session counts
