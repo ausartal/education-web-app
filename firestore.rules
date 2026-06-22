@@ -2,61 +2,101 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ── Helpers ──────────────────────────────────────────────────────────────
     function isAuth() { return request.auth != null; }
-    function uid() { return request.auth.uid; }
-    function userDoc() { return get(/databases/$(database)/documents/users/$(uid())); }
-    function role() { return userDoc().data.role; }
-    function isActive() { return userDoc().data.isActive == true; }
-    function isAdmin() { return isAuth() && role() == 'admin'; }
-    function isTeacherOrAdmin() { return isAuth() && (role() == 'teacher' || role() == 'admin'); }
-    function isActiveUser() { return isAuth() && isActive(); }
-    function isOwner(userId) { return isAuth() && uid() == userId; }
-    function creatorRole(resourceData) {
-      return get(/databases/$(database)/documents/users/$(resourceData.createdBy)).data.role;
+    function uid()    { return request.auth.uid; }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(uid()));
     }
+    function role() { return userDoc().data.role; }
+
+    function isAdmin()          { return isAuth() && role() == 'admin'; }
+    function isTeacher()        { return isAuth() && role() == 'teacher'; }
+    function isTeacherOrAdmin() { return isAuth() && (role() == 'teacher' || role() == 'admin'); }
+    function isOwner(userId)    { return isAuth() && uid() == userId; }
+
     function notAdminCreated(resourceData) {
-      return creatorRole(resourceData) != 'admin';
+      return get(/databases/$(database)/documents/users/$(resourceData.createdBy)).data.role != 'admin';
     }
 
-    // USERS
+    // ── USERS ────────────────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read: if isOwner(userId) || isTeacherOrAdmin();
+      allow read:   if isOwner(userId) || isTeacherOrAdmin();
       allow create: if isAdmin();
       allow update: if isAdmin()
-        || (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','isActive','uid','createdAt']));
+        || (isOwner(userId) && !request.resource.data.diff(resource.data)
+            .affectedKeys().hasAny(['role','isActive','uid','createdAt']));
       allow delete: if isAdmin();
     }
 
-    // MATERIALS
+    // ── MATERIALS ────────────────────────────────────────────────────────────
     match /materials/{docId} {
-      allow read: if isActiveUser();
+      allow read:   if isAuth();
       allow create: if isTeacherOrAdmin();
       allow update: if isAdmin() || (isTeacherOrAdmin() && notAdminCreated(resource.data));
       allow delete: if isAdmin() || (isTeacherOrAdmin() && notAdminCreated(resource.data));
     }
 
-    // QUESTION BANK
+    // ── QUESTION BANK ────────────────────────────────────────────────────────
     match /question_bank/{docId} {
-      allow read: if isActiveUser();
+      allow read:   if isAuth();
       allow create: if isTeacherOrAdmin();
       allow update: if isAdmin() || (isTeacherOrAdmin() && notAdminCreated(resource.data));
       allow delete: if isAdmin() || (isTeacherOrAdmin() && notAdminCreated(resource.data));
     }
 
-    // CLASSES (MSAT system)
-    match /classes/{docId} {
+    // ── CLASSES ──────────────────────────────────────────────────────────────
+    match /classes/{classId} {
       allow read: if isTeacherOrAdmin()
         || (isAuth() && resource.data.studentIds.hasAny([uid()]));
       allow create: if isTeacherOrAdmin();
       allow update: if isAdmin()
-        || (isTeacherOrAdmin() && resource.data.teacherId == uid());
+        || (isTeacherOrAdmin() && resource.data.teacherId == uid())
+        // Siswa boleh update untuk join kelas (menambahkan diri ke studentIds)
+        || (isAuth() && request.resource.data.diff(resource.data)
+            .affectedKeys().hasOnly(['studentIds']));
       allow delete: if isAdmin()
         || (isTeacherOrAdmin() && resource.data.teacherId == uid());
     }
 
-    // EXAM SCHEDULES (MSAT system)
+    // ── CLASS CHAT ───────────────────────────────────────────────────────────
+    match /class_chats/{classId}/messages/{msgId} {
+      // Boleh baca kalau terdaftar di kelas tersebut (guru atau siswa)
+      allow read: if isTeacherOrAdmin()
+        || (isAuth() && get(/databases/$(database)/documents/classes/$(classId))
+            .data.studentIds.hasAny([uid()]));
+      // Boleh kirim pesan kalau terdaftar di kelas
+      allow create: if isAuth()
+        && (isTeacherOrAdmin()
+            || get(/databases/$(database)/documents/classes/$(classId))
+               .data.studentIds.hasAny([uid()]))
+        && request.resource.data.senderId == uid()
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin()
+        || (isAuth() && resource.data.senderId == uid());
+    }
+
+    // ── ASSIGNMENTS ──────────────────────────────────────────────────────────
+    match /assignments/{docId} {
+      // Siswa bisa baca tugas kelasnya
+      allow read: if isTeacherOrAdmin()
+        || (isAuth() && get(/databases/$(database)/documents/classes/$(resource.data.classId))
+            .data.studentIds.hasAny([uid()]));
+      allow create: if isTeacherOrAdmin();
+      allow update: if isAdmin()
+        || (isTeacherOrAdmin() && resource.data.teacherId == uid())
+        // Siswa boleh submit jawaban (update field submissions)
+        || (isAuth() && request.resource.data.diff(resource.data)
+            .affectedKeys().hasOnly(['submissions', 'updatedAt']));
+      allow delete: if isAdmin()
+        || (isTeacherOrAdmin() && resource.data.teacherId == uid());
+    }
+
+    // ── EXAM SCHEDULES ───────────────────────────────────────────────────────
     match /exam_schedules/{docId} {
-      allow read: if isTeacherOrAdmin() || isAuth();
+      allow read:   if isAuth();
       allow create: if isTeacherOrAdmin();
       allow update: if isAdmin()
         || (isTeacherOrAdmin() && resource.data.teacherId == uid());
@@ -64,84 +104,82 @@ service cloud.firestore {
         || (isTeacherOrAdmin() && resource.data.teacherId == uid());
     }
 
-    // EXAM QUESTIONS bank (MSAT system)
+    // ── EXAM QUESTIONS ───────────────────────────────────────────────────────
     match /exam_questions/{docId} {
-      allow read: if isTeacherOrAdmin();
-      allow create: if isTeacherOrAdmin();
-      allow update: if isTeacherOrAdmin();
-      allow delete: if isTeacherOrAdmin();
+      allow read:   if isTeacherOrAdmin();
+      allow write:  if isTeacherOrAdmin();
     }
 
-    // EXAM SESSIONS (MSAT system) — note: uses studentId, not userId
+    // ── EXAM SESSIONS ────────────────────────────────────────────────────────
     match /exam_sessions/{docId} {
-      allow read: if isOwner(resource.data.studentId) || isTeacherOrAdmin();
-      allow create: if false; // created server-side only via Admin SDK
-      allow update: if false; // updated server-side only via Admin SDK
+      allow read:   if isOwner(resource.data.studentId) || isTeacherOrAdmin();
+      allow create: if false; // server-side only (Admin SDK)
+      allow update: if false; // server-side only (Admin SDK)
       allow delete: if isAdmin();
     }
 
-    // QUIZ RESULTS
+    // ── QUIZ RESULTS ─────────────────────────────────────────────────────────
     match /quiz_results/{docId} {
-      allow read: if isOwner(resource.data.userId) || isTeacherOrAdmin();
-      allow create: if isActiveUser() && request.resource.data.userId == uid();
+      allow read:   if isOwner(resource.data.userId) || isTeacherOrAdmin();
+      allow create: if isAuth() && request.resource.data.userId == uid();
       allow update: if false;
       allow delete: if isAdmin();
     }
 
-    // USER PROGRESS
+    // ── USER PROGRESS ─────────────────────────────────────────────────────────
     match /user_progress/{docId} {
-      allow read: if isOwner(resource.data.userId) || isTeacherOrAdmin();
-      allow create: if isActiveUser() && request.resource.data.userId == uid();
+      allow read:   if isOwner(resource.data.userId) || isTeacherOrAdmin();
+      allow create: if isAuth() && request.resource.data.userId == uid();
       allow update: if isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
-    // ACHIEVEMENTS
+    // ── ACHIEVEMENTS ─────────────────────────────────────────────────────────
     match /achievements/{docId} {
-      allow read: if isAuth();
+      allow read:  if isAuth();
       allow write: if isAdmin();
     }
     match /user_achievements/{docId} {
-      allow read: if isOwner(resource.data.userId) || isTeacherOrAdmin();
-      allow create: if isActiveUser();
-      allow update: if false;
-      allow delete: if isAdmin();
-    }
-
-    // MESSAGES
-    match /messages/{docId} {
-      allow read: if isAdmin()
-        || (isAuth() && (resource.data.senderId == uid() || resource.data.receiverId == uid()));
-      allow create: if isActiveUser();
-      allow update: if isAuth() && resource.data.receiverId == uid();
-      allow delete: if isAdmin() || (isAuth() && resource.data.senderId == uid());
-    }
-
-    // NOTIFICATIONS
-    match /notifications/{docId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isTeacherOrAdmin();
-      allow update: if isOwner(resource.data.userId);
-      allow delete: if isAdmin() || isOwner(resource.data.userId);
-    }
-
-    // APP CONFIG
-    match /app_config/{docId} {
-      allow read: if isAuth();
-      allow write: if isAdmin();
-    }
-
-    // ANALYTICS
-    match /analytics_events/{docId} {
-      allow read: if isAdmin();
+      allow read:   if isOwner(resource.data.userId) || isTeacherOrAdmin();
       allow create: if isAuth();
       allow update: if false;
       allow delete: if isAdmin();
     }
 
-    // AUDIT LOGS — admin-only read, immutable
+    // ── MESSAGES ─────────────────────────────────────────────────────────────
+    match /messages/{docId} {
+      allow read: if isAdmin()
+        || (isAuth() && (resource.data.senderId == uid() || resource.data.receiverId == uid()));
+      allow create: if isAuth();
+      allow update: if isAuth() && resource.data.receiverId == uid();
+      allow delete: if isAdmin() || (isAuth() && resource.data.senderId == uid());
+    }
+
+    // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+    match /notifications/{docId} {
+      allow read:   if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isTeacherOrAdmin();
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if isAdmin() || isOwner(resource.data.userId);
+    }
+
+    // ── APP CONFIG ───────────────────────────────────────────────────────────
+    match /app_config/{docId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ── ANALYTICS ────────────────────────────────────────────────────────────
+    match /analytics_events/{docId} {
+      allow read:   if isAdmin();
+      allow create: if isAuth();
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // ── AUDIT LOGS ───────────────────────────────────────────────────────────
     match /audit_logs/{docId} {
-      allow read: if isAdmin();
+      allow read:   if isAdmin();
       allow create: if isAuth();
       allow update: if false;
       allow delete: if false;
