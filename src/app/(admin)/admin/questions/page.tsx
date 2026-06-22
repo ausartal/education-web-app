@@ -1,6 +1,7 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import { FC, useState, useCallback, useMemo } from 'react';
+import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Search, Plus, Pencil, Trash2, X, ChevronDown,
@@ -62,8 +63,7 @@ const Skeleton: FC = () => (
 const AdminQuestions: FC = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState('');
   const [filterDiff, setFilterDiff] = useState<Difficulty | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<QuestionStatus | 'all'>('all');
@@ -73,34 +73,24 @@ const AdminQuestions: FC = () => {
   const [saving, setSaving] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // URL changes with filters — SWR key tracks filter state
+  const url = useMemo(() => {
+    const params = new URLSearchParams();
+    if (filterDiff !== 'all') params.set('difficulty', filterDiff);
+    if (filterStatus !== 'all') params.set('status', filterStatus);
+    const q = params.toString();
+    return `/api/admin/questions${q ? `?${q}` : ''}`;
+  }, [filterDiff, filterStatus]);
+
+  const { data, isLoading: loading, mutate } = useAuthSWR<{ questions: Question[] }>(url, {
+    dedupingInterval: 30_000,
+  });
+  const questions = data?.questions ?? [];
+
   const getToken = useCallback(async () => {
     if (!user) throw new Error('Not authenticated');
     return user.getIdToken();
   }, [user]);
-
-  const fetchQuestions = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const token = await getToken();
-      const params = new URLSearchParams();
-      if (filterDiff !== 'all') params.set('difficulty', filterDiff);
-      if (filterStatus !== 'all') params.set('status', filterStatus);
-      const res = await fetch(`/api/admin/questions?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Fetch failed');
-      const data = await res.json();
-      setQuestions(data.questions);
-    } catch (err) {
-      console.error(err);
-      addToast('error', 'Gagal memuat soal');
-    } finally {
-      setLoading(false);
-    }
-  }, [user, getToken, filterDiff, filterStatus, addToast]);
-
-  useEffect(() => { fetchQuestions(); }, [fetchQuestions]);
 
   const openCreate = () => { setEditTarget(null); setForm({ ...emptyForm }); setShowModal(true); };
   const openEdit = (q: Question) => {
@@ -127,7 +117,7 @@ const AdminQuestions: FC = () => {
       if (!res.ok) throw new Error('Save failed');
       addToast('success', editTarget ? 'Soal diperbarui' : 'Soal ditambahkan');
       setShowModal(false);
-      fetchQuestions();
+      mutate();
     } catch {
       addToast('error', 'Gagal menyimpan soal');
     } finally {
@@ -145,7 +135,7 @@ const AdminQuestions: FC = () => {
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error('Update failed');
-      setQuestions(prev => prev.map(x => x.id === q.id ? { ...x, status: newStatus } : x));
+      mutate(d => d ? { questions: d.questions.map(x => x.id === q.id ? { ...x, status: newStatus } : x) } : d, false);
       addToast('success', `Soal di${newStatus === 'active' ? 'aktifkan' : 'nonaktifkan'}`);
     } catch {
       addToast('error', 'Gagal memperbarui status');
@@ -160,7 +150,7 @@ const AdminQuestions: FC = () => {
         method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Delete failed');
-      setQuestions(prev => prev.filter(q => q.id !== id));
+      mutate(d => d ? { questions: d.questions.filter(q => q.id !== id) } : d, false);
       addToast('success', 'Soal dihapus');
     } catch {
       addToast('error', 'Gagal menghapus soal');

@@ -1,6 +1,7 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import { FC, useState, useCallback } from 'react';
+import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PlusCircle, BookOpen, Clock, Edit3, Trash2, Eye, EyeOff,
@@ -75,42 +76,23 @@ const TeacherMaterials: FC = () => {
   const { user, profile } = useAuth();
   const { addToast } = useToast();
 
-  const [materials, setMaterials] = useState<MaterialItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading, mutate } = useAuthSWR<{ materials: MaterialItem[] }>('/api/teacher/materials');
+  const materials = data?.materials ?? [];
+
   const [search, setSearch] = useState('');
   const [filterTopic, setFilterTopic] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  // Modal state
   const [modal, setModal] = useState<'create' | 'edit' | null>(null);
   const [editTarget, setEditTarget] = useState<MaterialItem | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-
-  // Expanded log
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
 
   const authToken = useCallback(async () => {
     if (!user) throw new Error('Not authenticated');
-    return await user.getIdToken();
+    return user.getIdToken();
   }, [user]);
-
-  const fetchMaterials = useCallback(async () => {
-    if (!user) return;
-    try {
-      const t = await authToken();
-      const res = await fetch('/api/teacher/materials', { headers: { Authorization: `Bearer ${t}` } });
-      if (!res.ok) throw new Error((await res.json()).error ?? `HTTP ${res.status}`);
-      const data = await res.json();
-      setMaterials(data.materials ?? []);
-    } catch (err) {
-      addToast('error', `Gagal memuat materi: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, authToken, addToast]);
-
-  useEffect(() => { fetchMaterials(); }, [fetchMaterials]);
 
   const openCreate = () => {
     setForm(EMPTY_FORM);
@@ -189,7 +171,7 @@ const TeacherMaterials: FC = () => {
       }
 
       closeModal();
-      await fetchMaterials();
+      mutate();
     } catch (err) {
       addToast('error', err instanceof Error ? err.message : 'Gagal menyimpan materi');
     } finally {
@@ -207,7 +189,7 @@ const TeacherMaterials: FC = () => {
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? `HTTP ${res.status}`);
-      setMaterials(prev => prev.map(x => x.id === m.id ? { ...x, status: newStatus as MaterialItem['status'] } : x));
+      mutate(d => d ? { materials: d.materials.map(x => x.id === m.id ? { ...x, status: newStatus as MaterialItem['status'] } : x) } : d, false);
       addToast('success', newStatus === 'published' ? 'Materi dipublikasi' : 'Materi disembunyikan');
     } catch (err) {
       addToast('error', err instanceof Error ? err.message : 'Gagal mengubah status');
@@ -223,7 +205,7 @@ const TeacherMaterials: FC = () => {
         headers: { Authorization: `Bearer ${t}` },
       });
       if (!res.ok) throw new Error((await res.json()).error ?? `HTTP ${res.status}`);
-      setMaterials(prev => prev.filter(x => x.id !== m.id));
+      mutate(d => d ? { materials: d.materials.filter(x => x.id !== m.id) } : d, false);
       addToast('success', 'Materi dihapus');
     } catch (err) {
       addToast('error', err instanceof Error ? err.message : 'Gagal menghapus materi');

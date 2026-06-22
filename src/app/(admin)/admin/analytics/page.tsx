@@ -1,6 +1,7 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import { FC } from 'react';
+import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion } from 'framer-motion';
 import {
   BarChart3, TrendingUp, Users, ClipboardList,
@@ -95,24 +96,10 @@ const HBar: FC<HBarProps> = ({ label, value, total, color, sub }) => {
 
 const AdminAnalytics: FC = () => {
   const { user } = useAuth();
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchData = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch('/api/admin/analytics', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) setData(await res.json());
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
+  // Same key as admin/page.tsx — data served from cache when navigating between pages
+  const { data, isLoading: loading, mutate } = useAuthSWR<AnalyticsData>('/api/admin/analytics', {
+    dedupingInterval: 60_000,
+  });
 
   const handleExport = async (col: string, fmt: string) => {
     if (!user) return;
@@ -171,7 +158,7 @@ const AdminAnalytics: FC = () => {
               </div>
             ))}
           </div>
-          <button onClick={fetchData}
+          <button onClick={() => mutate()}
             className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50">
             <RefreshCw size={13} /> Refresh
           </button>
