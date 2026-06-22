@@ -227,30 +227,36 @@ const MateriDetailPage: FC = () => {
                 h1: ({ children, ...props }) => {
                   const text = String(children);
                   const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                  return (
-                    <h1 id={slug} {...props}>
-                      {children}
-                    </h1>
-                  );
+                  return <h1 id={slug} {...props}>{children}</h1>;
                 },
                 h2: ({ children, ...props }) => {
                   const text = String(children);
                   const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                  return (
-                    <h2 id={slug} {...props}>
-                      {children}
-                    </h2>
-                  );
+                  return <h2 id={slug} {...props}>{children}</h2>;
                 },
                 h3: ({ children, ...props }) => {
                   const text = String(children);
                   const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                  return (
-                    <h3 id={slug} {...props}>
-                      {children}
-                    </h3>
-                  );
+                  return <h3 id={slug} {...props}>{children}</h3>;
                 },
+                code: (({ className, children }: { className?: string; children?: React.ReactNode }) => {
+                  const lang = /language-(\w+)/.exec(className || '')?.[1];
+                  if (lang === 'youtube') {
+                    const videoId = String(children).trim();
+                    return (
+                      <div className="relative my-4 aspect-video w-full overflow-hidden rounded-xl bg-black not-prose">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${videoId}`}
+                          className="absolute inset-0 h-full w-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title="YouTube video"
+                        />
+                      </div>
+                    );
+                  }
+                  return <code className={className}>{children}</code>;
+                }) as React.ComponentType<unknown>,
               }}
             >
               {material.content}

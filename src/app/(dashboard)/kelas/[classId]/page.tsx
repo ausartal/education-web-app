@@ -6,10 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, BookOpen, ClipboardList, ClipboardCheck, Clock,
   Calendar, ArrowRight, CheckCircle2, XCircle, ChevronRight,
-  MessageCircle, Send, Loader2, RefreshCw,
+  MessageCircle, Send, Loader2, RefreshCw, Upload, X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { stripMarkdown } from '@/lib/strip-html';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ClassInfo {
@@ -29,6 +30,8 @@ interface ExamItem {
 interface AssignmentItem {
   id: string; title: string; description: string; dueDate: string | null;
   maxScore: number; status: string; createdAt: string | null;
+  submissionCount?: number;
+  mySubmission?: { text: string; submittedAt: string | null } | null;
 }
 interface ChatMessage {
   id: string; senderId: string; senderName: string;
@@ -81,6 +84,11 @@ const StudentClassDetailPage: FC = () => {
   const [sendingChat, setSendingChat] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatUnsub = useRef<(() => void) | null>(null);
+
+  // Submit assignment
+  const [submitAsgn, setSubmitAsgn] = useState<AssignmentItem | null>(null);
+  const [submitText, setSubmitText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const getToken = useCallback(async () => (user ? user.getIdToken() : ''), [user]);
 
@@ -157,6 +165,31 @@ const StudentClassDetailPage: FC = () => {
       setChatText('');
     } finally {
       setSendingChat(false);
+    }
+  };
+
+  const handleSubmitAssignment = async () => {
+    if (!submitAsgn || !user) return;
+    setSubmitting(true);
+    try {
+      const t = await getToken();
+      const res = await fetch(`/api/student/assignments/${submitAsgn.id}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ text: submitText }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Gagal');
+      setAssignments(prev => prev.map(a =>
+        a.id === submitAsgn.id
+          ? { ...a, mySubmission: { text: submitText, submittedAt: new Date().toISOString() } }
+          : a,
+      ));
+      setSubmitAsgn(null);
+      setSubmitText('');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Gagal mengumpulkan tugas');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -348,23 +381,30 @@ const StudentClassDetailPage: FC = () => {
                 {assignments.map((a, i) => {
                   const isOverdue = !!(a.dueDate && new Date(a.dueDate) < new Date());
                   const daysLeft = a.dueDate ? Math.ceil((new Date(a.dueDate).getTime() - Date.now()) / 86400000) : null;
+                  const submitted = !!a.mySubmission;
+                  const plainDesc = a.description ? stripMarkdown(a.description) : '';
                   return (
                     <motion.div key={a.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                       className="rounded-2xl bg-white p-5 shadow-sm">
                       <div className="flex items-start gap-4">
-                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isOverdue ? 'bg-red-50' : 'bg-amber-50'}`}>
-                          <ClipboardCheck size={18} className={isOverdue ? 'text-red-400' : 'text-amber-500'} />
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${submitted ? 'bg-emerald-50' : isOverdue ? 'bg-red-50' : 'bg-amber-50'}`}>
+                          <ClipboardCheck size={18} className={submitted ? 'text-emerald-500' : isOverdue ? 'text-red-400' : 'text-amber-500'} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="font-semibold text-gray-900">{a.title}</p>
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isOverdue ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
-                              {isOverdue ? 'Lewat batas' : 'Aktif'}
-                            </span>
+                            {submitted ? (
+                              <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                <CheckCircle2 size={10} /> Sudah dikumpulkan
+                              </span>
+                            ) : (
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isOverdue ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
+                                {isOverdue ? 'Lewat batas' : 'Belum dikumpulkan'}
+                              </span>
+                            )}
                           </div>
-                          {a.description && (
-                            <div className="mt-1.5 line-clamp-3 text-xs text-gray-500 [&_p]:mb-0 [&_ul]:ml-4 [&_ol]:ml-4"
-                              dangerouslySetInnerHTML={{ __html: a.description }} />
+                          {plainDesc && (
+                            <p className="mt-1.5 line-clamp-2 text-xs text-gray-500">{plainDesc}</p>
                           )}
                           <div className="mt-2.5 flex flex-wrap items-center gap-3 text-xs">
                             {a.dueDate ? (
@@ -380,6 +420,24 @@ const StudentClassDetailPage: FC = () => {
                             <span className="text-gray-400">·</span>
                             <span className="text-gray-500">Nilai maks: <span className="font-semibold text-gray-700">{a.maxScore}</span></span>
                           </div>
+                          {submitted && a.mySubmission?.submittedAt && (
+                            <p className="mt-1.5 text-[10px] text-gray-400">
+                              Dikumpulkan {fmtDateTime(a.mySubmission.submittedAt)}
+                            </p>
+                          )}
+                          <div className="mt-3">
+                            <button
+                              onClick={() => { setSubmitAsgn(a); setSubmitText(a.mySubmission?.text ?? ''); }}
+                              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${
+                                submitted
+                                  ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                  : 'bg-amber-500 text-white hover:bg-amber-600'
+                              }`}
+                            >
+                              <Upload size={12} />
+                              {submitted ? 'Lihat / Edit Jawaban' : 'Kumpulkan Tugas'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -387,6 +445,66 @@ const StudentClassDetailPage: FC = () => {
                 })}
               </div>
             )}
+
+            {/* Submit Modal */}
+            <AnimatePresence>
+              {submitAsgn && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
+                  onClick={e => { if (e.target === e.currentTarget) setSubmitAsgn(null); }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    className="w-full max-w-lg rounded-2xl bg-white shadow-2xl"
+                  >
+                    <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Kumpulkan Tugas</h3>
+                        <p className="text-xs text-gray-400">{submitAsgn.title}</p>
+                      </div>
+                      <button onClick={() => setSubmitAsgn(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                    </div>
+                    {submitAsgn.description && (
+                      <div className="border-b border-gray-50 px-5 py-3">
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Instruksi:</p>
+                        <p className="text-xs text-gray-600 line-clamp-4">{stripMarkdown(submitAsgn.description)}</p>
+                      </div>
+                    )}
+                    <div className="px-5 py-4">
+                      <label className="mb-1.5 block text-xs font-semibold text-gray-700">Jawaban / Keterangan Pengumpulan</label>
+                      <textarea
+                        value={submitText}
+                        onChange={e => setSubmitText(e.target.value)}
+                        placeholder="Tuliskan jawaban atau keterangan pengumpulan tugasmu..."
+                        rows={5}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-100 resize-none"
+                      />
+                    </div>
+                    <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-5 py-4">
+                      <button
+                        onClick={() => setSubmitAsgn(null)}
+                        className="rounded-xl border border-gray-200 px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={handleSubmitAssignment}
+                        disabled={submitting}
+                        className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+                      >
+                        {submitting && <Loader2 size={14} className="animate-spin" />}
+                        Kumpulkan
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
 
