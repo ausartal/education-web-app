@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useMemo,
   FC,
   ReactNode,
 } from 'react';
@@ -25,11 +26,7 @@ const AuthContext = createContext<AuthContextValue>({
   loading: true,
 });
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,25 +34,22 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-
       if (firebaseUser) {
         const userProfile = await getUserProfile(firebaseUser.uid);
         setProfile(userProfile);
       } else {
         setProfile(null);
       }
-
       setLoading(false);
     });
-
     return unsubscribe;
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, profile, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  // Memoize value supaya komponen yang pakai useAuth() tidak re-render
+  // saat state lain di parent berubah — hanya re-render kalau user/profile/loading berubah.
+  const value = useMemo(() => ({ user, profile, loading }), [user, profile, loading]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);
