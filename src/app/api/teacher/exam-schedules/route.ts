@@ -34,22 +34,42 @@ export async function GET(req: NextRequest) {
 
   const snap = await query.get();
 
-  // For each schedule, count sessions
-  const schedules = await Promise.all(snap.docs.map(async (d) => {
-    const sessionsSnap = await adminDb.collection('exam_sessions')
-      .where('examScheduleId', '==', d.id).get();
-    const completedSessions = sessionsSnap.docs.filter(s => s.data().status === 'completed');
-    const avgScore = completedSessions.length > 0
-      ? Math.round(completedSessions.reduce((acc, s) => acc + (s.data().numericScore || 0), 0) / completedSessions.length)
-      : null;
+  if (snap.empty) return NextResponse.json({ schedules: [] });
+
+  // Kumpulkan semua session sekaligus — satu query per chunk 30 schedule IDs
+  // Daripada N query (1 per schedule), jadi ceil(N/30) query.
+  const scheduleIds = snap.docs.map((d) => d.id);
+  const sessionsBySchedule: Record<string, Array<{ status: string; numericScore?: number }>> = {};
+  const chunkSize = 30;
+  for (let i = 0; i < scheduleIds.length; i += chunkSize) {
+    const chunk = scheduleIds.slice(i, i + chunkSize);
+    const sessSnap = await adminDb
+      .collection('exam_sessions')
+      .where('examScheduleId', 'in', chunk)
+      .select('examScheduleId', 'status', 'numericScore')
+      .get();
+    sessSnap.docs.forEach((d) => {
+      const sid = d.data().examScheduleId as string;
+      if (!sessionsBySchedule[sid]) sessionsBySchedule[sid] = [];
+      sessionsBySchedule[sid].push(d.data() as { status: string; numericScore?: number });
+    });
+  }
+
+  const schedules = snap.docs.map((d) => {
+    const sessions = sessionsBySchedule[d.id] ?? [];
+    const completed = sessions.filter((s) => s.status === 'completed');
+    const avgScore =
+      completed.length > 0
+        ? Math.round(completed.reduce((acc, s) => acc + (s.numericScore ?? 0), 0) / completed.length)
+        : null;
     return {
       id: d.id,
       ...d.data(),
-      sessionCount: sessionsSnap.size,
-      completedCount: completedSessions.length,
+      sessionCount: sessions.length,
+      completedCount: completed.length,
       avgScore,
     };
-  }));
+  });
 
   const getSeconds = (ts: unknown) => (ts as { _seconds?: number })?._seconds ?? 0;
   (schedules as Array<Record<string, unknown>>).sort((a, b) => getSeconds(b.createdAt) - getSeconds(a.createdAt));

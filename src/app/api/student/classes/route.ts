@@ -5,43 +5,68 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const token = authHeader.slice(7);
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   let decoded;
   try {
-    decoded = await adminAuth.verifyIdToken(token);
-  } catch { return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); }
+    decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-  // Get classes the student is in
-  const snap = await adminDb.collection('classes')
+  // Satu query untuk semua kelas yang diikuti siswa
+  const snap = await adminDb
+    .collection('classes')
     .where('studentIds', 'array-contains', decoded.uid)
     .where('status', '==', 'active')
     .get();
 
-  const classes = await Promise.all(snap.docs.map(async (d) => {
-    const data = d.data();
-    // Get teacher name
-    const teacherSnap = await adminDb.collection('users').doc(data.teacherId).get();
-    const teacherName = teacherSnap.data()?.displayName || 'Guru';
+  if (snap.empty) return NextResponse.json({ classes: [] });
 
-    // Get active exams for this class
-    const examSnap = await adminDb.collection('exam_schedules')
-      .where('classId', '==', d.id)
+  const classIds = snap.docs.map((d) => d.id);
+  const classDataMap = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()]));
+
+  // Batch fetch teacher names — satu get() per teacher UNIK (bukan per kelas)
+  const uniqueTeacherIds = [...new Set(snap.docs.map((d) => d.data().teacherId as string))];
+  const teacherDocs = await Promise.all(
+    uniqueTeacherIds.map((tid) => adminDb.collection('users').doc(tid).get())
+  );
+  const teacherMap: Record<string, string> = Object.fromEntries(
+    uniqueTeacherIds.map((tid, i) => [tid, teacherDocs[i].data()?.displayName ?? 'Guru'])
+  );
+
+  // Satu query untuk semua jadwal ujian aktif dari semua kelas sekaligus
+  // Firestore 'in' mendukung maks 30 nilai
+  const examCountMap: Record<string, number> = Object.fromEntries(classIds.map((id) => [id, 0]));
+  const chunkSize = 30;
+  for (let i = 0; i < classIds.length; i += chunkSize) {
+    const chunk = classIds.slice(i, i + chunkSize);
+    const examSnap = await adminDb
+      .collection('exam_schedules')
+      .where('classId', 'in', chunk)
       .where('status', '==', 'active')
       .get();
+    examSnap.docs.forEach((d) => {
+      const cid = d.data().classId as string;
+      examCountMap[cid] = (examCountMap[cid] ?? 0) + 1;
+    });
+  }
 
+  const classes = classIds.map((id) => {
+    const data = classDataMap[id];
     return {
-      id: d.id,
+      id,
       name: data.name,
       subject: data.subject,
       joinCode: data.joinCode,
-      teacherName,
+      teacherName: teacherMap[data.teacherId] ?? 'Guru',
       teacherId: data.teacherId,
-      studentCount: (data.studentIds || []).length,
-      activeExamCount: examSnap.size,
+      studentCount: (data.studentIds ?? []).length,
+      activeExamCount: examCountMap[id] ?? 0,
     };
-  }));
+  });
 
   return NextResponse.json({ classes });
 }
