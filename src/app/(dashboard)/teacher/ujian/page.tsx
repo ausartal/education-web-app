@@ -1,6 +1,7 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import { FC, useState, useCallback } from 'react';
+import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, ClipboardList, Copy, Check, Pencil, Trash2, X,
@@ -34,9 +35,17 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 
 const TeacherUjianPage: FC = () => {
   const { user } = useAuth();
-  const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
-  const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const { data: schedData, isLoading: schedLoading, mutate: mutateScheds } =
+    useAuthSWR<{ schedules: ScheduleItem[] }>('/api/teacher/exam-schedules');
+  // /api/teacher/classes is already cached by the kelas page — same SWR key
+  const { data: classData, isLoading: classLoading } =
+    useAuthSWR<{ classes: ClassOption[] }>('/api/teacher/classes');
+
+  const schedules = schedData?.schedules ?? [];
+  const classes = classData?.classes ?? [];
+  const loading = schedLoading || classLoading;
+
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<ScheduleItem | null>(null);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
@@ -48,20 +57,6 @@ const TeacherUjianPage: FC = () => {
   });
 
   const getToken = useCallback(async () => user ? await user.getIdToken() : '', [user]);
-
-  const fetchData = useCallback(async () => {
-    const t = await getToken();
-    const [schedRes, classRes] = await Promise.all([
-      fetch('/api/teacher/exam-schedules', { headers: { Authorization: `Bearer ${t}` } }),
-      fetch('/api/teacher/classes', { headers: { Authorization: `Bearer ${t}` } }),
-    ]);
-    const [schedData, classData] = await Promise.all([schedRes.json(), classRes.json()]);
-    setSchedules(schedData.schedules || []);
-    setClasses(classData.classes || []);
-    setLoading(false);
-  }, [getToken]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
 
   const toggleDomain = (id: string) => {
     setForm(f => ({
@@ -82,7 +77,7 @@ const TeacherUjianPage: FC = () => {
     setShowCreate(false);
     resetForm();
     setSaving(false);
-    fetchData();
+    mutateScheds();
   };
 
   const handleEdit = async () => {
@@ -96,7 +91,7 @@ const TeacherUjianPage: FC = () => {
     });
     setEditItem(null);
     setSaving(false);
-    fetchData();
+    mutateScheds();
   };
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -106,7 +101,7 @@ const TeacherUjianPage: FC = () => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
       body: JSON.stringify({ status }),
     });
-    fetchData();
+    mutateScheds();
   };
 
   const handleDelete = async (id: string) => {
@@ -116,7 +111,7 @@ const TeacherUjianPage: FC = () => {
       headers: { Authorization: `Bearer ${t}` },
     });
     setDeleteConfirm(null);
-    fetchData();
+    mutateScheds();
   };
 
   const resetForm = () => setForm({ classId: '', title: '', module: 'stoikiometri', domainIds: [], durationMinutes: 50, scheduledAt: '' });
