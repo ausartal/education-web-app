@@ -12,7 +12,6 @@ service cloud.firestore {
     function role() { return userDoc().data.role; }
 
     function isAdmin()          { return isAuth() && role() == 'admin'; }
-    function isTeacher()        { return isAuth() && role() == 'teacher'; }
     function isTeacherOrAdmin() { return isAuth() && (role() == 'teacher' || role() == 'admin'); }
     function isOwner(userId)    { return isAuth() && uid() == userId; }
 
