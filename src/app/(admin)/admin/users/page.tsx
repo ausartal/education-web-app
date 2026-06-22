@@ -1,6 +1,7 @@
 'use client';
 
-import React, { FC, useEffect, useState, useCallback } from 'react';
+import React, { FC, useState, useCallback } from 'react';
+import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserRole } from '@/types/firestore';
 import { useToast } from '@/hooks/useToast';
@@ -150,37 +151,19 @@ function UserExpandedRow({
 const AdminUsers: FC = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
-  const [users, setUsers] = useState<UserRow[]>([]);
+  const { data, isLoading: loading, mutate } = useAuthSWR<{ users: UserRow[] }>('/api/admin/users', {
+    dedupingInterval: 120_000,
+  });
+  const users = data?.users ?? [];
+
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');
-  const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState<CreateUserForm>(defaultForm);
   const [creating, setCreating] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const fetchUsers = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.detail ?? errBody.error ?? `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setUsers(data.users as UserRow[]);
-    } catch (err) {
-      console.error('[fetchUsers]', err);
-      addToast('error', err instanceof Error ? err.message : 'Gagal memuat data pengguna');
-    }
-    finally { setLoading(false); }
-  }, [user, addToast]);
-
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const filtered = users.filter(u => {
     const matchSearch = !search ||
@@ -195,53 +178,55 @@ const AdminUsers: FC = () => {
   };
   const allSelected = filtered.length > 0 && filtered.every(u => selected.has(u.uid));
 
+  const getToken = useCallback(async () => user!.getIdToken(), [user]);
+
   const handleChangeRole = async (uid: string, newRole: UserRole) => {
     try {
-      const token = await user!.getIdToken();
+      const token = await getToken();
       const res = await fetch(`/api/admin/users/${uid}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole }),
       });
       if (!res.ok) throw new Error();
-      setUsers(prev => prev.map(u => u.uid === uid ? { ...u, role: newRole } : u));
+      mutate(d => d ? { users: d.users.map(u => u.uid === uid ? { ...u, role: newRole } : u) } : d, false);
       addToast('success', `Role diubah ke ${newRole}`);
     } catch { addToast('error', 'Gagal mengubah role'); }
   };
 
   const handleToggleActive = async (uid: string, current: boolean) => {
     try {
-      const token = await user!.getIdToken();
+      const token = await getToken();
       const res = await fetch(`/api/admin/users/${uid}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !current }),
       });
       if (!res.ok) throw new Error();
-      setUsers(prev => prev.map(u => u.uid === uid ? { ...u, isActive: !current } : u));
+      mutate(d => d ? { users: d.users.map(u => u.uid === uid ? { ...u, isActive: !current } : u) } : d, false);
       addToast('success', !current ? 'Pengguna diaktifkan' : 'Pengguna dinonaktifkan');
     } catch { addToast('error', 'Gagal mengubah status'); }
   };
 
   const handleUpdateStats = async (uid: string, field: string, value: number) => {
-    const token = await user!.getIdToken();
+    const token = await getToken();
     const res = await fetch(`/api/admin/users/${uid}`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ stats: { ...(users.find(u => u.uid === uid)?.stats ?? {}), [field]: value } }),
     });
     if (!res.ok) throw new Error();
-    setUsers(prev => prev.map(u => u.uid === uid ? { ...u, stats: { ...(u.stats ?? {}), [field]: value } } : u));
+    mutate(d => d ? { users: d.users.map(u => u.uid === uid ? { ...u, stats: { ...(u.stats ?? {}), [field]: value } } : u) } : d, false);
     addToast('success', `${field} diperbarui`);
   };
 
   const handleDelete = async (uid: string) => {
     if (!confirm('Hapus pengguna ini secara permanen?')) return;
     try {
-      const token = await user!.getIdToken();
+      const token = await getToken();
       const res = await fetch(`/api/admin/users/${uid}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error();
-      setUsers(prev => prev.filter(u => u.uid !== uid));
+      mutate(d => d ? { users: d.users.filter(u => u.uid !== uid) } : d, false);
       addToast('success', 'Pengguna dihapus');
     } catch { addToast('error', 'Gagal menghapus pengguna'); }
   };
@@ -251,7 +236,7 @@ const AdminUsers: FC = () => {
     if (action === 'delete' && !confirm(`Hapus ${selected.size} pengguna?`)) return;
     setBulkLoading(true);
     try {
-      const token = await user!.getIdToken();
+      const token = await getToken();
       const body: Record<string, unknown> = { action, uids: Array.from(selected) };
       if (role) body.role = role;
       const res = await fetch('/api/admin/bulk', {
@@ -260,10 +245,10 @@ const AdminUsers: FC = () => {
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error();
-      const data = await res.json();
-      addToast('success', `${data.affected} pengguna diperbarui`);
+      const resData = await res.json();
+      addToast('success', `${resData.affected} pengguna diperbarui`);
       setSelected(new Set());
-      fetchUsers();
+      mutate();
     } catch { addToast('error', 'Bulk action gagal'); }
     finally { setBulkLoading(false); }
   };
@@ -272,7 +257,7 @@ const AdminUsers: FC = () => {
     e.preventDefault();
     setCreating(true);
     try {
-      const token = await user!.getIdToken();
+      const token = await getToken();
       const res = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -282,7 +267,7 @@ const AdminUsers: FC = () => {
       setShowCreateModal(false);
       setCreateForm(defaultForm);
       addToast('success', 'Pengguna berhasil dibuat');
-      fetchUsers();
+      mutate();
     } catch (err) {
       addToast('error', err instanceof Error ? err.message : 'Gagal membuat pengguna');
     } finally { setCreating(false); }

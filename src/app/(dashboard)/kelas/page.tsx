@@ -1,10 +1,11 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import { FC, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { School, Plus, ArrowRight, X, AlertCircle, Loader2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { useAuthSWR } from '@/hooks/useAuthSWR';
 
 interface ClassItem {
   id: string;
@@ -18,52 +19,42 @@ interface ClassItem {
 
 const KelasPage: FC = () => {
   const { user } = useAuth();
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, mutate } = useAuthSWR<{ classes: ClassItem[] }>('/api/student/classes');
+  const classes = data?.classes ?? [];
+  const loading = isLoading;
+
   const [showJoin, setShowJoin] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState('');
   const [joinSuccess, setJoinSuccess] = useState('');
 
-  const getToken = useCallback(async () => user ? await user.getIdToken() : '', [user]);
-
-  const fetchClasses = useCallback(async () => {
-    const t = await getToken();
-    const res = await fetch('/api/student/classes', { headers: { Authorization: `Bearer ${t}` } });
-    const data = await res.json();
-    setClasses(data.classes || []);
-    setLoading(false);
-  }, [getToken]);
-
-  useEffect(() => { fetchClasses(); }, [fetchClasses]);
-
-  const handleJoin = async () => {
-    if (!joinCode.trim()) return;
+  const handleJoin = useCallback(async () => {
+    if (!joinCode.trim() || !user) return;
     setJoining(true);
     setJoinError('');
     setJoinSuccess('');
-    const t = await getToken();
+    const t = await user.getIdToken();
     const res = await fetch('/api/student/join-class', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
       body: JSON.stringify({ joinCode: joinCode.trim() }),
     });
-    const data = await res.json();
+    const resData = await res.json();
     setJoining(false);
 
     if (!res.ok) {
-      setJoinError(data.error || 'Gagal bergabung');
+      setJoinError(resData.error || 'Gagal bergabung');
       return;
     }
-    if (data.alreadyJoined) {
+    if (resData.alreadyJoined) {
       setJoinSuccess('Kamu sudah terdaftar di kelas ini.');
     } else {
-      setJoinSuccess(`Berhasil bergabung ke kelas ${data.class?.name}!`);
-      fetchClasses();
+      setJoinSuccess(`Berhasil bergabung ke kelas ${resData.class?.name}!`);
+      mutate();
     }
     setJoinCode('');
-  };
+  }, [joinCode, user, mutate]);
 
   if (loading) return (
     <div className="flex min-h-[60vh] items-center justify-center">

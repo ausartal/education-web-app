@@ -1,11 +1,12 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import { FC, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Users, BookOpen, Copy, Check, Pencil, Trash2, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { useAuthSWR } from '@/hooks/useAuthSWR';
 
 interface ClassItem {
   id: string;
@@ -19,8 +20,10 @@ interface ClassItem {
 
 const TeacherKelasPage: FC = () => {
   const { user } = useAuth();
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, mutate } = useAuthSWR<{ classes: ClassItem[] }>('/api/teacher/classes');
+  const classes = data?.classes ?? [];
+  const loading = isLoading;
+
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<ClassItem | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -28,24 +31,12 @@ const TeacherKelasPage: FC = () => {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const token = useCallback(async () => {
-    return user ? await user.getIdToken() : '';
-  }, [user]);
-
-  const fetchClasses = useCallback(async () => {
-    const t = await token();
-    const res = await fetch('/api/teacher/classes', { headers: { Authorization: `Bearer ${t}` } });
-    const data = await res.json();
-    setClasses(data.classes || []);
-    setLoading(false);
-  }, [token]);
-
-  useEffect(() => { fetchClasses(); }, [fetchClasses]);
+  const getToken = useCallback(async () => user ? await user.getIdToken() : '', [user]);
 
   const handleCreate = async () => {
     if (!form.name || !form.subject) return;
     setSaving(true);
-    const t = await token();
+    const t = await getToken();
     await fetch('/api/teacher/classes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
@@ -54,13 +45,13 @@ const TeacherKelasPage: FC = () => {
     setForm({ name: '', subject: '' });
     setShowCreate(false);
     setSaving(false);
-    fetchClasses();
+    mutate();
   };
 
   const handleEdit = async () => {
     if (!editItem) return;
     setSaving(true);
-    const t = await token();
+    const t = await getToken();
     await fetch(`/api/teacher/classes/${editItem.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
@@ -69,17 +60,17 @@ const TeacherKelasPage: FC = () => {
     setEditItem(null);
     setForm({ name: '', subject: '' });
     setSaving(false);
-    fetchClasses();
+    mutate();
   };
 
   const handleDelete = async (id: string) => {
-    const t = await token();
+    const t = await getToken();
     await fetch(`/api/teacher/classes/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${t}` },
     });
     setDeleteConfirm(null);
-    fetchClasses();
+    mutate();
   };
 
   const copyCode = (code: string) => {
