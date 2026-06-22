@@ -47,7 +47,7 @@ export async function GET(
   const teacherSnap = await adminDb.collection('users').doc(classData.teacherId).get();
   const teacherName = teacherSnap.data()?.displayName || 'Guru';
 
-  // Pinned materials
+  // Pinned materials — fetch in parallel with field projection
   const materialIds: string[] = classData.materialIds || [];
   const materials = (
     await Promise.all(

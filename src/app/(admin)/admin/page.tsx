@@ -1,6 +1,7 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback } from 'react';
+import { FC, useState, useCallback } from 'react';
+import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion } from 'framer-motion';
 import {
   Users, GraduationCap, BookOpen, ClipboardList,
@@ -123,23 +124,21 @@ const fade = (delay: number) => ({
 
 const AdminDashboard: FC = () => {
   const { user, profile } = useAuth();
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  const fetchAll = useCallback(async (silent = false) => {
-    if (!user) return;
-    if (!silent) setLoading(true); else setRefreshing(true);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch('/api/admin/analytics', { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) { setData(await res.json()); setLastRefresh(new Date()); }
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); setRefreshing(false); }
-  }, [user]);
+  const { data, isLoading, mutate } = useAuthSWR<AnalyticsData>('/api/admin/analytics', {
+    dedupingInterval: 60_000,
+  });
+  const loading = isLoading;
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  const fetchAll = useCallback(async (silent = false) => {
+    if (!silent) return;
+    setRefreshing(true);
+    await mutate();
+    setLastRefresh(new Date());
+    setRefreshing(false);
+  }, [mutate]);
 
   const handleExport = async (col: string) => {
     if (!user) return;
@@ -233,7 +232,7 @@ const AdminDashboard: FC = () => {
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Sistem Online
             </span>
-            <button onClick={() => fetchAll(true)} disabled={refreshing}
+            <button onClick={() => fetchAll(true)} disabled={refreshing || isLoading}
               className="flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-medium text-stone-500 shadow-xs transition-colors hover:bg-stone-50 disabled:opacity-50">
               <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
               {lastRefresh.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
