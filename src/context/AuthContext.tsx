@@ -27,9 +27,11 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  // Initialise synchronously from the cached auth state — avoids the
+  // full-screen spinner on every navigation when the user is already signed in.
+  const [user, setUser] = useState<User | null>(auth.currentUser);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!auth.currentUser);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
