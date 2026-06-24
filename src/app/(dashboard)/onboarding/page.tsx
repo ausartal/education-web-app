@@ -4,10 +4,10 @@ import { FC, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 
 const topics = [
   {
@@ -43,10 +43,12 @@ const goals = [
 
 const OnboardingPage: FC = () => {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const [step, setStep] = useState(0);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [selectedGoal, setSelectedGoal] = useState(10);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const toggleTopic = (id: string) => {
     setSelectedTopics((prev) =>
@@ -55,13 +57,25 @@ const OnboardingPage: FC = () => {
   };
 
   const handleFinish = async () => {
-    if (!profile) return;
-    await updateDoc(doc(db, 'users', profile.uid), {
-      'settings.dailyGoal': selectedGoal,
-      'settings.selectedTopics': selectedTopics,
-      'settings.onboardingComplete': true,
-    });
-    router.push('/dashboard');
+    const uid = user?.uid ?? profile?.uid;
+    if (!uid || saving) return;
+    setSaving(true);
+    setSaveError('');
+    try {
+      await setDoc(doc(db, 'users', uid), {
+        settings: {
+          dailyGoal: selectedGoal,
+          selectedTopics,
+          onboardingComplete: true,
+          notifications: true,
+          language: 'id',
+        },
+      }, { merge: true });
+      router.push('/dashboard');
+    } catch {
+      setSaveError('Gagal menyimpan. Coba lagi.');
+      setSaving(false);
+    }
   };
 
   const steps = [
@@ -169,12 +183,15 @@ const OnboardingPage: FC = () => {
         })}
       </div>
 
+      {saveError && (
+        <p className="mb-3 text-center text-sm text-red-500">{saveError}</p>
+      )}
       <button
         onClick={handleFinish}
-        disabled={selectedTopics.length === 0}
-        className="w-full rounded-2xl bg-gradient-to-r from-primary to-primary-cyan py-4 font-bold text-white shadow-lg shadow-primary/25 transition-all disabled:opacity-40 hover:enabled:-translate-y-0.5"
+        disabled={selectedTopics.length === 0 || saving}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-cyan py-4 font-bold text-white shadow-lg shadow-primary/25 transition-all disabled:opacity-40 hover:enabled:-translate-y-0.5"
       >
-        Start Learning
+        {saving ? <><Loader2 size={18} className="animate-spin" /> Menyimpan...</> : 'Start Learning'}
       </button>
     </motion.div>,
   ];
