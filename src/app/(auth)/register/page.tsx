@@ -1,11 +1,11 @@
 'use client';
 
-import { FC, FormEvent, useState } from 'react';
+import { FC, FormEvent, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, User } from 'lucide-react';
-import { signUp, signInWithGoogle, getUserProfile } from '@/services/auth';
+import { signUp, signInWithGoogle, getGoogleRedirectResult, getUserProfile } from '@/services/auth';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { useToast } from '@/hooks/useToast';
 import { auth } from '@/lib/firebase';
@@ -41,17 +41,34 @@ const RegisterPage: FC = () => {
     }
   };
 
+  // Handle Google redirect result (fallback from popup-blocked)
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const profile = await getGoogleRedirectResult();
+        if (profile) router.push(profile.role === 'teacher' ? '/teacher' : '/dashboard');
+      } catch (err) {
+        const msg = getAuthErrorMessage(err);
+        if (msg) setError(msg);
+      }
+    };
+    checkRedirect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleGoogle = async () => {
     setError('');
     setLoading(true);
     try {
-      await signInWithGoogle();
-      const profile = await getUserProfile(auth.currentUser!.uid);
-      router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
+      const mode = await signInWithGoogle();
+      if (mode === 'popup') {
+        const profile = await getUserProfile(auth.currentUser!.uid);
+        router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
+      }
+      // 'redirect' mode: page will reload, useEffect picks up the result
     } catch (err) {
       const msg = getAuthErrorMessage(err);
       if (msg) setError(msg);
-    } finally {
       setLoading(false);
     }
   };

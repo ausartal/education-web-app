@@ -1,11 +1,11 @@
 'use client';
 
-import { FC, FormEvent, useState } from 'react';
+import { FC, FormEvent, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock } from 'lucide-react';
-import { signIn, signInWithGoogle, getUserProfile } from '@/services/auth';
+import { signIn, signInWithGoogle, getGoogleRedirectResult, getUserProfile } from '@/services/auth';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { useToast } from '@/hooks/useToast';
 import { auth } from '@/lib/firebase';
@@ -23,6 +23,21 @@ const LoginPage: FC = () => {
     else if (role === 'teacher') router.push('/teacher');
     else router.push('/dashboard');
   }
+
+  // Handle Google redirect result (fallback from popup-blocked)
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const profile = await getGoogleRedirectResult();
+        if (profile) redirectByRole(profile.role);
+      } catch (err) {
+        const msg = getAuthErrorMessage(err);
+        if (msg) setError(msg);
+      }
+    };
+    checkRedirect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -44,13 +59,15 @@ const LoginPage: FC = () => {
     setError('');
     setLoading(true);
     try {
-      await signInWithGoogle();
-      const profile = await getUserProfile(auth.currentUser!.uid);
-      redirectByRole(profile?.role);
+      const mode = await signInWithGoogle();
+      if (mode === 'popup') {
+        const profile = await getUserProfile(auth.currentUser!.uid);
+        redirectByRole(profile?.role);
+      }
+      // 'redirect' mode: page will reload, useEffect picks up the result
     } catch (err) {
       const msg = getAuthErrorMessage(err);
       if (msg) setError(msg);
-    } finally {
       setLoading(false);
     }
   };

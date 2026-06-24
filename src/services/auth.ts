@@ -2,7 +2,10 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
+  User,
   signOut as firebaseSignOut,
   sendPasswordResetEmail,
   updateProfile,
@@ -15,6 +18,7 @@ import { auth, db } from '@/lib/firebase';
 import { UserRole, UserProfile } from '@/types/user';
 
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 export async function signUp(
   email: string,
@@ -45,11 +49,33 @@ export async function signIn(
   await updateLastLogin();
 }
 
-export async function signInWithGoogle(): Promise<void> {
-  const { user } = await signInWithPopup(auth, googleProvider);
+export async function signInWithGoogle(): Promise<'popup' | 'redirect'> {
+  try {
+    const { user } = await signInWithPopup(auth, googleProvider);
+    await _syncGoogleUser(user);
+    return 'popup';
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code ?? '';
+    // Fallback to redirect when popup is blocked or unavailable
+    if (code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request') {
+      await signInWithRedirect(auth, googleProvider);
+      return 'redirect';
+    }
+    throw err;
+  }
+}
+
+/** Call on page mount to pick up a pending Google redirect result */
+export async function getGoogleRedirectResult(): Promise<UserProfile | null> {
+  const result = await getRedirectResult(auth);
+  if (!result) return null;
+  await _syncGoogleUser(result.user);
+  return getUserProfile(result.user.uid);
+}
+
+async function _syncGoogleUser(user: User): Promise<void> {
   const profileRef = doc(db, 'users', user.uid);
   const profileSnap = await getDoc(profileRef);
-
   if (!profileSnap.exists()) {
     await createUserProfile(user.uid, {
       email: user.email || '',
