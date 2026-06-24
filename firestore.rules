@@ -22,7 +22,11 @@ service cloud.firestore {
     // ── USERS ────────────────────────────────────────────────────────────────
     match /users/{userId} {
       allow read:   if isOwner(userId) || isTeacherOrAdmin();
-      allow create: if isAdmin();
+      // User bisa buat profil sendiri saat register (role tidak boleh admin)
+      allow create: if isAdmin()
+        || (isAuth() && userId == uid()
+            && request.resource.data.uid == uid()
+            && request.resource.data.role in ['student', 'teacher']);
       allow update: if isAdmin()
         || (isOwner(userId) && !request.resource.data.diff(resource.data)
             .affectedKeys().hasAny(['role','isActive','uid','createdAt']));
