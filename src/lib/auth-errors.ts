@@ -28,6 +28,15 @@ export function getAuthErrorMessage(error: unknown): string | null {
   if (msg.includes('network-request-failed')) {
     return 'Koneksi internet bermasalah. Periksa jaringanmu.';
   }
+  if (msg.includes('popup-blocked')) {
+    return 'Popup diblok oleh browser. Mengalihkan ke halaman Google...';
+  }
+  if (msg.includes('unauthorized-domain')) {
+    return 'Domain ini belum diotorisasi untuk Google Sign-In.';
+  }
+  if (msg.includes('account-exists-with-different-credential')) {
+    return 'Email ini sudah terdaftar dengan metode login lain. Coba login dengan email & password.';
+  }
 
   return 'Terjadi kesalahan. Silakan coba lagi.';
 }
