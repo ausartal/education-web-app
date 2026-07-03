@@ -71,13 +71,14 @@ export async function POST(req: NextRequest) {
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
-  const { code, name, subject, description, order } = body as { code?: string; name?: string; subject?: string; description?: string; order?: number };
+  const { code, name, subject, description, order, scope: reqScope } = body as { code?: string; name?: string; subject?: string; description?: string; order?: number; scope?: string };
 
   if (!code?.trim() || !name?.trim()) {
     return NextResponse.json({ error: 'Kode dan nama TP wajib diisi' }, { status: 400 });
   }
 
-  const scope = teacher.role === 'admin' ? 'global' : 'private';
+  // Admin can choose public ('global') or private; teachers always get private
+  const scope = teacher.role === 'admin' && reqScope === 'global' ? 'global' : 'private';
 
   const docRef = adminDb.collection('tp_definitions').doc();
   await docRef.set({

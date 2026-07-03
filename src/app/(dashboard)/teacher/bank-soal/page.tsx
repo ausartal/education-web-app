@@ -69,9 +69,10 @@ const emptyForm = (domainId = '') => ({
   optionA: '', optionB: '', optionC: '', optionD: '', optionE: '',
   correctAnswer: 'A' as AnswerKey,
   explanation: '',
+  visibility: 'private' as 'global' | 'private',
 });
 
-const emptyTPForm = () => ({ code: '', name: '', subject: '' });
+const emptyTPForm = () => ({ code: '', name: '', subject: '', scope: 'private' as 'global' | 'private' });
 
 // ── Component ──────────────────────────────────────────────────────
 const BankSoalPage: FC = () => {
@@ -207,6 +208,7 @@ const BankSoalPage: FC = () => {
         },
         correctAnswer: form.correctAnswer,
         explanation: form.explanation.trim(),
+        visibility: form.visibility,
       };
 
       if (editQ) {
@@ -311,13 +313,13 @@ const BankSoalPage: FC = () => {
               onClick={() => setTpTab('mine')}
               className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${tpTab === 'mine' ? 'border-b-2 border-violet-500 text-violet-700' : 'text-gray-400 hover:text-gray-600'}`}
             >
-              TP Saya
+              Private
             </button>
             <button
               onClick={() => setTpTab('global')}
               className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${tpTab === 'global' ? 'border-b-2 border-violet-500 text-violet-700' : 'text-gray-400 hover:text-gray-600'}`}
             >
-              Global
+              Public
             </button>
           </div>
 
@@ -361,7 +363,7 @@ const BankSoalPage: FC = () => {
                 {tpTab === 'global' && (
                   <>
                     {globalTPs.length === 0 ? (
-                      <p className="px-4 py-6 text-center text-xs text-gray-400">Belum ada TP global</p>
+                      <p className="px-4 py-6 text-center text-xs text-gray-400">Belum ada TP publik</p>
                     ) : (
                       globalTPs.map(tp => (
                         <TPItem
@@ -406,7 +408,7 @@ const BankSoalPage: FC = () => {
                       </span>
                       {selectedTP.scope === 'global' ? (
                         <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-                          <Globe size={9} /> Global
+                          <Globe size={9} /> Public
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
@@ -429,17 +431,11 @@ const BankSoalPage: FC = () => {
                     )}
                   </div>
 
-                  {/* Question completeness per tier */}
-                  <div className="hidden lg:flex items-center gap-1">
-                    {REQUIRED_PATHS.map(path => {
-                      const count = selectedTP.questionCounts[path] || 0;
-                      const info = tierInfo(path);
-                      return (
-                        <div key={path} title={info?.label} className={`flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-bold ${count > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
-                          {count > 0 ? '✓' : '?'}
-                        </div>
-                      );
-                    })}
+                  {/* Total question count */}
+                  <div className="hidden lg:flex items-center">
+                    <span className="rounded-xl bg-gray-100 px-3 py-1 text-sm font-bold text-gray-600">
+                      {selectedTP.totalQuestions} soal
+                    </span>
                   </div>
                 </div>
               </div>
@@ -456,7 +452,7 @@ const BankSoalPage: FC = () => {
                   onClick={() => setQView('global')}
                   className={`border-b-2 py-3 text-sm font-semibold transition-colors ${qView === 'global' ? 'border-violet-500 text-violet-700' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                 >
-                  Soal Global
+                  Soal Public
                 </button>
                 <div className="ml-auto flex items-center gap-2 py-2">
                   <div className="relative">
@@ -495,7 +491,7 @@ const BankSoalPage: FC = () => {
                       <ClipboardList size={24} className="text-gray-300" />
                     </div>
                     <p className="text-sm font-semibold text-gray-500">
-                      {qView === 'mine' ? 'Belum ada soal pribadi' : 'Belum ada soal global'}
+                      {qView === 'mine' ? 'Belum ada soal pribadi' : 'Belum ada soal publik'}
                     </p>
                     {qView === 'mine' && (
                       <button
@@ -566,6 +562,23 @@ const BankSoalPage: FC = () => {
                   className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                 />
               </div>
+              {isAdmin && (
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-600">Visibilitas</label>
+                  <div className="flex gap-2">
+                    {(['private', 'global'] as const).map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setTPForm(f => ({ ...f, scope: s }))}
+                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-semibold transition-colors ${tpForm.scope === s ? (s === 'global' ? 'border-emerald-400 bg-emerald-50 text-emerald-700' : 'border-violet-400 bg-violet-50 text-violet-700') : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}
+                      >
+                        {s === 'global' ? <><Globe size={12} /> Public</> : <><Lock size={12} /> Private</>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="mt-5 flex gap-2">
               <button
@@ -676,6 +689,25 @@ const BankSoalPage: FC = () => {
                   className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 resize-none"
                 />
               </div>
+
+              {/* Visibility — admin only */}
+              {isAdmin && (
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-600">Visibilitas Soal</label>
+                  <div className="flex gap-2">
+                    {(['private', 'global'] as const).map(v => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, visibility: v }))}
+                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-semibold transition-colors ${form.visibility === v ? (v === 'global' ? 'border-emerald-400 bg-emerald-50 text-emerald-700' : 'border-violet-400 bg-violet-50 text-violet-700') : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}
+                      >
+                        {v === 'global' ? <><Globe size={12} /> Public</> : <><Lock size={12} /> Private</>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-5 flex gap-2">
@@ -740,7 +772,7 @@ const TPItem: FC<{
       <div className="min-w-0 flex-1">
         <p className={`truncate text-xs font-semibold ${selected ? 'text-violet-800' : 'text-gray-700'}`}>{tp.name}</p>
         <p className={`text-[10px] font-medium ${completenessColor}`}>
-          {tp.totalQuestions}/7 soal{tp.isComplete ? ' ✓' : ''}
+          {tp.totalQuestions} soal
         </p>
       </div>
       {canEdit && hovered && (
@@ -826,7 +858,7 @@ const QuestionCard: FC<{
                 <span>Dipakai: {q.usageCount}×</span>
                 {q.visibility && (
                   <span className={`rounded-full px-2 py-0.5 font-semibold ${q.visibility === 'global' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
-                    {q.visibility === 'global' ? 'Global' : 'Pribadi'}
+                    {q.visibility === 'global' ? 'Public' : 'Private'}
                   </span>
                 )}
                 {q.approvalStatus === 'pending' && (
