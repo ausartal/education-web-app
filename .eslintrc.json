@@ -1,8 +1,7 @@
 {
   "extends": [
     "next/core-web-vitals",
-    "next/typescript",
-    "plugin:prettier/recommended"
+    "next/typescript"
   ],
   "ignorePatterns": [
     "src/dataconnect-generated/**",

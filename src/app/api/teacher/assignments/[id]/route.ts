@@ -39,7 +39,7 @@ export async function GET(
 
     const submissions = (data.submissions as Record<string, Record<string, unknown>>) ?? {};
 
-    let studentNames: Record<string, string> = {};
+    const studentNames: Record<string, string> = {};
     if (studentIds.length > 0) {
       const chunks: string[][] = [];
       for (let i = 0; i < studentIds.length; i += 30) chunks.push(studentIds.slice(i, i + 30));
