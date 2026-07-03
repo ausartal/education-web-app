@@ -259,6 +259,7 @@ const BankSoalPage: FC = () => {
       optionE: q.options.E || '',
       correctAnswer: q.correctAnswer,
       explanation: q.explanation,
+      visibility: (q.visibility === 'global' ? 'global' : 'private') as 'global' | 'private',
     });
     setShowQForm(true);
   };
