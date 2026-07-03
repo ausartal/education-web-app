@@ -16,9 +16,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const data = snap.data()!;
   const isAdmin = teacher.role === 'admin';
   const isOwner = data.ownerId === teacher.uid || data.createdBy === teacher.uid;
-  const isLegacy = !data.visibility; // old questions without visibility
 
-  if (!isAdmin && !isOwner && !isLegacy) {
+  if (!isAdmin && !isOwner) {
     return NextResponse.json({ error: 'Forbidden: bukan soal Anda' }, { status: 403 });
   }
 

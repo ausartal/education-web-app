@@ -56,9 +56,13 @@ service cloud.firestore {
       allow create: if isTeacherOrAdmin();
       allow update: if isAdmin()
         || (isTeacherOrAdmin() && resource.data.teacherId == uid())
-        // Siswa boleh update untuk join kelas (menambahkan diri ke studentIds)
-        || (isAuth() && request.resource.data.diff(resource.data)
-            .affectedKeys().hasOnly(['studentIds']));
+        // Siswa boleh join kelas: hanya boleh menambahkan diri sendiri, tidak boleh menghapus siswa lain
+        || (isAuth()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentIds'])
+            && request.resource.data.studentIds.hasAll(resource.data.studentIds)
+            && request.resource.data.studentIds.size() == resource.data.studentIds.size() + 1
+            && !resource.data.studentIds.hasAny([uid()])
+            && request.resource.data.studentIds.hasAll([uid()]));
       allow delete: if isAdmin()
         || (isTeacherOrAdmin() && resource.data.teacherId == uid());
     }
@@ -90,16 +94,18 @@ service cloud.firestore {
       allow create: if isTeacherOrAdmin();
       allow update: if isAdmin()
         || (isTeacherOrAdmin() && resource.data.teacherId == uid())
-        // Siswa boleh submit jawaban (update field submissions)
-        || (isAuth() && request.resource.data.diff(resource.data)
-            .affectedKeys().hasOnly(['submissions', 'updatedAt']));
+        // Siswa boleh submit jawaban: hanya jika terdaftar di kelas dan hanya mengubah entry milik sendiri
+        || (isAuth()
+            && get(/databases/$(database)/documents/classes/$(resource.data.classId)).data.studentIds.hasAny([uid()])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['submissions', 'updatedAt'])
+            && request.resource.data.submissions.diff(resource.data.submissions).affectedKeys().hasOnly([uid()]));
       allow delete: if isAdmin()
         || (isTeacherOrAdmin() && resource.data.teacherId == uid());
     }
 
     // ── EXAM SCHEDULES ───────────────────────────────────────────────────────
     match /exam_schedules/{docId} {
-      allow read:   if isAuth();
+      allow read:   if isTeacherOrAdmin();
       allow create: if isTeacherOrAdmin();
       allow update: if isAdmin()
         || (isTeacherOrAdmin() && resource.data.teacherId == uid());
@@ -163,7 +169,7 @@ service cloud.firestore {
     }
     match /user_achievements/{docId} {
       allow read:   if isOwner(resource.data.userId) || isTeacherOrAdmin();
-      allow create: if isAuth();
+      allow create: if false; // server-side only via Admin SDK
       allow update: if false;
       allow delete: if isAdmin();
     }
@@ -202,7 +208,7 @@ service cloud.firestore {
     // ── AUDIT LOGS ───────────────────────────────────────────────────────────
     match /audit_logs/{docId} {
       allow read:   if isAdmin();
-      allow create: if isAuth();
+      allow create: if false; // server-side only via Admin SDK
       allow update: if false;
       allow delete: if false;
     }

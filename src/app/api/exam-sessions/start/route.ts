@@ -95,6 +95,11 @@ export async function POST(req: NextRequest) {
     }, { status: 422 });
   }
 
+  // Collect all valid question IDs for this session (used in check-answer validation)
+  const questionIds = Object.values(questionsByDomain).flatMap(
+    (domain) => Object.values(domain as Record<string, { id: string }>).map((q) => (q as { id: string }).id),
+  );
+
   const schedulePayload = { id: scheduleDoc.id, title: schedule.title, durationMinutes: schedule.durationMinutes, domainIds };
 
   // Check if student already has an in-progress session for this schedule
@@ -106,10 +111,15 @@ export async function POST(req: NextRequest) {
     .get();
 
   if (!existingSnap.empty) {
-    const existingSession = existingSnap.docs[0].data();
+    const existingDoc = existingSnap.docs[0];
+    const existingSession = existingDoc.data();
+    // Upgrade legacy sessions that don't have questionIds stored
+    if (!existingSession.questionIds) {
+      await existingDoc.ref.update({ questionIds });
+    }
     const completedDomains = (existingSession.domainResponses || []).length;
     return NextResponse.json({
-      sessionId: existingSnap.docs[0].id,
+      sessionId: existingDoc.id,
       resumed: true,
       completedDomains,
       schedule: schedulePayload,
@@ -144,6 +154,7 @@ export async function POST(req: NextRequest) {
     domainResponses: [],
     numericScore: null,
     anomalyFlags: [],
+    questionIds,
   };
   await docRef.set(session);
 

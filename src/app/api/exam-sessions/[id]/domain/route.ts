@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { getT2Path, getT3Path } from '@/lib/msat-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { domainResponse } = await req.json();
   if (!domainResponse) return NextResponse.json({ error: 'domainResponse required' }, { status: 400 });
 
+  // Validate domainId belongs to this exam schedule
+  const scheduleSnap = await adminDb.collection('exam_schedules').doc(session.examScheduleId).get();
+  if (!scheduleSnap.exists) return NextResponse.json({ error: 'Schedule not found' }, { status: 404 });
+  const validDomainIds: string[] = scheduleSnap.data()!.domainIds || [];
+  if (!validDomainIds.includes(domainResponse.domainId)) {
+    return NextResponse.json({ error: 'Domain tidak valid untuk ujian ini' }, { status: 400 });
+  }
+
+  // Check for duplicate domain submission
+  const existingResponses: Array<{ domainId: string }> = session.domainResponses || [];
+  if (existingResponses.some((r) => r.domainId === domainResponse.domainId)) {
+    return NextResponse.json({ error: 'Domain ini sudah dikerjakan' }, { status: 409 });
+  }
+
   const qIds = [
     domainResponse.tier1?.questionId,
     domainResponse.tier2?.questionId,
@@ -47,6 +62,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     tier3: recompute(domainResponse.tier3),
   };
 
+  // Validate adaptive branch paths match server-computed isCorrect values
+  if (sanitizedResponse.tier2) {
+    const expectedT2Path = getT2Path(sanitizedResponse.tier1?.isCorrect ?? false);
+    if (sanitizedResponse.tier2.path !== expectedT2Path) {
+      return NextResponse.json({ error: 'Jalur tier 2 tidak valid' }, { status: 400 });
+    }
+  }
+  if (sanitizedResponse.tier3 && sanitizedResponse.tier2) {
+    const expectedT3Path = getT3Path(
+      sanitizedResponse.tier1?.isCorrect ?? false,
+      sanitizedResponse.tier2?.isCorrect ?? false,
+    );
+    if (sanitizedResponse.tier3.path !== expectedT3Path) {
+      return NextResponse.json({ error: 'Jalur tier 3 tidak valid' }, { status: 400 });
+    }
+  }
+
   const usageBatch = adminDb.batch();
   for (const qId of qIds) {
     usageBatch.update(adminDb.collection('exam_questions').doc(qId), {
@@ -55,8 +87,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
   await usageBatch.commit().catch(() => { /* ignore if question doesn't exist */ });
 
-  // Append domain response
-  const existingResponses: unknown[] = session.domainResponses || [];
+  // Append domain response (no duplicate check needed — already validated above)
   const updatedResponses = [...existingResponses, sanitizedResponse];
 
   await ref.update({
