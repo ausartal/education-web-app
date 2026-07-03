@@ -50,9 +50,11 @@ export async function POST(req: NextRequest) {
     examType: schedule.examType || 'tp',
   };
 
-  // ── Custom exam mode (teacher-written questions) ───────────────────
-  if (schedule.examType === 'custom') {
+  // ── Custom / Manual exam mode ───────────────────────────────────────
+  if (schedule.examType === 'custom' || schedule.examType === 'manual') {
+    const mode = schedule.examType as 'custom' | 'manual';
     const customQuestions = (schedule.customQuestions as unknown[]) || [];
+    const maxAttempts = (schedule.maxAttempts as number) ?? 1;
 
     // Check existing in-progress session
     const existingSnap = await adminDb.collection('exam_sessions')
@@ -64,19 +66,20 @@ export async function POST(req: NextRequest) {
     if (!existingSnap.empty) {
       const ed = existingSnap.docs[0];
       return NextResponse.json({
-        sessionId: ed.id, resumed: true, mode: 'custom',
+        sessionId: ed.id, resumed: true, mode,
         schedule: schedulePayload, customQuestions,
         completedDomains: 0,
       });
     }
 
-    // Check already completed
+    // Check attempts limit
     const completedSnap = await adminDb.collection('exam_sessions')
       .where('examScheduleId', '==', scheduleDoc.id)
       .where('studentId', '==', decoded.uid)
-      .where('status', '==', 'completed').limit(1).get();
-    if (!completedSnap.empty) {
-      return NextResponse.json({ error: 'Kamu sudah mengerjakan ujian ini', completed: true, sessionId: completedSnap.docs[0].id }, { status: 409 });
+      .where('status', '==', 'completed').get();
+
+    if (maxAttempts > 0 && completedSnap.size >= maxAttempts) {
+      return NextResponse.json({ error: 'Kamu sudah mencapai batas percobaan ujian ini', completed: true, sessionId: completedSnap.docs[0].id }, { status: 409 });
     }
 
     const docRef = adminDb.collection('exam_sessions').doc();
@@ -88,7 +91,7 @@ export async function POST(req: NextRequest) {
       startedAt: FieldValue.serverTimestamp(),
       completedAt: null,
       durationMinutes: schedule.durationMinutes || 50,
-      examType: 'custom',
+      examType: mode,
       status: 'in_progress',
       domainResponses: [],
       customAnswers: [],
@@ -99,11 +102,11 @@ export async function POST(req: NextRequest) {
     await adminDb.collection('audit_logs').add({
       actorId: decoded.uid, actorRole: 'student', action: 'start_exam',
       targetId: docRef.id, targetType: 'exam_session',
-      details: { scheduleId: scheduleDoc.id, title: schedule.title, examType: 'custom' }, timestamp: new Date(),
+      details: { scheduleId: scheduleDoc.id, title: schedule.title, examType: mode }, timestamp: new Date(),
     });
 
     return NextResponse.json({
-      sessionId: docRef.id, mode: 'custom',
+      sessionId: docRef.id, mode,
       schedule: schedulePayload, customQuestions,
       resumed: false,
     }, { status: 201 });
@@ -197,16 +200,16 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Check if already completed
+  // Check attempts limit for MSAT
   const completedSnap = await adminDb.collection('exam_sessions')
     .where('examScheduleId', '==', scheduleDoc.id)
     .where('studentId', '==', decoded.uid)
     .where('status', '==', 'completed')
-    .limit(1)
     .get();
 
-  if (!completedSnap.empty) {
-    return NextResponse.json({ error: 'Kamu sudah mengerjakan ujian ini', completed: true, sessionId: completedSnap.docs[0].id }, { status: 409 });
+  const maxAttemptsMsat = (schedule.maxAttempts as number) ?? 1;
+  if (maxAttemptsMsat > 0 && completedSnap.size >= maxAttemptsMsat) {
+    return NextResponse.json({ error: 'Kamu sudah mencapai batas percobaan ujian ini', completed: true, sessionId: completedSnap.docs[0].id }, { status: 409 });
   }
 
   // Create session
