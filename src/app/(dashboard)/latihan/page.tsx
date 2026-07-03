@@ -61,15 +61,17 @@ const LatihanPage: FC = () => {
   useEffect(() => {
     if (!profile) return;
     (async () => {
-      const snap = await getDoc(doc(db, 'users', profile.uid));
-      const data = snap.data() || {};
-      setEasyDone(!!data.easyQuizCompleted);
-      setModerateDone(!!data.lastQuiz_moderate);
-      const scores: Record<string, number> = {};
-      if (data.lastQuiz_easy) scores.easy = data.lastQuiz_easy.score;
-      if (data.lastQuiz_moderate) scores.moderate = data.lastQuiz_moderate.score;
-      if (data.lastQuiz_hard) scores.hard = data.lastQuiz_hard.score;
-      setLastScores(scores);
+      try {
+        const snap = await getDoc(doc(db, 'users', profile.uid));
+        const data = snap.data() || {};
+        setEasyDone(!!data.easyQuizCompleted);
+        setModerateDone(!!data.lastQuiz_moderate);
+        const scores: Record<string, number> = {};
+        if (data.lastQuiz_easy) scores.easy = data.lastQuiz_easy.score;
+        if (data.lastQuiz_moderate) scores.moderate = data.lastQuiz_moderate.score;
+        if (data.lastQuiz_hard) scores.hard = data.lastQuiz_hard.score;
+        setLastScores(scores);
+      } catch { /* leave defaults — levels stay locked */ }
     })();
   }, [profile]);
 

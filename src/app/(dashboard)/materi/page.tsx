@@ -58,13 +58,16 @@ const MateriPage: FC = () => {
   useEffect(() => {
     if (!profile) return;
     const fetch = async () => {
-      const [mats, prog] = await Promise.all([
-        getMaterials(),
-        getUserProgress(profile.uid),
-      ]);
-      setMaterials(mats);
-      setProgress(prog);
-      setLoading(false);
+      try {
+        const [mats, prog] = await Promise.all([
+          getMaterials(),
+          getUserProgress(profile.uid),
+        ]);
+        setMaterials(mats);
+        setProgress(prog);
+      } catch { /* leave empty on error */ } finally {
+        setLoading(false);
+      }
     };
     fetch();
   }, [profile]);

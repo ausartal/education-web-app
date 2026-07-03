@@ -32,39 +32,43 @@ const AdminConfig: FC = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      const [msatSnap, gamSnap] = await Promise.all([
-        getDoc(doc(db, 'app_config', 'msat')),
-        getDoc(doc(db, 'app_config', 'gamification')),
-      ]);
-      if (msatSnap.exists()) {
-        const d = msatSnap.data();
-        setMsat({
-          stagesCount: d.stagesCount || 3,
-          questionsPerStage: d.questionsPerStage || 7,
-          thetaMin: d.thetaMin || -3,
-          thetaMax: d.thetaMax || 3,
-          tooFastMs: d.anomalyThresholds?.tooFastMs || 3000,
-          allFastCorrectCount: d.anomalyThresholds?.allFastCorrectCount || 5,
-          suddenDropThreshold: d.anomalyThresholds?.suddenDropThreshold || 3,
-        });
+      try {
+        const [msatSnap, gamSnap] = await Promise.all([
+          getDoc(doc(db, 'app_config', 'msat')),
+          getDoc(doc(db, 'app_config', 'gamification')),
+        ]);
+        if (msatSnap.exists()) {
+          const d = msatSnap.data();
+          setMsat({
+            stagesCount: d.stagesCount || 3,
+            questionsPerStage: d.questionsPerStage || 7,
+            thetaMin: d.thetaMin || -3,
+            thetaMax: d.thetaMax || 3,
+            tooFastMs: d.anomalyThresholds?.tooFastMs || 3000,
+            allFastCorrectCount: d.anomalyThresholds?.allFastCorrectCount || 5,
+            suddenDropThreshold: d.anomalyThresholds?.suddenDropThreshold || 3,
+          });
+        }
+        if (gamSnap.exists()) {
+          const d = gamSnap.data();
+          setGamification({
+            xpPerLesson: d.xpPerLesson || 50,
+            xpPerCorrectAnswer: d.xpPerCorrectAnswer || 10,
+            xpPerExam: d.xpPerExam || 100,
+            xpDailyLogin: d.xpDailyLogin || 5,
+            xpStreakBonus: d.xpStreakBonus || 10,
+          });
+        }
+      } catch { /* leave defaults on error */ } finally {
+        setLoading(false);
       }
-      if (gamSnap.exists()) {
-        const d = gamSnap.data();
-        setGamification({
-          xpPerLesson: d.xpPerLesson || 50,
-          xpPerCorrectAnswer: d.xpPerCorrectAnswer || 10,
-          xpPerExam: d.xpPerExam || 100,
-          xpDailyLogin: d.xpDailyLogin || 5,
-          xpStreakBonus: d.xpStreakBonus || 10,
-        });
-      }
-      setLoading(false);
     };
     fetch();
   }, []);
 
   const handleSave = async () => {
     setSaving(true);
+    try {
     await Promise.all([
       setDoc(
         doc(db, 'app_config', 'msat'),
@@ -89,8 +93,10 @@ const AdminConfig: FC = () => {
         merge: true,
       }),
     ]);
-    setSaving(false);
     addToast('success', 'Configuration saved');
+    } catch { addToast('error', 'Gagal menyimpan konfigurasi'); } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {

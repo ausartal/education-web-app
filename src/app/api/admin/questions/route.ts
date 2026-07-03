@@ -26,8 +26,9 @@ export async function POST(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const body = await req.json();
-  const { topic, subtopic, difficulty, stem, options, correctAnswer, explanation, baseTime } = body;
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
+  const { topic, subtopic, difficulty, stem, options, correctAnswer, explanation, baseTime } = body as Record<string, unknown>;
 
   if (!topic || !difficulty || !stem || !correctAnswer) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

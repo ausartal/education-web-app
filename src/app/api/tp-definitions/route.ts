@@ -69,8 +69,9 @@ export async function POST(req: NextRequest) {
   const teacher = await verifyTeacher(req);
   if (!teacher) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const body = await req.json();
-  const { code, name, subject, description, order } = body;
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
+  const { code, name, subject, description, order } = body as { code?: string; name?: string; subject?: string; description?: string; order?: number };
 
   if (!code?.trim() || !name?.trim()) {
     return NextResponse.json({ error: 'Kode dan nama TP wajib diisi' }, { status: 400 });

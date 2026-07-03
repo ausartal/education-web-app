@@ -51,11 +51,12 @@ const TeacherQuestions: FC = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      const snap = await getDocs(collection(db, 'question_bank'));
-      setQuestions(
-        snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Question)
-      );
-      setLoading(false);
+      try {
+        const snap = await getDocs(collection(db, 'question_bank'));
+        setQuestions(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Question));
+      } catch { /* leave empty */ } finally {
+        setLoading(false);
+      }
     };
     fetch();
   }, []);
@@ -66,7 +67,7 @@ const TeacherQuestions: FC = () => {
       : questions.filter((q) => q.difficulty === filter);
 
   const handleCreate = async () => {
-    await addDoc(collection(db, 'question_bank'), {
+    try { await addDoc(collection(db, 'question_bank'), {
       topic: 'stoikiometri',
       subtopic: '',
       difficulty: form.difficulty,
@@ -93,12 +94,15 @@ const TeacherQuestions: FC = () => {
     addToast('success', 'Soal berhasil dibuat');
     const snap = await getDocs(collection(db, 'question_bank'));
     setQuestions(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Question));
+    } catch { addToast('error', 'Gagal membuat soal'); }
   };
 
   const handleDelete = async (id: string) => {
-    await deleteDoc(doc(db, 'question_bank', id));
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
-    addToast('success', 'Soal dihapus');
+    try {
+      await deleteDoc(doc(db, 'question_bank', id));
+      setQuestions((prev) => prev.filter((q) => q.id !== id));
+      addToast('success', 'Soal dihapus');
+    } catch { addToast('error', 'Gagal menghapus soal'); }
   };
 
   const handleBulkImport = async (e: React.ChangeEvent<HTMLInputElement>) => {

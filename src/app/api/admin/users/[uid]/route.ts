@@ -9,7 +9,8 @@ export async function PATCH(
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const body = await req.json();
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
   const allowed = ['role', 'isActive', 'displayName', 'profile', 'stats'];
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {

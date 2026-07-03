@@ -19,7 +19,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (session.studentId !== decoded.uid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   if (session.status !== 'in_progress') return NextResponse.json({ error: 'Session is not in progress' }, { status: 409 });
 
-  const { questionId, selectedAnswer } = await req.json();
+  let body: { questionId?: string; selectedAnswer?: string };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
+  const { questionId, selectedAnswer } = body;
   if (!questionId || !selectedAnswer) return NextResponse.json({ error: 'questionId and selectedAnswer required' }, { status: 400 });
 
   // Validate questionId belongs to this session's question pool

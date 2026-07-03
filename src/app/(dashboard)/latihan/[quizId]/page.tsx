@@ -49,10 +49,13 @@ const QuizPage: FC = () => {
   useEffect(() => {
     if (!difficulty) return;
     const fetch = async () => {
-      const qs = await getQuestionsByDifficulty('stoikiometri', difficulty, 10);
-      setQuestions(qs);
-      setTimer(qs[0]?.baseTime || 60);
-      setLoading(false);
+      try {
+        const qs = await getQuestionsByDifficulty('stoikiometri', difficulty, 10);
+        setQuestions(qs);
+        setTimer(qs[0]?.baseTime || 60);
+      } catch { /* leave empty */ } finally {
+        setLoading(false);
+      }
     };
     fetch();
   }, [difficulty]);

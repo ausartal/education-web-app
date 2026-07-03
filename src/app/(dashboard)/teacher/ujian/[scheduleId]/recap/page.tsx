@@ -227,13 +227,17 @@ const RecapPage: FC = () => {
 
   const fetchRecap = useCallback(async () => {
     if (!user) return;
-    const token = await user.getIdToken();
-    const res = await fetch(`/api/teacher/recap/${scheduleId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const json = await res.json();
-    setData(json);
-    setLoading(false);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/teacher/recap/${scheduleId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const json = await res.json();
+      setData(json);
+    } catch { /* leave data null — UI shows empty state */ } finally {
+      setLoading(false);
+    }
   }, [user, scheduleId]);
 
   useEffect(() => { fetchRecap(); }, [fetchRecap]);
