@@ -33,7 +33,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const questionSnap = await adminDb.collection('exam_questions').doc(questionId).get();
   if (!questionSnap.exists) return NextResponse.json({ error: 'Question not found' }, { status: 404 });
 
-  const isCorrect = selectedAnswer === questionSnap.data()!.correctAnswer;
+  const qData = questionSnap.data()!;
+  const isCorrect = selectedAnswer === qData.correctAnswer;
+  const questionVersion = (qData.version as number) ?? 1;
 
-  return NextResponse.json({ isCorrect });
+  return NextResponse.json({ isCorrect, questionVersion });
 }

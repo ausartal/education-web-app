@@ -42,7 +42,74 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Kamu tidak terdaftar di kelas ini. Minta gurumu untuk menambahkanmu atau bergabung lewat kode kelas.' }, { status: 403 });
   }
 
-  // Load exam questions accessible to this teacher for all domains
+  const schedulePayload = {
+    id: scheduleDoc.id,
+    title: schedule.title,
+    durationMinutes: schedule.durationMinutes,
+    domainIds: schedule.domainIds || [],
+    examType: schedule.examType || 'tp',
+  };
+
+  // ── Custom exam mode (teacher-written questions) ───────────────────
+  if (schedule.examType === 'custom') {
+    const customQuestions = (schedule.customQuestions as unknown[]) || [];
+
+    // Check existing in-progress session
+    const existingSnap = await adminDb.collection('exam_sessions')
+      .where('examScheduleId', '==', scheduleDoc.id)
+      .where('studentId', '==', decoded.uid)
+      .where('status', '==', 'in_progress')
+      .limit(1).get();
+
+    if (!existingSnap.empty) {
+      const ed = existingSnap.docs[0];
+      return NextResponse.json({
+        sessionId: ed.id, resumed: true, mode: 'custom',
+        schedule: schedulePayload, customQuestions,
+        completedDomains: 0,
+      });
+    }
+
+    // Check already completed
+    const completedSnap = await adminDb.collection('exam_sessions')
+      .where('examScheduleId', '==', scheduleDoc.id)
+      .where('studentId', '==', decoded.uid)
+      .where('status', '==', 'completed').limit(1).get();
+    if (!completedSnap.empty) {
+      return NextResponse.json({ error: 'Kamu sudah mengerjakan ujian ini', completed: true, sessionId: completedSnap.docs[0].id }, { status: 409 });
+    }
+
+    const docRef = adminDb.collection('exam_sessions').doc();
+    await docRef.set({
+      studentId: decoded.uid,
+      examScheduleId: scheduleDoc.id,
+      classId: schedule.classId,
+      teacherId: schedule.teacherId,
+      startedAt: FieldValue.serverTimestamp(),
+      completedAt: null,
+      durationMinutes: schedule.durationMinutes || 50,
+      examType: 'custom',
+      status: 'in_progress',
+      domainResponses: [],
+      customAnswers: [],
+      numericScore: null,
+      anomalyFlags: [],
+    });
+
+    await adminDb.collection('audit_logs').add({
+      actorId: decoded.uid, actorRole: 'student', action: 'start_exam',
+      targetId: docRef.id, targetType: 'exam_session',
+      details: { scheduleId: scheduleDoc.id, title: schedule.title, examType: 'custom' }, timestamp: new Date(),
+    });
+
+    return NextResponse.json({
+      sessionId: docRef.id, mode: 'custom',
+      schedule: schedulePayload, customQuestions,
+      resumed: false,
+    }, { status: 201 });
+  }
+
+  // ── Standard MSAT adaptive mode ────────────────────────────────────
   const domainIds: string[] = schedule.domainIds || [];
   const teacherId: string = schedule.teacherId;
 
@@ -62,13 +129,12 @@ export async function POST(req: NextRequest) {
   // Filter: legacy (no visibility) = global, or global+approved, or teacher's private
   const accessibleDocs = allDocs.filter(d => {
     const q = d.data();
-    if (!q.visibility) return true; // legacy question = globally accessible
+    if (!q.visibility) return true;
     if (q.visibility === 'global' && q.approvalStatus === 'approved') return true;
     if (q.visibility === 'private' && q.ownerId === teacherId) return true;
     return false;
   });
 
-  // Normalize legacy K1-K7 tier paths to current MSAT tier names
   const LEGACY_TIER_MAP: Record<string, string> = {
     K1: 'anchor', K2: 'mudah', K3: 'sukar',
     K4: 'sangat_mudah', K5: 'sedang_a', K6: 'sedang_b', K7: 'sangat_sukar',
@@ -90,7 +156,6 @@ export async function POST(req: NextRequest) {
     };
   });
 
-  // Validate all required tier paths exist for each domain
   const requiredPaths = ['anchor', 'mudah', 'sukar', 'sangat_mudah', 'sedang_a', 'sedang_b', 'sangat_sukar'];
   const missingDomains = domainIds.filter(id => {
     const dq = questionsByDomain[id];
@@ -104,12 +169,9 @@ export async function POST(req: NextRequest) {
     }, { status: 422 });
   }
 
-  // Collect all valid question IDs for this session (used in check-answer validation)
   const questionIds = Object.values(questionsByDomain).flatMap(
     (domain) => Object.values(domain as Record<string, { id: string }>).map((q) => (q as { id: string }).id),
   );
-
-  const schedulePayload = { id: scheduleDoc.id, title: schedule.title, durationMinutes: schedule.durationMinutes, domainIds };
 
   // Check if student already has an in-progress session for this schedule
   const existingSnap = await adminDb.collection('exam_sessions')
@@ -122,7 +184,6 @@ export async function POST(req: NextRequest) {
   if (!existingSnap.empty) {
     const existingDoc = existingSnap.docs[0];
     const existingSession = existingDoc.data();
-    // Upgrade legacy sessions that don't have questionIds stored
     if (!existingSession.questionIds) {
       await existingDoc.ref.update({ questionIds });
     }
@@ -158,6 +219,7 @@ export async function POST(req: NextRequest) {
     startedAt: FieldValue.serverTimestamp(),
     completedAt: null,
     durationMinutes: schedule.durationMinutes || 50,
+    examType: 'tp',
     status: 'in_progress',
     currentDomainIndex: 0,
     domainResponses: [],

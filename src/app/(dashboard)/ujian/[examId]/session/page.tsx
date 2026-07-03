@@ -83,6 +83,16 @@ const ExamSessionPage: FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFullscreenGate, setShowFullscreenGate] = useState(false);
 
+  // ── Custom exam mode state ──
+  const [customMode, setCustomMode] = useState(false);
+  const [customQuestions, setCustomQuestions] = useState<Array<{
+    id: string; stem: string;
+    options: Record<string, string>;
+    correctAnswer: string;
+  }>>([]);
+  const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({});
+  const [customIdx, setCustomIdx] = useState(0);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const phaseStartRef = useRef(Date.now());
 
@@ -115,12 +125,29 @@ const ExamSessionPage: FC = () => {
     const raw = sessionStorage.getItem(`exam_init_${sessionId}`);
     if (!raw) return;
     sessionStorage.removeItem(`exam_init_${sessionId}`);
-    const { schedule, questions: qs, completedDomains: cd = 0 } = JSON.parse(raw) as {
+    const parsed = JSON.parse(raw) as {
       schedule: { title: string; durationMinutes: number; domainIds: string[] };
-      questions: Record<string, Record<string, QuestionData>>;
+      questions?: Record<string, Record<string, QuestionData>>;
       completedDomains?: number;
+      mode?: string;
+      customQuestions?: Array<{ id: string; stem: string; options: Record<string, string>; correctAnswer: string }>;
     };
 
+    const { schedule, completedDomains: cd = 0, mode } = parsed;
+    const dur = schedule.durationMinutes;
+
+    // ── Custom exam mode ──
+    if (mode === 'custom') {
+      setCustomMode(true);
+      setCustomQuestions(parsed.customQuestions ?? []);
+      setDurationMinutes(dur);
+      setTimeLeft(dur * 60);
+      setLoading(false);
+      return;
+    }
+
+    // ── MSAT adaptive mode ──
+    const qs = parsed.questions ?? {};
     const dl = schedule.domainIds;
     const dn: Record<string, string> = {};
     dl.forEach(id => {
@@ -129,7 +156,6 @@ const ExamSessionPage: FC = () => {
     });
 
     const typedQ = qs as unknown as Record<string, DomainQuestions>;
-    const dur = schedule.durationMinutes;
     const startIdx = Math.min(cd, dl.length - 1);
 
     setDomainList(dl);
@@ -385,10 +411,36 @@ const ExamSessionPage: FC = () => {
     }
   };
 
+  const submitCustomExam = async () => {
+    if (!user || submitting) return;
+    setSubmitting(true);
+    try {
+      const idToken = await user.getIdToken();
+      const answers = customQuestions.map((q, idx) => {
+        const sel = customAnswers[q.id] ?? customAnswers[String(idx)] ?? '';
+        return {
+          questionId: q.id,
+          questionIndex: idx,
+          selectedAnswer: sel,
+          isCorrect: sel === q.correctAnswer,
+        };
+      });
+      const res = await fetch(`/api/exam-sessions/${sessionId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ customAnswers: answers }),
+      });
+      if (res.ok) router.push(`/ujian/${sessionId}/results`);
+    } catch { /* ignore */ } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleAutoSubmit = async () => {
     if (!user) return;
     try {
       const idToken = await user.getIdToken();
+      if (customMode) { await submitCustomExam(); return; }
       await completeExam(idToken);
     } catch { /* ignore */ }
   };
@@ -399,6 +451,111 @@ const ExamSessionPage: FC = () => {
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
     </div>
   );
+
+  // ── Custom exam UI ──────────────────────────────────────────────────
+  if (!loading && customMode) {
+    const total = customQuestions.length;
+    const cq = customQuestions[customIdx];
+    const answeredCount = Object.keys(customAnswers).length;
+    const allAnswered = answeredCount >= total;
+    const mins2 = Math.floor(timeLeft / 60);
+    const secs2 = timeLeft % 60;
+    const timerStr2 = `${mins2}:${secs2.toString().padStart(2, '0')}`;
+
+    return (
+      <div className="flex min-h-screen flex-col bg-gray-50">
+        {/* Header */}
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700">
+              <Clock size={12} /> {timerStr2}
+            </div>
+            <span className="text-xs text-gray-500">{answeredCount}/{total} terjawab</span>
+          </div>
+          <span className="text-sm font-semibold text-gray-700">Soal {customIdx + 1} / {total}</span>
+        </div>
+
+        {/* Question navigation dots */}
+        <div className="flex flex-wrap gap-1.5 px-4 pt-3">
+          {customQuestions.map((q, i) => (
+            <button
+              key={q.id}
+              onClick={() => setCustomIdx(i)}
+              className={`h-7 w-7 rounded-full text-xs font-bold transition-colors ${
+                i === customIdx ? 'bg-violet-600 text-white' :
+                customAnswers[q.id] ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+
+        {/* Question body */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {cq && (
+            <div className="mx-auto max-w-2xl">
+              <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-violet-500">Soal {customIdx + 1}</p>
+                <p className="text-base font-medium leading-relaxed text-gray-800">{cq.stem}</p>
+              </div>
+
+              <div className="space-y-3">
+                {(['A', 'B', 'C', 'D'] as const).map(key => {
+                  const optText = cq.options[key];
+                  if (!optText) return null;
+                  const selected = customAnswers[cq.id] === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setCustomAnswers(prev => ({ ...prev, [cq.id]: key }))}
+                      className={`flex w-full items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all ${
+                        selected
+                          ? 'border-violet-500 bg-violet-50 shadow-sm'
+                          : 'border-gray-200 bg-white hover:border-violet-300 hover:bg-violet-50/50'
+                      }`}
+                    >
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
+                        selected ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-600'
+                      }`}>{key}</span>
+                      <span className="mt-1 text-sm leading-relaxed text-gray-800">{optText}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Nav buttons */}
+              <div className="mt-6 flex items-center gap-3">
+                <button
+                  onClick={() => setCustomIdx(i => Math.max(0, i - 1))}
+                  disabled={customIdx === 0}
+                  className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-600 disabled:opacity-40 hover:bg-gray-50"
+                >
+                  ← Sebelumnya
+                </button>
+                {customIdx < total - 1 ? (
+                  <button
+                    onClick={() => setCustomIdx(i => i + 1)}
+                    className="flex-1 rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-700"
+                  >
+                    Berikutnya →
+                  </button>
+                ) : (
+                  <button
+                    onClick={submitCustomExam}
+                    disabled={submitting || !allAnswered}
+                    className="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white disabled:opacity-50 hover:bg-emerald-700"
+                  >
+                    {submitting ? 'Mengirim...' : allAnswered ? 'Selesai & Kumpulkan' : `Jawab semua soal (${total - answeredCount} lagi)`}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (!progress || domainList.length === 0) {
     return (

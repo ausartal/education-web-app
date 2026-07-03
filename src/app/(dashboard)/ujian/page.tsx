@@ -41,10 +41,13 @@ const UjianPage: FC = () => {
       }
 
       // Store full question data in sessionStorage for the session page to consume
+      const isCustom = data.mode === 'custom';
       sessionStorage.setItem(`exam_init_${data.sessionId}`, JSON.stringify({
         schedule: data.schedule,
-        questions: data.questions,
+        questions: data.questions ?? {},
         completedDomains: data.completedDomains ?? 0,
+        mode: data.mode,
+        customQuestions: data.customQuestions ?? [],
       }));
 
       if (data.resumed) {
@@ -55,7 +58,9 @@ const UjianPage: FC = () => {
       setScheduleInfo({
         title: data.schedule.title,
         durationMinutes: data.schedule.durationMinutes,
-        domainCount: data.schedule.domainIds?.length || 0,
+        domainCount: isCustom
+          ? (data.customQuestions?.length ?? 0)
+          : (data.schedule.domainIds?.length || 0),
         sessionId: data.sessionId,
       });
       setStep('confirm');

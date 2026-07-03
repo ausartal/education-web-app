@@ -46,6 +46,7 @@ interface ExamQ {
   explanation: string;
   status: string;
   usageCount: number;
+  version?: number;
 }
 
 const emptyForm = () => ({
@@ -70,6 +71,7 @@ const TeacherExamSoalPage: FC = () => {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [editVersion, setEditVersion] = useState<number>(1);
 
   const getToken = useCallback(async () => user ? await user.getIdToken() : '', [user]);
 
@@ -139,6 +141,7 @@ const TeacherExamSoalPage: FC = () => {
 
   const openEdit = (q: ExamQ) => {
     setEditId(q.id);
+    setEditVersion(q.version ?? 1);
     setForm({
       domainId: q.domainId,
       tierPath: q.tierPath,
@@ -263,6 +266,9 @@ const TeacherExamSoalPage: FC = () => {
                       <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600">{tierInfo?.label || q.tierPath}</span>
                       <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">{q.cognitiveLevel}</span>
                       <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${q.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{q.status === 'active' ? 'Aktif' : 'Nonaktif'}</span>
+                      {(q.version ?? 1) > 1 && (
+                        <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700" title="Soal sudah direvisi">v{q.version}</span>
+                      )}
                     </div>
                     <p className="flex-1 truncate text-sm font-medium text-gray-800">{q.stem}</p>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -312,7 +318,10 @@ const TeacherExamSoalPage: FC = () => {
               <motion.div initial={{ scale: 0.95, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
                 className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
                 <div className="mb-5 flex items-center justify-between">
-                  <h2 className="font-display text-lg font-bold">{editId ? 'Edit Soal' : 'Tambah Soal Ujian'}</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-display text-lg font-bold">{editId ? 'Edit Soal' : 'Tambah Soal Ujian'}</h2>
+                    {editId && <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">v{editVersion} → v{editVersion + 1}</span>}
+                  </div>
                   <button onClick={() => { setShowForm(false); setEditId(null); }} className="rounded-lg p-1.5 hover:bg-gray-100"><X size={18} /></button>
                 </div>
 
