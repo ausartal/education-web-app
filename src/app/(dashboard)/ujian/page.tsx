@@ -41,7 +41,7 @@ const UjianPage: FC = () => {
       }
 
       // Store full question data in sessionStorage for the session page to consume
-      const isCustom = data.mode === 'custom';
+      const isCustom = data.mode === 'custom' || data.mode === 'manual';
       sessionStorage.setItem(`exam_init_${data.sessionId}`, JSON.stringify({
         schedule: data.schedule,
         questions: data.questions ?? {},

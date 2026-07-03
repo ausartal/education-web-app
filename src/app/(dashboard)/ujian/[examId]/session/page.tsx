@@ -136,8 +136,8 @@ const ExamSessionPage: FC = () => {
     const { schedule, completedDomains: cd = 0, mode } = parsed;
     const dur = schedule.durationMinutes;
 
-    // ── Custom exam mode ──
-    if (mode === 'custom') {
+    // ── Custom / Manual exam mode ──
+    if (mode === 'custom' || mode === 'manual') {
       setCustomMode(true);
       setCustomQuestions(parsed.customQuestions ?? []);
       setDurationMinutes(dur);

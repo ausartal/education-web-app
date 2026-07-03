@@ -23,12 +23,16 @@ interface StudentSession {
   anomalyFlags: string[];
   completedAt: string | null;
   startedAt: string | null;
+  examType?: string;
+  customAnswers?: Array<{ questionId: string; selectedAnswer: string; isCorrect: boolean }>;
+  attemptNumber?: number;
+  totalAttempts?: number;
 }
 
 interface RecapData {
-  schedule: { id: string; title: string; module: string; domainIds: string[]; examToken: string; durationMinutes: number };
+  schedule: { id: string; title: string; module: string; domainIds: string[]; examToken: string; durationMinutes: number; examType?: string; maxAttempts?: number };
   sessions: StudentSession[];
-  stats: { total: number; completed: number; inProgress: number; avgScore: number | null };
+  stats: { total: number; totalSessions: number; completed: number; inProgress: number; avgScore: number | null };
 }
 
 type Notes = Record<string, Record<string, string>>; // sessionId → domainId → text
@@ -268,6 +272,8 @@ const RecapPage: FC = () => {
 
   const { schedule, sessions, stats } = data;
   const completedSessions = sessions.filter(s => s.status === 'completed');
+  const isCustomOrManual = schedule.examType === 'custom' || schedule.examType === 'manual';
+  const maxScore = isCustomOrManual ? 100 : 120;
 
   // Build domain name map from actual session data
   const domainNameMap: Record<string, string> = {};
@@ -297,12 +303,12 @@ const RecapPage: FC = () => {
         <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
             { label: 'Total Peserta', value: stats.total, icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-50' },
-            { label: 'Selesai', value: stats.completed, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-            { label: 'Sedang Berjalan', value: stats.inProgress, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' },
+            { label: 'Siswa Selesai', value: stats.completed, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+            { label: 'Total Sesi', value: stats.totalSessions ?? stats.completed, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' },
             {
-              label: 'Rata-rata Skor',
+              label: 'Avg Skor Terbaik',
               value: stats.avgScore !== null ? `${stats.avgScore}` : '—',
-              sub: stats.avgScore !== null ? '/120' : undefined,
+              sub: stats.avgScore !== null ? `/${maxScore}` : undefined,
               icon: Trophy, color: 'text-violet-500', bg: 'bg-violet-50',
             },
           ].map((card, i) => {
@@ -388,12 +394,15 @@ const RecapPage: FC = () => {
                         </div>
                       )}
 
-                      {/* Score */}
+                      {/* Attempt badge + Score */}
                       <div className="shrink-0 text-right">
+                        {(session.totalAttempts ?? 1) > 1 && (
+                          <p className="mb-0.5 text-[10px] text-gray-400">Percobaan {session.attemptNumber}/{session.totalAttempts}</p>
+                        )}
                         {session.status === 'completed' || session.status === 'flagged' ? (
                           <span className={`text-2xl font-black ${SCORE_COLOR(session.numericScore)}`}>
                             {session.numericScore ?? '—'}
-                            <span className="text-xs font-normal text-gray-400">/120</span>
+                            <span className="text-xs font-normal text-gray-400">/{maxScore}</span>
                           </span>
                         ) : (
                           <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600">Berlangsung</span>
@@ -407,7 +416,7 @@ const RecapPage: FC = () => {
 
                     {/* ── Expanded detail ── */}
                     <AnimatePresence>
-                      {isExpanded && session.domainResponses?.length > 0 && (
+                      {isExpanded && (session.domainResponses?.length > 0 || (session.customAnswers?.length ?? 0) > 0) && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
@@ -416,6 +425,27 @@ const RecapPage: FC = () => {
                           className="overflow-hidden"
                         >
                           <div className="border-t border-gray-100 bg-gray-50/60 px-6 py-5">
+                            {/* Custom / Manual answers */}
+                            {(session.examType === 'custom' || session.examType === 'manual') && (session.customAnswers?.length ?? 0) > 0 && (
+                              <div className="mb-5">
+                                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Jawaban per Soal</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {session.customAnswers!.map((ans, ai) => (
+                                    <div key={ai}
+                                      className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold ${ans.isCorrect ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
+                                      title={`Soal ${ai + 1}: ${ans.isCorrect ? 'Benar' : 'Salah'} · Jawab: ${ans.selectedAnswer}`}>
+                                      {ai + 1}
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="mt-2 flex gap-4 text-xs">
+                                  <span className="font-semibold text-emerald-600">{session.customAnswers!.filter(a => a.isCorrect).length} benar</span>
+                                  <span className="font-semibold text-rose-500">{session.customAnswers!.filter(a => !a.isCorrect).length} salah</span>
+                                  <span className="text-gray-400">dari {session.customAnswers!.length} soal</span>
+                                </div>
+                              </div>
+                            )}
+
                             {/* Anomaly section */}
                             {hasAnomaly && (
                               <div className="mb-5 space-y-2">

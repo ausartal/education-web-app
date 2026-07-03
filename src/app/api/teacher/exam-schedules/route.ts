@@ -75,22 +75,28 @@ export async function POST(req: NextRequest) {
   const {
     classId, title, module = 'stoikiometri', domainIds, scheduledAt,
     durationMinutes = 50, maxAttempts = 1, shuffleQuestions = false,
-    examType = 'tp', customQuestions = [],
+    examType = 'tp', customQuestions = [], selectedQuestionIds = [],
   } = body as {
     classId?: string; title?: string; module?: string; domainIds?: string[];
     scheduledAt?: string; durationMinutes?: number; maxAttempts?: number;
     shuffleQuestions?: boolean; examType?: string; customQuestions?: unknown[];
+    selectedQuestionIds?: string[];
   };
 
   const isCustom = examType === 'custom';
+  const isManual = examType === 'manual';
+
   if (!classId || !title) {
     return NextResponse.json({ error: 'classId and title required' }, { status: 400 });
   }
-  if (!isCustom && !domainIds?.length) {
+  if (!isCustom && !isManual && !domainIds?.length) {
     return NextResponse.json({ error: 'domainIds required for TP exam' }, { status: 400 });
   }
   if (isCustom && (!Array.isArray(customQuestions) || customQuestions.length === 0)) {
     return NextResponse.json({ error: 'customQuestions required for custom exam' }, { status: 400 });
+  }
+  if (isManual && (!Array.isArray(selectedQuestionIds) || selectedQuestionIds.length === 0)) {
+    return NextResponse.json({ error: 'selectedQuestionIds required for manual exam' }, { status: 400 });
   }
 
   // Verify class belongs to teacher
@@ -112,13 +118,39 @@ export async function POST(req: NextRequest) {
     attempts++;
   }
 
+  // For manual exams: fetch the selected questions from DB and store them as customQuestions
+  let finalCustomQuestions: unknown[] = customQuestions;
+  if (isManual) {
+    const qDocs = await Promise.all(
+      (selectedQuestionIds as string[]).map(id => adminDb.collection('exam_questions').doc(id).get()),
+    );
+    finalCustomQuestions = qDocs
+      .filter(d => d.exists)
+      .map(d => {
+        const data = d.data()!;
+        return {
+          id: d.id,
+          stem: data.stem,
+          options: data.options,
+          correctAnswer: data.correctAnswer,
+          version: (data.version as number) ?? 1,
+          domainId: data.domainId,
+          domainName: data.domainName,
+          tierPath: data.tierPath,
+        };
+      });
+    if (finalCustomQuestions.length === 0) {
+      return NextResponse.json({ error: 'Soal yang dipilih tidak ditemukan' }, { status: 400 });
+    }
+  }
+
   const docRef = adminDb.collection('exam_schedules').doc();
   const schedule: Record<string, unknown> = {
     teacherId: teacher.uid,
     classId,
     title,
     module,
-    domainIds: isCustom ? [] : domainIds,
+    domainIds: (isCustom || isManual) ? [] : domainIds,
     examToken,
     scheduledAt: scheduledAt ? new Date(scheduledAt) : new Date(),
     durationMinutes,
@@ -128,13 +160,14 @@ export async function POST(req: NextRequest) {
     status: 'active',
     createdAt: FieldValue.serverTimestamp(),
   };
-  if (isCustom) schedule.customQuestions = customQuestions;
+  if (isCustom) schedule.customQuestions = finalCustomQuestions;
+  if (isManual) schedule.customQuestions = finalCustomQuestions;
   await docRef.set(schedule);
 
   await adminDb.collection('audit_logs').add({
     actorId: teacher.uid, actorRole: 'teacher', action: 'create_exam_schedule',
     targetId: docRef.id, targetType: 'exam_schedule',
-    details: { title, classId, examToken, examType, questionCount: isCustom ? customQuestions.length : (domainIds?.length ?? 0) }, timestamp: new Date(),
+    details: { title, classId, examToken, examType, questionCount: (isCustom || isManual) ? finalCustomQuestions.length : (domainIds?.length ?? 0) }, timestamp: new Date(),
   });
 
   return NextResponse.json({ schedule: { id: docRef.id, ...schedule } }, { status: 201 });
