@@ -17,9 +17,14 @@ const ResultsPage: FC = () => {
   useEffect(() => {
     if (!sessionId) return;
     const fetchSession = async () => {
-      const snap = await getDoc(doc(db, 'exam_sessions', sessionId));
-      if (snap.exists()) setSession(snap.data() as MSATExamSession);
-      setLoading(false);
+      try {
+        const snap = await getDoc(doc(db, 'exam_sessions', sessionId));
+        if (snap.exists()) setSession(snap.data() as MSATExamSession);
+      } catch {
+        // Permission denied or network error — session stays null, shows "not found" state
+      } finally {
+        setLoading(false);
+      }
     };
     fetchSession();
   }, [sessionId]);

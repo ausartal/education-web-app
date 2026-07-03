@@ -66,16 +66,23 @@ export async function POST(req: NextRequest) {
     return false;
   });
 
+  // Normalize legacy K1-K7 tier paths to current MSAT tier names
+  const LEGACY_TIER_MAP: Record<string, string> = {
+    K1: 'anchor', K2: 'mudah', K3: 'sukar',
+    K4: 'sangat_mudah', K5: 'sedang_a', K6: 'sedang_b', K7: 'sangat_sukar',
+  };
+
   const questionsByDomain: Record<string, Record<string, unknown>> = {};
   accessibleDocs.forEach(d => {
     const q = d.data();
+    const tierPath = LEGACY_TIER_MAP[q.tierPath] ?? q.tierPath;
     if (!questionsByDomain[q.domainId]) questionsByDomain[q.domainId] = {};
-    questionsByDomain[q.domainId][q.tierPath] = {
+    questionsByDomain[q.domainId][tierPath] = {
       id: d.id,
       domainName: q.domainName,
       stem: q.stem,
       options: q.options,
-      tierPath: q.tierPath,
+      tierPath,
       difficulty: q.difficulty,
       cognitiveLevel: q.cognitiveLevel,
     };
