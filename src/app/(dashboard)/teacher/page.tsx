@@ -33,27 +33,29 @@ const TeacherDashboard: FC = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      const [studentsSnap, matSnap, qSnap] = await Promise.all([
-        getDocs(query(collection(db, 'users'), where('role', '==', 'student'))),
-        getDocs(collection(db, 'materials')),
-        getDocs(collection(db, 'question_bank')),
-      ]);
-      setStudents(
-        studentsSnap.docs.map((d) => {
-          const data = d.data();
-          return {
-            uid: d.id,
-            displayName: data.displayName,
-            xp: data.stats?.xp || 0,
-            totalLessons: data.stats?.totalLessons || 0,
-            lastLoginAt:
-              data.lastLoginAt?.toDate?.()?.toLocaleDateString('id-ID') || '-',
-          };
-        })
-      );
-      setMaterialCount(matSnap.size);
-      setQuestionCount(qSnap.size);
-      setLoading(false);
+      try {
+        const [studentsSnap, matSnap, qSnap] = await Promise.all([
+          getDocs(query(collection(db, 'users'), where('role', '==', 'student'))),
+          getDocs(collection(db, 'materials')),
+          getDocs(collection(db, 'question_bank')),
+        ]);
+        setStudents(
+          studentsSnap.docs.map((d) => {
+            const data = d.data();
+            return {
+              uid: d.id,
+              displayName: data.displayName ?? 'Siswa',
+              xp: data.stats?.xp || 0,
+              totalLessons: data.stats?.totalLessons || 0,
+              lastLoginAt: data.lastLoginAt?.toDate?.()?.toLocaleDateString('id-ID') || '-',
+            };
+          })
+        );
+        setMaterialCount(matSnap.size);
+        setQuestionCount(qSnap.size);
+      } catch { /* leave empty on error */ } finally {
+        setLoading(false);
+      }
     };
     fetch();
   }, []);

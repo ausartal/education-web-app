@@ -82,10 +82,12 @@ const TeacherMessages: FC = () => {
 
   // Load contacts (students)
   useEffect(() => {
-    getDocs(query(collection(db, 'users'), where('role', '==', 'student'))).then(snap => {
-      setContacts(snap.docs.map(d => ({ uid: d.id, displayName: d.data().displayName || 'Siswa' })));
-      setLoading(false);
-    });
+    getDocs(query(collection(db, 'users'), where('role', '==', 'student')))
+      .then(snap => {
+        setContacts(snap.docs.map(d => ({ uid: d.id, displayName: d.data().displayName || 'Siswa' })));
+      })
+      .catch(() => { /* leave empty */ })
+      .finally(() => setLoading(false));
   }, []);
 
   // Real-time messages listener
@@ -128,15 +130,20 @@ const TeacherMessages: FC = () => {
     const text = newMessage.trim();
     setNewMessage('');
     setSending(true);
-    await addDoc(collection(db, 'messages'), {
-      senderId: profile.uid,
-      receiverId: selectedUid,
-      content: text,
-      readAt: null,
-      createdAt: serverTimestamp(),
-    });
-    setSending(false);
-    setTimeout(() => inputRef.current?.focus(), 50);
+    try {
+      await addDoc(collection(db, 'messages'), {
+        senderId: profile.uid,
+        receiverId: selectedUid,
+        content: text,
+        readAt: null,
+        createdAt: serverTimestamp(),
+      });
+      setTimeout(() => inputRef.current?.focus(), 50);
+    } catch {
+      setNewMessage(text); // restore message on failure
+    } finally {
+      setSending(false);
+    }
   }, [newMessage, selectedUid, profile, sending]);
 
   const selectedContact = contacts.find(c => c.uid === selectedUid);

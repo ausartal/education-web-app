@@ -30,13 +30,15 @@ const MateriDetailPage: FC = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      const [mat, all] = await Promise.all([getMaterial(id), getMaterials()]);
-      setMaterial(mat);
-      setAllMaterials(all);
-      setLoading(false);
-
-      if (profile && mat) {
-        updateProgress(profile.uid, mat.id, 'in_progress', 0);
+      try {
+        const [mat, all] = await Promise.all([getMaterial(id), getMaterials()]);
+        setMaterial(mat);
+        setAllMaterials(all);
+        if (profile && mat) {
+          updateProgress(profile.uid, mat.id, 'in_progress', 0);
+        }
+      } catch { /* leave null on error */ } finally {
+        setLoading(false);
       }
     };
     fetch();

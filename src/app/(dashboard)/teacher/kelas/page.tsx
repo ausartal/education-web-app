@@ -36,41 +36,49 @@ const TeacherKelasPage: FC = () => {
   const handleCreate = async () => {
     if (!form.name || !form.subject) return;
     setSaving(true);
-    const t = await getToken();
-    await fetch('/api/teacher/classes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-      body: JSON.stringify(form),
-    });
-    setForm({ name: '', subject: '' });
-    setShowCreate(false);
-    setSaving(false);
-    mutate();
+    try {
+      const t = await getToken();
+      await fetch('/api/teacher/classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify(form),
+      });
+      setForm({ name: '', subject: '' });
+      setShowCreate(false);
+      mutate();
+    } catch { /* ignore */ } finally {
+      setSaving(false);
+    }
   };
 
   const handleEdit = async () => {
     if (!editItem) return;
     setSaving(true);
-    const t = await getToken();
-    await fetch(`/api/teacher/classes/${editItem.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-      body: JSON.stringify({ name: form.name, subject: form.subject }),
-    });
-    setEditItem(null);
-    setForm({ name: '', subject: '' });
-    setSaving(false);
-    mutate();
+    try {
+      const t = await getToken();
+      await fetch(`/api/teacher/classes/${editItem.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ name: form.name, subject: form.subject }),
+      });
+      setEditItem(null);
+      setForm({ name: '', subject: '' });
+      mutate();
+    } catch { /* ignore */ } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    const t = await getToken();
-    await fetch(`/api/teacher/classes/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${t}` },
-    });
-    setDeleteConfirm(null);
-    mutate();
+    try {
+      const t = await getToken();
+      await fetch(`/api/teacher/classes/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      setDeleteConfirm(null);
+      mutate();
+    } catch { /* ignore */ }
   };
 
   const copyCode = (code: string) => {

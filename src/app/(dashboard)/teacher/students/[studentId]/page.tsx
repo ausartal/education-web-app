@@ -29,17 +29,19 @@ const StudentDetail: FC = () => {
   useEffect(() => {
     if (!studentId) return;
     const fetch = async () => {
-      const snap = await getDoc(doc(db, 'users', studentId));
-      if (snap.exists()) {
-        setStudent(snap.data() as UserProfile);
-        setNotes((snap.data() as Record<string, string>).teacherNotes || '');
+      try {
+        const snap = await getDoc(doc(db, 'users', studentId));
+        if (snap.exists()) {
+          setStudent(snap.data() as UserProfile);
+          setNotes((snap.data() as Record<string, string>).teacherNotes || '');
+        }
+        const examSnap = await getDocs(
+          query(collection(db, 'exam_sessions'), where('studentId', '==', studentId))
+        );
+        setExams(examSnap.docs.map((d) => d.data() as ExamSession));
+      } catch { /* leave empty on error */ } finally {
+        setLoading(false);
       }
-
-      const examSnap = await getDocs(
-        query(collection(db, 'exam_sessions'), where('userId', '==', studentId))
-      );
-      setExams(examSnap.docs.map((d) => d.data() as ExamSession));
-      setLoading(false);
     };
     fetch();
   }, [studentId]);

@@ -14,7 +14,9 @@ export async function POST(req: NextRequest) {
     decoded = await adminAuth.verifyIdToken(token);
   } catch { return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); }
 
-  const { examToken } = await req.json();
+  let body: { examToken?: string };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
+  const { examToken } = body;
   if (!examToken) return NextResponse.json({ error: 'examToken required' }, { status: 400 });
 
   // Find active exam schedule with this token

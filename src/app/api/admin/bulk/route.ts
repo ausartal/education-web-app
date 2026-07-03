@@ -9,7 +9,8 @@ export async function POST(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const body = await req.json() as { action: string; uids: string[]; role?: UserRole };
+  let body: { action?: string; uids?: string[]; role?: UserRole };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
   const { action, uids, role } = body;
 
   if (!Array.isArray(uids) || uids.length === 0) {

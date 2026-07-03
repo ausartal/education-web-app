@@ -244,69 +244,76 @@ const ExamSessionPage: FC = () => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
       body: JSON.stringify({ questionId, selectedAnswer }),
     });
+    if (!res.ok) throw new Error(`check-answer failed: ${res.status}`);
     const data = await res.json();
-    return data.isCorrect as boolean;
+    return Boolean(data.isCorrect);
   }, [user, sessionId]);
 
   // ── Submit T1 ──
   const submitT1 = useCallback(async () => {
     if (!progress?.t1.answer || !progress.t1.question || !user || checkingAnswer) return;
     setCheckingAnswer(true);
-    const timeSpentMs = getTimeSpent();
-    const isCorrect = await checkAnswer(progress.t1.question.id, progress.t1.answer);
-    const t2Path = getT2Path(isCorrect);
-    const t2Question = questions[progress.domainId]?.[t2Path] || null;
-
-    phaseStartRef.current = Date.now();
-    setProgress(p => p ? {
-      ...p,
-      t1: { ...p.t1, submitted: true, isCorrect, timeSpentMs },
-      t2: { ...p.t2, question: t2Question, path: t2Path },
-      phase: 'tier2',
-    } : p);
-    setCheckingAnswer(false);
+    try {
+      const timeSpentMs = getTimeSpent();
+      const isCorrect = await checkAnswer(progress.t1.question.id, progress.t1.answer);
+      const t2Path = getT2Path(isCorrect);
+      const t2Question = questions[progress.domainId]?.[t2Path] || null;
+      phaseStartRef.current = Date.now();
+      setProgress(p => p ? {
+        ...p,
+        t1: { ...p.t1, submitted: true, isCorrect, timeSpentMs },
+        t2: { ...p.t2, question: t2Question, path: t2Path },
+        phase: 'tier2',
+      } : p);
+    } finally {
+      setCheckingAnswer(false);
+    }
   }, [progress, questions, user, checkingAnswer, checkAnswer, getTimeSpent]);
 
   // ── Submit T2 ──
   const submitT2 = useCallback(async () => {
     if (!progress?.t2.answer || !progress.t2.question || !progress.t2.path || !user || checkingAnswer) return;
     setCheckingAnswer(true);
-    const timeSpentMs = getTimeSpent();
-    const isCorrect = await checkAnswer(progress.t2.question.id, progress.t2.answer);
-    const t3Path = getT3Path(progress.t1.isCorrect!, isCorrect);
-    const t3Question = questions[progress.domainId]?.[t3Path] || null;
-
-    phaseStartRef.current = Date.now();
-    setProgress(p => p ? {
-      ...p,
-      t2: { ...p.t2, submitted: true, isCorrect, timeSpentMs },
-      t3: { ...p.t3, question: t3Question, path: t3Path },
-      phase: 'tier3',
-    } : p);
-    setCheckingAnswer(false);
+    try {
+      const timeSpentMs = getTimeSpent();
+      const isCorrect = await checkAnswer(progress.t2.question.id, progress.t2.answer);
+      const t3Path = getT3Path(progress.t1.isCorrect!, isCorrect);
+      const t3Question = questions[progress.domainId]?.[t3Path] || null;
+      phaseStartRef.current = Date.now();
+      setProgress(p => p ? {
+        ...p,
+        t2: { ...p.t2, submitted: true, isCorrect, timeSpentMs },
+        t3: { ...p.t3, question: t3Question, path: t3Path },
+        phase: 'tier3',
+      } : p);
+    } finally {
+      setCheckingAnswer(false);
+    }
   }, [progress, questions, user, checkingAnswer, checkAnswer, getTimeSpent]);
 
   // ── Submit T3 ──
   const submitT3 = useCallback(async () => {
     if (!progress?.t3.answer || !progress.t3.question || !user || checkingAnswer) return;
     setCheckingAnswer(true);
-    const timeSpentMs = getTimeSpent();
-    const isCorrect = await checkAnswer(progress.t3.question.id, progress.t3.answer);
-
-    phaseStartRef.current = Date.now();
-    setProgress(p => p ? {
-      ...p,
-      t3: { ...p.t3, submitted: true, isCorrect, timeSpentMs },
-      phase: 'cri',
-    } : p);
-    setCheckingAnswer(false);
+    try {
+      const timeSpentMs = getTimeSpent();
+      const isCorrect = await checkAnswer(progress.t3.question.id, progress.t3.answer);
+      phaseStartRef.current = Date.now();
+      setProgress(p => p ? {
+        ...p,
+        t3: { ...p.t3, submitted: true, isCorrect, timeSpentMs },
+        phase: 'cri',
+      } : p);
+    } finally {
+      setCheckingAnswer(false);
+    }
   }, [progress, user, checkingAnswer, checkAnswer, getTimeSpent]);
 
   // ── Submit CRI + save domain ──
   const submitCRI = useCallback(async (cri: 'yakin' | 'tidak_yakin') => {
     if (!progress || !user) return;
     setSubmitting(true);
-
+    try {
     const domainResponse = {
       domainId: progress.domainId,
       domainName: progress.domainName,
@@ -357,23 +364,33 @@ const ExamSessionPage: FC = () => {
     }));
 
     initDomainProgress(nextIdx, domainList, domainNames, questions);
-    setSubmitting(false);
+    } catch {
+      // Network error during domain submit — keep submitting state so user can retry
+    } finally {
+      setSubmitting(false);
+    }
   }, [progress, user, sessionId, currentDomainIdx, domainList, domainNames, questions, completedDomains, durationMinutes, timeLeft, initDomainProgress]);
 
   const completeExam = async (idToken: string) => {
-    const res = await fetch(`/api/exam-sessions/${sessionId}/complete`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-      body: JSON.stringify({}),
-    });
-    localStorage.removeItem(SESSION_KEY(sessionId));
-    if (res.ok) router.push(`/ujian/${sessionId}/results`);
+    try {
+      const res = await fetch(`/api/exam-sessions/${sessionId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({}),
+      });
+      localStorage.removeItem(SESSION_KEY(sessionId));
+      if (res.ok) router.push(`/ujian/${sessionId}/results`);
+    } catch {
+      // Network error — session stays in_progress, user can retry
+    }
   };
 
   const handleAutoSubmit = async () => {
     if (!user) return;
-    const idToken = await user.getIdToken();
-    await completeExam(idToken);
+    try {
+      const idToken = await user.getIdToken();
+      await completeExam(idToken);
+    } catch { /* ignore */ }
   };
 
   // ── Loading / error ──

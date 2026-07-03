@@ -34,26 +34,31 @@ const KelasPage: FC = () => {
     setJoining(true);
     setJoinError('');
     setJoinSuccess('');
-    const t = await user.getIdToken();
-    const res = await fetch('/api/student/join-class', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-      body: JSON.stringify({ joinCode: joinCode.trim() }),
-    });
-    const resData = await res.json();
-    setJoining(false);
-
-    if (!res.ok) {
-      setJoinError(resData.error || 'Gagal bergabung');
-      return;
+    try {
+      const t = await user.getIdToken();
+      const res = await fetch('/api/student/join-class', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ joinCode: joinCode.trim() }),
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setJoinError((resData as Record<string, string>).error || 'Gagal bergabung');
+        return;
+      }
+      const data = resData as { alreadyJoined?: boolean; class?: { name: string } };
+      if (data.alreadyJoined) {
+        setJoinSuccess('Kamu sudah terdaftar di kelas ini.');
+      } else {
+        setJoinSuccess(`Berhasil bergabung ke kelas ${data.class?.name}!`);
+        mutate();
+      }
+      setJoinCode('');
+    } catch {
+      setJoinError('Koneksi bermasalah, coba lagi');
+    } finally {
+      setJoining(false);
     }
-    if (resData.alreadyJoined) {
-      setJoinSuccess('Kamu sudah terdaftar di kelas ini.');
-    } else {
-      setJoinSuccess(`Berhasil bergabung ke kelas ${resData.class?.name}!`);
-      mutate();
-    }
-    setJoinCode('');
   }, [joinCode, user, mutate]);
 
   if (loading) return (

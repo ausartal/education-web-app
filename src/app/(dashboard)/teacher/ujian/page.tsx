@@ -68,50 +68,60 @@ const TeacherUjianPage: FC = () => {
   const handleCreate = async () => {
     if (!form.classId || !form.title || form.domainIds.length === 0) return;
     setSaving(true);
-    const t = await getToken();
-    await fetch('/api/teacher/exam-schedules', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-      body: JSON.stringify(form),
-    });
-    setShowCreate(false);
-    resetForm();
-    setSaving(false);
-    mutateScheds();
+    try {
+      const t = await getToken();
+      await fetch('/api/teacher/exam-schedules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify(form),
+      });
+      setShowCreate(false);
+      resetForm();
+      mutateScheds();
+    } catch { /* ignore */ } finally {
+      setSaving(false);
+    }
   };
 
   const handleEdit = async () => {
     if (!editItem) return;
     setSaving(true);
-    const t = await getToken();
-    await fetch(`/api/teacher/exam-schedules/${editItem.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-      body: JSON.stringify({ title: form.title, status: editItem.status, domainIds: form.domainIds, durationMinutes: form.durationMinutes }),
-    });
-    setEditItem(null);
-    setSaving(false);
-    mutateScheds();
+    try {
+      const t = await getToken();
+      await fetch(`/api/teacher/exam-schedules/${editItem.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ title: form.title, status: editItem.status, domainIds: form.domainIds, durationMinutes: form.durationMinutes }),
+      });
+      setEditItem(null);
+      mutateScheds();
+    } catch { /* ignore */ } finally {
+      setSaving(false);
+    }
   };
 
   const handleStatusChange = async (id: string, status: string) => {
-    const t = await getToken();
-    await fetch(`/api/teacher/exam-schedules/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-      body: JSON.stringify({ status }),
-    });
-    mutateScheds();
+    try {
+      const t = await getToken();
+      await fetch(`/api/teacher/exam-schedules/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ status }),
+      });
+      mutateScheds();
+    } catch { /* ignore */ }
   };
 
   const handleDelete = async (id: string) => {
-    const t = await getToken();
-    await fetch(`/api/teacher/exam-schedules/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${t}` },
-    });
-    setDeleteConfirm(null);
-    mutateScheds();
+    try {
+      const t = await getToken();
+      await fetch(`/api/teacher/exam-schedules/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      setDeleteConfirm(null);
+      mutateScheds();
+    } catch { /* ignore */ }
   };
 
   const resetForm = () => setForm({ classId: '', title: '', module: 'stoikiometri', domainIds: [], durationMinutes: 50, scheduledAt: '' });

@@ -20,7 +20,9 @@ export async function POST(req: NextRequest) {
   const auth = await verifyStudent(req);
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { joinCode } = await req.json();
+  let body: { joinCode?: string };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
+  const { joinCode } = body;
   if (!joinCode) return NextResponse.json({ error: 'joinCode required' }, { status: 400 });
 
   const snap = await adminDb.collection('classes')

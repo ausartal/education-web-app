@@ -22,19 +22,20 @@ const ProfilePage: FC = () => {
   useEffect(() => {
     if (!profile) return;
     const fetch = async () => {
-      const [progress, materials, uAch, aAch] = await Promise.all([
-        getUserProgress(profile.uid),
-        getMaterials(),
-        getUserAchievements(profile.uid),
-        getAchievements(),
-      ]);
-      setCompletedCount(
-        progress.filter((p) => p.status === 'completed').length
-      );
-      setTotalMaterials(materials.length);
-      setUserAchievements(uAch);
-      setAllAchievements(aAch);
-      setLoading(false);
+      try {
+        const [progress, materials, uAch, aAch] = await Promise.all([
+          getUserProgress(profile.uid),
+          getMaterials(),
+          getUserAchievements(profile.uid),
+          getAchievements(),
+        ]);
+        setCompletedCount(progress.filter((p) => p.status === 'completed').length);
+        setTotalMaterials(materials.length);
+        setUserAchievements(uAch);
+        setAllAchievements(aAch);
+      } catch { /* leave defaults on error */ } finally {
+        setLoading(false);
+      }
     };
     fetch();
   }, [profile]);

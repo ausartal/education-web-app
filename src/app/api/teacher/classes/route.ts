@@ -50,7 +50,9 @@ export async function POST(req: NextRequest) {
   const teacher = await verifyTeacher(req);
   if (!teacher) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { name, subject } = await req.json();
+  let body: { name?: string; subject?: string };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
+  const { name, subject } = body;
   if (!name || !subject) return NextResponse.json({ error: 'name and subject required' }, { status: 400 });
 
   // Generate unique join code

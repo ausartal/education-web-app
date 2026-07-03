@@ -106,13 +106,16 @@ const DashboardPage: FC = () => {
   useEffect(() => {
     if (!profile) return;
     const fetchData = async () => {
-      const [mats, prog] = await Promise.all([
-        getMaterials(),
-        getUserProgress(profile.uid),
-      ]);
-      setMaterials(mats);
-      setProgress(prog);
-      setLoading(false);
+      try {
+        const [mats, prog] = await Promise.all([
+          getMaterials(),
+          getUserProgress(profile.uid),
+        ]);
+        setMaterials(mats);
+        setProgress(prog);
+      } catch { /* leave empty on error */ } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, [profile]);
