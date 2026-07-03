@@ -17,10 +17,10 @@ export async function GET(req: NextRequest) {
   }
 
   // Single query for all classes the student is enrolled in
+  // Note: no status filter — classes may not have a status field, and students see all their enrolled classes
   const snap = await adminDb
     .collection('classes')
     .where('studentIds', 'array-contains', decoded.uid)
-    .where('status', '==', 'active')
     .get();
 
   if (snap.empty) return NextResponse.json({ classes: [] });

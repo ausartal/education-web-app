@@ -57,11 +57,11 @@ export async function GET(req: NextRequest) {
       id: d.id,
       studentId: data.studentId,
       studentName: userMap[data.studentId]?.name ?? data.studentId,
-      scheduleId: data.scheduleId,
+      scheduleId: data.examScheduleId ?? data.scheduleId ?? null,
       status: data.status,
       numericScore: data.numericScore ?? (domainCount > 0 ? Math.round(domainScoreSum / domainCount) : null),
-      completedDomains: data.completedDomains ?? 0,
-      domainCount: Object.keys(domainResponses).length,
+      completedDomains: data.completedDomains ?? (Array.isArray(data.domainResponses) ? data.domainResponses.length : 0),
+      domainCount: Array.isArray(data.domainResponses) ? data.domainResponses.length : Object.keys(domainResponses).length,
       comprehensionSummary,
       anomalyFlags: data.anomalyFlags ?? [],
       startedAt: tsToIso(data.startedAt as Record<string, number>),
@@ -89,11 +89,14 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Domain performance
+  // Domain performance — domainResponses is always an array
   const domainPerf: Record<string, { count: number; comprehensionCounts: Record<string, number> }> = {};
   for (const sessionDoc of sessionsSnap.docs) {
-    const dr = (sessionDoc.data().domainResponses ?? {}) as Record<string, { comprehensionCategory: string }>;
-    for (const [domainId, resp] of Object.entries(dr)) {
+    const rawDr = sessionDoc.data().domainResponses;
+    const drArr = Array.isArray(rawDr) ? rawDr as Array<{ domainId?: string; comprehensionCategory?: string }> : [];
+    for (const resp of drArr) {
+      const domainId = resp.domainId;
+      if (!domainId) continue;
       if (!domainPerf[domainId]) domainPerf[domainId] = { count: 0, comprehensionCounts: {} };
       domainPerf[domainId].count++;
       const cat = resp.comprehensionCategory;

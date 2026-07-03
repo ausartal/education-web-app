@@ -94,6 +94,7 @@ const StudentClassDetailPage: FC = () => {
 
   // Fetch class data
   const fetchData = useCallback(async () => {
+    if (!user) return; // wait until auth is resolved
     setLoading(true);
     setError('');
     try {

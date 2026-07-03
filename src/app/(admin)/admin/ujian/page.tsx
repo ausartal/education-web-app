@@ -185,7 +185,7 @@ function SessionRow({ s, onDelete }: { s: SessionDoc; onDelete: () => void }) {
 const BLANK_Q = {
   domainId: 'tp1', domainName: 'Konsep Mol', stem: '',
   options: { A: '', B: '', C: '', D: '', E: '' },
-  correctAnswer: 'A', tierPath: 'K1', difficulty: 'moderate', cognitiveLevel: 'C2',
+  correctAnswer: 'A', tierPath: 'anchor', difficulty: 'moderate', cognitiveLevel: 'C2',
 };
 
 function QuestionModal({
@@ -204,7 +204,7 @@ function QuestionModal({
 
   const domainOptions = Object.entries(DOMAIN_LABELS);
   const answerKeys = ['A', 'B', 'C', 'D', 'E'];
-  const tierPaths = ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7'];
+  const tierPaths = ['anchor', 'mudah', 'sukar', 'sangat_mudah', 'sedang_a', 'sedang_b', 'sangat_sukar'];
 
   const handleSave = async () => {
     if (!form.stem.trim()) return;
@@ -372,7 +372,7 @@ const AdminUjianPage: FC = () => {
   ];
 
   const filteredSessions = data.sessions.filter(s =>
-    !sessionSearch || s.studentName.toLowerCase().includes(sessionSearch.toLowerCase()) || s.scheduleId.includes(sessionSearch)
+    !sessionSearch || s.studentName.toLowerCase().includes(sessionSearch.toLowerCase()) || (s.scheduleId ?? '').includes(sessionSearch)
   );
   const filteredQuestions = data.questions.filter(q =>
     !questionSearch || q.stem.toLowerCase().includes(questionSearch.toLowerCase()) || q.domainId.includes(questionSearch) || q.tierPath.includes(questionSearch)

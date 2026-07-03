@@ -25,28 +25,33 @@ const TeacherStudents: FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
-      const snap = await getDocs(
-        query(collection(db, 'users'), where('role', '==', 'student'))
-      );
-      setStudents(
-        snap.docs.map((d) => {
-          const data = d.data();
-          return {
-            uid: d.id,
-            displayName: data.displayName,
-            email: data.email,
-            xp: data.stats?.xp || 0,
-            level: data.stats?.level || 1,
-            streak: data.stats?.streak || 0,
-            totalLessons: data.stats?.totalLessons || 0,
-            totalQuizzes: data.stats?.totalQuizzes || 0,
-          };
-        })
-      );
-      setLoading(false);
+    const fetchStudents = async () => {
+      try {
+        const snap = await getDocs(
+          query(collection(db, 'users'), where('role', '==', 'student'))
+        );
+        setStudents(
+          snap.docs.map((d) => {
+            const data = d.data();
+            return {
+              uid: d.id,
+              displayName: data.displayName ?? 'Siswa',
+              email: data.email ?? '',
+              xp: data.stats?.xp || 0,
+              level: data.stats?.level || 1,
+              streak: data.stats?.streak || 0,
+              totalLessons: data.stats?.totalLessons || 0,
+              totalQuizzes: data.stats?.totalQuizzes || 0,
+            };
+          })
+        );
+      } catch {
+        // Permission error or network failure — leave students empty
+      } finally {
+        setLoading(false);
+      }
     };
-    fetch();
+    fetchStudents();
   }, []);
 
   const filtered = students.filter(
@@ -146,7 +151,7 @@ const TeacherStudents: FC = () => {
                 className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan-400 text-sm font-bold text-white">
-                  {s.displayName.charAt(0).toUpperCase()}
+                  {(s.displayName || '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-900 truncate">
