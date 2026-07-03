@@ -72,10 +72,25 @@ export async function POST(req: NextRequest) {
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
-  const { classId, title, module = 'stoikiometri', domainIds, scheduledAt, durationMinutes = 50, maxAttempts = 1, shuffleQuestions = false } = body as { classId?: string; title?: string; module?: string; domainIds?: string[]; scheduledAt?: string; durationMinutes?: number; maxAttempts?: number; shuffleQuestions?: boolean };
+  const {
+    classId, title, module = 'stoikiometri', domainIds, scheduledAt,
+    durationMinutes = 50, maxAttempts = 1, shuffleQuestions = false,
+    examType = 'tp', customQuestions = [],
+  } = body as {
+    classId?: string; title?: string; module?: string; domainIds?: string[];
+    scheduledAt?: string; durationMinutes?: number; maxAttempts?: number;
+    shuffleQuestions?: boolean; examType?: string; customQuestions?: unknown[];
+  };
 
-  if (!classId || !title || !domainIds?.length) {
-    return NextResponse.json({ error: 'classId, title, and domainIds required' }, { status: 400 });
+  const isCustom = examType === 'custom';
+  if (!classId || !title) {
+    return NextResponse.json({ error: 'classId and title required' }, { status: 400 });
+  }
+  if (!isCustom && !domainIds?.length) {
+    return NextResponse.json({ error: 'domainIds required for TP exam' }, { status: 400 });
+  }
+  if (isCustom && (!Array.isArray(customQuestions) || customQuestions.length === 0)) {
+    return NextResponse.json({ error: 'customQuestions required for custom exam' }, { status: 400 });
   }
 
   // Verify class belongs to teacher
@@ -98,26 +113,28 @@ export async function POST(req: NextRequest) {
   }
 
   const docRef = adminDb.collection('exam_schedules').doc();
-  const schedule = {
+  const schedule: Record<string, unknown> = {
     teacherId: teacher.uid,
     classId,
     title,
     module,
-    domainIds,
+    domainIds: isCustom ? [] : domainIds,
     examToken,
     scheduledAt: scheduledAt ? new Date(scheduledAt) : new Date(),
     durationMinutes,
     maxAttempts,
     shuffleQuestions,
+    examType,
     status: 'active',
     createdAt: FieldValue.serverTimestamp(),
   };
+  if (isCustom) schedule.customQuestions = customQuestions;
   await docRef.set(schedule);
 
   await adminDb.collection('audit_logs').add({
     actorId: teacher.uid, actorRole: 'teacher', action: 'create_exam_schedule',
     targetId: docRef.id, targetType: 'exam_schedule',
-    details: { title, classId, examToken, domainCount: domainIds.length }, timestamp: new Date(),
+    details: { title, classId, examToken, examType, questionCount: isCustom ? customQuestions.length : (domainIds?.length ?? 0) }, timestamp: new Date(),
   });
 
   return NextResponse.json({ schedule: { id: docRef.id, ...schedule } }, { status: 201 });

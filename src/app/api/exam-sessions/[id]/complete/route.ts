@@ -41,9 +41,39 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
   }
 
-  // Validate all required domains have been submitted
   const scheduleSnap = await adminDb.collection('exam_schedules').doc(session.examScheduleId).get();
-  const requiredDomainCount = (scheduleSnap.data()?.domainIds || []).length;
+  const scheduleData = scheduleSnap.data() ?? {};
+
+  // ── Custom exam completion ────────────────────────────────────────
+  if (session.examType === 'custom') {
+    let body2: Record<string, unknown> = {};
+    try { body2 = await req.json(); } catch { /* optional body */ }
+    const customAnswers = (body2.customAnswers ?? []) as Array<{ questionId: string; selectedAnswer: string; isCorrect: boolean; timeSpentMs?: number }>;
+
+    const customQuestions = (scheduleData.customQuestions as Array<{ id: string; correctAnswer: string }>) || [];
+    const totalQ = customQuestions.length;
+    const correctCount = customAnswers.filter(a => a.isCorrect).length;
+    const numericScore = totalQ > 0 ? Math.round((correctCount / totalQ) * 100) : 0;
+
+    await ref.update({
+      customAnswers,
+      numericScore,
+      anomalyFlags: [],
+      status: 'completed',
+      completedAt: FieldValue.serverTimestamp(),
+    });
+
+    await adminDb.collection('audit_logs').add({
+      actorId: decoded.uid, actorRole: 'student', action: 'complete_exam',
+      targetId: params.id, targetType: 'exam_session',
+      details: { numericScore, totalQ, correctCount, examType: 'custom' }, timestamp: new Date(),
+    });
+
+    return NextResponse.json({ numericScore, correctCount, totalQ, customAnswers });
+  }
+
+  // ── Standard MSAT completion ──────────────────────────────────────
+  const requiredDomainCount = (scheduleData.domainIds || []).length;
   const domainResponses = session.domainResponses || [];
   if (domainResponses.length < requiredDomainCount) {
     return NextResponse.json({
