@@ -174,7 +174,7 @@ const AdminUsers: FC = () => {
   });
 
   const toggleSelect = (uid: string) => {
-    setSelected(prev => { const n = new Set(prev); n.has(uid) ? n.delete(uid) : n.add(uid); return n; });
+    setSelected(prev => { const n = new Set(prev); if (n.has(uid)) { n.delete(uid); } else { n.add(uid); } return n; });
   };
   const allSelected = filtered.length > 0 && filtered.every(u => selected.has(u.uid));
 
