@@ -132,7 +132,7 @@ function SessionRow({ s, onDelete }: { s: SessionDoc; onDelete: () => void }) {
       <tr className="border-b border-gray-50 hover:bg-gray-50/50">
         <td className="py-2 pr-3">
           <p className="text-xs font-semibold text-gray-900">{s.studentName}</p>
-          <p className="text-[10px] text-gray-400">{s.studentId.slice(0, 8)}</p>
+          <p className="text-[10px] text-gray-400">{(s.studentId ?? '').slice(0, 8)}</p>
         </td>
         <td className="py-2 pr-3">
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[s.status] ?? 'bg-gray-100 text-gray-500'}`}>
@@ -372,7 +372,7 @@ const AdminUjianPage: FC = () => {
   ];
 
   const filteredSessions = data.sessions.filter(s =>
-    !sessionSearch || s.studentName.toLowerCase().includes(sessionSearch.toLowerCase()) || (s.scheduleId ?? '').includes(sessionSearch)
+    !sessionSearch || (s.studentName ?? '').toLowerCase().includes(sessionSearch.toLowerCase()) || (s.scheduleId ?? '').includes(sessionSearch)
   );
   const filteredQuestions = data.questions.filter(q =>
     !questionSearch || q.stem.toLowerCase().includes(questionSearch.toLowerCase()) || q.domainId.includes(questionSearch) || q.tierPath.includes(questionSearch)

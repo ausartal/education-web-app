@@ -55,8 +55,8 @@ export async function GET(req: NextRequest) {
     }
     return {
       id: d.id,
-      studentId: data.studentId,
-      studentName: userMap[data.studentId]?.name ?? data.studentId,
+      studentId: data.studentId ?? '',
+      studentName: userMap[data.studentId]?.name ?? data.studentId ?? '(unknown)',
       scheduleId: data.examScheduleId ?? data.scheduleId ?? null,
       status: data.status,
       numericScore: data.numericScore ?? (domainCount > 0 ? Math.round(domainScoreSum / domainCount) : null),
