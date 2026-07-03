@@ -15,6 +15,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (snap.data()!.teacherId !== teacher.uid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
+
+  const validStatuses = ['active', 'inactive', 'closed'];
+  if (body.status && !validStatuses.includes(body.status)) {
+    return NextResponse.json({ error: 'Status tidak valid' }, { status: 400 });
+  }
+
   const allowed = ['title', 'status', 'domainIds', 'scheduledAt', 'durationMinutes'];
   const update: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
   for (const key of allowed) {

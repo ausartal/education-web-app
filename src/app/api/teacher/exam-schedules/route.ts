@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyTeacher } from '@/lib/auth-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
+import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 function generateExamToken(): string {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+  return randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
 }
 
 export async function GET(req: NextRequest) {

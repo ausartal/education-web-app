@@ -30,7 +30,26 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (session.studentId !== decoded.uid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   if (session.status !== 'in_progress') return NextResponse.json({ error: 'Already completed' }, { status: 409 });
 
+  // Server-side time validation: reject if past durationMinutes + 5 min grace
+  const startedAt = session.startedAt?.toDate?.();
+  if (startedAt) {
+    const elapsedMs = Date.now() - startedAt.getTime();
+    const maxMs = ((session.durationMinutes || 50) + 5) * 60 * 1000;
+    if (elapsedMs > maxMs) {
+      await ref.update({ status: 'timed_out', completedAt: FieldValue.serverTimestamp() });
+      return NextResponse.json({ error: 'Waktu ujian telah berakhir' }, { status: 410 });
+    }
+  }
+
+  // Validate all required domains have been submitted
+  const scheduleSnap = await adminDb.collection('exam_schedules').doc(session.examScheduleId).get();
+  const requiredDomainCount = (scheduleSnap.data()?.domainIds || []).length;
   const domainResponses = session.domainResponses || [];
+  if (domainResponses.length < requiredDomainCount) {
+    return NextResponse.json({
+      error: `Semua domain harus diselesaikan terlebih dahulu (${domainResponses.length}/${requiredDomainCount})`,
+    }, { status: 400 });
+  }
 
   // Compute comprehension categories and domain scores (server-side authoritative)
   const enrichedDomainResponses = domainResponses.map((dr: Record<string, unknown>) => {

@@ -22,6 +22,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { questionId, selectedAnswer } = await req.json();
   if (!questionId || !selectedAnswer) return NextResponse.json({ error: 'questionId and selectedAnswer required' }, { status: 400 });
 
+  // Validate questionId belongs to this session's question pool
+  const allowedIds: string[] = session.questionIds || [];
+  if (allowedIds.length > 0 && !allowedIds.includes(questionId)) {
+    return NextResponse.json({ error: 'Question not part of this session' }, { status: 403 });
+  }
+
   const questionSnap = await adminDb.collection('exam_questions').doc(questionId).get();
   if (!questionSnap.exists) return NextResponse.json({ error: 'Question not found' }, { status: 404 });
 
