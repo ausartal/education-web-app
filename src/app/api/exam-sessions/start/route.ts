@@ -40,17 +40,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Kamu tidak terdaftar di kelas ini. Minta gurumu untuk menambahkanmu atau bergabung lewat kode kelas.' }, { status: 403 });
   }
 
-  // Load exam questions for all domains in this schedule (needed for both new and resumed sessions)
+  // Load exam questions accessible to this teacher for all domains
   const domainIds: string[] = schedule.domainIds || [];
-  const questionsSnap = await adminDb.collection('exam_questions')
-    .where('module', '==', schedule.module)
-    .where('status', '==', 'active')
-    .get();
+  const teacherId: string = schedule.teacherId;
+
+  // Query in chunks (Firestore 'in' limit = 10)
+  const chunks: string[][] = [];
+  for (let i = 0; i < domainIds.length; i += 10) chunks.push(domainIds.slice(i, i + 10));
+
+  const allDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+  for (const chunk of chunks) {
+    const snap = await adminDb.collection('exam_questions')
+      .where('domainId', 'in', chunk)
+      .where('status', '==', 'active')
+      .get();
+    allDocs.push(...snap.docs);
+  }
+
+  // Filter: legacy (no visibility) = global, or global+approved, or teacher's private
+  const accessibleDocs = allDocs.filter(d => {
+    const q = d.data();
+    if (!q.visibility) return true; // legacy question = globally accessible
+    if (q.visibility === 'global' && q.approvalStatus === 'approved') return true;
+    if (q.visibility === 'private' && q.ownerId === teacherId) return true;
+    return false;
+  });
 
   const questionsByDomain: Record<string, Record<string, unknown>> = {};
-  questionsSnap.docs.forEach(d => {
+  accessibleDocs.forEach(d => {
     const q = d.data();
-    if (!domainIds.includes(q.domainId)) return;
     if (!questionsByDomain[q.domainId]) questionsByDomain[q.domainId] = {};
     questionsByDomain[q.domainId][q.tierPath] = {
       id: d.id,
