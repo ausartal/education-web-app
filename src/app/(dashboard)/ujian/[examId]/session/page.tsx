@@ -16,7 +16,6 @@ interface QuestionData {
   domainName?: string;
   stem: string;
   options: Record<AnswerKey, string>;
-  correctAnswer: AnswerKey;
   tierPath: MSATTierPath;
   difficulty: string;
 }
@@ -80,6 +79,7 @@ const ExamSessionPage: FC = () => {
   const [showCalc, setShowCalc] = useState(false);
   const [showPeriodic, setShowPeriodic] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingAnswer, setCheckingAnswer] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFullscreenGate, setShowFullscreenGate] = useState(false);
 
@@ -237,11 +237,23 @@ const ExamSessionPage: FC = () => {
 
   const getTimeSpent = () => Date.now() - phaseStartRef.current;
 
+  const checkAnswer = useCallback(async (questionId: string, selectedAnswer: string): Promise<boolean> => {
+    const idToken = await user!.getIdToken();
+    const res = await fetch(`/api/exam-sessions/${sessionId}/check-answer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({ questionId, selectedAnswer }),
+    });
+    const data = await res.json();
+    return data.isCorrect as boolean;
+  }, [user, sessionId]);
+
   // ── Submit T1 ──
-  const submitT1 = useCallback(() => {
-    if (!progress?.t1.answer || !progress.t1.question) return;
+  const submitT1 = useCallback(async () => {
+    if (!progress?.t1.answer || !progress.t1.question || !user || checkingAnswer) return;
+    setCheckingAnswer(true);
     const timeSpentMs = getTimeSpent();
-    const isCorrect = progress.t1.answer === progress.t1.question.correctAnswer;
+    const isCorrect = await checkAnswer(progress.t1.question.id, progress.t1.answer);
     const t2Path = getT2Path(isCorrect);
     const t2Question = questions[progress.domainId]?.[t2Path] || null;
 
@@ -252,13 +264,15 @@ const ExamSessionPage: FC = () => {
       t2: { ...p.t2, question: t2Question, path: t2Path },
       phase: 'tier2',
     } : p);
-  }, [progress, questions, getTimeSpent]);
+    setCheckingAnswer(false);
+  }, [progress, questions, user, checkingAnswer, checkAnswer, getTimeSpent]);
 
   // ── Submit T2 ──
-  const submitT2 = useCallback(() => {
-    if (!progress?.t2.answer || !progress.t2.question || !progress.t2.path) return;
+  const submitT2 = useCallback(async () => {
+    if (!progress?.t2.answer || !progress.t2.question || !progress.t2.path || !user || checkingAnswer) return;
+    setCheckingAnswer(true);
     const timeSpentMs = getTimeSpent();
-    const isCorrect = progress.t2.answer === progress.t2.question.correctAnswer;
+    const isCorrect = await checkAnswer(progress.t2.question.id, progress.t2.answer);
     const t3Path = getT3Path(progress.t1.isCorrect!, isCorrect);
     const t3Question = questions[progress.domainId]?.[t3Path] || null;
 
@@ -269,13 +283,15 @@ const ExamSessionPage: FC = () => {
       t3: { ...p.t3, question: t3Question, path: t3Path },
       phase: 'tier3',
     } : p);
-  }, [progress, questions, getTimeSpent]);
+    setCheckingAnswer(false);
+  }, [progress, questions, user, checkingAnswer, checkAnswer, getTimeSpent]);
 
   // ── Submit T3 ──
-  const submitT3 = useCallback(() => {
-    if (!progress?.t3.answer || !progress.t3.question) return;
+  const submitT3 = useCallback(async () => {
+    if (!progress?.t3.answer || !progress.t3.question || !user || checkingAnswer) return;
+    setCheckingAnswer(true);
     const timeSpentMs = getTimeSpent();
-    const isCorrect = progress.t3.answer === progress.t3.question.correctAnswer;
+    const isCorrect = await checkAnswer(progress.t3.question.id, progress.t3.answer);
 
     phaseStartRef.current = Date.now();
     setProgress(p => p ? {
@@ -283,7 +299,8 @@ const ExamSessionPage: FC = () => {
       t3: { ...p.t3, submitted: true, isCorrect, timeSpentMs },
       phase: 'cri',
     } : p);
-  }, [progress, getTimeSpent]);
+    setCheckingAnswer(false);
+  }, [progress, user, checkingAnswer, checkAnswer, getTimeSpent]);
 
   // ── Submit CRI + save domain ──
   const submitCRI = useCallback(async (cri: 'yakin' | 'tidak_yakin') => {
@@ -407,9 +424,9 @@ const ExamSessionPage: FC = () => {
   };
 
   const handleSubmitCurrent = () => {
-    if (currentPhase === 'tier1') submitT1();
-    else if (currentPhase === 'tier2') submitT2();
-    else if (currentPhase === 'tier3') submitT3();
+    if (currentPhase === 'tier1') void submitT1();
+    else if (currentPhase === 'tier2') void submitT2();
+    else if (currentPhase === 'tier3') void submitT3();
   };
 
   const options: AnswerKey[] = ['A', 'B', 'C', 'D', 'E'];
@@ -640,10 +657,10 @@ const ExamSessionPage: FC = () => {
 
                       <button
                         onClick={handleSubmitCurrent}
-                        disabled={!currentAnswer}
+                        disabled={!currentAnswer || checkingAnswer}
                         className="mt-5 w-full rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all disabled:opacity-30 hover:enabled:-translate-y-0.5 hover:enabled:shadow-violet-300/60"
                       >
-                        {currentPhase === 'tier3' ? 'Selesai — Pertanyaan Keyakinan' : 'Lanjut ke Soal Berikutnya'}
+                        {checkingAnswer ? 'Memeriksa...' : currentPhase === 'tier3' ? 'Selesai — Pertanyaan Keyakinan' : 'Lanjut ke Soal Berikutnya'}
                       </button>
                     </>
                   ) : (
