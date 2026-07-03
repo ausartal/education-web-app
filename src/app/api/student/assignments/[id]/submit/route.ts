@@ -22,6 +22,11 @@ export async function POST(
   const { id } = params;
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
   const text = typeof body.text === 'string' ? body.text.trim() : '';
+  const rawLinks = Array.isArray(body.links) ? body.links : [];
+  const links = rawLinks
+    .map((l: unknown) => (typeof l === 'string' ? l.trim() : ''))
+    .filter(Boolean)
+    .slice(0, 10);
 
   try {
     const docRef = adminDb.collection('assignments').doc(id);
@@ -37,19 +42,30 @@ export async function POST(
       return NextResponse.json({ error: 'Anda tidak terdaftar di kelas ini' }, { status: 403 });
     }
 
+    const dueDate = data.dueDate as string | null;
+    const allowLate = (data.allowLate as boolean) ?? false;
+    const now = new Date();
+    const isLate = !!(dueDate && now > new Date(dueDate));
+
+    if (isLate && !allowLate) {
+      return NextResponse.json({ error: 'Batas waktu pengumpulan sudah lewat' }, { status: 403 });
+    }
+
     const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
     const studentName = (userDoc.data()?.displayName as string) ?? 'Siswa';
 
     await docRef.update({
       [`submissions.${decoded.uid}`]: {
         text,
+        links,
         studentName,
         submittedAt: FieldValue.serverTimestamp(),
+        isLate,
       },
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, isLate });
   } catch (err) {
     console.error('[student/assignments/submit POST]', err);
     return NextResponse.json({ error: 'Gagal mengumpulkan tugas' }, { status: 500 });

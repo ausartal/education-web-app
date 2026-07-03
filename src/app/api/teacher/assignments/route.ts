@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
           description: (data.description as string) ?? '',
           dueDate: (data.dueDate as string) ?? null,
           maxScore: (data.maxScore as number) ?? 100,
+          allowLate: (data.allowLate as boolean) ?? false,
           status: (data.status as string) ?? 'draft',
           submissionCount: Object.keys(subs).length,
           createdAt: tsToIso(data.createdAt),
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json() as Record<string, unknown>;
-    const { title, classId, description, dueDate, maxScore } = body;
+    const { title, classId, description, dueDate, maxScore, allowLate } = body;
 
     if (!title || typeof title !== 'string') {
       return NextResponse.json({ error: 'title wajib diisi' }, { status: 400 });
@@ -90,6 +91,7 @@ export async function POST(req: NextRequest) {
       description: description ?? '',
       dueDate: dueDate ?? null,
       maxScore: maxScore ?? 100,
+      allowLate: allowLate === true,
       status: 'published',
       submissionCount: 0,
       createdAt: FieldValue.serverTimestamp(),
