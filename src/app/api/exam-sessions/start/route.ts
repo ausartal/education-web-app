@@ -57,7 +57,6 @@ export async function POST(req: NextRequest) {
       domainName: q.domainName,
       stem: q.stem,
       options: q.options,
-      correctAnswer: q.correctAnswer,
       tierPath: q.tierPath,
       difficulty: q.difficulty,
       cognitiveLevel: q.cognitiveLevel,

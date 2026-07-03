@@ -25,15 +25,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { domainResponse } = await req.json();
   if (!domainResponse) return NextResponse.json({ error: 'domainResponse required' }, { status: 400 });
 
-  // Increment usageCount on each question used
-  const questionIds = [
+  const qIds = [
     domainResponse.tier1?.questionId,
     domainResponse.tier2?.questionId,
     domainResponse.tier3?.questionId,
-  ].filter(Boolean);
+  ].filter(Boolean) as string[];
+
+  // Fetch questions to recompute isCorrect server-side (never trust client)
+  const qSnaps = await Promise.all(qIds.map(id => adminDb.collection('exam_questions').doc(id).get()));
+  const qMap = Object.fromEntries(qSnaps.filter(s => s.exists).map(s => [s.id, s.data()!.correctAnswer]));
+
+  const recompute = (tier: { questionId?: string; selectedAnswer?: string; isCorrect?: boolean; [k: string]: unknown } | undefined) => {
+    if (!tier?.questionId) return tier;
+    return { ...tier, isCorrect: tier.selectedAnswer === qMap[tier.questionId] };
+  };
+
+  const sanitizedResponse = {
+    ...domainResponse,
+    tier1: recompute(domainResponse.tier1),
+    tier2: recompute(domainResponse.tier2),
+    tier3: recompute(domainResponse.tier3),
+  };
 
   const usageBatch = adminDb.batch();
-  for (const qId of questionIds) {
+  for (const qId of qIds) {
     usageBatch.update(adminDb.collection('exam_questions').doc(qId), {
       usageCount: FieldValue.increment(1),
     });
@@ -42,7 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   // Append domain response
   const existingResponses: unknown[] = session.domainResponses || [];
-  const updatedResponses = [...existingResponses, domainResponse];
+  const updatedResponses = [...existingResponses, sanitizedResponse];
 
   await ref.update({
     domainResponses: updatedResponses,
