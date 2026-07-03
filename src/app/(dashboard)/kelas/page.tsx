@@ -2,7 +2,7 @@
 
 import { FC, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { School, Plus, ArrowRight, X, AlertCircle, Loader2, Users } from 'lucide-react';
+import { School, Plus, ArrowRight, X, AlertCircle, Loader2, Users, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
@@ -16,6 +16,20 @@ interface ClassItem {
   studentCount: number;
   activeExamCount: number;
 }
+
+const CLASS_PALETTES = [
+  { gradient: 'from-violet-500 to-indigo-600', light: 'bg-violet-50', badge: 'bg-violet-100 text-violet-700', btn: 'bg-violet-600 hover:bg-violet-700 text-white', icon: 'text-violet-300' },
+  { gradient: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50', badge: 'bg-emerald-100 text-emerald-700', btn: 'bg-emerald-600 hover:bg-emerald-700 text-white', icon: 'text-emerald-300' },
+  { gradient: 'from-sky-500 to-blue-600', light: 'bg-sky-50', badge: 'bg-sky-100 text-sky-700', btn: 'bg-sky-600 hover:bg-sky-700 text-white', icon: 'text-sky-300' },
+  { gradient: 'from-amber-500 to-orange-600', light: 'bg-amber-50', badge: 'bg-amber-100 text-amber-700', btn: 'bg-amber-600 hover:bg-amber-700 text-white', icon: 'text-amber-300' },
+  { gradient: 'from-rose-500 to-pink-600', light: 'bg-rose-50', badge: 'bg-rose-100 text-rose-700', btn: 'bg-rose-600 hover:bg-rose-700 text-white', icon: 'text-rose-300' },
+  { gradient: 'from-fuchsia-500 to-purple-600', light: 'bg-fuchsia-50', badge: 'bg-fuchsia-100 text-fuchsia-700', btn: 'bg-fuchsia-600 hover:bg-fuchsia-700 text-white', icon: 'text-fuchsia-300' },
+  { gradient: 'from-cyan-500 to-teal-600', light: 'bg-cyan-50', badge: 'bg-cyan-100 text-cyan-700', btn: 'bg-cyan-600 hover:bg-cyan-700 text-white', icon: 'text-cyan-300' },
+  { gradient: 'from-lime-500 to-green-600', light: 'bg-lime-50', badge: 'bg-lime-100 text-lime-700', btn: 'bg-lime-600 hover:bg-lime-700 text-white', icon: 'text-lime-300' },
+];
+
+const getPalette = (id: string) =>
+  CLASS_PALETTES[id.charCodeAt(0) % CLASS_PALETTES.length];
 
 const KelasPage: FC = () => {
   const { user } = useAuth();
@@ -46,11 +60,11 @@ const KelasPage: FC = () => {
         setJoinError((resData as Record<string, string>).error || 'Gagal bergabung');
         return;
       }
-      const data = resData as { alreadyJoined?: boolean; class?: { name: string } };
-      if (data.alreadyJoined) {
+      const d = resData as { alreadyJoined?: boolean; class?: { name: string } };
+      if (d.alreadyJoined) {
         setJoinSuccess('Kamu sudah terdaftar di kelas ini.');
       } else {
-        setJoinSuccess(`Berhasil bergabung ke kelas ${data.class?.name}!`);
+        setJoinSuccess(`Berhasil bergabung ke kelas ${d.class?.name}!`);
         mutate();
       }
       setJoinCode('');
@@ -73,7 +87,9 @@ const KelasPage: FC = () => {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-gray-900">Kelas Saya</h1>
-          <p className="mt-1 text-sm text-gray-500">Kelas yang kamu ikuti dari guru</p>
+          <p className="mt-1 text-sm text-gray-500">
+            {classes.length > 0 ? `${classes.length} kelas yang kamu ikuti` : 'Kelas yang kamu ikuti dari guru'}
+          </p>
         </div>
         <button
           onClick={() => { setShowJoin(true); setJoinError(''); setJoinSuccess(''); }}
@@ -98,33 +114,50 @@ const KelasPage: FC = () => {
           </button>
         </motion.div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {classes.map((cls, i) => (
-            <motion.div key={cls.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-              className="rounded-2xl bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-start justify-between">
-                <div>
-                  <h3 className="font-bold text-gray-900">{cls.name}</h3>
-                  <p className="text-sm text-gray-500">{cls.subject}</p>
-                  <p className="mt-0.5 text-xs text-gray-400">Guru: {cls.teacherName}</p>
+        <div className="grid gap-5 sm:grid-cols-2">
+          {classes.map((cls, i) => {
+            const pal = getPalette(cls.id);
+            return (
+              <motion.div
+                key={cls.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="group overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow"
+              >
+                {/* Color banner */}
+                <div className={`relative bg-gradient-to-br ${pal.gradient} px-5 py-5`}>
+                  <BookOpen size={40} className={`absolute right-4 top-3 opacity-20 ${pal.icon}`} />
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-white/70 mb-1">
+                    {cls.subject || 'Kelas'}
+                  </p>
+                  <h3 className="text-lg font-extrabold text-white leading-tight">{cls.name}</h3>
+                  <p className="mt-1 text-xs text-white/80">Guru: {cls.teacherName}</p>
                 </div>
-                {cls.activeExamCount > 0 && (
-                  <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-violet-700">
-                    {cls.activeExamCount} ujian aktif
-                  </span>
-                )}
-              </div>
 
-              <div className="mb-4 flex items-center gap-1.5 text-xs text-gray-400">
-                <Users size={13} /> {cls.studentCount} siswa
-              </div>
+                {/* Body */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <Users size={13} /> <span>{cls.studentCount} siswa</span>
+                    </div>
+                    {cls.activeExamCount > 0 && (
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${pal.badge}`}>
+                        {cls.activeExamCount} ujian aktif
+                      </span>
+                    )}
+                  </div>
 
-              <Link href={`/kelas/${cls.id}`}
-                className="flex items-center justify-center gap-2 rounded-xl bg-gray-100 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-200 transition-colors">
-                Lihat Kelas <ArrowRight size={13} />
-              </Link>
-            </motion.div>
-          ))}
+                  <Link
+                    href={`/kelas/${cls.id}`}
+                    className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-colors ${pal.btn}`}
+                  >
+                    Masuk Kelas <ArrowRight size={13} />
+                  </Link>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 

@@ -54,7 +54,9 @@ const TeacherUjianPage: FC = () => {
   const [form, setForm] = useState({
     classId: '', title: '', module: 'stoikiometri',
     domainIds: [] as string[], durationMinutes: 50, scheduledAt: '',
+    maxAttempts: 1, shuffleQuestions: false,
   });
+  const [durationInput, setDurationInput] = useState('50');
 
   const getToken = useCallback(async () => user ? await user.getIdToken() : '', [user]);
 
@@ -124,7 +126,10 @@ const TeacherUjianPage: FC = () => {
     } catch { /* ignore */ }
   };
 
-  const resetForm = () => setForm({ classId: '', title: '', module: 'stoikiometri', domainIds: [], durationMinutes: 50, scheduledAt: '' });
+  const resetForm = () => {
+    setForm({ classId: '', title: '', module: 'stoikiometri', domainIds: [], durationMinutes: 50, scheduledAt: '', maxAttempts: 1, shuffleQuestions: false });
+    setDurationInput('50');
+  };
 
   const copyToken = (tok: string) => {
     navigator.clipboard.writeText(tok);
@@ -232,7 +237,7 @@ const TeacherUjianPage: FC = () => {
                         <ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400" />
                       </div>
                       <button
-                        onClick={() => { setEditItem(sch); setForm({ ...form, title: sch.title, domainIds: sch.domainIds, durationMinutes: sch.durationMinutes, classId: sch.classId }); }}
+                        onClick={() => { setEditItem(sch); setForm({ ...form, title: sch.title, domainIds: sch.domainIds, durationMinutes: sch.durationMinutes, classId: sch.classId, maxAttempts: (sch as unknown as Record<string,unknown>).maxAttempts as number ?? 1, shuffleQuestions: (sch as unknown as Record<string,unknown>).shuffleQuestions as boolean ?? false }); setDurationInput(String(sch.durationMinutes)); }}
                         className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                       >
                         <Pencil size={14} />
@@ -299,9 +304,53 @@ const TeacherUjianPage: FC = () => {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-gray-700">Durasi (menit)</label>
-                    <input type="number" value={form.durationMinutes} min={10} max={180}
-                      onChange={e => setForm(f => ({ ...f, durationMinutes: parseInt(e.target.value) || 50 }))}
-                      className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400" />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={durationInput}
+                        onChange={e => {
+                          const v = e.target.value.replace(/[^0-9]/g, '');
+                          setDurationInput(v);
+                          const n = parseInt(v);
+                          if (!isNaN(n) && n >= 1) setForm(f => ({ ...f, durationMinutes: n }));
+                        }}
+                        onBlur={() => {
+                          const n = parseInt(durationInput);
+                          const clamped = isNaN(n) ? 50 : Math.min(180, Math.max(10, n));
+                          setDurationInput(String(clamped));
+                          setForm(f => ({ ...f, durationMinutes: clamped }));
+                        }}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400"
+                      />
+                      <span className="shrink-0 text-sm text-gray-400">menit</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-gray-400">Min 10 – Max 180 menit</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-gray-700">Maks Percobaan Siswa</label>
+                      <select
+                        value={form.maxAttempts}
+                        onChange={e => setForm(f => ({ ...f, maxAttempts: parseInt(e.target.value) }))}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400"
+                      >
+                        <option value={1}>1× (sekali saja)</option>
+                        <option value={2}>2× percobaan</option>
+                        <option value={3}>3× percobaan</option>
+                        <option value={0}>Tak terbatas</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-gray-700">Urutan Soal</label>
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, shuffleQuestions: !f.shuffleQuestions }))}
+                        className={`flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold transition-colors ${form.shuffleQuestions ? 'border-violet-400 bg-violet-50 text-violet-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                      >
+                        {form.shuffleQuestions ? '🔀 Diacak' : '📋 Berurutan'}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="mt-6 flex gap-3">
@@ -348,9 +397,40 @@ const TeacherUjianPage: FC = () => {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-gray-700">Durasi (menit)</label>
-                    <input type="number" value={form.durationMinutes} min={10} max={180}
-                      onChange={e => setForm(f => ({ ...f, durationMinutes: parseInt(e.target.value) || 50 }))}
-                      className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400" />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={durationInput}
+                        onChange={e => {
+                          const v = e.target.value.replace(/[^0-9]/g, '');
+                          setDurationInput(v);
+                          const n = parseInt(v);
+                          if (!isNaN(n) && n >= 1) setForm(f => ({ ...f, durationMinutes: n }));
+                        }}
+                        onBlur={() => {
+                          const n = parseInt(durationInput);
+                          const clamped = isNaN(n) ? 50 : Math.min(180, Math.max(10, n));
+                          setDurationInput(String(clamped));
+                          setForm(f => ({ ...f, durationMinutes: clamped }));
+                        }}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400"
+                      />
+                      <span className="shrink-0 text-sm text-gray-400">menit</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-gray-700">Maks Percobaan Siswa</label>
+                    <select
+                      value={form.maxAttempts}
+                      onChange={e => setForm(f => ({ ...f, maxAttempts: parseInt(e.target.value) }))}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400"
+                    >
+                      <option value={1}>1× (sekali saja)</option>
+                      <option value={2}>2× percobaan</option>
+                      <option value={3}>3× percobaan</option>
+                      <option value={0}>Tak terbatas</option>
+                    </select>
                   </div>
                 </div>
                 <div className="mt-6 flex gap-3">

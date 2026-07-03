@@ -52,10 +52,26 @@ const AVATAR_COLORS = [
   'from-amber-400 to-orange-500',
   'from-rose-400 to-pink-500',
   'from-sky-400 to-blue-500',
+  'from-fuchsia-400 to-purple-500',
+  'from-cyan-400 to-teal-500',
+  'from-lime-400 to-green-500',
 ];
 
-const avatarColor = (uid: string) =>
-  AVATAR_COLORS[uid.charCodeAt(0) % AVATAR_COLORS.length];
+const BUBBLE_COLORS = [
+  'bg-violet-500',
+  'bg-emerald-500',
+  'bg-sky-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-indigo-500',
+  'bg-teal-500',
+  'bg-orange-500',
+];
+
+const hashUid = (uid: string) => uid.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+
+const avatarColor = (uid: string) => AVATAR_COLORS[hashUid(uid) % AVATAR_COLORS.length];
+const bubbleColor = (uid: string) => BUBBLE_COLORS[hashUid(uid) % BUBBLE_COLORS.length];
 
 // ── Avatar ─────────────────────────────────────────────────────────
 const Avatar: FC<{ name: string; uid: string; size?: 'sm' | 'md' | 'lg' }> = ({ name, uid, size = 'md' }) => {
@@ -282,10 +298,10 @@ const TeacherMessages: FC = () => {
                           const isLastInChain = !nextMsg || nextMsg.senderId !== msg.senderId;
                           const isFirstInChain = !prevMsg || prevMsg.senderId !== msg.senderId;
                           const showAvatar = !isMine && isLastInChain;
+                          const senderBubble = bubbleColor(msg.senderId);
 
-                          // Bubble rounding: continuous messages share edges
                           const myRadius = `${isFirstInChain ? 'rounded-tl-2xl' : 'rounded-tl-lg'} rounded-tr-2xl ${isLastInChain ? 'rounded-bl-2xl' : 'rounded-bl-lg'} rounded-br-md`;
-                          const theirRadius = `rounded-tl-2xl ${isFirstInChain ? 'rounded-tr-2xl' : 'rounded-tr-lg'} rounded-br-2xl ${isLastInChain ? 'rounded-tr-2xl' : 'rounded-tr-lg'} rounded-bl-md`;
+                          const theirRadius = `rounded-tl-2xl ${isFirstInChain ? 'rounded-tr-2xl' : 'rounded-tr-lg'} rounded-br-2xl rounded-bl-md`;
 
                           return (
                             <motion.div
@@ -307,11 +323,7 @@ const TeacherMessages: FC = () => {
                               {/* Bubble */}
                               <div className={`flex flex-col gap-0.5 max-w-[65%] ${isMine ? 'items-end' : 'items-start'}`}>
                                 <div
-                                  className={`px-4 py-2.5 text-sm leading-relaxed break-words ${
-                                    isMine
-                                      ? `bg-violet-600 text-white ${myRadius}`
-                                      : `bg-white text-gray-800 shadow-sm border border-gray-100 ${theirRadius}`
-                                  }`}
+                                  className={`px-4 py-2.5 text-sm leading-relaxed break-words text-white ${isMine ? `${senderBubble} ${myRadius}` : `${senderBubble} ${theirRadius}`}`}
                                 >
                                   {msg.content}
                                 </div>

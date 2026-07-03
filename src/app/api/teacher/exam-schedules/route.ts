@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
-  const { classId, title, module = 'stoikiometri', domainIds, scheduledAt, durationMinutes = 50 } = body as { classId?: string; title?: string; module?: string; domainIds?: string[]; scheduledAt?: string; durationMinutes?: number };
+  const { classId, title, module = 'stoikiometri', domainIds, scheduledAt, durationMinutes = 50, maxAttempts = 1, shuffleQuestions = false } = body as { classId?: string; title?: string; module?: string; domainIds?: string[]; scheduledAt?: string; durationMinutes?: number; maxAttempts?: number; shuffleQuestions?: boolean };
 
   if (!classId || !title || !domainIds?.length) {
     return NextResponse.json({ error: 'classId, title, and domainIds required' }, { status: 400 });
@@ -107,6 +107,8 @@ export async function POST(req: NextRequest) {
     examToken,
     scheduledAt: scheduledAt ? new Date(scheduledAt) : new Date(),
     durationMinutes,
+    maxAttempts,
+    shuffleQuestions,
     status: 'active',
     createdAt: FieldValue.serverTimestamp(),
   };
