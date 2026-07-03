@@ -17,13 +17,14 @@ import { stripMarkdown } from '@/lib/strip-html';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Student { uid: string; displayName: string; email: string; xp: number; }
-interface ExamItem { id: string; title: string; examToken: string; status: string; completedCount: number; sessionCount: number; startTime?: string; endTime?: string; }
+interface ExamItem { id: string; title: string; examToken: string; status: string; completedCount: number; sessionCount: number; startTime?: string; endTime?: string; domainIds?: string[]; }
 interface MaterialItem { id: string; title: string; description: string; topic: string; estimatedTime: number; status: string; createdByName: string; }
 interface Assignment { id: string; title: string; description: string; dueDate: string | null; maxScore: number; status: string; submissionCount?: number; }
 interface SubmissionEntry { studentId: string; studentName: string; text: string; submittedAt: string | null; }
 interface SubmissionsData { submitted: SubmissionEntry[]; notSubmitted: { studentId: string; studentName: string }[]; }
 interface ClassDetail { id: string; name: string; subject: string; joinCode: string; teacherId: string; studentIds: string[]; }
 interface ChatMessage { id: string; senderId: string; senderName: string; senderRole: string; text: string; createdAt: unknown; }
+interface TPDef { id: string; code: string; name: string; subject: string; scope: string; isComplete: boolean; totalQuestions: number; }
 
 type Tab = 'siswa' | 'materi' | 'ujian' | 'tugas' | 'chat';
 
@@ -62,6 +63,14 @@ const TeacherClassDetailPage: FC = () => {
   const [allMaterials, setAllMaterials] = useState<MaterialItem[]>([]);
   const [loadingMat, setLoadingMat] = useState(false);
   const [showAddMat, setShowAddMat] = useState(false);
+
+  // Exam creation
+  const [showCreateExam, setShowCreateExam] = useState(false);
+  const [tpDefs, setTpDefs] = useState<TPDef[]>([]);
+  const [loadingTPs, setLoadingTPs] = useState(false);
+  const [examForm, setExamForm] = useState({ title: '', domainIds: [] as string[], durationMinutes: 50 });
+  const [savingExam, setSavingExam] = useState(false);
+  const [copiedExamToken, setCopiedExamToken] = useState<string | null>(null);
 
   // Assignments
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -141,6 +150,67 @@ const TeacherClassDetailPage: FC = () => {
     if (tab === 'materi' && cls) fetchClassMaterials();
     if (tab === 'tugas') fetchAssignments();
   }, [tab, cls, fetchClassMaterials, fetchAssignments]);
+
+  // Load TP definitions when ujian tab opened + exam creation modal opened
+  const fetchTPDefs = useCallback(async () => {
+    setLoadingTPs(true);
+    try {
+      const t = await authToken();
+      const res = await fetch('/api/tp-definitions', { headers: { Authorization: `Bearer ${t}` } });
+      if (res.ok) setTpDefs(await res.json().then((d: { tps: TPDef[] }) => d.tps));
+    } finally {
+      setLoadingTPs(false);
+    }
+  }, [authToken]);
+
+  useEffect(() => {
+    if (tab === 'ujian') fetchTPDefs();
+  }, [tab, fetchTPDefs]);
+
+  const handleCreateExam = async () => {
+    if (!examForm.title.trim() || examForm.domainIds.length === 0) return;
+    setSavingExam(true);
+    try {
+      const t = await authToken();
+      const res = await fetch('/api/teacher/exam-schedules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ classId: id, ...examForm }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        addToast('error', err.error || 'Gagal membuat ujian');
+        return;
+      }
+      const data = await res.json();
+      setExams(prev => [{ ...data.schedule, id: data.schedule.id, completedCount: 0, sessionCount: 0 }, ...prev]);
+      setShowCreateExam(false);
+      setExamForm({ title: '', domainIds: [], durationMinutes: 50 });
+      addToast('success', `Ujian "${examForm.title}" berhasil dibuat`);
+    } finally {
+      setSavingExam(false);
+    }
+  };
+
+  const handleExamStatusChange = async (examId: string, status: string) => {
+    try {
+      const t = await authToken();
+      await fetch(`/api/teacher/exam-schedules/${examId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ status }),
+      });
+      setExams(prev => prev.map(e => e.id === examId ? { ...e, status } : e));
+    } catch {
+      addToast('error', 'Gagal mengubah status ujian');
+    }
+  };
+
+  const copyExamToken = (token: string) => {
+    navigator.clipboard.writeText(token);
+    setCopiedExamToken(token);
+    setTimeout(() => setCopiedExamToken(null), 2000);
+  };
 
   // Realtime chat subscription (teacher)
   useEffect(() => {
@@ -511,74 +581,194 @@ const TeacherClassDetailPage: FC = () => {
             <motion.div key="ujian" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-gray-500">{exams.length} ujian terjadwal</p>
-                <Link
-                  href="/teacher/ujian"
-                  className="flex items-center gap-1.5 rounded-xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-600"
+                <button
+                  onClick={() => setShowCreateExam(true)}
+                  className="flex items-center gap-1.5 rounded-xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-600 transition-colors"
                 >
                   <PlusCircle size={14} /> Buat Ujian
-                </Link>
+                </button>
               </div>
+
               {exams.length === 0 ? (
-                <EmptyState icon={<ClipboardList size={32} />} title="Belum ada ujian" description="Buat ujian baru untuk kelas ini" />
+                <EmptyState icon={<ClipboardList size={32} />} title="Belum ada ujian" description="Buat ujian adaptif MSAT untuk kelas ini" />
               ) : (
                 <div className="space-y-3">
-                  {exams.map((exam, i) => (
-                    <motion.div
-                      key={exam.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      className="rounded-2xl bg-white p-5 shadow-sm"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-gray-900">{exam.title}</p>
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                              exam.status === 'active' ? 'bg-emerald-100 text-emerald-700'
-                              : exam.status === 'completed' ? 'bg-gray-100 text-gray-500'
-                              : 'bg-amber-100 text-amber-700'
-                            }`}>
-                              {exam.status === 'active' ? 'Aktif' : exam.status === 'completed' ? 'Selesai' : exam.status}
-                            </span>
+                  {exams.map((exam, i) => {
+                    const pct = exam.sessionCount > 0 ? Math.round((exam.completedCount / exam.sessionCount) * 100) : 0;
+                    return (
+                      <motion.div
+                        key={exam.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-gray-900">{exam.title}</p>
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                exam.status === 'active' ? 'bg-emerald-100 text-emerald-700'
+                                : exam.status === 'closed' ? 'bg-gray-100 text-gray-500'
+                                : 'bg-amber-100 text-amber-700'
+                              }`}>
+                                {exam.status === 'active' ? 'Aktif' : exam.status === 'closed' ? 'Ditutup' : exam.status}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-gray-400">{exam.completedCount}/{exam.sessionCount} siswa selesai</p>
                           </div>
-                          <div className="mt-1 flex items-center gap-3 text-xs text-gray-400">
-                            {exam.startTime && <span><Calendar size={10} className="inline mr-1" />{fmtDateTime(exam.startTime)}</span>}
-                            <span>{exam.completedCount}/{exam.sessionCount} selesai</span>
+
+                          {/* Token */}
+                          <div className="flex shrink-0 flex-col items-end gap-2">
+                            <button
+                              onClick={() => copyExamToken(exam.examToken)}
+                              className="flex items-center gap-2 rounded-xl bg-violet-50 px-3 py-1.5 transition-colors hover:bg-violet-100"
+                              title="Klik untuk salin token"
+                            >
+                              <p className="font-mono text-sm font-black tracking-widest text-violet-700">{exam.examToken}</p>
+                              {copiedExamToken === exam.examToken
+                                ? <Check size={12} className="text-emerald-500" />
+                                : <Copy size={12} className="text-violet-400" />}
+                            </button>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <div className="rounded-xl bg-violet-50 px-4 py-1.5 text-center">
-                            <p className="font-mono text-sm font-black tracking-widest text-violet-700">{exam.examToken}</p>
+
+                        {exam.sessionCount > 0 && (
+                          <div className="mt-3">
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-violet-400 to-purple-500 transition-all duration-500"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="flex gap-2">
+                            {exam.status === 'active' ? (
+                              <button onClick={() => handleExamStatusChange(exam.id, 'closed')} className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+                                Tutup Ujian
+                              </button>
+                            ) : (
+                              <button onClick={() => handleExamStatusChange(exam.id, 'active')} className="rounded-lg border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
+                                Buka Kembali
+                              </button>
+                            )}
                           </div>
                           <Link
                             href={`/teacher/ujian/${exam.id}/recap`}
-                            className="flex items-center gap-1 text-xs text-violet-600 hover:underline"
+                            className="flex items-center gap-1 rounded-lg bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
                           >
-                            Rekap Hasil <ChevronRight size={12} />
+                            Lihat Rekap <ChevronRight size={12} />
                           </Link>
                         </div>
-                      </div>
-                      {exam.sessionCount > 0 && (
-                        <div className="mt-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-gray-400">Progress penyelesaian</span>
-                            <span className="text-xs font-semibold text-gray-600">
-                              {Math.round((exam.completedCount / exam.sessionCount) * 100)}%
-                            </span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                            <div
-                              className="h-full rounded-full bg-gradient-to-r from-violet-400 to-purple-500"
-                              style={{ width: `${Math.round((exam.completedCount / exam.sessionCount) * 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
+
+              {/* Create Exam Modal */}
+              <AnimatePresence>
+                {showCreateExam && (
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
+                    onClick={e => { if (e.target === e.currentTarget) setShowCreateExam(false); }}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
+                      className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl"
+                    >
+                      <div className="mb-5 flex items-center justify-between">
+                        <h3 className="font-bold text-gray-900">Buat Ujian Baru</h3>
+                        <button onClick={() => setShowCreateExam(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><X size={16} /></button>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="mb-1.5 block text-xs font-semibold text-gray-600">Judul Ujian *</label>
+                          <input
+                            value={examForm.title}
+                            onChange={e => setExamForm(f => ({ ...f, title: e.target.value }))}
+                            placeholder="Ujian Tengah Semester – Kimia"
+                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1.5 block text-xs font-semibold text-gray-600">Durasi (menit)</label>
+                          <input
+                            type="number"
+                            value={examForm.durationMinutes}
+                            onChange={e => setExamForm(f => ({ ...f, durationMinutes: parseInt(e.target.value) || 50 }))}
+                            min={10} max={180}
+                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block text-xs font-semibold text-gray-600">
+                            Tujuan Pembelajaran (TP) *
+                            <span className="ml-1 font-normal text-gray-400">— pilih yang memiliki soal lengkap</span>
+                          </label>
+                          {loadingTPs ? (
+                            <div className="flex justify-center py-4"><Loader2 size={16} className="animate-spin text-gray-300" /></div>
+                          ) : tpDefs.length === 0 ? (
+                            <p className="text-xs text-gray-400 py-2">Belum ada TP. Buat TP dan soal di halaman <strong>Bank Soal</strong> terlebih dahulu.</p>
+                          ) : (
+                            <div className="grid gap-2 max-h-48 overflow-y-auto pr-1">
+                              {tpDefs.map(tp => {
+                                const selected = examForm.domainIds.includes(tp.id);
+                                return (
+                                  <button
+                                    key={tp.id}
+                                    onClick={() => setExamForm(f => ({
+                                      ...f,
+                                      domainIds: selected ? f.domainIds.filter(d => d !== tp.id) : [...f.domainIds, tp.id],
+                                    }))}
+                                    className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+                                      selected ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    } ${!tp.isComplete ? 'opacity-60' : ''}`}
+                                  >
+                                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${selected ? 'border-violet-500 bg-violet-500' : 'border-gray-300'}`}>
+                                      {selected && <Check size={11} className="text-white" />}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-xs font-bold text-violet-700">{tp.code}</span>
+                                        <span className="truncate text-xs font-medium text-gray-700">{tp.name}</span>
+                                      </div>
+                                      <p className={`text-[10px] mt-0.5 ${tp.isComplete ? 'text-emerald-600' : 'text-amber-500'}`}>
+                                        {tp.isComplete ? `✓ Soal lengkap (${tp.totalQuestions}/7)` : `⚠ Soal belum lengkap (${tp.totalQuestions}/7)`}
+                                      </p>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-5 flex gap-2">
+                        <button onClick={() => setShowCreateExam(false)} className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+                          Batal
+                        </button>
+                        <button
+                          onClick={handleCreateExam}
+                          disabled={savingExam || !examForm.title.trim() || examForm.domainIds.length === 0}
+                          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-violet-600 py-2.5 text-sm font-bold text-white hover:bg-violet-700 disabled:opacity-40 transition-colors"
+                        >
+                          {savingExam && <Loader2 size={14} className="animate-spin" />}
+                          Buat Ujian
+                        </button>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
 

@@ -107,10 +107,29 @@ service cloud.firestore {
         || (isTeacherOrAdmin() && resource.data.teacherId == uid());
     }
 
+    // ── TP DEFINITIONS ───────────────────────────────────────────────────────
+    match /tp_definitions/{docId} {
+      allow read: if isTeacherOrAdmin();
+      allow create: if isTeacherOrAdmin()
+        && request.resource.data.ownerId == uid();
+      allow update: if isAdmin()
+        || (isTeacherOrAdmin() && resource.data.ownerId == uid()
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['scope', 'ownerId']));
+      allow delete: if isAdmin()
+        || (isTeacherOrAdmin() && resource.data.ownerId == uid());
+    }
+
     // ── EXAM QUESTIONS ───────────────────────────────────────────────────────
     match /exam_questions/{docId} {
-      allow read:   if isTeacherOrAdmin();
-      allow write:  if isTeacherOrAdmin();
+      allow read: if isTeacherOrAdmin();
+      allow create: if isTeacherOrAdmin()
+        && request.resource.data.ownerId == uid();
+      allow update: if isAdmin()
+        || (isTeacherOrAdmin()
+            && (resource.data.ownerId == uid() || resource.data.createdBy == uid()));
+      allow delete: if isAdmin()
+        || (isTeacherOrAdmin()
+            && (resource.data.ownerId == uid() || resource.data.createdBy == uid()));
     }
 
     // ── EXAM SESSIONS ────────────────────────────────────────────────────────
