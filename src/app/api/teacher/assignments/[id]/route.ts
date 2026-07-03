@@ -51,19 +51,33 @@ export async function GET(
       }));
     }
 
-    const submitted = Object.entries(submissions).map(([uid, sub]) => ({
-      studentId: uid,
-      studentName: (sub.studentName as string) ?? studentNames[uid] ?? uid,
-      text: (sub.text as string) ?? '',
-      submittedAt: tsToIso(sub.submittedAt),
-    }));
+    const dueDate = (data.dueDate as string) ?? null;
+    const submitted = Object.entries(submissions).map(([uid, sub]) => {
+      const submittedAt = tsToIso(sub.submittedAt);
+      const isLate = !!(dueDate && submittedAt && new Date(submittedAt) > new Date(dueDate));
+      return {
+        studentId: uid,
+        studentName: (sub.studentName as string) ?? studentNames[uid] ?? uid,
+        text: (sub.text as string) ?? '',
+        links: (sub.links as string[]) ?? [],
+        submittedAt,
+        isLate,
+        grade: (sub.grade as number) ?? null,
+        gradeNote: (sub.gradeNote as string) ?? '',
+      };
+    });
 
     const submittedIds = new Set(Object.keys(submissions));
     const notSubmitted = studentIds
       .filter(uid => !submittedIds.has(uid))
       .map(uid => ({ studentId: uid, studentName: studentNames[uid] ?? uid }));
 
-    return NextResponse.json({ submitted, notSubmitted });
+    return NextResponse.json({
+      submitted,
+      notSubmitted,
+      allowLate: (data.allowLate as boolean) ?? false,
+      dueDate,
+    });
   } catch (err) {
     console.error('[teacher/assignments GET id]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -89,7 +103,7 @@ export async function PATCH(
     }
 
     const body = await req.json() as Record<string, unknown>;
-    const allowed = ['title', 'description', 'dueDate', 'maxScore', 'status'];
+    const allowed = ['title', 'description', 'dueDate', 'maxScore', 'status', 'allowLate'];
     const update: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
     for (const key of allowed) {
       if (key in body) update[key] = body[key];

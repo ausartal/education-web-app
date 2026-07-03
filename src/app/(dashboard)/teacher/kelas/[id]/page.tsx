@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Users, ClipboardList, Copy, Check, BookOpen, ClipboardCheck,
   PlusCircle, Trash2, Calendar, X, ExternalLink, Clock, ChevronRight,
-  MessageCircle, Send, Loader2,
+  MessageCircle, Send, Loader2, AlertTriangle, Link2, Star,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -19,9 +19,18 @@ import { stripMarkdown } from '@/lib/strip-html';
 interface Student { uid: string; displayName: string; email: string; xp: number; }
 interface ExamItem { id: string; title: string; examToken: string; status: string; completedCount: number; sessionCount: number; startTime?: string; endTime?: string; domainIds?: string[]; }
 interface MaterialItem { id: string; title: string; description: string; topic: string; estimatedTime: number; status: string; createdByName: string; }
-interface Assignment { id: string; title: string; description: string; dueDate: string | null; maxScore: number; status: string; submissionCount?: number; }
-interface SubmissionEntry { studentId: string; studentName: string; text: string; submittedAt: string | null; }
-interface SubmissionsData { submitted: SubmissionEntry[]; notSubmitted: { studentId: string; studentName: string }[]; }
+interface Assignment { id: string; title: string; description: string; dueDate: string | null; maxScore: number; allowLate?: boolean; status: string; submissionCount?: number; }
+interface SubmissionEntry {
+  studentId: string; studentName: string; text: string; links?: string[];
+  submittedAt: string | null; isLate?: boolean;
+  grade?: number | null; gradeNote?: string;
+}
+interface SubmissionsData {
+  submitted: SubmissionEntry[];
+  notSubmitted: { studentId: string; studentName: string }[];
+  allowLate?: boolean;
+  dueDate?: string | null;
+}
 interface ClassDetail { id: string; name: string; subject: string; joinCode: string; teacherId: string; studentIds: string[]; }
 interface ChatMessage { id: string; senderId: string; senderName: string; senderRole: string; text: string; createdAt: unknown; }
 interface TPDef { id: string; code: string; name: string; subject: string; scope: string; isComplete: boolean; totalQuestions: number; }
@@ -76,11 +85,13 @@ const TeacherClassDetailPage: FC = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loadingAsgn, setLoadingAsgn] = useState(false);
   const [showCreateAsgn, setShowCreateAsgn] = useState(false);
-  const [asgnForm, setAsgnForm] = useState({ title: '', description: '', dueDate: '', maxScore: 100 });
+  const [asgnForm, setAsgnForm] = useState({ title: '', description: '', dueDate: '', maxScore: 100, allowLate: false });
   const [savingAsgn, setSavingAsgn] = useState(false);
   const [viewSubmissions, setViewSubmissions] = useState<Assignment | null>(null);
   const [submissionsData, setSubmissionsData] = useState<SubmissionsData | null>(null);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [gradeInputs, setGradeInputs] = useState<Record<string, { grade: string; note: string }>>({});
+  const [savingGrade, setSavingGrade] = useState<Record<string, boolean>>({});
 
   // Chat
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -314,7 +325,7 @@ const TeacherClassDetailPage: FC = () => {
       if (!res.ok) throw new Error((await res.json()).error ?? `HTTP ${res.status}`);
       addToast('success', 'Tugas berhasil dibuat');
       setShowCreateAsgn(false);
-      setAsgnForm({ title: '', description: '', dueDate: '', maxScore: 100 });
+      setAsgnForm({ title: '', description: '', dueDate: '', maxScore: 100, allowLate: false });
       await fetchAssignments();
     } catch (err) {
       addToast('error', err instanceof Error ? err.message : 'Gagal membuat tugas');
@@ -327,14 +338,57 @@ const TeacherClassDetailPage: FC = () => {
     setViewSubmissions(asgn);
     setSubmissionsData(null);
     setLoadingSubmissions(true);
+    setGradeInputs({});
     try {
       const t = await authToken();
       const res = await fetch(`/api/teacher/assignments/${asgn.id}`, {
         headers: { Authorization: `Bearer ${t}` },
       });
-      if (res.ok) setSubmissionsData(await res.json());
+      if (res.ok) {
+        const data: SubmissionsData = await res.json();
+        setSubmissionsData(data);
+        const initGrades: Record<string, { grade: string; note: string }> = {};
+        data.submitted.forEach(s => {
+          initGrades[s.studentId] = {
+            grade: typeof s.grade === 'number' ? String(s.grade) : '',
+            note: s.gradeNote ?? '',
+          };
+        });
+        setGradeInputs(initGrades);
+      }
     } finally {
       setLoadingSubmissions(false);
+    }
+  };
+
+  const handleGradeSubmission = async (asgnId: string, studentId: string, maxScore: number) => {
+    const input = gradeInputs[studentId];
+    if (!input) return;
+    const grade = Number(input.grade);
+    if (isNaN(grade) || grade < 0 || grade > maxScore) {
+      addToast('error', `Nilai harus antara 0 dan ${maxScore}`);
+      return;
+    }
+    setSavingGrade(g => ({ ...g, [studentId]: true }));
+    try {
+      const t = await authToken();
+      const res = await fetch(`/api/teacher/assignments/${asgnId}/grade`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ studentId, grade, gradeNote: input.note }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Gagal');
+      setSubmissionsData(prev => prev ? {
+        ...prev,
+        submitted: prev.submitted.map(s =>
+          s.studentId === studentId ? { ...s, grade, gradeNote: input.note } : s
+        ),
+      } : prev);
+      addToast('success', 'Nilai berhasil disimpan');
+    } catch (err) {
+      addToast('error', err instanceof Error ? err.message : 'Gagal menyimpan nilai');
+    } finally {
+      setSavingGrade(g => ({ ...g, [studentId]: false }));
     }
   };
 
@@ -804,13 +858,18 @@ const TeacherClassDetailPage: FC = () => {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <p className="font-semibold text-gray-900">{a.title}</p>
                               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                                 isOverdue ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'
                               }`}>
                                 {isOverdue ? 'Lewat batas' : a.status === 'published' ? 'Aktif' : 'Draf'}
                               </span>
+                              {a.allowLate && (
+                                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-600">
+                                  Boleh terlambat
+                                </span>
+                              )}
                             </div>
                             {plainDesc && (
                               <p className="mt-1 line-clamp-2 text-xs text-gray-500">{plainDesc}</p>
@@ -879,16 +938,68 @@ const TeacherClassDetailPage: FC = () => {
                                 <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-emerald-600">Sudah Mengumpulkan ({submissionsData.submitted.length})</p>
                                 <div className="space-y-2">
                                   {submissionsData.submitted.map(s => (
-                                    <div key={s.studentId} className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-                                      <div className="flex items-center justify-between gap-2">
+                                    <div key={s.studentId} className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 space-y-2">
+                                      <div className="flex flex-wrap items-center gap-2 justify-between">
                                         <p className="text-sm font-semibold text-gray-800">{s.studentName}</p>
-                                        {s.submittedAt && (
-                                          <span className="text-[10px] text-gray-400">{fmtDateTime(s.submittedAt)}</span>
-                                        )}
+                                        <div className="flex items-center gap-1.5">
+                                          {s.isLate && (
+                                            <span className="flex items-center gap-0.5 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-600">
+                                              <AlertTriangle size={9} /> Terlambat
+                                            </span>
+                                          )}
+                                          {s.submittedAt && (
+                                            <span className="text-[10px] text-gray-400">{fmtDateTime(s.submittedAt)}</span>
+                                          )}
+                                        </div>
                                       </div>
                                       {s.text && (
-                                        <p className="mt-1.5 text-xs text-gray-600 whitespace-pre-wrap">{s.text}</p>
+                                        <p className="text-xs text-gray-600 whitespace-pre-wrap">{s.text}</p>
                                       )}
+                                      {s.links && s.links.length > 0 && (
+                                        <div className="space-y-1">
+                                          {s.links.map((link, i) => (
+                                            <a key={i} href={link} target="_blank" rel="noopener noreferrer"
+                                              className="flex items-center gap-1.5 text-xs text-violet-600 hover:underline truncate">
+                                              <Link2 size={11} className="shrink-0" /> {link}
+                                            </a>
+                                          ))}
+                                        </div>
+                                      )}
+                                      {/* Grading */}
+                                      <div className="border-t border-emerald-200 pt-2">
+                                        {typeof s.grade === 'number' && (
+                                          <p className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold text-violet-600">
+                                            <Star size={11} /> Nilai saat ini: {s.grade}/{viewSubmissions!.maxScore}
+                                            {s.gradeNote && <span className="font-normal text-gray-500"> — {s.gradeNote}</span>}
+                                          </p>
+                                        )}
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            type="number"
+                                            min={0}
+                                            max={viewSubmissions!.maxScore}
+                                            value={gradeInputs[s.studentId]?.grade ?? ''}
+                                            onChange={e => setGradeInputs(g => ({ ...g, [s.studentId]: { ...(g[s.studentId] ?? { grade: '', note: '' }), grade: e.target.value } }))}
+                                            placeholder={`0–${viewSubmissions!.maxScore}`}
+                                            className="w-20 rounded-lg border border-gray-200 px-2 py-1.5 text-sm outline-none focus:border-violet-300 focus:ring-1 focus:ring-violet-100"
+                                          />
+                                          <input
+                                            type="text"
+                                            value={gradeInputs[s.studentId]?.note ?? ''}
+                                            onChange={e => setGradeInputs(g => ({ ...g, [s.studentId]: { ...(g[s.studentId] ?? { grade: '', note: '' }), note: e.target.value } }))}
+                                            placeholder="Catatan (opsional)"
+                                            className="flex-1 rounded-lg border border-gray-200 px-2 py-1.5 text-sm outline-none focus:border-violet-300 focus:ring-1 focus:ring-violet-100"
+                                          />
+                                          <button
+                                            onClick={() => handleGradeSubmission(viewSubmissions!.id, s.studentId, viewSubmissions!.maxScore)}
+                                            disabled={savingGrade[s.studentId] || !gradeInputs[s.studentId]?.grade}
+                                            className="flex items-center gap-1 rounded-lg bg-violet-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-600 disabled:opacity-40 whitespace-nowrap"
+                                          >
+                                            {savingGrade[s.studentId] ? <Loader2 size={11} className="animate-spin" /> : <Star size={11} />}
+                                            Simpan
+                                          </button>
+                                        </div>
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
@@ -979,6 +1090,24 @@ const TeacherClassDetailPage: FC = () => {
                               className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-100"
                             />
                           </div>
+                        </div>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setAsgnForm(f => ({ ...f, allowLate: !f.allowLate }))}
+                            className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+                              asgnForm.allowLate
+                                ? 'border-orange-200 bg-orange-50 text-orange-700'
+                                : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className={`flex h-4 w-4 items-center justify-center rounded border-2 transition-colors ${
+                              asgnForm.allowLate ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
+                            }`}>
+                              {asgnForm.allowLate && <Check size={10} className="text-white" />}
+                            </div>
+                            Izinkan pengumpulan terlambat
+                          </button>
                         </div>
                       </div>
                       <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
