@@ -290,17 +290,17 @@ const BankSoalPage: FC = () => {
         {/* ── Left Sidebar ─────────────────────────────────────────── */}
         <div className="flex w-64 shrink-0 flex-col border-r border-gray-100">
           {/* Sidebar header */}
-          <div className="border-b border-gray-100 px-4 py-4">
+          <div className="bg-gradient-to-br from-violet-600 to-indigo-700 px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
                   <Layers size={16} className="text-white" />
                 </div>
-                <span className="font-bold text-gray-900">Bank Soal</span>
+                <span className="font-bold text-white">Bank Soal</span>
               </div>
               <button
                 onClick={() => { setEditTP(null); setTPForm(emptyTPForm()); setShowTPForm(true); }}
-                className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-50 text-violet-600 hover:bg-violet-100 transition-colors"
+                className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 text-white hover:bg-white/30 transition-colors"
                 title="Buat TP Baru"
               >
                 <Plus size={14} />
