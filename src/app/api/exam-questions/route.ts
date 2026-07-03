@@ -77,9 +77,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Field wajib tidak lengkap' }, { status: 400 });
   }
 
-  // Only admin can create global questions directly (auto-approved)
-  const finalVisibility = teacher.role === 'admin' ? (visibility || 'global') : 'private';
-  const approvalStatus = teacher.role === 'admin' ? 'approved' : undefined;
+  // Admin can choose public ('global') or private; teacher always private
+  const finalVisibility = teacher.role === 'admin' && visibility === 'global' ? 'global' : 'private';
+  const approvalStatus = finalVisibility === 'global' ? 'approved' : undefined;
 
   // Fetch TP name if not provided
   let resolvedDomainName = domainName;
