@@ -266,7 +266,7 @@ const BankSoalPage: FC = () => {
 
   const openEditTP = (tp: TPDef) => {
     setEditTP(tp);
-    setTPForm({ code: tp.code, name: tp.name, subject: tp.subject });
+    setTPForm({ code: tp.code, name: tp.name, subject: tp.subject, scope: tp.scope });
     setShowTPForm(true);
   };
 
