@@ -74,55 +74,67 @@ const TeacherExamSoalPage: FC = () => {
   const getToken = useCallback(async () => user ? await user.getIdToken() : '', [user]);
 
   const fetchQuestions = useCallback(async () => {
-    const t = await getToken();
-    const params = new URLSearchParams({ module: 'stoikiometri' });
-    if (filterDomain) params.set('domainId', filterDomain);
-    const res = await fetch(`/api/exam-questions?${params}`, { headers: { Authorization: `Bearer ${t}` } });
-    const data = await res.json();
-    setQuestions(data.questions || []);
-    setLoading(false);
-  }, [getToken, filterDomain]);
+    if (!user) return;
+    try {
+      const t = await getToken();
+      const params = new URLSearchParams({ module: 'stoikiometri' });
+      if (filterDomain) params.set('domainId', filterDomain);
+      const res = await fetch(`/api/exam-questions?${params}`, { headers: { Authorization: `Bearer ${t}` } });
+      if (!res.ok) throw new Error('Gagal memuat soal');
+      const data = await res.json();
+      setQuestions(data.questions || []);
+    } catch {
+      // Questions stay empty; no crash
+    } finally {
+      setLoading(false);
+    }
+  }, [user, getToken, filterDomain]);
 
   useEffect(() => { fetchQuestions(); }, [fetchQuestions]);
 
   const handleSave = async () => {
     if (!form.stem || !form.optionA || !form.optionB || !form.optionC || !form.optionD) return;
     setSaving(true);
-    const t = await getToken();
-    const domain = DOMAINS.find(d => d.id === form.domainId);
-    const tierInfo = TIER_PATHS.find(tp => tp.value === form.tierPath)!;
-    const body = {
-      domainId: form.domainId,
-      domainName: domain?.name || form.domainId,
-      module: 'stoikiometri',
-      tier: tierInfo.tier,
-      tierPath: form.tierPath,
-      difficulty: TIER_PATH_DIFFICULTY[form.tierPath],
-      cognitiveLevel: form.cognitiveLevel,
-      stem: form.stem,
-      options: { A: form.optionA, B: form.optionB, C: form.optionC, D: form.optionD, E: form.optionE || undefined },
-      correctAnswer: form.correctAnswer,
-      explanation: form.explanation,
-    };
+    try {
+      const t = await getToken();
+      const domain = DOMAINS.find(d => d.id === form.domainId);
+      const tierInfo = TIER_PATHS.find(tp => tp.value === form.tierPath)!;
+      const body = {
+        domainId: form.domainId,
+        domainName: domain?.name || form.domainId,
+        module: 'stoikiometri',
+        tier: tierInfo.tier,
+        tierPath: form.tierPath,
+        difficulty: TIER_PATH_DIFFICULTY[form.tierPath],
+        cognitiveLevel: form.cognitiveLevel,
+        stem: form.stem,
+        options: { A: form.optionA, B: form.optionB, C: form.optionC, D: form.optionD, E: form.optionE || undefined },
+        correctAnswer: form.correctAnswer,
+        explanation: form.explanation,
+      };
 
-    if (editId) {
-      await fetch(`/api/exam-questions/${editId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify(body),
-      });
-    } else {
-      await fetch('/api/exam-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify(body),
-      });
+      if (editId) {
+        await fetch(`/api/exam-questions/${editId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+          body: JSON.stringify(body),
+        });
+      } else {
+        await fetch('/api/exam-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+          body: JSON.stringify(body),
+        });
+      }
+      setShowForm(false);
+      setEditId(null);
+      setForm(emptyForm());
+      fetchQuestions();
+    } catch {
+      // Saving failed; button re-enables via finally
+    } finally {
+      setSaving(false);
     }
-    setShowForm(false);
-    setEditId(null);
-    setForm(emptyForm());
-    setSaving(false);
-    fetchQuestions();
   };
 
   const openEdit = (q: ExamQ) => {
@@ -144,20 +156,29 @@ const TeacherExamSoalPage: FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const t = await getToken();
-    await fetch(`/api/exam-questions/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
-    setDeleteConfirm(null);
-    fetchQuestions();
+    try {
+      const t = await getToken();
+      await fetch(`/api/exam-questions/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      fetchQuestions();
+    } catch {
+      // Delete failed silently
+    } finally {
+      setDeleteConfirm(null);
+    }
   };
 
   const handleToggleStatus = async (q: ExamQ) => {
-    const t = await getToken();
-    await fetch(`/api/exam-questions/${q.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-      body: JSON.stringify({ status: q.status === 'active' ? 'inactive' : 'active' }),
-    });
-    fetchQuestions();
+    try {
+      const t = await getToken();
+      await fetch(`/api/exam-questions/${q.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ status: q.status === 'active' ? 'inactive' : 'active' }),
+      });
+      fetchQuestions();
+    } catch {
+      // Toggle failed silently
+    }
   };
 
   const filtered = questions.filter(q =>
