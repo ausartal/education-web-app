@@ -262,29 +262,31 @@ const TeacherMaterials: FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex flex-wrap items-end justify-between gap-4"
+          className="mb-6 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-sm"
         >
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">Kelola Materi</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              {materials.filter(m => m.status === 'published').length} dipublikasi · {materials.length} total
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={exportFormat}
-              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50"
-              title="Download template format import"
-            >
-              <FileJson size={15} />
-              Template
-            </button>
-            <button
-              onClick={openCreate}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
-            >
-              <PlusCircle size={16} /> Tambah Materi
-            </button>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="font-display text-2xl font-extrabold">Kelola Materi</h1>
+              <p className="mt-1 text-sm text-white/80">
+                {materials.filter(m => m.status === 'published').length} dipublikasi · {materials.length} total
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exportFormat}
+                className="flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/30 transition-colors"
+                title="Download template format import"
+              >
+                <FileJson size={15} />
+                Template
+              </button>
+              <button
+                onClick={openCreate}
+                className="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50 transition-colors"
+              >
+                <PlusCircle size={16} /> Tambah Materi
+              </button>
+            </div>
           </div>
         </motion.div>
 

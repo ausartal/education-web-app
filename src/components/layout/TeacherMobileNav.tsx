@@ -3,13 +3,13 @@
 import { FC } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, Users, School, Database } from 'lucide-react';
+import { Home, Users, School, Database, ClipboardList } from 'lucide-react';
 
 const teacherTabs = [
   { href: '/teacher', label: 'Home', icon: Home },
   { href: '/teacher/kelas', label: 'Kelas', icon: School },
+  { href: '/teacher/ujian', label: 'Ujian', icon: ClipboardList },
   { href: '/teacher/bank-soal', label: 'Bank Soal', icon: Database },
-  { href: '/teacher/materials', label: 'Materi', icon: BookOpen },
   { href: '/teacher/students', label: 'Siswa', icon: Users },
 ];
 

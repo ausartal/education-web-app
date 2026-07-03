@@ -81,39 +81,28 @@ const TeacherStudents: FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 rounded-3xl bg-gradient-to-br from-primary to-cyan-500 p-6 text-white shadow-sm"
         >
-          <h1 className="font-display text-2xl font-extrabold text-gray-900">
-            Daftar Siswa
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            {students.length} siswa terdaftar
-          </p>
-        </motion.div>
+          <h1 className="font-display text-2xl font-extrabold">Daftar Siswa</h1>
+          <p className="mt-1 text-sm text-white/80">{students.length} siswa terdaftar di platform</p>
 
-        {/* Summary Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6 grid grid-cols-3 gap-4"
-        >
-          <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-400 p-4 text-white shadow-sm">
-            <Zap size={18} className="mb-1 opacity-80" />
-            <p className="text-xl font-black">{totalXP}</p>
-            <p className="text-[11px] opacity-80">Total XP Kelas</p>
-          </div>
-          <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 p-4 text-white shadow-sm">
-            <Trophy size={18} className="mb-1 opacity-80" />
-            <p className="text-xl font-black">Lv. {avgLevel}</p>
-            <p className="text-[11px] opacity-80">Rata-rata Level</p>
-          </div>
-          <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 p-4 text-white shadow-sm">
-            <BookOpen size={18} className="mb-1 opacity-80" />
-            <p className="text-xl font-black">
-              {students.reduce((a, s) => a + s.totalLessons, 0)}
-            </p>
-            <p className="text-[11px] opacity-80">Pelajaran Selesai</p>
+          {/* Summary Stats */}
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
+              <Zap size={16} className="mb-1 opacity-80" />
+              <p className="text-lg font-black">{totalXP}</p>
+              <p className="text-[10px] opacity-75">Total XP</p>
+            </div>
+            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
+              <Trophy size={16} className="mb-1 opacity-80" />
+              <p className="text-lg font-black">Lv. {avgLevel}</p>
+              <p className="text-[10px] opacity-75">Avg Level</p>
+            </div>
+            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
+              <BookOpen size={16} className="mb-1 opacity-80" />
+              <p className="text-lg font-black">{students.reduce((a, s) => a + s.totalLessons, 0)}</p>
+              <p className="text-[10px] opacity-75">Pelajaran</p>
+            </div>
           </div>
         </motion.div>
 
