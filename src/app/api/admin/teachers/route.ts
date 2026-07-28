@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
   // Count exam sessions that belong to each teacher's schedules
   const sessionsByTeacher: Record<string, { total: number; completed: number }> = {};
   sessionsSnap.docs.forEach(d => {
-    const scheduleId = d.data().scheduleId as string;
+    const scheduleId = d.data().examScheduleId as string;
     // Find which teacher owns this schedule
     for (const [teacherUid, schedIds] of Object.entries(scheduleIdsByTeacher)) {
       if (schedIds.has(scheduleId)) {

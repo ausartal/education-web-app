@@ -75,21 +75,31 @@ export async function GET(
     .where('classId', '==', classId)
     .get();
 
-  // Check completed exams by this student
-  const sessionSnap = await adminDb
-    .collection('exam_sessions')
-    .where('studentId', '==', decoded.uid)
-    .get();
-  const completedExamIds = new Set(
-    sessionSnap.docs
-      .filter(d => d.data().status === 'completed')
-      .map(d => d.data().examScheduleId as string),
-  );
+  // Check completed exams by this student — filter to only this class's schedules
+  const classScheduleIds = examSnap.docs.map(d => d.id);
+  const completedExamIds = new Set<string>();
+  const sessionsBySchedule: Record<string, string> = {};
+
+  if (classScheduleIds.length > 0) {
+    // Firestore 'in' supports max 30 items; chunk if needed
+    for (let i = 0; i < classScheduleIds.length; i += 30) {
+      const chunk = classScheduleIds.slice(i, i + 30);
+      const sessSnap = await adminDb
+        .collection('exam_sessions')
+        .where('studentId', '==', decoded.uid)
+        .where('examScheduleId', 'in', chunk)
+        .get();
+      sessSnap.docs.forEach(d => {
+        const sData = d.data();
+        if (sData.status === 'completed') completedExamIds.add(sData.examScheduleId as string);
+        sessionsBySchedule[sData.examScheduleId as string] = d.id;
+      });
+    }
+  }
 
   const exams = examSnap.docs
     .map(d => {
       const e = d.data();
-      const sessionDoc = sessionSnap.docs.find(s => s.data().examScheduleId === d.id);
       return {
         id: d.id,
         title: e.title as string,
@@ -101,7 +111,7 @@ export async function GET(
         startTime: tsToIso(e.startTime),
         endTime: tsToIso(e.endTime),
         isCompleted: completedExamIds.has(d.id),
-        sessionId: sessionDoc?.id ?? null,
+        sessionId: sessionsBySchedule[d.id] ?? null,
       };
     })
     .sort((a, b) => {

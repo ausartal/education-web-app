@@ -52,10 +52,11 @@ export async function awardXP(
 ): Promise<{ newXP: number; leveledUp: boolean; newLevel: number }> {
   const userRef = doc(db, 'users', userId);
   const snap = await getDoc(userRef);
+  if (!snap.exists()) throw new Error(`User ${userId} not found`);
   const data = snap.data() as UserProfile;
 
-  const oldLevel = data.stats.level;
-  const newXP = data.stats.xp + amount;
+  const oldLevel = data.stats?.level ?? 1;
+  const newXP = (data.stats?.xp ?? 0) + amount;
   const newLevel = getLevelFromXP(newXP);
 
   await updateDoc(userRef, {
@@ -92,13 +93,14 @@ export async function awardStreakXP(userId: string) {
 export async function updateStreak(userId: string): Promise<number> {
   const userRef = doc(db, 'users', userId);
   const snap = await getDoc(userRef);
+  if (!snap.exists()) throw new Error(`User ${userId} not found`);
   const data = snap.data() as UserProfile;
 
   const now = new Date();
   const lastLogin = data.lastLoginAt?.toDate?.() || new Date(0);
   const diffHours = (now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60);
 
-  let newStreak = data.stats.streak;
+  let newStreak = data.stats?.streak ?? 1;
 
   if (diffHours < 24) {
     // Same day, no change
@@ -111,7 +113,7 @@ export async function updateStreak(userId: string): Promise<number> {
     newStreak = 1;
   }
 
-  const longestStreak = Math.max(data.stats.longestStreak, newStreak);
+  const longestStreak = Math.max(data.stats?.longestStreak ?? 0, newStreak);
 
   await updateDoc(userRef, {
     'stats.streak': newStreak,

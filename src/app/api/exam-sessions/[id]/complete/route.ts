@@ -44,8 +44,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const scheduleSnap = await adminDb.collection('exam_schedules').doc(session.examScheduleId).get();
   const scheduleData = scheduleSnap.data() ?? {};
 
-  // ── Custom exam completion ────────────────────────────────────────
-  if (session.examType === 'custom') {
+  // ── Custom & Manual exam completion ───────────────────────────────
+  if (session.examType === 'custom' || session.examType === 'manual') {
     let body2: Record<string, unknown> = {};
     try { body2 = await req.json(); } catch { /* optional body */ }
     const customAnswers = (body2.customAnswers ?? []) as Array<{ questionId: string; selectedAnswer: string; isCorrect: boolean; timeSpentMs?: number }>;

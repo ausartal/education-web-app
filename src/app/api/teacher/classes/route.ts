@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyTeacher } from '@/lib/auth-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
+import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 function generateJoinCode(): string {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+  return randomBytes(4).toString('hex').toUpperCase().slice(0, 8);
 }
 
 export async function GET(req: NextRequest) {
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest) {
   }
 
   const docRef = adminDb.collection('classes').doc();
+  const now = FieldValue.serverTimestamp();
   const classData = {
     teacherId: teacher.uid,
     name,
@@ -73,9 +75,11 @@ export async function POST(req: NextRequest) {
     joinCode,
     studentIds: [],
     status: 'active',
-    createdAt: FieldValue.serverTimestamp(),
+    createdAt: now,
   };
   await docRef.set(classData);
 
-  return NextResponse.json({ class: { id: docRef.id, ...classData } }, { status: 201 });
+  return NextResponse.json({
+    class: { id: docRef.id, teacherId: teacher.uid, name, subject, joinCode, studentIds: [], status: 'active', createdAt: new Date().toISOString() },
+  }, { status: 201 });
 }

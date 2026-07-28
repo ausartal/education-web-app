@@ -159,8 +159,8 @@ export async function GET(req: NextRequest) {
     if (data.status === 'completed') {
       if (data.result?.accuracy != null) { accuracySum += data.result.accuracy; accuracyCount++; }
       if (typeof data.numericScore === 'number') { msatScoreSum += data.numericScore; msatScoreCount++; }
-      const dr = data.domainResponses as Record<string, { comprehensionCategory: string }> ?? {};
-      for (const resp of Object.values(dr)) {
+      const dr = (data.domainResponses ?? []) as Array<{ comprehensionCategory: string }>;
+      for (const resp of dr) {
         const cat = resp.comprehensionCategory;
         if (cat && cat in msatComprehensionDist) msatComprehensionDist[cat]++;
       }

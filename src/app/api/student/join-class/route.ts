@@ -1,20 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
+import { verifyStudent } from '@/lib/auth-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
-
-async function verifyStudent(req: NextRequest) {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.slice(7);
-  try {
-    const decoded = await adminAuth.verifyIdToken(token);
-    const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
-    if (!userDoc.exists) return null;
-    return { decoded, role: userDoc.data()?.role };
-  } catch { return null; }
-}
 
 export async function POST(req: NextRequest) {
   const auth = await verifyStudent(req);
@@ -36,16 +25,16 @@ export async function POST(req: NextRequest) {
   const classDoc = snap.docs[0];
   const classData = classDoc.data();
 
-  if ((classData.studentIds || []).includes(auth.decoded.uid)) {
+  if ((classData.studentIds || []).includes(auth.uid)) {
     return NextResponse.json({ class: { id: classDoc.id, ...classData }, alreadyJoined: true });
   }
 
   await classDoc.ref.update({
-    studentIds: FieldValue.arrayUnion(auth.decoded.uid),
+    studentIds: FieldValue.arrayUnion(auth.uid),
   });
 
   await adminDb.collection('audit_logs').add({
-    actorId: auth.decoded.uid, actorRole: auth.role, action: 'join_class',
+    actorId: auth.uid, actorRole: auth.role, action: 'join_class',
     targetId: classDoc.id, targetType: 'class',
     details: { joinCode, className: classData.name }, timestamp: new Date(),
   });

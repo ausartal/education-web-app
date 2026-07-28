@@ -3,9 +3,22 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-  : undefined;
+function getServiceAccount() {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (!raw) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not set');
+    }
+    return undefined;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not valid JSON');
+  }
+}
+
+const serviceAccount = getServiceAccount();
 
 const app =
   getApps().length === 0

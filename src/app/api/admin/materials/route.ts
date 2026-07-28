@@ -40,7 +40,9 @@ export async function POST(req: NextRequest) {
     status, order,
     learningObjectives,
     prerequisites,
-    createdBy: admin.uid,
+    createdByUid: admin.uid,
+    createdByName: admin.displayName ?? 'Admin',
+    createdByRole: 'admin',
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   };
