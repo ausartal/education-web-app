@@ -283,7 +283,7 @@ export type MSATTierPath =
   | 'sangat_sukar';  // T3 path (T1 right, T2 right)
 
 export type MSATDifficulty = 'sangat_mudah' | 'mudah' | 'sedang' | 'sukar' | 'sangat_sukar';
-export type CognitiveLevel = 'C1' | 'C2' | 'C3' | 'C4';
+export type CognitiveLevel = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6';
 
 export interface ExamQuestion {
   id: string;
