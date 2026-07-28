@@ -1022,7 +1022,7 @@ const Modal: FC<{ children: React.ReactNode; onClose: () => void; wide?: boolean
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.96, opacity: 0 }}
-      className={`relative w-full rounded-2xl bg-white p-6 shadow-2xl ${wide ? 'max-w-2xl max-h-[90vh] overflow-y-auto' : 'max-w-md'}`}
+      className={`relative w-full rounded-2xl bg-white p-6 shadow-2xl ${wide ? 'max-w-4xl max-h-[90vh] overflow-y-auto' : 'max-w-md'}`}
     >
       <button onClick={onClose} className="absolute right-4 top-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 transition-colors">
         <X size={16} />
