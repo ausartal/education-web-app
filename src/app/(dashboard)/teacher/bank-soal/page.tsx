@@ -2,14 +2,21 @@
 
 import { FC, useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
   Plus, Pencil, Trash2, X, ChevronDown, ChevronUp, Globe, Lock,
   CheckCircle2, AlertCircle, BookOpen, Layers, Search, Loader2,
-  ClipboardList, Send,
+  ClipboardList, Send, Eye, EyeOff,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { RichEditor } from '@/components/teacher/RichEditor';
 import { MSATTierPath, MSATDifficulty, CognitiveLevel, AnswerKey } from '@/types/firestore';
+
+const MarkdownPreview = dynamic(() => import('@/components/teacher/MarkdownPreview'), {
+  loading: () => <p className="text-xs text-gray-300 italic">Memuat preview...</p>,
+  ssr: false,
+});
 
 // ── Types ──────────────────────────────────────────────────────────
 interface TPDef {
@@ -57,7 +64,7 @@ const TIER_PATH_DIFFICULTY: Record<MSATTierPath, MSATDifficulty> = {
   sangat_mudah: 'sangat_mudah', sedang_a: 'sedang', sedang_b: 'sedang', sangat_sukar: 'sangat_sukar',
 };
 
-const COGNITIVE_LEVELS: CognitiveLevel[] = ['C1', 'C2', 'C3', 'C4'];
+const COGNITIVE_LEVELS: CognitiveLevel[] = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
 const ANSWER_KEYS: AnswerKey[] = ['A', 'B', 'C', 'D', 'E'];
 const REQUIRED_PATHS = ['anchor', 'mudah', 'sukar', 'sangat_mudah', 'sedang_a', 'sedang_b', 'sangat_sukar'];
 
@@ -104,6 +111,7 @@ const BankSoalPage: FC = () => {
   const [form, setForm] = useState(emptyForm());
   const [savingQ, setSavingQ] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [formTab, setFormTab] = useState<'edit' | 'preview'>('edit');
 
   const getToken = useCallback(async () => user ? await user.getIdToken() : '', [user]);
 
@@ -249,6 +257,7 @@ const BankSoalPage: FC = () => {
 
   const openEditQ = (q: ExamQ) => {
     setEditQ(q);
+    setFormTab('edit');
     setForm({
       domainId: q.domainId,
       tierPath: q.tierPath,
@@ -470,6 +479,7 @@ const BankSoalPage: FC = () => {
                       onClick={() => {
                         setEditQ(null);
                         setForm(emptyForm(selectedTP.id));
+                        setFormTab('edit');
                         setShowQForm(true);
                       }}
                       className="flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-violet-700 transition-colors"
@@ -496,7 +506,7 @@ const BankSoalPage: FC = () => {
                     </p>
                     {qView === 'mine' && (
                       <button
-                        onClick={() => { setEditQ(null); setForm(emptyForm(selectedTP.id)); setShowQForm(true); }}
+                        onClick={() => { setEditQ(null); setForm(emptyForm(selectedTP.id)); setFormTab('edit'); setShowQForm(true); }}
                         className="text-xs font-semibold text-violet-600 hover:underline"
                       >
                         + Tambah soal pertama
@@ -604,116 +614,150 @@ const BankSoalPage: FC = () => {
       {/* ── Question Form Modal ───────────────────────────────────── */}
       <AnimatePresence>
         {showQForm && (
-          <Modal onClose={() => { setShowQForm(false); setEditQ(null); }} wide>
-            <h3 className="mb-5 text-base font-bold text-gray-900">
-              {editQ ? 'Edit Soal' : 'Tambah Soal'}
-              {selectedTP && (
-                <span className="ml-2 rounded-lg bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
-                  {selectedTP.code}
-                </span>
-              )}
-            </h3>
+          <Modal onClose={() => { setShowQForm(false); setEditQ(null); setFormTab('edit'); }} wide>
+            <div className="mb-4 pr-8">
+              <h3 className="text-base font-bold text-gray-900">
+                {editQ ? 'Edit Soal' : 'Tambah Soal'}
+                {selectedTP && (
+                  <span className="ml-2 rounded-lg bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
+                    {selectedTP.code}
+                  </span>
+                )}
+              </h3>
+            </div>
 
-            <div className="space-y-4">
-              {/* Tier + Cognitive */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-gray-600">Tier Path *</label>
-                  <select
-                    value={form.tierPath}
-                    onChange={e => setForm(f => ({ ...f, tierPath: e.target.value as MSATTierPath }))}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
-                  >
-                    {TIER_PATHS.map(t => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
-                    ))}
-                  </select>
+            <div className="mb-4 flex rounded-xl bg-gray-100 p-0.5 w-fit">
+              <button
+                type="button"
+                onClick={() => setFormTab('edit')}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${formTab === 'edit' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <Pencil size={12} /> Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormTab('preview')}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${formTab === 'preview' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <Eye size={12} /> Preview
+              </button>
+            </div>
+
+            {formTab === 'edit' ? (
+              <div className="space-y-4">
+                {/* Tier + Cognitive */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                      Tier Path *
+                      <TooltipInfo text="Tier Path menentukan jalur adaptif soal dalam ujian MSAT. T1 (Anchor) = soal awal, T2 = soal lanjutan berdasarkan jawaban T1, T3 = soal akhir berdasarkan jalur T1+T2." />
+                    </label>
+                    <select
+                      value={form.tierPath}
+                      onChange={e => setForm(f => ({ ...f, tierPath: e.target.value as MSATTierPath }))}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                    >
+                      {TIER_PATHS.map(t => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                      Level Kognitif
+                      <TooltipInfo text="Taksonomi Bloom: C1=Mengingat, C2=Memahami, C3=Menerapkan, C4=Menganalisis, C5=Mengevaluasi, C6=Mencipta. Tentukan level berpikir yang diuji oleh soal ini." />
+                    </label>
+                    <select
+                      value={form.cognitiveLevel}
+                      onChange={e => setForm(f => ({ ...f, cognitiveLevel: e.target.value as CognitiveLevel }))}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                    >
+                      {COGNITIVE_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
                 </div>
+
+                {/* Stem — RichEditor */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-gray-600">Level Kognitif</label>
-                  <select
-                    value={form.cognitiveLevel}
-                    onChange={e => setForm(f => ({ ...f, cognitiveLevel: e.target.value as CognitiveLevel }))}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
-                  >
-                    {COGNITIVE_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-                  </select>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                    Pertanyaan (Stem) *
+                    <TooltipInfo text="Tulis soal di sini. Mendukung markdown: **tebal**, *miring*, $rumus$ inline, $$rumus$$ display, gambar, dan video YouTube." />
+                  </label>
+                  <RichEditor
+                    value={form.stem}
+                    onChange={v => setForm(f => ({ ...f, stem: v }))}
+                    placeholder="Tulis soal di sini... Mendukung **teks tebal**, *miring*, $rumus$, gambar, dan video."
+                    minHeight={160}
+                  />
                 </div>
-              </div>
 
-              {/* Stem */}
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-gray-600">Pertanyaan (Stem) *</label>
-                <textarea
-                  value={form.stem}
-                  onChange={e => setForm(f => ({ ...f, stem: e.target.value }))}
-                  rows={3}
-                  placeholder="Tulis soal di sini..."
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 resize-none"
-                />
-              </div>
-
-              {/* Options */}
-              <div>
-                <label className="mb-2 block text-xs font-semibold text-gray-600">Pilihan Jawaban *</label>
-                <div className="space-y-2">
-                  {ANSWER_KEYS.map(key => (
-                    <div key={key} className="flex items-center gap-2">
-                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors ${form.correctAnswer === key ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
-                        {key}
+                {/* Options */}
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-gray-600">Pilihan Jawaban *</label>
+                  <div className="space-y-2">
+                    {ANSWER_KEYS.map(key => (
+                      <div key={key} className="flex items-center gap-2">
+                        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors ${form.correctAnswer === key ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                          {key}
+                        </div>
+                        <input
+                          value={form[`option${key}` as keyof typeof form] as string}
+                          onChange={e => setForm(f => ({ ...f, [`option${key}`]: e.target.value }))}
+                          placeholder={`Pilihan ${key}${key === 'E' ? ' (opsional)' : ''}`}
+                          className="flex-1 rounded-xl border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                        />
+                        <button
+                          onClick={() => setForm(f => ({ ...f, correctAnswer: key }))}
+                          className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold transition-colors ${form.correctAnswer === key ? 'bg-emerald-100 text-emerald-700' : 'text-gray-400 hover:bg-gray-100'}`}
+                        >
+                          Benar
+                        </button>
                       </div>
-                      <input
-                        value={form[`option${key}` as keyof typeof form] as string}
-                        onChange={e => setForm(f => ({ ...f, [`option${key}`]: e.target.value }))}
-                        placeholder={`Pilihan ${key}${key === 'E' ? ' (opsional)' : ''}`}
-                        className="flex-1 rounded-xl border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
-                      />
-                      <button
-                        onClick={() => setForm(f => ({ ...f, correctAnswer: key }))}
-                        className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold transition-colors ${form.correctAnswer === key ? 'bg-emerald-100 text-emerald-700' : 'text-gray-400 hover:bg-gray-100'}`}
-                      >
-                        Benar
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Explanation */}
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-gray-600">Penjelasan / Pembahasan</label>
-                <textarea
-                  value={form.explanation}
-                  onChange={e => setForm(f => ({ ...f, explanation: e.target.value }))}
-                  rows={2}
-                  placeholder="Penjelasan jawaban yang benar..."
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 resize-none"
-                />
-              </div>
-
-              {/* Visibility — admin only */}
-              {isAdmin && (
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-gray-600">Visibilitas Soal</label>
-                  <div className="flex gap-2">
-                    {(['private', 'global'] as const).map(v => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setForm(f => ({ ...f, visibility: v }))}
-                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-semibold transition-colors ${form.visibility === v ? (v === 'global' ? 'border-emerald-400 bg-emerald-50 text-emerald-700' : 'border-violet-400 bg-violet-50 text-violet-700') : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}
-                      >
-                        {v === 'global' ? <><Globe size={12} /> Public</> : <><Lock size={12} /> Private</>}
-                      </button>
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
+
+                {/* Explanation — RichEditor */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                    Penjelasan / Pembahasan
+                    <TooltipInfo text="Markdown didukung: **tebal**, *miring*, $rumus$ inline, $$rumus$$ display, ```youtube ID``` video, ![alt](url) gambar. Bisa juga paste dari Word." />
+                  </label>
+                  <RichEditor
+                    value={form.explanation}
+                    onChange={v => setForm(f => ({ ...f, explanation: v }))}
+                    placeholder="Penjelasan jawaban yang benar... Bisa pakai rumus $E=mc^2$ atau gambar."
+                    minHeight={120}
+                  />
+                </div>
+
+                {/* Visibility — admin only */}
+                {isAdmin && (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-gray-600">Visibilitas Soal</label>
+                    <div className="flex gap-2">
+                      {(['private', 'global'] as const).map(v => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, visibility: v }))}
+                          className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-semibold transition-colors ${form.visibility === v ? (v === 'global' ? 'border-emerald-400 bg-emerald-50 text-emerald-700' : 'border-violet-400 bg-violet-50 text-violet-700') : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}
+                        >
+                          {v === 'global' ? <><Globe size={12} /> Public</> : <><Lock size={12} /> Private</>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Preview Tab ─────────────────────────────────────────── */
+              <QuestionPreview form={form} tierPaths={TIER_PATHS} />
+            )}
 
             <div className="mt-5 flex gap-2">
               <button
-                onClick={() => { setShowQForm(false); setEditQ(null); }}
+                onClick={() => { setShowQForm(false); setEditQ(null); setFormTab('edit'); }}
                 className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50"
               >
                 Batal
@@ -871,6 +915,98 @@ const QuestionCard: FC<{
         )}
       </AnimatePresence>
     </motion.div>
+  );
+};
+
+const QuestionPreview: FC<{
+  form: ReturnType<typeof emptyForm>;
+  tierPaths: typeof TIER_PATHS;
+}> = ({ form, tierPaths }) => {
+  const tierInfo = tierPaths.find(t => t.value === form.tierPath);
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        {/* Header badges */}
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {tierInfo && (
+            <span className={`rounded-lg px-2 py-0.5 text-[10px] font-bold ${tierInfo.color}`}>
+              {tierInfo.label}
+            </span>
+          )}
+          <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600">
+            {form.cognitiveLevel}
+          </span>
+        </div>
+
+        {/* Stem */}
+        <div className="prose prose-sm prose-violet max-w-none mb-4">
+          {form.stem.trim() ? (
+            <MarkdownPreview content={form.stem} />
+          ) : (
+            <p className="text-gray-300 italic">Belum ada pertanyaan...</p>
+          )}
+        </div>
+
+        {/* Options */}
+        <div className="space-y-2">
+          {ANSWER_KEYS.map(key => {
+            const text = form[`option${key}` as keyof typeof form] as string;
+            if (!text.trim()) return null;
+            const isCorrect = form.correctAnswer === key;
+            return (
+              <div
+                key={key}
+                className={`flex items-start gap-2 rounded-lg px-3 py-2 text-sm ${isCorrect ? 'bg-emerald-50 ring-1 ring-emerald-200' : 'bg-gray-50'}`}
+              >
+                <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                  {key}
+                </span>
+                <span className={isCorrect ? 'font-medium text-emerald-800' : 'text-gray-700'}>
+                  {text}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Explanation */}
+        {form.explanation.trim() && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p className="mb-1 text-xs font-semibold text-amber-700">Pembahasan:</p>
+            <div className="prose prose-sm prose-amber max-w-none">
+              <MarkdownPreview content={form.explanation} />
+            </div>
+          </div>
+        )}
+      </div>
+      <p className="text-center text-[10px] text-gray-400">
+        Preview ini menampilkan soal seperti yang akan dilihat siswa saat ujian
+      </p>
+    </div>
+  );
+};
+
+const TooltipInfo: FC<{ text: string }> = ({ text }) => {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="relative inline-flex ml-1">
+      <button
+        type="button"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onClick={() => setShow(v => !v)}
+        className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-200 text-[9px] font-bold text-gray-500 hover:bg-gray-300 transition-colors"
+      >
+        ?
+      </button>
+      {show && (
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-56 rounded-lg bg-gray-900 px-3 py-2 text-[11px] leading-relaxed text-white shadow-lg z-50">
+          {text}
+          <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900" />
+        </span>
+      )}
+    </span>
   );
 };
 
