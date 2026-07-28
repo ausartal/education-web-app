@@ -115,5 +115,15 @@ export async function POST(req: NextRequest) {
 
   await docRef.set(question);
 
-  return NextResponse.json({ question: { id: docRef.id, ...question } }, { status: 201 });
+  return NextResponse.json({
+    question: {
+      id: docRef.id, domainId, domainName: resolvedDomainName, module: module || 'custom',
+      tier, tierPath, difficulty, cognitiveLevel: cognitiveLevel || 'C2',
+      stem, options, correctAnswer, explanation: explanation || '',
+      status: 'active', visibility: finalVisibility, ownerId: teacher.uid,
+      ownerName: teacher.displayName || '', createdBy: teacher.uid,
+      createdAt: new Date().toISOString(), usageCount: 0, avgCorrectRate: 0.5,
+      ...(approvalStatus ? { approvalStatus } : {}),
+    },
+  }, { status: 201 });
 }

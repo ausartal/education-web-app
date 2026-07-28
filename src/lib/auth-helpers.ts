@@ -27,3 +27,17 @@ export async function verifyTeacher(req: NextRequest): Promise<TeacherToken | nu
     return { ...decoded, role, displayName: (data?.displayName as string) ?? '' };
   } catch { return null; }
 }
+
+export type StudentToken = DecodedIdToken & { role: string };
+
+export async function verifyStudent(req: NextRequest): Promise<StudentToken | null> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return null;
+  try {
+    const decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
+    const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
+    if (!userDoc.exists) return null;
+    const role = (userDoc.data()?.role as string) ?? 'student';
+    return { ...decoded, role };
+  } catch { return null; }
+}

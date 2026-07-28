@@ -37,8 +37,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
-        const userProfile = await getUserProfile(firebaseUser.uid);
-        setProfile(userProfile);
+        try {
+          const userProfile = await getUserProfile(firebaseUser.uid);
+          setProfile(userProfile);
+        } catch {
+          setProfile(null);
+        }
       } else {
         setProfile(null);
       }
