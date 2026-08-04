@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { useToast } from '@/hooks/useToast';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
@@ -25,7 +26,7 @@ interface ScheduleItem {
   scheduledAt: unknown; examType?: string; maxAttempts?: number;
 }
 interface TPDef {
-  id: string; code: string; name: string; isComplete: boolean; totalQuestions: number;
+  id: string; code: string; name: string; isComplete: boolean; totalQuestions: number; coveredPaths?: number;
 }
 interface ExamQItem {
   id: string; domainId: string; domainName: string; tierPath: string;
@@ -60,6 +61,7 @@ const emptyCustomQ = (): CustomQuestion => ({
 // ── Component ────────────────────────────────────────────────────────
 const TeacherUjianPage: FC = () => {
   const { user } = useAuth();
+  const { addToast } = useToast();
 
   const { data: schedData, isLoading: schedLoading, mutate: mutateScheds } =
     useAuthSWR<{ schedules: ScheduleItem[] }>('/api/teacher/exam-schedules');
@@ -137,7 +139,7 @@ const TeacherUjianPage: FC = () => {
     setSaving(true);
     try {
       const t = await getToken();
-      await fetch('/api/teacher/exam-schedules', {
+      const res = await fetch('/api/teacher/exam-schedules', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
         body: JSON.stringify({
@@ -152,10 +154,15 @@ const TeacherUjianPage: FC = () => {
           ...(examSource === 'custom' && { customQuestions }),
         }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        addToast('error', (err as { error?: string }).error || 'Gagal membuat ujian');
+        return;
+      }
       setShowCreate(false);
       resetForm();
       mutateScheds();
-    } catch { /* ignore */ } finally { setSaving(false); }
+    } catch { addToast('error', 'Terjadi kesalahan jaringan'); } finally { setSaving(false); }
   };
 
   const handleEdit = async () => {
@@ -397,7 +404,7 @@ const TeacherUjianPage: FC = () => {
                                     <span className="truncate text-xs text-gray-700">{tp.name}</span>
                                   </div>
                                   <p className={`mt-0.5 text-[10px] ${tp.isComplete ? 'text-emerald-600' : 'text-amber-500'}`}>
-                                    {tp.isComplete ? `✓ Lengkap · ${tp.totalQuestions} soal` : `⚠ Belum lengkap · ${tp.totalQuestions}/7`}
+                                    {tp.isComplete ? `✓ Lengkap · ${tp.totalQuestions} soal` : `⚠ ${tp.coveredPaths ?? 0}/7 tingkat terisi · ${tp.totalQuestions} soal`}
                                   </p>
                                 </div>
                               </button>

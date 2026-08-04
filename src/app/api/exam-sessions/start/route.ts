@@ -171,8 +171,16 @@ export async function POST(req: NextRequest) {
   });
 
   if (missingDomains.length > 0) {
+    // Get readable domain names for the error message
+    const domainNameMap: Record<string, string> = {};
+    missingDomains.forEach(id => {
+      const firstQ = questionsByDomain[id];
+      const firstPath = firstQ ? Object.values(firstQ)[0] as { domainName?: string } : null;
+      domainNameMap[id] = firstPath?.domainName || id;
+    });
+    const readableNames = missingDomains.map(id => domainNameMap[id]);
     return NextResponse.json({
-      error: `Bank soal ujian belum lengkap untuk domain: ${missingDomains.join(', ')}`,
+      error: `Bank soal belum lengkap. Topik berikut belum memiliki soal di semua tingkat: ${readableNames.join(', ')}`,
       missingDomains,
     }, { status: 422 });
   }

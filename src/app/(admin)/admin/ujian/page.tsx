@@ -63,8 +63,11 @@ const COMPREHENSION_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 const DOMAIN_LABELS: Record<string, string> = {
-  tp1: 'Konsep Mol', tp2: 'Rumus Kimia', tp3: 'Persamaan Reaksi',
-  tp4: 'Perhitungan Stoikiometri', tp5: 'Stoikiometri Larutan',
+  tp1: 'Hubungan Mol & Pereaksi Pembatas',
+  tp2: 'Stoikiometri Gas (Avogadro/STP)',
+  tp3: 'Konsep Mol & Jumlah Partikel',
+  tp4: 'Rumus Empiris & Rumus Molekul',
+  tp5: 'Konsentrasi Larutan',
 };
 
 const STATUS_COLORS: Record<string, string> = {

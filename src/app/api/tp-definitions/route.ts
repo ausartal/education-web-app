@@ -33,7 +33,13 @@ export async function GET(req: NextRequest) {
     return aOrder - bOrder;
   });
 
-  // Count questions per TP
+  // Legacy tierPath mapping (K1-K7 → new names)
+  const LEGACY_TIER_MAP: Record<string, string> = {
+    K1: 'anchor', K2: 'mudah', K3: 'sukar',
+    K4: 'sangat_mudah', K5: 'sedang_a', K6: 'sedang_b', K7: 'sangat_sukar',
+  };
+
+  // Count questions per TP — only count accessible questions for this teacher
   const tpIds = tps.map(t => t.id);
   const questionCounts: Record<string, Record<string, number>> = {};
   if (tpIds.length > 0) {
@@ -46,8 +52,19 @@ export async function GET(req: NextRequest) {
         .get();
       qSnap.docs.forEach(d => {
         const data = d.data();
+        // Only count questions accessible to this teacher
+        const visibility = (data.visibility as string) || 'global';
+        const approvalStatus = (data.approvalStatus as string) || 'approved';
+        const ownerId = data.ownerId as string;
+        const isAccessible =
+          visibility === 'global' && approvalStatus === 'approved' ||
+          visibility === 'private' && ownerId === teacher.uid;
+        if (!isAccessible) return;
+
         const tpId = data.domainId as string;
-        const tierPath = data.tierPath as string;
+        const rawTierPath = data.tierPath as string;
+        // Map legacy tierPath names to current names
+        const tierPath = LEGACY_TIER_MAP[rawTierPath] || rawTierPath;
         if (!questionCounts[tpId]) questionCounts[tpId] = {};
         questionCounts[tpId][tierPath] = (questionCounts[tpId][tierPath] || 0) + 1;
       });
@@ -57,9 +74,10 @@ export async function GET(req: NextRequest) {
   const requiredPaths = ['anchor', 'mudah', 'sukar', 'sangat_mudah', 'sedang_a', 'sedang_b', 'sangat_sukar'];
   const enriched = tps.map(tp => {
     const counts = questionCounts[tp.id] || {};
+    const coveredPaths = requiredPaths.filter(p => (counts[p] || 0) >= 1).length;
     const totalQuestions = Object.values(counts).reduce((s, n) => s + n, 0);
-    const isComplete = requiredPaths.every(p => (counts[p] || 0) >= 1);
-    return { ...tp, questionCounts: counts, totalQuestions, isComplete };
+    const isComplete = coveredPaths === requiredPaths.length;
+    return { ...tp, questionCounts: counts, totalQuestions, coveredPaths, isComplete };
   });
 
   return NextResponse.json({ tps: enriched });
