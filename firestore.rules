@@ -43,7 +43,7 @@ service cloud.firestore {
 
     // ── QUESTION BANK ────────────────────────────────────────────────────────
     match /question_bank/{docId} {
-      allow read:   if isAuth();
+      allow read:   if isTeacherOrAdmin();
       allow create: if isTeacherOrAdmin();
       allow update: if isAdmin() || (isTeacherOrAdmin() && notAdminCreated(resource.data));
       allow delete: if isAdmin() || (isTeacherOrAdmin() && notAdminCreated(resource.data));

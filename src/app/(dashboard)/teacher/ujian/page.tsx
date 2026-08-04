@@ -3,6 +3,7 @@
 import { FC, useState, useCallback, useMemo } from 'react';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
   Plus, ClipboardList, Copy, Check, Pencil, Trash2, X,
   ChevronDown, Users, BarChart2, Clock, ArrowRight, HelpCircle,
@@ -12,6 +13,8 @@ import {
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 // ── Types ────────────────────────────────────────────────────────────
 interface ClassOption { id: string; name: string; subject: string; }
@@ -468,7 +471,7 @@ const TeacherUjianPage: FC = () => {
                                       <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">v{q.version}</span>
                                     )}
                                   </div>
-                                  <p className="line-clamp-2 text-xs text-gray-700">{q.stem}</p>
+                                  <div className="line-clamp-2 text-xs text-gray-700"><QuestionRenderer content={q.stem} /></div>
                                 </div>
                               </button>
                             );

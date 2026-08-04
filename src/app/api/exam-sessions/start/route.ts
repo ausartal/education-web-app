@@ -65,9 +65,11 @@ export async function POST(req: NextRequest) {
 
     if (!existingSnap.empty) {
       const ed = existingSnap.docs[0];
+      // Strip correctAnswer before sending to client
+      const safeCustomQuestions = (customQuestions as Array<Record<string, unknown>>).map(({ correctAnswer, ...rest }) => rest);
       return NextResponse.json({
         sessionId: ed.id, resumed: true, mode,
-        schedule: schedulePayload, customQuestions,
+        schedule: schedulePayload, customQuestions: safeCustomQuestions,
         completedDomains: 0,
       });
     }
@@ -105,9 +107,12 @@ export async function POST(req: NextRequest) {
       details: { scheduleId: scheduleDoc.id, title: schedule.title, examType: mode }, timestamp: new Date(),
     });
 
+    // Strip correctAnswer before sending to client
+    const safeCustomQuestions = (customQuestions as Array<Record<string, unknown>>).map(({ correctAnswer, ...rest }) => rest);
+
     return NextResponse.json({
       sessionId: docRef.id, mode,
-      schedule: schedulePayload, customQuestions,
+      schedule: schedulePayload, customQuestions: safeCustomQuestions,
       resumed: false,
     }, { status: 201 });
   }

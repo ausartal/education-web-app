@@ -32,13 +32,15 @@ const MATH_CATEGORIES = [
     ],
   },
   {
-    label: 'Operator',
+    label: 'Simbol Matematika',
     items: [
       { d: '±', l: '\\pm' }, { d: '×', l: '\\times' }, { d: '÷', l: '\\div' },
       { d: '≤', l: '\\leq' }, { d: '≥', l: '\\geq' }, { d: '≠', l: '\\neq' },
       { d: '≈', l: '\\approx' }, { d: '∞', l: '\\infty' }, { d: '∝', l: '\\propto' },
       { d: '∈', l: '\\in' }, { d: '∉', l: '\\notin' }, { d: '⊂', l: '\\subset' },
       { d: '∪', l: '\\cup' }, { d: '∩', l: '\\cap' }, { d: '∅', l: '\\emptyset' },
+      { d: '√', l: '\\sqrt{}' }, { d: '∛', l: '\\sqrt[3]{}' },
+      { d: '∴', l: '\\therefore' }, { d: '∵', l: '\\because' },
     ],
   },
   {
@@ -49,21 +51,61 @@ const MATH_CATEGORIES = [
       { d: '↔', l: '\\leftrightarrow' }, { d: '°', l: '^{\\circ}' },
       { d: '·', l: '\\cdot' }, { d: 'Δ', l: '\\Delta' }, { d: '∘', l: '\\circ' },
       { d: 'ℏ', l: '\\hbar' }, { d: '∇', l: '\\nabla' },
+      { d: '↑', l: '\\uparrow' }, { d: '↓', l: '\\downarrow' },
+      { d: '•', l: '\\bullet' }, { d: 'ℏ', l: '\\hbar' },
+    ],
+  },
+  {
+    label: 'Notasi Kimia',
+    items: [
+      { d: 'H₂O', l: 'H_2O' }, { d: 'SO₄²⁻', l: 'SO_4^{2-}' },
+      { d: '¹⁴C', l: '^{14}C' }, { d: 'Fe³⁺', l: 'Fe^{3+}' },
+      { d: 'e⁻', l: 'e^{-}' }, { d: 'OH•', l: 'OH^{\\bullet}' },
+      { d: 'δ⁺', l: '\\delta^{+}' }, { d: 'δ⁻', l: '\\delta^{-}' },
+      { d: '(s)', l: '\\text{(s)}' }, { d: '(l)', l: '\\text{(l)}' },
+      { d: '(g)', l: '\\text{(g)}' }, { d: '(aq)', l: '\\text{(aq)}' },
+      { d: 'CuSO₄·5H₂O', l: 'CuSO_4 \\cdot 5H_2O' },
+      { d: '10⁻³', l: '10^{-3}' }, { d: 'cm³', l: 'cm^{3}' },
+    ],
+  },
+  {
+    label: 'Kondisi Reaksi',
+    items: [
+      { d: 'Δ (panas)', l: '\\Delta' }, { d: 'Pt (katalis)', l: '\\text{Pt}' },
+      { d: 'hv (cahaya)', l: 'h\\nu' }, { d: 'suhu', l: '\\text{T}' },
+      { d: 'tekanan', l: '\\text{P}' }, { d: 'katalis', l: '\\text{katalis}' },
+      { d: 'larutan', l: '\\text{larutan}' }, { d: 'aq', l: '\\text{aq}' },
+    ],
+  },
+  {
+    label: 'Persamaan',
+    items: [
+      { d: '2H₂+O₂→2H₂O', l: '2H_2 + O_2 \\rightarrow 2H_2O' },
+      { d: 'PV=nRT', l: 'PV = nRT' },
+      { d: 'M=n/V', l: 'M = \\frac{n}{V}' },
+      { d: 'pH=-log[H⁺]', l: 'pH = -\\log[H^+]' },
+      { d: 'ΔG=ΔH-TΔS', l: '\\Delta G = \\Delta H - T\\Delta S' },
+      { d: 'E=mc²', l: 'E = mc^2' },
+      { d: 'n=m/M', l: 'n = \\frac{m}{M}' },
+      { d: 'C=n/V', l: 'C = \\frac{n}{V}' },
+      { d: 'Kc=[C]ᶜ[D]ᵈ/[A]ᵃ[B]ᵇ', l: 'K_c = \\frac{[C]^c[D]^d}{[A]^a[B]^b}' },
+      { d: 'a/b', l: '\\frac{a}{b}' },
+      { d: 'xⁿ', l: 'x^{n}' },
+      { d: 'xₙ', l: 'x_{n}' },
     ],
   },
   {
     label: 'Kalkulus',
     items: [
       { d: '∫', l: '\\int' }, { d: '∮', l: '\\oint' }, { d: '∑', l: '\\sum' },
-      { d: '∏', l: '\\prod' }, { d: '∂', l: '\\partial' }, { d: '√', l: '\\sqrt{}' },
-      { d: '∛', l: '\\sqrt[3]{}' }, { d: 'lim', l: '\\lim_{x \\to \\infty}' },
+      { d: '∏', l: '\\prod' }, { d: '∂', l: '\\partial' },
+      { d: 'lim', l: '\\lim_{x \\to \\infty}' },
     ],
   },
   {
     label: 'Template',
     items: [
-      { d: 'a/b', l: '\\frac{a}{b}' }, { d: 'xⁿ', l: 'x^{n}' },
-      { d: 'xₙ', l: 'x_{n}' }, { d: '|x|', l: '|x|' },
+      { d: '|x|', l: '|x|' },
       { d: 'x̄', l: '\\bar{x}' }, { d: 'x⃗', l: '\\vec{x}' },
       { d: 'log', l: '\\log' }, { d: 'ln', l: '\\ln' },
       { d: 'sin', l: '\\sin' }, { d: 'cos', l: '\\cos' },
@@ -382,7 +424,7 @@ export const RichEditor: FC<RichEditorProps> = ({
       {/* ── Footer hint ─────────────────────────────────────────────────── */}
       <div className="border-t border-gray-100 bg-gray-50 px-4 py-1.5">
         <p className="text-[10px] text-gray-400">
-          Markdown didukung · <span className="font-mono">$rumus$</span> inline · <span className="font-mono">$$rumus$$</span> display · <span className="font-mono">```youtube ID```</span> video
+          Markdown didukung · <span className="font-mono">$rumus$</span> inline · <span className="font-mono">$$rumus$$</span> display · <span className="font-mono">![alt](url)</span> gambar · <span className="font-mono">```youtube ID```</span> video
         </p>
       </div>
 

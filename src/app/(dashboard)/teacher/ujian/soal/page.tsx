@@ -2,10 +2,13 @@
 
 import { FC, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { Plus, Pencil, Trash2, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { MSATTierPath, MSATDifficulty, CognitiveLevel, AnswerKey } from '@/types/firestore';
+
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 const DOMAINS = [
   { id: 'tp1', name: 'TP1 – Hubungan mol & pereaksi pembatas' },
@@ -270,7 +273,7 @@ const TeacherExamSoalPage: FC = () => {
                         <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700" title="Soal sudah direvisi">v{q.version}</span>
                       )}
                     </div>
-                    <p className="flex-1 truncate text-sm font-medium text-gray-800">{q.stem}</p>
+                    <div className="flex-1 truncate text-sm font-medium text-gray-800"><QuestionRenderer content={q.stem} /></div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button onClick={() => setExpanded(expanded === q.id ? null : q.id)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100">
                         <ChevronDown size={14} className={`transition-transform ${expanded === q.id ? 'rotate-180' : ''}`} />
@@ -285,21 +288,21 @@ const TeacherExamSoalPage: FC = () => {
 
                   {expanded === q.id && (
                     <div className="border-t border-gray-100 px-5 py-4">
-                      <p className="mb-3 text-sm text-gray-800">{q.stem}</p>
+                      <QuestionRenderer content={q.stem} className="mb-3 text-sm text-gray-800" />
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                         {ANSWER_KEYS.map(k => {
                           if (!q.options[k]) return null;
                           return (
                             <div key={k} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${q.correctAnswer === k ? 'bg-emerald-50 font-semibold text-emerald-700 ring-1 ring-emerald-300' : 'bg-gray-50 text-gray-700'}`}>
                               <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${q.correctAnswer === k ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600'}`}>{k}</span>
-                              {q.options[k]}
+                              <QuestionRenderer content={q.options[k]} />
                             </div>
                           );
                         })}
                       </div>
                       {q.explanation && (
                         <div className="mt-3 rounded-xl bg-blue-50 px-4 py-3 text-xs text-blue-700">
-                          <strong>Penjelasan:</strong> {q.explanation}
+                          <strong>Penjelasan:</strong> <QuestionRenderer content={q.explanation} />
                         </div>
                       )}
                     </div>

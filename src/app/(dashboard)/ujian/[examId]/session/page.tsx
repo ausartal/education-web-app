@@ -4,11 +4,14 @@ import { FC, useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Wifi, WifiOff, Maximize, AlertTriangle, X } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
 import { PeriodicTableRef } from '@/components/tools/PeriodicTableRef';
 import { getT2Path, getT3Path } from '@/lib/msat-engine';
 import { AnswerKey, MSATTierPath } from '@/types/firestore';
+
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 // ── Types ──────────────────────────────────────────────────────────
 interface QuestionData {
@@ -497,7 +500,10 @@ const ExamSessionPage: FC = () => {
             <div className="mx-auto max-w-2xl">
               <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-violet-500">Soal {customIdx + 1}</p>
-                <p className="text-base font-medium leading-relaxed text-gray-800">{cq.stem}</p>
+                <QuestionRenderer
+                  content={cq.stem}
+                  className="text-base font-medium leading-relaxed text-gray-800"
+                />
               </div>
 
               <div className="space-y-3">
@@ -518,7 +524,7 @@ const ExamSessionPage: FC = () => {
                       <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
                         selected ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-600'
                       }`}>{key}</span>
-                      <span className="mt-1 text-sm leading-relaxed text-gray-800">{optText}</span>
+                      <QuestionRenderer content={optText} className="mt-1 text-sm leading-relaxed text-gray-800" />
                     </button>
                   );
                 })}
@@ -798,9 +804,10 @@ const ExamSessionPage: FC = () => {
                   {currentQ ? (
                     <>
                       <div className="mb-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-                        <p className="font-display text-[17px] font-semibold leading-relaxed text-gray-900">
-                          {currentQ.stem}
-                        </p>
+                        <QuestionRenderer
+                          content={currentQ.stem}
+                          className="font-display text-[17px] font-semibold leading-relaxed text-gray-900"
+                        />
                       </div>
 
                       <div className="grid gap-2.5 sm:grid-cols-2">
@@ -821,9 +828,10 @@ const ExamSessionPage: FC = () => {
                               <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition-colors ${isSelected ? 'bg-violet-500 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-violet-50 group-hover:text-violet-600'}`}>
                                 {key}
                               </span>
-                              <span className={`flex-1 text-sm font-medium leading-snug ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
-                                {currentQ.options[key]}
-                              </span>
+                              <QuestionRenderer
+                                content={currentQ.options[key]}
+                                className={`flex-1 text-sm font-medium leading-snug ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}
+                              />
                             </motion.button>
                           );
                         })}

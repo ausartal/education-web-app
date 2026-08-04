@@ -2,6 +2,7 @@
 
 import { FC, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
   collection,
   getDocs,
@@ -17,6 +18,8 @@ import { useToast } from '@/hooks/useToast';
 import { PlusCircle, Trash2, Upload } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 const diffColors: Record<Difficulty, string> = {
   easy: 'bg-emerald-50 text-emerald-700',
@@ -218,9 +221,9 @@ const TeacherQuestions: FC = () => {
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                    {q.stem}
-                  </p>
+                  <div className="text-sm font-medium text-gray-900 line-clamp-2">
+                    <QuestionRenderer content={q.stem} />
+                  </div>
                   <div className="mt-2 flex items-center gap-3">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${diffColors[q.difficulty]}`}

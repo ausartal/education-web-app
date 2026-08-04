@@ -13,10 +13,7 @@ import { RoleGuard } from '@/components/guards/RoleGuard';
 import { RichEditor } from '@/components/teacher/RichEditor';
 import { MSATTierPath, MSATDifficulty, CognitiveLevel, AnswerKey } from '@/types/firestore';
 
-const MarkdownPreview = dynamic(() => import('@/components/teacher/MarkdownPreview'), {
-  loading: () => <p className="text-xs text-gray-300 italic">Memuat preview...</p>,
-  ssr: false,
-});
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 // ── Types ──────────────────────────────────────────────────────────
 interface TPDef {
@@ -856,7 +853,7 @@ const QuestionCard: FC<{
             {tierInfo.label}
           </span>
         )}
-        <p className="flex-1 truncate text-sm text-gray-800">{q.stem}</p>
+        <div className="flex-1 truncate text-sm text-gray-800"><QuestionRenderer content={q.stem} /></div>
         <div className="flex shrink-0 items-center gap-2">
           <span className="hidden text-[10px] text-gray-400 sm:block">{q.cognitiveLevel}</span>
           {canEdit && (
@@ -889,14 +886,14 @@ const QuestionCard: FC<{
                   return (
                     <div key={key} className={`flex items-start gap-2 rounded-lg px-3 py-2 text-sm ${isCorrect ? 'bg-emerald-50 ring-1 ring-emerald-200' : 'bg-gray-50'}`}>
                       <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'}`}>{key}</span>
-                      <span className={isCorrect ? 'font-medium text-emerald-800' : 'text-gray-700'}>{q.options[key]}</span>
+                      <QuestionRenderer content={q.options[key]} className={isCorrect ? 'font-medium text-emerald-800' : 'text-gray-700'} />
                     </div>
                   );
                 })}
               </div>
               {q.explanation && (
                 <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                  <span className="font-semibold">Pembahasan:</span> {q.explanation}
+                  <span className="font-semibold">Pembahasan:</span> <QuestionRenderer content={q.explanation} />
                 </div>
               )}
               <div className="flex items-center gap-3 text-[10px] text-gray-400">
@@ -942,7 +939,7 @@ const QuestionPreview: FC<{
         {/* Stem */}
         <div className="prose prose-sm prose-violet max-w-none mb-4">
           {form.stem.trim() ? (
-            <MarkdownPreview content={form.stem} />
+            <QuestionRenderer content={form.stem} />
           ) : (
             <p className="text-gray-300 italic">Belum ada pertanyaan...</p>
           )}
@@ -975,7 +972,7 @@ const QuestionPreview: FC<{
           <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
             <p className="mb-1 text-xs font-semibold text-amber-700">Pembahasan:</p>
             <div className="prose prose-sm prose-amber max-w-none">
-              <MarkdownPreview content={form.explanation} />
+              <QuestionRenderer content={form.explanation} />
             </div>
           </div>
         )}

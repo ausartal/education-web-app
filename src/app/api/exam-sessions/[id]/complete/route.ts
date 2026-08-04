@@ -52,7 +52,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const customQuestions = (scheduleData.customQuestions as Array<{ id: string; correctAnswer: string }>) || [];
     const totalQ = customQuestions.length;
-    const correctCount = customAnswers.filter(a => a.isCorrect).length;
+    // Server-side verification: never trust client-sent isCorrect
+    const correctCount = customAnswers.filter(a => {
+      const q = customQuestions.find(cq => cq.id === a.questionId);
+      return q && a.selectedAnswer === q.correctAnswer;
+    }).length;
     const numericScore = totalQ > 0 ? Math.round((correctCount / totalQ) * 100) : 0;
 
     await ref.update({

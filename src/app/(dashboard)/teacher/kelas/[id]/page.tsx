@@ -3,6 +3,7 @@
 import { FC, useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
   ArrowLeft, Users, ClipboardList, Copy, Check, BookOpen, ClipboardCheck,
   PlusCircle, Trash2, Calendar, X, ExternalLink, Clock, ChevronRight,
@@ -15,6 +16,8 @@ import { RoleGuard } from '@/components/guards/RoleGuard';
 import { RichEditor } from '@/components/teacher/RichEditor';
 import { useToast } from '@/hooks/useToast';
 import { stripMarkdown } from '@/lib/strip-html';
+
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Student { uid: string; displayName: string; email: string; xp: number; }
@@ -920,7 +923,7 @@ const TeacherClassDetailPage: FC = () => {
                                           <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-semibold text-gray-600">{TIER_PATH_LABELS[q.tierPath] ?? q.tierPath}</span>
                                           {(q.version ?? 1) > 1 && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">v{q.version}</span>}
                                         </div>
-                                        <p className="line-clamp-2 text-xs text-gray-700">{q.stem}</p>
+                                        <div className="line-clamp-2 text-xs text-gray-700"><QuestionRenderer content={q.stem} /></div>
                                       </div>
                                     </button>
                                   );
