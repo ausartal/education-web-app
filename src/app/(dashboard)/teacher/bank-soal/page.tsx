@@ -25,6 +25,7 @@ interface TPDef {
   ownerId: string;
   questionCounts: Record<string, number>;
   totalQuestions: number;
+  coveredPaths?: number;
   isComplete: boolean;
 }
 
@@ -436,6 +437,24 @@ const BankSoalPage: FC = () => {
                     {selectedTP.subject && (
                       <p className="text-xs text-gray-400">{selectedTP.subject}</p>
                     )}
+                    {!selectedTP.isComplete && selectedTP.questionCounts && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {TIER_PATHS.map(tp => {
+                          const count = selectedTP.questionCounts[tp.value] || 0;
+                          return (
+                            <span
+                              key={tp.value}
+                              className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold ${
+                                count > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'
+                              }`}
+                              title={`${tp.label}: ${count} soal`}
+                            >
+                              {tp.label.split(' – ')[0]}{count > 0 ? ` (${count})` : ''}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Total question count */}
@@ -814,7 +833,7 @@ const TPItem: FC<{
       <div className="min-w-0 flex-1">
         <p className={`truncate text-xs font-semibold ${selected ? 'text-violet-800' : 'text-gray-700'}`}>{tp.name}</p>
         <p className={`text-[10px] font-medium ${completenessColor}`}>
-          {tp.totalQuestions} soal
+          {tp.isComplete ? `${tp.totalQuestions} soal` : `${tp.coveredPaths ?? 0}/7 tingkat · ${tp.totalQuestions} soal`}
         </p>
       </div>
       {canEdit && hovered && (
