@@ -3,6 +3,7 @@
 import { FC, useState, useCallback, useMemo } from 'react';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
   BookOpen, Search, Plus, Pencil, Trash2, X, ChevronDown,
   ToggleLeft, ToggleRight, Filter,
@@ -10,6 +11,8 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/useToast';
 import { Difficulty, QuestionStatus, AnswerKey } from '@/types/firestore';
+
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 interface Question {
   id: string;
@@ -259,7 +262,7 @@ const AdminQuestions: FC = () => {
                       <td className="max-w-xs px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           <ChevronDown size={12} className={`shrink-0 text-gray-400 transition-transform ${expandedId === q.id ? 'rotate-180' : ''}`} />
-                          <p className="truncate text-xs text-gray-800">{q.stem}</p>
+                          <div className="truncate text-xs text-gray-800"><QuestionRenderer content={q.stem} /></div>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-500">{q.topic}</td>
@@ -297,17 +300,17 @@ const AdminQuestions: FC = () => {
                         <td colSpan={7} className="px-8 py-4">
                           <div className="space-y-3">
                             <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Soal Lengkap</p>
-                            <p className="text-sm text-gray-800">{q.stem}</p>
+                            <QuestionRenderer content={q.stem} className="text-sm text-gray-800" />
                             <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
                               {ANSWER_KEYS.filter(k => q.options?.[k]).map(k => (
                                 <div key={k} className={`rounded-xl px-3 py-2 text-xs ${k === q.correctAnswer ? 'bg-emerald-100 text-emerald-800 font-bold' : 'bg-white text-gray-700'}`}>
-                                  <span className="font-bold">{k}.</span> {q.options[k]}
+                                  <span className="font-bold">{k}.</span> <QuestionRenderer content={q.options[k]} />
                                 </div>
                               ))}
                             </div>
                             {q.explanation && (
                               <div className="rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-800">
-                                <span className="font-bold">Penjelasan: </span>{q.explanation}
+                                <span className="font-bold">Penjelasan: </span><QuestionRenderer content={q.explanation} />
                               </div>
                             )}
                           </div>

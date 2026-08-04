@@ -3,6 +3,7 @@
 import { FC, useState, useCallback } from 'react';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
   Users, GraduationCap, BookOpen, ClipboardList,
   TrendingUp, Zap, RefreshCw, Download, Terminal,
@@ -12,6 +13,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 interface AnalyticsData {
   dayKeys: string[];
@@ -520,7 +523,7 @@ const AdminDashboard: FC = () => {
               <div className="space-y-2.5">
                 {data.lowAccuracyQuestions.map(q => (
                   <div key={q.id} className="rounded-xl border border-amber-100 bg-amber-50/60 p-3">
-                    <p className="text-xs leading-relaxed text-gray-700 line-clamp-2">{q.stem}</p>
+                    <div className="text-xs leading-relaxed text-gray-700 line-clamp-2"><QuestionRenderer content={q.stem} /></div>
                     <div className="mt-2 flex items-center gap-2">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${diffStyle[q.difficulty] ?? ''}`}>{q.difficulty}</span>
                       <span className="text-[10px] font-bold text-rose-600">{q.avgCorrectRate}% benar</span>

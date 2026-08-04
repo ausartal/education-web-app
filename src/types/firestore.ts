@@ -75,6 +75,9 @@ export interface Question {
   createdAt: Timestamp;
 }
 
+// PracticeQuestion: Question without sensitive fields (correctAnswer, misconceptions)
+export type PracticeQuestion = Omit<Question, 'correctAnswer' | 'misconceptions'>;
+
 // ===== EXAM SESSIONS =====
 export type ExamStatus = 'in_progress' | 'completed' | 'abandoned' | 'flagged';
 export type ConfidenceLabel =

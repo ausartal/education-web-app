@@ -2,12 +2,15 @@
 
 import { FC, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
   FlaskConical, School, CalendarCheck, ClipboardList, BookOpen,
   RefreshCw, Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp,
   AlertTriangle, Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -691,7 +694,7 @@ const AdminUjianPage: FC = () => {
                 {filteredQuestions.map(q => (
                   <tr key={q.id} className="hover:bg-gray-50/50">
                     <td className="px-5 py-2.5 max-w-xs">
-                      <p className="line-clamp-2 text-gray-800">{q.stem}</p>
+                      <div className="line-clamp-2 text-gray-800"><QuestionRenderer content={q.stem} /></div>
                     </td>
                     <td className="px-3 py-2.5">
                       <p className="font-semibold text-gray-900">{DOMAIN_LABELS[q.domainId] ?? q.domainId}</p>

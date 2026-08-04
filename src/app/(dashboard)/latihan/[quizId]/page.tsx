@@ -3,31 +3,35 @@
 import { FC, useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { Clock, ArrowRight, RotateCcw } from 'lucide-react';
-import { getQuestionsByDifficulty } from '@/services/questions';
-import { Question, Difficulty, AnswerKey } from '@/types/firestore';
+import { PracticeQuestion, Difficulty, AnswerKey } from '@/types/firestore';
 import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
 import { PeriodicTableRef } from '@/components/tools/PeriodicTableRef';
 import { useAuth } from '@/context/AuthContext';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
+
 const QuizPage: FC = () => {
   const params = useParams();
   const router = useRouter();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const difficulty = params.quizId as Difficulty;
 
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<PracticeQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selected, setSelected] = useState<AnswerKey | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(0);
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showCalc, setShowCalc] = useState(false);
   const [showPeriodic, setShowPeriodic] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   const currentQ = questions[currentIdx];
   const options: AnswerKey[] = ['A', 'B', 'C', 'D', 'E'];
@@ -45,20 +49,25 @@ const QuizPage: FC = () => {
     return shuffled;
   }, [currentIdx, currentQ]);
 
-  // Fetch questions
+  // Fetch questions from secure API (correctAnswer stripped server-side)
   useEffect(() => {
-    if (!difficulty) return;
-    const fetch = async () => {
+    if (!difficulty || !user) return;
+    const fetchQuestions = async () => {
       try {
-        const qs = await getQuestionsByDifficulty('stoikiometri', difficulty, 10);
-        setQuestions(qs);
-        setTimer(qs[0]?.baseTime || 60);
+        const idToken = await user.getIdToken();
+        const res = await fetch(`/api/practice-questions?topic=stoikiometri&difficulty=${difficulty}&count=10`, {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        if (!res.ok) throw new Error('Failed to fetch questions');
+        const data = await res.json();
+        setQuestions(data.questions);
+        setTimer(data.questions[0]?.baseTime || 60);
       } catch { /* leave empty */ } finally {
         setLoading(false);
       }
     };
-    fetch();
-  }, [difficulty]);
+    fetchQuestions();
+  }, [difficulty, user]);
 
   // Timer countdown
   useEffect(() => {
@@ -71,21 +80,40 @@ const QuizPage: FC = () => {
     return () => clearInterval(interval);
   }, [timer, loading, submitted, finished]);
 
-  const handleSubmit = useCallback(() => {
-    if (!currentQ || submitted) return;
-    setSubmitted(true);
-    if (selected === currentQ.correctAnswer) {
-      setScore((s) => s + 1);
+  // Check answer via server API
+  const checkAnswer = useCallback(async (questionId: string, selectedAnswer: string): Promise<boolean> => {
+    const idToken = await user!.getIdToken();
+    const res = await fetch('/api/practice-questions/check-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({ questionId, selectedAnswer }),
+    });
+    if (!res.ok) throw new Error('Failed to check answer');
+    const data = await res.json();
+    return data.isCorrect;
+  }, [user]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!currentQ || submitted || !selected || checking) return;
+    setChecking(true);
+    try {
+      const correct = await checkAnswer(currentQ.id, selected);
+      setIsCorrect(correct);
+      setSubmitted(true);
+      if (correct) {
+        setScore((s) => s + 1);
+      }
+    } catch { /* handle error */ } finally {
+      setChecking(false);
     }
-  }, [currentQ, selected, submitted]);
+  }, [currentQ, selected, submitted, checking, checkAnswer]);
 
   const handleNext = () => {
     if (currentIdx >= questions.length - 1) {
       setFinished(true);
       // Save completion to Firestore
       if (profile) {
-        const finalScore =
-          score + (selected === currentQ?.correctAnswer ? 1 : 0);
+        const finalScore = score;
         const percentage = Math.round((finalScore / questions.length) * 100);
         const data: Record<string, unknown> = {
           [`lastQuiz_${difficulty}`]: {
@@ -109,6 +137,7 @@ const QuizPage: FC = () => {
     setCurrentIdx((i) => i + 1);
     setSelected(null);
     setSubmitted(false);
+    setIsCorrect(null);
     setTimer(questions[currentIdx + 1]?.baseTime || 60);
   };
 
@@ -116,6 +145,7 @@ const QuizPage: FC = () => {
     setCurrentIdx(0);
     setSelected(null);
     setSubmitted(false);
+    setIsCorrect(null);
     setScore(0);
     setFinished(false);
     setTimer(questions[0]?.baseTime || 60);
@@ -178,8 +208,6 @@ const QuizPage: FC = () => {
     );
   }
 
-  const isCorrect = selected === currentQ?.correctAnswer;
-
   return (
     <div className="min-h-screen bg-[#F8F9FB] px-4 py-6">
       <div className="mx-auto max-w-6xl">
@@ -231,20 +259,19 @@ const QuizPage: FC = () => {
                 <p className="mb-1 text-xs text-gray-400">
                   Question {currentIdx + 1} of {questions.length}
                 </p>
-                <p className="font-display text-base font-bold leading-relaxed text-gray-900">
-                  {currentQ.stem}
-                </p>
+                <QuestionRenderer
+                  content={currentQ.stem}
+                  className="font-display text-base font-bold leading-relaxed text-gray-900"
+                />
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {shuffledOptions.map((key) => {
                   const isSelected = selected === key;
-                  const isAnswer = key === currentQ.correctAnswer;
                   let style = 'bg-white hover:border-primary/40 text-gray-800';
                   if (submitted) {
-                    if (isAnswer) style = 'bg-emerald-50 text-emerald-800';
-                    else if (isSelected && !isAnswer)
-                      style = 'bg-rose-50 text-rose-800';
+                    if (isCorrect && isSelected) style = 'bg-emerald-50 text-emerald-800';
+                    else if (!isCorrect && isSelected) style = 'bg-rose-50 text-rose-800';
                     else style = 'bg-gray-50 text-gray-400';
                   } else if (isSelected) {
                     style = 'bg-primary/5 text-gray-900';
@@ -259,9 +286,9 @@ const QuizPage: FC = () => {
                     >
                       <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                          submitted && isAnswer
+                          submitted && isCorrect && isSelected
                             ? 'bg-emerald-500 text-white'
-                            : submitted && isSelected && !isAnswer
+                            : submitted && !isCorrect && isSelected
                               ? 'bg-rose-500 text-white'
                               : isSelected
                                 ? 'bg-primary text-white'
@@ -270,9 +297,10 @@ const QuizPage: FC = () => {
                       >
                         {key}
                       </span>
-                      <span className="flex-1 text-sm font-medium">
-                        {currentQ.options[key]}
-                      </span>
+                      <QuestionRenderer
+                        content={currentQ.options[key]}
+                        className="flex-1 text-sm font-medium"
+                      />
                     </motion.button>
                   );
                 })}
@@ -289,9 +317,7 @@ const QuizPage: FC = () => {
                   >
                     {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
                   </p>
-                  <p className="text-xs text-gray-600">
-                    {currentQ.explanation}
-                  </p>
+                  <QuestionRenderer content={currentQ.explanation} className="text-xs text-gray-600" />
                 </motion.div>
               )}
 
@@ -299,10 +325,10 @@ const QuizPage: FC = () => {
                 {!submitted ? (
                   <button
                     onClick={handleSubmit}
-                    disabled={!selected}
+                    disabled={!selected || checking}
                     className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md shadow-primary/20 transition-all disabled:opacity-30 hover:enabled:-translate-y-0.5"
                   >
-                    Submit Answer
+                    {checking ? 'Checking...' : 'Submit Answer'}
                   </button>
                 ) : (
                   <button
