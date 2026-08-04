@@ -37,7 +37,7 @@ interface SubmissionsData {
 }
 interface ClassDetail { id: string; name: string; subject: string; joinCode: string; teacherId: string; studentIds: string[]; }
 interface ChatMessage { id: string; senderId: string; senderName: string; senderRole: string; text: string; createdAt: unknown; }
-interface TPDef { id: string; code: string; name: string; subject: string; scope: string; isComplete: boolean; totalQuestions: number; }
+interface TPDef { id: string; code: string; name: string; subject: string; scope: string; isComplete: boolean; totalQuestions: number; coveredPaths?: number; }
 interface ExamQItem { id: string; domainId: string; tierPath: string; stem: string; options: { A: string; B: string; C: string; D: string; E?: string }; correctAnswer: string; status: string; version?: number; }
 interface CustomQuestion { id: string; stem: string; options: { A: string; B: string; C: string; D: string }; correctAnswer: 'A' | 'B' | 'C' | 'D'; }
 
@@ -862,7 +862,7 @@ const TeacherClassDetailPage: FC = () => {
                                           <span className="truncate text-xs text-gray-700">{tp.name}</span>
                                         </div>
                                         <p className={`mt-0.5 text-[10px] ${tp.isComplete ? 'text-emerald-600' : 'text-amber-500'}`}>
-                                          {tp.isComplete ? `✓ Lengkap · ${tp.totalQuestions} soal` : `⚠ Belum lengkap · ${tp.totalQuestions}/7`}
+                                          {tp.isComplete ? `✓ Lengkap · ${tp.totalQuestions} soal` : `⚠ ${tp.coveredPaths ?? 0}/7 tingkat terisi · ${tp.totalQuestions} soal`}
                                         </p>
                                       </div>
                                     </button>

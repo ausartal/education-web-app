@@ -105,6 +105,60 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Class not found' }, { status: 404 });
   }
 
+  // For TP exams: verify all selected domains have complete question sets
+  if (!isCustom && !isManual && domainIds?.length) {
+    const LEGACY_TIER_MAP: Record<string, string> = {
+      K1: 'anchor', K2: 'mudah', K3: 'sukar',
+      K4: 'sangat_mudah', K5: 'sedang_a', K6: 'sedang_b', K7: 'sangat_sukar',
+    };
+    const requiredPaths = ['anchor', 'mudah', 'sukar', 'sangat_mudah', 'sedang_a', 'sedang_b', 'sangat_sukar'];
+
+    // Query questions for selected domains
+    const chunks: string[][] = [];
+    for (let i = 0; i < domainIds.length; i += 10) chunks.push(domainIds.slice(i, i + 10));
+    const allDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+    for (const chunk of chunks) {
+      const snap = await adminDb.collection('exam_questions')
+        .where('domainId', 'in', chunk)
+        .where('status', '==', 'active')
+        .get();
+      allDocs.push(...snap.docs);
+    }
+
+    // Filter accessible questions and build per-domain tierPath sets
+    const domainTierPaths: Record<string, Set<string>> = {};
+    const domainNameMap: Record<string, string> = {};
+    allDocs.forEach(d => {
+      const q = d.data();
+      const visibility = (q.visibility as string) || 'global';
+      const approvalStatus = (q.approvalStatus as string) || 'approved';
+      const ownerId = q.ownerId as string;
+      const isAccessible =
+        visibility === 'global' && approvalStatus === 'approved' ||
+        visibility === 'private' && ownerId === teacher.uid;
+      if (!isAccessible) return;
+
+      const tpId = q.domainId as string;
+      const tierPath = LEGACY_TIER_MAP[q.tierPath as string] || q.tierPath;
+      if (!domainTierPaths[tpId]) domainTierPaths[tpId] = new Set();
+      domainTierPaths[tpId].add(tierPath);
+      if (!domainNameMap[tpId]) domainNameMap[tpId] = (q.domainName as string) || tpId;
+    });
+
+    const incompleteDomains = domainIds.filter(id => {
+      const paths = domainTierPaths[id];
+      return !paths || requiredPaths.some(p => !paths.has(p));
+    });
+
+    if (incompleteDomains.length > 0) {
+      const readableNames = incompleteDomains.map(id => domainNameMap[id] || id);
+      return NextResponse.json({
+        error: `Bank soal belum lengkap untuk: ${readableNames.join(', ')}. Pastikan setiap topik memiliki soal di semua tingkat.`,
+        incompleteDomains,
+      }, { status: 422 });
+    }
+  }
+
   // Generate unique exam token
   let examToken = generateExamToken();
   let attempts = 0;

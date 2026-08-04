@@ -11,11 +11,11 @@ import { MSATTierPath, MSATDifficulty, CognitiveLevel, AnswerKey } from '@/types
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
 const DOMAINS = [
-  { id: 'tp1', name: 'TP1 – Hubungan mol & pereaksi pembatas' },
-  { id: 'tp2', name: 'TP2 – Stoikiometri gas (Avogadro/STP)' },
-  { id: 'tp3', name: 'TP3 – Konsep mol & jumlah partikel' },
-  { id: 'tp4', name: 'TP4 – Rumus empiris & rumus molekul' },
-  { id: 'tp5', name: 'TP5 – Konsentrasi larutan' },
+  { id: 'tp1', name: 'Hubungan Mol & Pereaksi Pembatas' },
+  { id: 'tp2', name: 'Stoikiometri Gas (Avogadro/STP)' },
+  { id: 'tp3', name: 'Konsep Mol & Jumlah Partikel' },
+  { id: 'tp4', name: 'Rumus Empiris & Rumus Molekul' },
+  { id: 'tp5', name: 'Konsentrasi Larutan' },
 ];
 
 const TIER_PATHS: { value: MSATTierPath; label: string; tier: number }[] = [
