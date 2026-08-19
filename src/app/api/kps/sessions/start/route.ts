@@ -68,19 +68,21 @@ export async function POST(req: NextRequest) {
     const existingData = existingDoc.data();
 
     // Fetch current stage questions for resume
+    // Stage 3 reuses stage 2 questions
+    const queryStage = existingData.currentStage === 3 ? 2 : existingData.currentStage;
     const level = existingData.currentStage === 1 ? 'menengah'
       : existingData.stage2Path === 'tinggi' ? 'tinggi' : 'rendah';
 
     const questionsSnap = await adminDb.collection('kps_questions')
       .where('difficultyLevel', '==', level)
-      .where('stage', '==', existingData.currentStage)
+      .where('stage', '==', queryStage)
       .where('status', '==', 'active')
       .orderBy('order')
       .get();
 
     const stimulusSnap = await adminDb.collection('kps_stimuli')
       .where('level', '==', level)
-      .where('stage', '==', existingData.currentStage)
+      .where('stage', '==', queryStage)
       .where('status', '==', 'active')
       .limit(1)
       .get();
