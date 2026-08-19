@@ -60,19 +60,18 @@ export async function POST(req: NextRequest) {
   }
 
   // Check if student already has an in-progress session with this code
+  // Use single-field query + in-memory filter (no composite index needed)
   const existingSnap = await adminDb.collection('kps_exam_sessions')
-    .where('accessCodeId', '==', codeDoc.id)
     .where('studentId', '==', decoded.uid)
     .where('status', '==', 'in_progress')
-    .limit(1)
     .get();
 
-  if (!existingSnap.empty) {
-    const existingDoc = existingSnap.docs[0];
+  const existingDoc = existingSnap.docs.find(d => d.data().accessCodeId === codeDoc.id);
+
+  if (existingDoc) {
     const existingData = existingDoc.data();
 
     // Fetch current stage questions for resume
-    // Stage 3 reuses stage 2 questions
     const queryStage = existingData.currentStage === 3 ? 2 : existingData.currentStage;
     const level = existingData.currentStage === 1 ? 'menengah'
       : existingData.stage2Path === 'tinggi' ? 'tinggi' : 'rendah';
@@ -80,28 +79,27 @@ export async function POST(req: NextRequest) {
     const questionsSnap = await adminDb.collection('kps_questions')
       .where('difficultyLevel', '==', level)
       .where('stage', '==', queryStage)
-      .where('status', '==', 'active')
-      .orderBy('order')
       .get();
+
+    const questions = questionsSnap.docs
+      .map(d => ({ id: d.id, ...d.data() } as Record<string, unknown>))
+      .filter(d => d.status === 'active')
+      .sort((a, b) => ((a.order as number) || 0) - ((b.order as number) || 0))
+      .map(d => {
+        const { correctAnswer, correctAnswers, correctMatches, statements, ...safe } = d;
+        if (d.questionType === 'complex_true_false' && statements) {
+          return { ...safe, statements: (statements as Array<{ id: string; text: string }>).map(s => ({ id: s.id, text: s.text })) };
+        }
+        return safe;
+      });
 
     const stimulusSnap = await adminDb.collection('kps_stimuli')
       .where('level', '==', level)
       .where('stage', '==', queryStage)
-      .where('status', '==', 'active')
-      .limit(1)
       .get();
 
-    const questions = questionsSnap.docs.map((d) => {
-      const data = d.data();
-      const { correctAnswer, correctAnswers, correctMatches, statements, ...safe } = data;
-      // For complex TF, strip correctAnswer from statements
-      if (data.questionType === 'complex_true_false' && data.statements) {
-        return { ...safe, id: d.id, statements: data.statements.map((s: { id: string; text: string }) => ({ id: s.id, text: s.text })) };
-      }
-      return { ...safe, id: d.id };
-    });
-
-    const stimulus = stimulusSnap.empty ? null : { id: stimulusSnap.docs[0].id, ...stimulusSnap.docs[0].data() };
+    const stimulusDoc = stimulusSnap.docs.find(d => d.data().status === 'active');
+    const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
 
     return NextResponse.json({
       sessionId: existingDoc.id,
@@ -117,17 +115,16 @@ export async function POST(req: NextRequest) {
 
   // Check if student already completed with this code
   const completedSnap = await adminDb.collection('kps_exam_sessions')
-    .where('accessCodeId', '==', codeDoc.id)
     .where('studentId', '==', decoded.uid)
     .where('status', '==', 'completed')
-    .limit(1)
     .get();
 
-  if (!completedSnap.empty) {
+  const completedDoc = completedSnap.docs.find(d => d.data().accessCodeId === codeDoc.id);
+  if (completedDoc) {
     return NextResponse.json({
       error: 'Kamu sudah menyelesaikan ujian dengan kode ini',
       completed: true,
-      sessionId: completedSnap.docs[0].id,
+      sessionId: completedDoc.id,
     }, { status: 409 });
   }
 
@@ -135,32 +132,32 @@ export async function POST(req: NextRequest) {
   const questionsSnap = await adminDb.collection('kps_questions')
     .where('difficultyLevel', '==', 'menengah')
     .where('stage', '==', 1)
-    .where('status', '==', 'active')
-    .orderBy('order')
     .get();
+
+  const questions = questionsSnap.docs
+    .map(d => ({ id: d.id, ...d.data() } as Record<string, unknown>))
+    .filter(d => d.status === 'active')
+    .sort((a, b) => ((a.order as number) || 0) - ((b.order as number) || 0))
+    .map(d => {
+      const { correctAnswer, correctAnswers, correctMatches, statements, ...safe } = d;
+      if (d.questionType === 'complex_true_false' && statements) {
+        return { ...safe, statements: (statements as Array<{ id: string; text: string }>).map(s => ({ id: s.id, text: s.text })) };
+      }
+      return safe;
+    });
 
   const stimulusSnap = await adminDb.collection('kps_stimuli')
     .where('level', '==', 'menengah')
     .where('stage', '==', 1)
-    .where('status', '==', 'active')
-    .limit(1)
     .get();
 
-  if (questionsSnap.empty) {
+  const stimulusDoc = stimulusSnap.docs.find(d => d.data().status === 'active');
+  const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
+  const stimulusIds = stimulusDoc ? [stimulusDoc.id] : [];
+
+  if (questions.length === 0) {
     return NextResponse.json({ error: 'Soal ujian belum tersedia' }, { status: 503 });
   }
-
-  const questions = questionsSnap.docs.map((d) => {
-    const data = d.data();
-    const { correctAnswer, correctAnswers, correctMatches, statements, ...safe } = data;
-    if (data.questionType === 'complex_true_false' && data.statements) {
-      return { ...safe, id: d.id, statements: data.statements.map((s: { id: string; text: string }) => ({ id: s.id, text: s.text })) };
-    }
-    return { ...safe, id: d.id };
-  });
-
-  const stimulus = stimulusSnap.empty ? null : { id: stimulusSnap.docs[0].id, ...stimulusSnap.docs[0].data() };
-  const stimulusIds = stimulusSnap.empty ? [] : [stimulusSnap.docs[0].id];
 
   // Create session
   const docRef = adminDb.collection('kps_exam_sessions').doc();
