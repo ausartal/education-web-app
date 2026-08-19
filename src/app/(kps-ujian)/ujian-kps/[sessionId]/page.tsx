@@ -274,9 +274,19 @@ const KPSSessionPage: FC = () => {
         body: JSON.stringify({ stage: currentStage, responses }),
       });
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text().catch(() => 'Unknown error');
+        console.error('Stage submit non-JSON response:', res.status, text);
+        addToast('error', `Server error (${res.status}): ${text.substring(0, 100)}`);
+        setSubmitting(false);
+        return;
+      }
 
       if (!res.ok) {
+        console.error('Stage submit error:', res.status, data);
         addToast('error', data.error || 'Gagal mengumpulkan tahap');
         setSubmitting(false);
         return;
@@ -302,7 +312,7 @@ const KPSSessionPage: FC = () => {
       }));
     } catch (err) {
       console.error('Submit stage error:', err);
-      addToast('error', 'Terjadi kesalahan saat mengumpulkan jawaban');
+      addToast('error', `Terjadi kesalahan: ${err instanceof Error ? err.message : 'Unknown'}`);
     } finally {
       setSubmitting(false);
     }

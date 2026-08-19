@@ -7,145 +7,146 @@ import { scoreQuestion, isResponseCorrect, getNextStagePath, getStage3Level, cou
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    // Auth
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let decoded;
+    try { decoded = await adminAuth.verifyIdToken(authHeader.slice(7)); } catch { return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); }
 
-  let decoded;
-  try { decoded = await adminAuth.verifyIdToken(authHeader.slice(7)); } catch { return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); }
+    // Session
+    const { id: sessionId } = await params;
+    const sessionDoc = await adminDb.collection('kps_exam_sessions').doc(sessionId).get();
+    if (!sessionDoc.exists) return NextResponse.json({ error: 'Session tidak ditemukan' }, { status: 404 });
+    const session = sessionDoc.data()!;
+    if (session.studentId !== decoded.uid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (session.status !== 'in_progress') return NextResponse.json({ error: 'Session sudah selesai' }, { status: 400 });
 
-  const { id: sessionId } = await params;
-  const sessionDoc = await adminDb.collection('kps_exam_sessions').doc(sessionId).get();
-  if (!sessionDoc.exists) return NextResponse.json({ error: 'Session tidak ditemukan' }, { status: 404 });
+    // Time check (with 10 min grace for old sessions)
+    const startedAt = session.startedAt?.toDate?.() ?? new Date();
+    const durationMin = session.durationMinutes || KPS_CONFIG.totalDurationMinutes;
+    const deadlineMs = startedAt.getTime() + durationMin * 60 * 1000;
+    const gracePeriod = 10 * 60 * 1000; // 10 min grace
+    if (Date.now() > deadlineMs + gracePeriod) {
+      return NextResponse.json({ error: 'Waktu ujian telah habis' }, { status: 408 });
+    }
 
-  const session = sessionDoc.data()!;
-  if (session.studentId !== decoded.uid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  if (session.status !== 'in_progress') return NextResponse.json({ error: 'Session sudah selesai' }, { status: 400 });
+    // Body
+    let body: { stage: 1 | 2 | 3; responses: Array<{ questionId: string; answer: Partial<KPSQuestionResponse>; timeSpentMs: number }> };
+    try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
 
-  // Server-side time validation
-  const startedAt = session.startedAt?.toDate?.() ?? new Date();
-  const deadlineMs = startedAt.getTime() + (session.durationMinutes || KPS_CONFIG.totalDurationMinutes) * 60 * 1000;
-  if (Date.now() > deadlineMs + 60_000) {
-    return NextResponse.json({ error: 'Waktu ujian telah habis' }, { status: 408 });
-  }
+    const { stage, responses: rawResponses } = body;
+    const actualCount = rawResponses?.length ?? 0;
+    if (!stage || actualCount !== KPS_CONFIG.questionsPerStage) {
+      return NextResponse.json({ error: `Diperlukan ${KPS_CONFIG.questionsPerStage} jawaban, diterima ${actualCount}` }, { status: 400 });
+    }
 
-  let body: { stage: 1 | 2 | 3; responses: Array<{ questionId: string; answer: Partial<KPSQuestionResponse>; timeSpentMs: number }> };
-  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
+    // Score answers server-side
+    const scoredResponses: KPSQuestionResponse[] = [];
+    for (const raw of rawResponses) {
+      try {
+        const questionDoc = await adminDb.collection('kps_questions').doc(raw.questionId).get();
+        if (!questionDoc.exists) continue;
+        const questionData = questionDoc.data()!;
+        const question = { id: questionDoc.id, ...questionData } as KPSQuestion;
 
-  const { stage, responses: rawResponses } = body;
-  const actualCount = rawResponses?.length ?? 0;
-  if (!stage || !rawResponses || actualCount !== KPS_CONFIG.questionsPerStage) {
-    return NextResponse.json({
-      error: `Diperlukan ${KPS_CONFIG.questionsPerStage} jawaban untuk stage ${stage}, diterima ${actualCount}`,
-    }, { status: 400 });
-  }
+        const response: KPSQuestionResponse = {
+          questionId: raw.questionId,
+          indicator: questionData.indicator as KPSIndicator,
+          questionType: questionData.questionType as KPSQuestionType,
+          selectedAnswer: raw.answer?.selectedAnswer,
+          selectedAnswers: raw.answer?.selectedAnswers,
+          booleanAnswer: raw.answer?.booleanAnswer,
+          booleanAnswers: raw.answer?.booleanAnswers,
+          matchedPairs: raw.answer?.matchedPairs,
+          isCorrect: false,
+          score: 0,
+          timeSpentMs: raw.timeSpentMs || 0,
+        };
 
-  // Re-score all answers server-side
-  const scoredResponses: KPSQuestionResponse[] = [];
-  for (const raw of rawResponses) {
-    const questionDoc = await adminDb.collection('kps_questions').doc(raw.questionId).get();
-    if (!questionDoc.exists) continue;
+        const score = scoreQuestion(question, response);
+        response.score = score;
+        response.isCorrect = isResponseCorrect(score);
+        scoredResponses.push(response);
+      } catch (e) {
+        console.error(`Error scoring question ${raw.questionId}:`, e);
+      }
+    }
 
-    const questionData = questionDoc.data()!;
-    const question = { id: questionDoc.id, ...questionData } as KPSQuestion;
+    const correctCount = countCorrect(scoredResponses);
+    const stageScore = calculateStageScore(scoredResponses);
 
-    const response: KPSQuestionResponse = {
-      questionId: raw.questionId,
-      indicator: questionData.indicator as KPSIndicator,
-      questionType: questionData.questionType as KPSQuestionType,
-      selectedAnswer: raw.answer.selectedAnswer,
-      selectedAnswers: raw.answer.selectedAnswers,
-      booleanAnswer: raw.answer.booleanAnswer,
-      booleanAnswers: raw.answer.booleanAnswers,
-      matchedPairs: raw.answer.matchedPairs,
-      isCorrect: false,
-      score: 0,
-      timeSpentMs: raw.timeSpentMs || 0,
+    // Path
+    const stage2Path = session.stage2Path;
+    let currentPath: 'tinggi' | 'rendah' | null = null;
+    if (stage === 1) currentPath = getNextStagePath(1, null, correctCount);
+    else if (stage === 2) currentPath = getNextStagePath(2, stage2Path, correctCount);
+    else currentPath = getNextStagePath(3, stage2Path, correctCount);
+
+    // Save stage response (plain object, no FieldValue sentinels)
+    const stageResponse = {
+      stage,
+      path: stage === 1 ? null : currentPath,
+      questions: scoredResponses,
+      correctCount,
+      score: stageScore,
+      submittedAt: new Date().toISOString(),
     };
 
-    try {
-      const score = scoreQuestion(question, response);
-      response.score = score;
-      response.isCorrect = isResponseCorrect(score);
-    } catch {
-      response.score = 0;
-      response.isCorrect = false;
+    const currentResponses = session.stageResponses || [];
+    const updateData: Record<string, unknown> = {
+      stageResponses: [...currentResponses, stageResponse],
+    };
+    if (stage === 1) { updateData.stage2Path = currentPath; updateData.currentStage = 2; }
+    else if (stage === 2) { updateData.stage3Path = currentPath; updateData.currentStage = 3; }
+    else { updateData.currentStage = 3; }
+
+    await sessionDoc.ref.update(updateData);
+
+    // Stage 3 → done
+    if (stage === 3) {
+      return NextResponse.json({ stageCompleted: 3, correctCount, stageScore, completed: true });
     }
-    scoredResponses.push(response);
+
+    // Fetch next stage questions
+    const nextStage = stage + 1;
+    const queryStage = nextStage === 3 ? 2 : nextStage;
+    let nextLevel: string;
+    if (nextStage === 2) {
+      nextLevel = currentPath === 'tinggi' ? 'tinggi' : 'rendah';
+    } else {
+      nextLevel = getStage3Level(stage2Path!, currentPath!);
+    }
+
+    const stimulusSnap = await adminDb.collection('kps_stimuli').where('level', '==', nextLevel).where('stage', '==', queryStage).get();
+    const activeStimuli = stimulusSnap.docs.filter(d => d.data().status === 'active');
+    const stimulusDoc = activeStimuli.length > 0 ? activeStimuli[Math.floor(Math.random() * activeStimuli.length)] : null;
+    const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
+
+    const questionsSnap = stimulusDoc
+      ? await adminDb.collection('kps_questions').where('stimulusId', '==', stimulusDoc.id).get()
+      : await adminDb.collection('kps_questions').where('difficultyLevel', '==', nextLevel).where('stage', '==', queryStage).get();
+
+    const questions = questionsSnap.docs
+      .map(d => ({ id: d.id, ...d.data() } as Record<string, unknown>))
+      .filter(d => d.status === 'active')
+      .sort((a, b) => ((a.order as number) || 0) - ((b.order as number) || 0))
+      .map(d => {
+        const { correctAnswer, correctAnswers, correctMatches, statements, ...safe } = d;
+        if (d.questionType === 'complex_true_false' && statements) {
+          return { ...safe, statements: (statements as Array<{ id: string; text: string }>).map(s => ({ id: s.id, text: s.text })) };
+        }
+        return safe;
+      });
+
+    if (stimulusDoc) {
+      await sessionDoc.ref.update({ stimulusIds: FieldValue.arrayUnion(stimulusDoc.id) });
+    }
+
+    return NextResponse.json({ stageCompleted: stage, correctCount, stageScore, nextStage, nextPath: currentPath, stimulus, questions });
+
+  } catch (err) {
+    console.error('Stage route error:', err);
+    return NextResponse.json({ error: `Server error: ${err instanceof Error ? err.message : 'Unknown'}` }, { status: 500 });
   }
-
-  const correctCount = countCorrect(scoredResponses);
-  const stageScore = calculateStageScore(scoredResponses);
-
-  // Determine path
-  const stage2Path = session.stage2Path;
-  let currentPath: 'tinggi' | 'rendah' | null = null;
-  if (stage === 1) currentPath = getNextStagePath(1, null, correctCount);
-  else if (stage === 2) currentPath = getNextStagePath(2, stage2Path, correctCount);
-  else currentPath = getNextStagePath(3, stage2Path, correctCount);
-
-  // Build stage response — use Date instead of FieldValue.serverTimestamp (can't nest sentinels in arrayUnion)
-  const stageResponse = {
-    stage,
-    path: stage === 1 ? null : currentPath,
-    questions: scoredResponses,
-    correctCount,
-    score: stageScore,
-    submittedAt: new Date().toISOString(),
-  };
-
-  // Update session using set with merge (safer than arrayUnion with nested objects)
-  const currentResponses = session.stageResponses || [];
-  const updateData: Record<string, unknown> = {
-    stageResponses: [...currentResponses, stageResponse],
-    currentStage: stage === 1 ? 2 : stage === 2 ? 3 : 3,
-  };
-  if (stage === 1) updateData.stage2Path = currentPath;
-  if (stage === 2) updateData.stage3Path = currentPath;
-
-  await sessionDoc.ref.update(updateData);
-
-  // Stage 3 → completion signal
-  if (stage === 3) {
-    return NextResponse.json({ stageCompleted: 3, correctCount, stageScore, completed: true });
-  }
-
-  // Fetch next stage questions
-  const nextStage = stage + 1;
-  const queryStage = nextStage === 3 ? 2 : nextStage;
-  let nextLevel: string;
-  if (nextStage === 2) {
-    nextLevel = currentPath === 'tinggi' ? 'tinggi' : 'rendah';
-  } else {
-    nextLevel = getStage3Level(stage2Path!, currentPath!);
-  }
-
-  const stimulusSnap = await adminDb.collection('kps_stimuli')
-    .where('level', '==', nextLevel)
-    .where('stage', '==', queryStage)
-    .get();
-  const activeStimuli = stimulusSnap.docs.filter(d => d.data().status === 'active');
-  const stimulusDoc = activeStimuli.length > 0 ? activeStimuli[Math.floor(Math.random() * activeStimuli.length)] : null;
-  const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
-
-  const questionsSnap = stimulusDoc
-    ? await adminDb.collection('kps_questions').where('stimulusId', '==', stimulusDoc.id).get()
-    : await adminDb.collection('kps_questions').where('difficultyLevel', '==', nextLevel).where('stage', '==', queryStage).get();
-
-  const questions = questionsSnap.docs
-    .map(d => ({ id: d.id, ...d.data() } as Record<string, unknown>))
-    .filter(d => d.status === 'active')
-    .sort((a, b) => ((a.order as number) || 0) - ((b.order as number) || 0))
-    .map(d => {
-      const { correctAnswer, correctAnswers, correctMatches, statements, ...safe } = d;
-      if (d.questionType === 'complex_true_false' && statements) {
-        return { ...safe, statements: (statements as Array<{ id: string; text: string }>).map(s => ({ id: s.id, text: s.text })) };
-      }
-      return safe;
-    });
-
-  if (stimulusDoc) {
-    await sessionDoc.ref.update({ stimulusIds: FieldValue.arrayUnion(stimulusDoc.id) });
-  }
-
-  return NextResponse.json({ stageCompleted: stage, correctCount, stageScore, nextStage, nextPath: currentPath, stimulus, questions });
 }
