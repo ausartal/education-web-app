@@ -53,7 +53,7 @@ interface ScoreItem {
   status: string;
 }
 
-const UKKBIScoresPage: FC = () => {
+const KPSScoresPage: FC = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [scores, setScores] = useState<ScoreItem[]>([]);
@@ -188,4 +188,4 @@ const UKKBIScoresPage: FC = () => {
   );
 };
 
-export default UKKBIScoresPage;
+export default KPSScoresPage;
