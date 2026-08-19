@@ -212,7 +212,7 @@ const KPSLandingPage: FC = () => {
                     value={code}
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                     placeholder="XXXXXX"
-                    maxLength={6}
+                    maxLength={10}
                     className="w-full rounded-2xl border-2 border-stone-100 bg-stone-50/50 px-5 py-4 text-center font-mono text-3xl font-bold tracking-[0.35em] text-stone-800 transition-all placeholder:tracking-[0.35em] placeholder:text-stone-300 focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-violet-100"
                   />
                 </div>
