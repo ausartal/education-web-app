@@ -4,7 +4,7 @@ import { FC, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, FlaskConical } from 'lucide-react';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -68,6 +68,13 @@ export const LandingNavbar: FC = () => {
         {/* Desktop CTAs */}
         <div className="hidden items-center gap-3 md:flex">
           <Link
+            href="/ujian-kps"
+            className="flex items-center gap-1.5 rounded-xl border border-[#5841EA]/30 bg-[#5841EA]/5 px-4 py-2.5 text-sm font-semibold text-[#5841EA] transition-colors hover:bg-[#5841EA]/10"
+          >
+            <FlaskConical size={16} />
+            Ujian KPS
+          </Link>
+          <Link
             href="/login"
             className="rounded-xl border border-gray-200 bg-white px-6 py-2.5 text-sm font-semibold text-[#0E1E47] transition-colors hover:bg-gray-50"
           >
@@ -108,6 +115,13 @@ export const LandingNavbar: FC = () => {
             ))}
           </ul>
           <div className="flex gap-3 border-t border-gray-100 p-4">
+            <Link
+              href="/ujian-kps"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#5841EA]/30 bg-[#5841EA]/5 py-2.5 text-center text-sm font-semibold text-[#5841EA]"
+            >
+              <FlaskConical size={16} />
+              Ujian KPS
+            </Link>
             <Link
               href="/login"
               className="flex-1 rounded-xl border border-gray-200 py-2.5 text-center text-sm font-semibold text-[#0E1E47]"
