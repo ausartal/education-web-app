@@ -54,9 +54,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Kode akses sudah kedaluwarsa' }, { status: 410 });
   }
 
-  // Check quota
-  if (codeData.maxUses > 0 && codeData.currentUses >= codeData.maxUses) {
-    return NextResponse.json({ error: 'Kode akses sudah mencapai batas penggunaan' }, { status: 410 });
+  // Check per-account attempt limit (not total usage)
+  const maxAttemptsPerAccount = codeData.maxAttemptsPerAccount || 1; // default 1 attempt per account
+  const allUserSessionsSnap = await adminDb.collection('kps_exam_sessions')
+    .where('studentId', '==', decoded.uid)
+    .get();
+  const userSessionsWithCode = allUserSessionsSnap.docs.filter(d => d.data().accessCodeId === codeDoc.id);
+  const completedWithCode = userSessionsWithCode.filter(d => d.data().status === 'completed' || d.data().status === 'flagged');
+
+  if (maxAttemptsPerAccount > 0 && completedWithCode.length >= maxAttemptsPerAccount) {
+    return NextResponse.json({
+      error: `Kamu sudah menggunakan kode ini ${completedWithCode.length}x. Batas: ${maxAttemptsPerAccount}x per akun.`,
+      completed: true,
+      sessionId: completedWithCode[0].id,
+    }, { status: 409 });
   }
 
   // Check if student already has an in-progress session with this code
