@@ -227,6 +227,12 @@ const KPSSessionPage: FC = () => {
   const handleSubmitStage = async () => {
     if (!user) return;
 
+    // Guard: questions must be loaded
+    if (questions.length === 0) {
+      addToast('error', 'Soal belum dimuat. Silakan refresh halaman.');
+      return;
+    }
+
     // Check all questions answered
     const unanswered = questions.filter((q) => !answers[q.id]);
     if (unanswered.length > 0) {
@@ -243,7 +249,7 @@ const KPSSessionPage: FC = () => {
           questionId: q.id,
           indicator: q.indicator,
           questionType: q.questionType,
-          ...answers[q.id],
+          ...(answers[q.id] || {}),
         },
         timeSpentMs: Date.now() - phaseStartRef.current,
       }));
@@ -257,14 +263,13 @@ const KPSSessionPage: FC = () => {
         body: JSON.stringify({ stage: currentStage, responses }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
         addToast('error', data.error || 'Gagal mengumpulkan tahap');
         setSubmitting(false);
         return;
       }
-
-      const data = await res.json();
 
       if (data.completed) {
         // Stage 3 done — complete exam
@@ -284,8 +289,9 @@ const KPSSessionPage: FC = () => {
         stimulus: data.stimulus,
         questions: data.questions,
       }));
-    } catch {
-      addToast('error', 'Terjadi kesalahan');
+    } catch (err) {
+      console.error('Submit stage error:', err);
+      addToast('error', 'Terjadi kesalahan saat mengumpulkan jawaban');
     } finally {
       setSubmitting(false);
     }
@@ -367,7 +373,7 @@ const KPSSessionPage: FC = () => {
 
   const currentQuestion = questions[currentIdx];
   const answeredCount = questions.filter((q) => answers[q.id]).length;
-  const allAnswered = answeredCount === questions.length;
+  const allAnswered = questions.length > 0 && answeredCount === questions.length;
 
   return (
     <>
@@ -464,6 +470,12 @@ const KPSSessionPage: FC = () => {
 
         {/* Content */}
         <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
+          {questions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-violet-200 border-t-violet-600" />
+              <p className="mt-3 text-sm text-stone-400">Memuat soal...</p>
+            </div>
+          ) : (
           <AnimatePresence mode="wait">
             <motion.div
               key={`${currentStage}-${currentIdx}`}
@@ -506,6 +518,7 @@ const KPSSessionPage: FC = () => {
               )}
             </motion.div>
           </AnimatePresence>
+          )}
         </main>
 
         {/* Bottom Navigation */}

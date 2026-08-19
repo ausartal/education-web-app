@@ -48,8 +48,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const { stage, responses: rawResponses } = body;
-  if (!stage || !rawResponses || rawResponses.length !== KPS_CONFIG.questionsPerStage) {
-    return NextResponse.json({ error: `Diperlukan ${KPS_CONFIG.questionsPerStage} jawaban untuk stage ${stage}` }, { status: 400 });
+  const actualCount = rawResponses?.length ?? 0;
+  if (!stage || !rawResponses || actualCount !== KPS_CONFIG.questionsPerStage) {
+    return NextResponse.json({
+      error: `Diperlukan ${KPS_CONFIG.questionsPerStage} jawaban untuk stage ${stage}, diterima ${actualCount}`,
+      expected: KPS_CONFIG.questionsPerStage,
+      received: actualCount,
+    }, { status: 400 });
   }
 
   // Re-score all answers server-side
