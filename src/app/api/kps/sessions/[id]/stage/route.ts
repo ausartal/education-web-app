@@ -126,7 +126,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   // Fetch next stage questions
+  // Stage 3 reuses stage 2 questions (same difficulty pool, different scoring context)
   const nextStage = stage + 1;
+  const queryStage = nextStage === 3 ? 2 : nextStage;
   let nextLevel: string;
   if (nextStage === 2) {
     nextLevel = currentPath === 'tinggi' ? 'tinggi' : 'rendah';
@@ -140,14 +142,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const questionsSnap = await adminDb.collection('kps_questions')
     .where('difficultyLevel', '==', nextLevel)
-    .where('stage', '==', nextStage)
+    .where('stage', '==', queryStage)
     .where('status', '==', 'active')
     .orderBy('order')
     .get();
 
   const stimulusSnap = await adminDb.collection('kps_stimuli')
     .where('level', '==', nextLevel)
-    .where('stage', '==', nextStage)
+    .where('stage', '==', queryStage)
     .where('status', '==', 'active')
     .limit(1)
     .get();

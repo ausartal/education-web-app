@@ -47,10 +47,10 @@ export function getLevelForStagePath(stage: 1 | 2 | 3, path: KPSStagePath | null
  * Get the actual level for stage 3 based on stage2Path and stage3Path combination.
  */
 export function getStage3Level(stage2Path: KPSStagePath, stage3Path: KPSStagePath): KPSDifficultyLevel {
-  if (stage2Path === 'tinggi' && stage3Path === 'tinggi') return 'tetap_tinggi';
-  if (stage2Path === 'tinggi' && stage3Path === 'rendah') return 'menengah_lebih_tinggi';
-  if (stage2Path === 'rendah' && stage3Path === 'tinggi') return 'menengah_lebih_rendah';
-  return 'tetap_rendah';
+  // Stage 3 reuses the same question pool as stage 2.
+  // Final level is determined by the path combination + numeric score in determineFinalLevel().
+  if (stage3Path === 'tinggi') return 'tinggi';
+  return 'rendah';
 }
 
 // ── Scoring ──
