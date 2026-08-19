@@ -6,6 +6,19 @@ import { scoreQuestion, isResponseCorrect, getNextStagePath, getStage3Level, cou
 
 export const dynamic = 'force-dynamic';
 
+// Strip undefined/null values — Firestore rejects them
+function clean<T>(obj: T): T {
+  if (obj === null || obj === undefined || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(item => clean(item)) as T;
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    if (value !== undefined && value !== null) {
+      result[key] = typeof value === 'object' ? clean(value) : value;
+    }
+  }
+  return result as T;
+}
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Auth
@@ -67,7 +80,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const score = scoreQuestion(question, response);
         response.score = score;
         response.isCorrect = isResponseCorrect(score);
-        scoredResponses.push(response);
+        scoredResponses.push(clean(response));
       } catch (e) {
         console.error(`Error scoring question ${raw.questionId}:`, e);
       }

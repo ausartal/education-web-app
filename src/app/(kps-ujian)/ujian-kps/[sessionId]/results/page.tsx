@@ -33,7 +33,8 @@ const LEVEL_GRADIENTS: Record<KPSDifficultyLevel, string> = {
 
 const KPSResultsPage: FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<KPSExamSession | null>(null);
@@ -178,8 +179,8 @@ const KPSResultsPage: FC = () => {
               </div>
             </motion.div>
 
-            {/* Indicator Details */}
-            {session.indicatorScores && (
+            {/* Indicator Details — Admin only */}
+            {isAdmin && session.indicatorScores && (
               <motion.div {...fade(0.2)}>
                 <h3 className="mb-4 font-display text-sm font-extrabold uppercase tracking-wider text-stone-400">Skor per Indikator</h3>
                 <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100/80">
@@ -210,12 +211,24 @@ const KPSResultsPage: FC = () => {
 
           {/* Right: Radar + Actions */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Radar Chart */}
-            {session.indicatorScores && (
+            {/* Radar Chart — Admin only */}
+            {isAdmin && session.indicatorScores && (
               <motion.div {...fade(0.15)}>
                 <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100/80">
                   <h3 className="mb-4 font-display text-sm font-extrabold uppercase tracking-wider text-stone-400">Profil KPS</h3>
                   <KPSIndicatorRadar scores={session.indicatorScores as Record<KPSIndicator, number>} size={260} />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Student: Menunggu Review */}
+            {!isAdmin && (
+              <motion.div {...fade(0.15)}>
+                <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100/80">
+                  <h3 className="mb-2 font-display text-sm font-extrabold text-stone-800">Menunggu Review</h3>
+                  <p className="text-sm text-stone-400">
+                    Hasil ujian Anda sedang dalam proses review oleh admin. Skor dan level akhir akan diinformasikan setelah review selesai.
+                  </p>
                 </div>
               </motion.div>
             )}
