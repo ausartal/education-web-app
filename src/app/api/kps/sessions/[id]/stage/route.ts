@@ -138,30 +138,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
   }
 
-  // Fetch next stage questions
-  // Stage 3 reuses stage 2 questions (same difficulty pool, different scoring context)
+  // Fetch next stage questions — pick random stimulus, then filter by stimulusId
   const nextStage = stage + 1;
   const queryStage = nextStage === 3 ? 2 : nextStage;
   let nextLevel: string;
   if (nextStage === 2) {
     nextLevel = currentPath === 'tinggi' ? 'tinggi' : 'rendah';
   } else {
-    // Stage 3: use the combination of stage2Path and currentPath
     const s2Path = stage2Path!;
     const s3Path = currentPath!;
-    const level = getStage3Level(s2Path, s3Path);
-    nextLevel = level;
+    nextLevel = getStage3Level(s2Path, s3Path);
   }
 
-  const questionsSnap = await adminDb.collection('kps_questions')
-    .where('difficultyLevel', '==', nextLevel)
-    .where('stage', '==', queryStage)
-    .get();
-
+  // Pick random stimulus for this level+stage
   const stimulusSnap = await adminDb.collection('kps_stimuli')
     .where('level', '==', nextLevel)
     .where('stage', '==', queryStage)
     .get();
+
+  const activeStimuli = stimulusSnap.docs.filter(d => d.data().status === 'active');
+  const stimulusDoc = activeStimuli.length > 0
+    ? activeStimuli[Math.floor(Math.random() * activeStimuli.length)]
+    : null;
+  const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
+
+  // Fetch questions for this stimulus only
+  const questionsSnap = stimulusDoc
+    ? await adminDb.collection('kps_questions').where('stimulusId', '==', stimulusDoc.id).get()
+    : await adminDb.collection('kps_questions').where('difficultyLevel', '==', nextLevel).where('stage', '==', queryStage).get();
 
   const questions = questionsSnap.docs
     .map(d => ({ id: d.id, ...d.data() } as Record<string, unknown>))
@@ -175,13 +179,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return safe;
     });
 
-  const stimulusDoc = stimulusSnap.docs.find(d => d.data().status === 'active');
-  const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
-
   // Update stimulusIds
-  if (!stimulusSnap.empty) {
+  if (stimulusDoc) {
     await sessionDoc.ref.update({
-      stimulusIds: FieldValue.arrayUnion(stimulusSnap.docs[0].id),
+      stimulusIds: FieldValue.arrayUnion(stimulusDoc.id),
     });
   }
 

@@ -76,10 +76,37 @@ export async function POST(req: NextRequest) {
     const level = existingData.currentStage === 1 ? 'menengah'
       : existingData.stage2Path === 'tinggi' ? 'tinggi' : 'rendah';
 
-    const questionsSnap = await adminDb.collection('kps_questions')
-      .where('difficultyLevel', '==', level)
-      .where('stage', '==', queryStage)
-      .get();
+    // Find a stimulus for this level+stage (pick from session's stimulusIds or random)
+    const sessionStimulusIds: string[] = existingData.stimulusIds || [];
+    let stimulusDoc: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+
+    // Try to find stimulus from session's saved stimulusIds
+    for (const sid of sessionStimulusIds) {
+      const doc = await adminDb.collection('kps_stimuli').doc(sid).get();
+      if (doc.exists && doc.data()?.level === level && doc.data()?.stage === queryStage) {
+        stimulusDoc = doc as unknown as FirebaseFirestore.QueryDocumentSnapshot;
+        break;
+      }
+    }
+
+    // Fallback: pick random stimulus
+    if (!stimulusDoc) {
+      const stimulusSnap = await adminDb.collection('kps_stimuli')
+        .where('level', '==', level)
+        .where('stage', '==', queryStage)
+        .get();
+      const activeStimuli = stimulusSnap.docs.filter(d => d.data().status === 'active');
+      if (activeStimuli.length > 0) {
+        stimulusDoc = activeStimuli[Math.floor(Math.random() * activeStimuli.length)];
+      }
+    }
+
+    const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
+
+    // Fetch questions for this stimulus only
+    const questionsSnap = stimulusDoc
+      ? await adminDb.collection('kps_questions').where('stimulusId', '==', stimulusDoc.id).get()
+      : await adminDb.collection('kps_questions').where('difficultyLevel', '==', level).where('stage', '==', queryStage).get();
 
     const questions = questionsSnap.docs
       .map(d => ({ id: d.id, ...d.data() } as Record<string, unknown>))
@@ -92,14 +119,6 @@ export async function POST(req: NextRequest) {
         }
         return safe;
       });
-
-    const stimulusSnap = await adminDb.collection('kps_stimuli')
-      .where('level', '==', level)
-      .where('stage', '==', queryStage)
-      .get();
-
-    const stimulusDoc = stimulusSnap.docs.find(d => d.data().status === 'active');
-    const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
 
     return NextResponse.json({
       sessionId: existingDoc.id,
@@ -128,10 +147,24 @@ export async function POST(req: NextRequest) {
     }, { status: 409 });
   }
 
-  // Fetch stage 1 questions (menengah level)
-  const questionsSnap = await adminDb.collection('kps_questions')
-    .where('difficultyLevel', '==', 'menengah')
+  // Fetch stage 1 stimulus (menengah level) — pick one topic randomly
+  const stimulusSnap = await adminDb.collection('kps_stimuli')
+    .where('level', '==', 'menengah')
     .where('stage', '==', 1)
+    .get();
+
+  const activeStimuli = stimulusSnap.docs.filter(d => d.data().status === 'active');
+  if (activeStimuli.length === 0) {
+    return NextResponse.json({ error: 'Soal ujian belum tersedia' }, { status: 503 });
+  }
+
+  const stimulusDoc = activeStimuli[Math.floor(Math.random() * activeStimuli.length)];
+  const stimulus = { id: stimulusDoc.id, ...stimulusDoc.data() };
+  const stimulusIds = [stimulusDoc.id];
+
+  // Fetch questions for this specific stimulus only
+  const questionsSnap = await adminDb.collection('kps_questions')
+    .where('stimulusId', '==', stimulusDoc.id)
     .get();
 
   const questions = questionsSnap.docs
@@ -145,15 +178,6 @@ export async function POST(req: NextRequest) {
       }
       return safe;
     });
-
-  const stimulusSnap = await adminDb.collection('kps_stimuli')
-    .where('level', '==', 'menengah')
-    .where('stage', '==', 1)
-    .get();
-
-  const stimulusDoc = stimulusSnap.docs.find(d => d.data().status === 'active');
-  const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
-  const stimulusIds = stimulusDoc ? [stimulusDoc.id] : [];
 
   if (questions.length === 0) {
     return NextResponse.json({ error: 'Soal ujian belum tersedia' }, { status: 503 });
