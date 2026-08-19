@@ -232,5 +232,15 @@ service cloud.firestore {
       allow read:   if isAdmin();
       allow write:  if false; // Admin SDK only
     }
+    match /kps_certificates/{docId} {
+      allow read:   if isAuth() && resource.data.studentId == uid();
+      allow create: if false; // Admin SDK only
+      allow update: if false;
+      allow delete: if false;
+    }
+    match /kps_announcements/{docId} {
+      allow read:   if isAuth();
+      allow write:  if false; // Admin SDK only
+    }
   }
 }

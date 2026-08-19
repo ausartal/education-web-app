@@ -18,6 +18,13 @@ import {
   CheckCircle,
   Shield,
   Zap,
+  LayoutDashboard,
+  BarChart3,
+  Award,
+  BookOpen,
+  Info,
+  Menu,
+  X,
 } from 'lucide-react';
 
 const fade = (delay: number) => ({
@@ -32,6 +39,7 @@ const KPSLandingPage: FC = () => {
   const { addToast } = useToast();
   const [code, setCode] = useState('');
   const [starting, setStarting] = useState(false);
+  const [mobileNav, setMobileNav] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -86,16 +94,66 @@ const KPSLandingPage: FC = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-md shadow-violet-200/50">
               <FlaskConical size={18} className="text-white" />
             </div>
-            <span className="font-display text-lg font-extrabold text-stone-800">Ujian KPS</span>
+            <span className="font-display text-lg font-extrabold text-stone-800">UKKBI</span>
           </div>
-          <button
-            onClick={() => router.push('/ujian-kps/riwayat')}
-            className="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold text-stone-500 transition-all hover:bg-stone-50 hover:text-violet-600"
-          >
-            <History size={15} />
-            Riwayat
+
+          {/* Desktop Nav */}
+          <nav className="hidden items-center gap-1 md:flex">
+            {[
+              { href: '/ujian-kps/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+              { href: '/ujian-kps/scores', label: 'Skor', icon: BarChart3 },
+              { href: '/ujian-kps/credentials', label: 'Sertifikat', icon: Award },
+              { href: '/ujian-kps/riwayat', label: 'Riwayat', icon: History },
+              { href: '/ujian-kps/learning', label: 'Belajar', icon: BookOpen },
+              { href: '/ujian-kps/info', label: 'Info', icon: Info },
+            ].map((nav) => {
+              const Icon = nav.icon;
+              return (
+                <button
+                  key={nav.href}
+                  onClick={() => router.push(nav.href)}
+                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-stone-500 transition-all hover:bg-stone-50 hover:text-violet-600"
+                >
+                  <Icon size={13} />
+                  {nav.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Mobile Toggle */}
+          <button className="md:hidden" onClick={() => setMobileNav(!mobileNav)}>
+            {mobileNav ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
+
+        {/* Mobile Nav */}
+        {mobileNav && (
+          <div className="border-t border-stone-100 bg-white px-4 py-3 md:hidden">
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { href: '/ujian-kps/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                { href: '/ujian-kps/scores', label: 'Skor', icon: BarChart3 },
+                { href: '/ujian-kps/credentials', label: 'Sertifikat', icon: Award },
+                { href: '/ujian-kps/riwayat', label: 'Riwayat', icon: History },
+                { href: '/ujian-kps/learning', label: 'Belajar', icon: BookOpen },
+                { href: '/ujian-kps/info', label: 'Info', icon: Info },
+              ].map((nav) => {
+                const Icon = nav.icon;
+                return (
+                  <button
+                    key={nav.href}
+                    onClick={() => { router.push(nav.href); setMobileNav(false); }}
+                    className="flex flex-col items-center gap-1 rounded-xl p-3 text-stone-500 transition-all hover:bg-violet-50 hover:text-violet-600"
+                  >
+                    <Icon size={18} />
+                    <span className="text-[10px] font-semibold">{nav.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 lg:px-8">
