@@ -212,5 +212,25 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if false;
     }
+
+    // ── KPS ASSESSMENT ──────────────────────────────────────────────────────
+    match /kps_stimuli/{docId} {
+      allow read:   if isAuth();
+      allow write:  if false; // Admin SDK only
+    }
+    match /kps_questions/{docId} {
+      allow read:   if isAuth();
+      allow write:  if false; // Admin SDK only
+    }
+    match /kps_exam_sessions/{docId} {
+      allow read:   if isAuth() && resource.data.studentId == uid();
+      allow create: if false; // Admin SDK only
+      allow update: if false; // Admin SDK only
+      allow delete: if false;
+    }
+    match /kps_access_codes/{docId} {
+      allow read:   if isAdmin();
+      allow write:  if false; // Admin SDK only
+    }
   }
 }

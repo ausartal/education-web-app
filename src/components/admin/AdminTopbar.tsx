@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { GraduationCap, Users, ChevronRight } from 'lucide-react';
+import { GraduationCap, Users, FlaskConical, ChevronRight } from 'lucide-react';
 
 const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
   '/admin':           { title: 'Dashboard',           sub: 'Ringkasan platform' },
@@ -11,6 +11,9 @@ const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
   '/admin/teachers':  { title: 'Guru',                 sub: 'Manajemen pengajar' },
   '/admin/questions': { title: 'Bank Soal',            sub: 'Koleksi soal MSAT' },
   '/admin/ujian':     { title: 'MSAT Ujian',           sub: 'Jadwal & sesi ujian' },
+  '/admin/kps':       { title: 'KPS Ujian',            sub: 'Keterampilan Proses Sains' },
+  '/admin/kps/codes': { title: 'Kode Akses KPS',       sub: 'Kelola kode ujian' },
+  '/admin/kps/results': { title: 'Hasil KPS',          sub: 'Hasil ujian siswa' },
   '/admin/content':   { title: 'Konten',               sub: 'Materi pembelajaran' },
   '/admin/cli':       { title: 'CLI Terminal',         sub: 'Tools developer' },
   '/admin/config':    { title: 'Pengaturan Platform',  sub: 'Konfigurasi sistem' },
@@ -55,6 +58,13 @@ export const AdminTopbar: FC = () => {
         >
           <GraduationCap size={11} />
           Guru
+        </button>
+        <button
+          onClick={() => router.push('/ujian-kps')}
+          className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 shadow-xs transition-all hover:bg-violet-50 hover:text-violet-700"
+        >
+          <FlaskConical size={11} />
+          KPS
         </button>
       </div>
     </header>
