@@ -19,18 +19,43 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!sessionDoc.exists) return NextResponse.json({ error: 'Session tidak ditemukan' }, { status: 404 });
 
   const session = sessionDoc.data()!;
-  if (session.studentId !== decoded.uid) {
-    // Allow admin to view any session
-    const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
-    if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  const isAdmin = (await adminDb.collection('users').doc(decoded.uid).get()).data()?.role === 'admin';
+
+  if (session.studentId !== decoded.uid && !isAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  return NextResponse.json({
+  const base = {
     id: sessionDoc.id,
-    ...session,
+    studentId: session.studentId,
     startedAt: session.startedAt?.toDate?.()?.toISOString() ?? null,
     completedAt: session.completedAt?.toDate?.()?.toISOString() ?? null,
-  });
+    durationMinutes: session.durationMinutes,
+    status: session.status,
+    currentStage: session.currentStage,
+    stage2Path: session.stage2Path,
+    stage3Path: session.stage3Path,
+    finalLevel: session.finalLevel,
+    numericScore: session.numericScore,
+    indicatorScores: session.indicatorScores,
+    anomalyFlags: session.anomalyFlags || [],
+    tabSwitchCount: session.tabSwitchCount || 0,
+  };
+
+  // For in-progress sessions: strip per-question correctness (H1 fix)
+  if (session.status === 'in_progress' && !isAdmin) {
+    return NextResponse.json(base);
+  }
+
+  // For completed/flagged sessions or admin: include summary stageResponses
+  const stageResponses = (session.stageResponses || []).map((sr: Record<string, unknown>) => ({
+    stage: sr.stage,
+    path: sr.path,
+    correctCount: sr.correctCount,
+    score: sr.score,
+    // Strip per-question detail for non-admin
+    ...(isAdmin ? { questions: sr.questions } : {}),
+  }));
+
+  return NextResponse.json({ ...base, stageResponses });
 }
