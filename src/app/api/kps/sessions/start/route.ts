@@ -29,19 +29,23 @@ export async function POST(req: NextRequest) {
 
   const normalizedCode = code.toUpperCase().trim();
 
-  // Find active access code
+  // Find access code (single-field query — no composite index needed)
   const codeSnap = await adminDb.collection('kps_access_codes')
     .where('code', '==', normalizedCode)
-    .where('status', '==', 'active')
     .limit(1)
     .get();
 
   if (codeSnap.empty) {
-    return NextResponse.json({ error: 'Kode akses tidak valid atau sudah tidak aktif' }, { status: 404 });
+    return NextResponse.json({ error: 'Kode akses tidak ditemukan' }, { status: 404 });
   }
 
   const codeDoc = codeSnap.docs[0];
   const codeData = codeDoc.data();
+
+  // Check status in memory
+  if (codeData.status !== 'active') {
+    return NextResponse.json({ error: 'Kode akses sudah tidak aktif' }, { status: 410 });
+  }
 
   // Check expiry
   const expiresAt = codeData.expiresAt?.toDate?.() ?? new Date(codeData.expiresAt);

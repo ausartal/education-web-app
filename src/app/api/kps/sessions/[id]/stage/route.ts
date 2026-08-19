@@ -6,6 +6,7 @@ import { scoreQuestion, isResponseCorrect, getNextStagePath, getStage3Level, cou
 
 export const dynamic = 'force-dynamic';
 
+// POST: Submit completed stage OR record tab-switch event
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,6 +25,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const session = sessionDoc.data()!;
   if (session.studentId !== decoded.uid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   if (session.status !== 'in_progress') return NextResponse.json({ error: 'Session sudah selesai' }, { status: 400 });
+
+  // H2 fix: Server-side time validation
+  const startedAt = session.startedAt?.toDate?.() ?? new Date(session.startedAt);
+  const deadlineMs = startedAt.getTime() + (session.durationMinutes || KPS_CONFIG.totalDurationMinutes) * 60 * 1000;
+  if (Date.now() > deadlineMs + 60_000) { // 1 min grace period
+    return NextResponse.json({ error: 'Waktu ujian telah habis' }, { status: 408 });
+  }
 
   let body: {
     stage: 1 | 2 | 3;
