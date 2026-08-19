@@ -94,7 +94,7 @@ const KPSLandingPage: FC = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-md shadow-violet-200/50">
               <FlaskConical size={18} className="text-white" />
             </div>
-            <span className="font-display text-lg font-extrabold text-stone-800">UKKBI</span>
+            <span className="font-display text-lg font-extrabold text-stone-800">KPS</span>
           </div>
 
           {/* Desktop Nav */}

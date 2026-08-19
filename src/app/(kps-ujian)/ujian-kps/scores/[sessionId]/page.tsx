@@ -55,7 +55,7 @@ interface ScoreDetail {
   anomalyFlags: string[];
 }
 
-const UKKBIScoreDetailPage: FC = () => {
+const KPSScoreDetailPage: FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -271,4 +271,4 @@ const UKKBIScoreDetailPage: FC = () => {
   );
 };
 
-export default UKKBIScoreDetailPage;
+export default KPSScoreDetailPage;

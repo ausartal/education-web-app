@@ -27,7 +27,7 @@ interface LearningData {
   suggestedMaterials: Array<{ title: string; topic: string; url: string }>;
 }
 
-const UKKBILearningPage: FC = () => {
+const KPSLearningPage: FC = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<LearningData | null>(null);
@@ -159,4 +159,4 @@ const UKKBILearningPage: FC = () => {
   );
 };
 
-export default UKKBILearningPage;
+export default KPSLearningPage;

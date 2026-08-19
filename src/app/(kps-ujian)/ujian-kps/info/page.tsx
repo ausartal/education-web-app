@@ -23,7 +23,7 @@ interface InfoData {
   policies: Array<{ id: string; title: string; content: string; publishedAt: string | null }>;
 }
 
-const UKKBIInfoPage: FC = () => {
+const KPSInfoPage: FC = () => {
   const { user } = useAuth();
   const [data, setData] = useState<InfoData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,7 +61,7 @@ const UKKBIInfoPage: FC = () => {
     <div className="space-y-6">
       <motion.div {...fade(0)}>
         <h1 className="font-display text-2xl font-extrabold text-stone-800">Informasi Resmi</h1>
-        <p className="mt-1 text-sm text-stone-400">Pengumuman, jadwal, dan kebijakan UKKBI</p>
+        <p className="mt-1 text-sm text-stone-400">Pengumuman, jadwal, dan kebijakan KPS</p>
       </motion.div>
 
       {sections.map((section, sIdx) => {
@@ -104,4 +104,4 @@ const UKKBIInfoPage: FC = () => {
   );
 };
 
-export default UKKBIInfoPage;
+export default KPSInfoPage;

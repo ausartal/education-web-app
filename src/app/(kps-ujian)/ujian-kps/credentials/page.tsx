@@ -39,7 +39,7 @@ interface Certificate {
   level: string | null;
 }
 
-const UKKBICredentialsPage: FC = () => {
+const KPSCredentialsPage: FC = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -200,4 +200,4 @@ const UKKBICredentialsPage: FC = () => {
   );
 };
 
-export default UKKBICredentialsPage;
+export default KPSCredentialsPage;

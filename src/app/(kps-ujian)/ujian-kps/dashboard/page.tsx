@@ -61,7 +61,7 @@ interface DashboardData {
   }>;
 }
 
-const UKKBIDashboardPage: FC = () => {
+const KPSDashboardPage: FC = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
@@ -109,7 +109,7 @@ const UKKBIDashboardPage: FC = () => {
           Selamat Datang, {candidate.name}
         </h1>
         <p className="mt-1 text-sm text-stone-400">
-          UKKBI — Uji Kompetensi Kimia Berbasis Indikator
+          KPS Dashboard
         </p>
       </motion.div>
 
@@ -291,4 +291,4 @@ const UKKBIDashboardPage: FC = () => {
   );
 };
 
-export default UKKBIDashboardPage;
+export default KPSDashboardPage;
