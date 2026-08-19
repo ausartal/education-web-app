@@ -8,11 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!authHeader?.startsWith('Bearer ')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   let decoded;
-  try {
-    decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  try { decoded = await adminAuth.verifyIdToken(authHeader.slice(7)); } catch { return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); }
 
   const { id: sessionId } = await params;
   const sessionDoc = await adminDb.collection('kps_exam_sessions').doc(sessionId).get();
@@ -25,6 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // Base data (always returned)
   const base = {
     id: sessionDoc.id,
     studentId: session.studentId,
@@ -33,29 +30,52 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     durationMinutes: session.durationMinutes,
     status: session.status,
     currentStage: session.currentStage,
-    stage2Path: session.stage2Path,
-    stage3Path: session.stage3Path,
     finalLevel: session.finalLevel,
     numericScore: session.numericScore,
-    indicatorScores: session.indicatorScores,
-    anomalyFlags: session.anomalyFlags || [],
-    tabSwitchCount: session.tabSwitchCount || 0,
   };
 
-  // For in-progress sessions: strip per-question correctness (H1 fix)
-  if (session.status === 'in_progress' && !isAdmin) {
-    return NextResponse.json(base);
+  // In-progress: return minimal data
+  if (session.status === 'in_progress') {
+    return NextResponse.json({
+      ...base,
+      stage2Path: session.stage2Path,
+      stage3Path: session.stage3Path,
+      stageResponses: (session.stageResponses || []).map((sr: Record<string, unknown>) => ({
+        stage: sr.stage,
+        path: sr.path,
+        correctCount: sr.correctCount,
+        score: sr.score,
+      })),
+    });
   }
 
-  // For completed/flagged sessions or admin: include summary stageResponses
-  const stageResponses = (session.stageResponses || []).map((sr: Record<string, unknown>) => ({
-    stage: sr.stage,
-    path: sr.path,
-    correctCount: sr.correctCount,
-    score: sr.score,
-    // Strip per-question detail for non-admin
-    ...(isAdmin ? { questions: sr.questions } : {}),
-  }));
+  // Completed/flagged — admin gets full detail, student gets summary only
+  if (isAdmin) {
+    return NextResponse.json({
+      ...base,
+      stage2Path: session.stage2Path,
+      stage3Path: session.stage3Path,
+      indicatorScores: session.indicatorScores,
+      anomalyFlags: session.anomalyFlags || [],
+      tabSwitchCount: session.tabSwitchCount || 0,
+      stageResponses: (session.stageResponses || []).map((sr: Record<string, unknown>) => ({
+        stage: sr.stage,
+        path: sr.path,
+        correctCount: sr.correctCount,
+        score: sr.score,
+        questions: sr.questions,
+      })),
+    });
+  }
 
-  return NextResponse.json({ ...base, stageResponses });
+  // Student: limited view — score, level, date only
+  return NextResponse.json({
+    ...base,
+    stageResponses: (session.stageResponses || []).map((sr: Record<string, unknown>) => ({
+      stage: sr.stage,
+      path: sr.path,
+      correctCount: sr.correctCount,
+      score: sr.score,
+    })),
+  });
 }
