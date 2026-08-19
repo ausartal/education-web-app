@@ -14,15 +14,8 @@ import {
   ArrowRight,
   History,
   Loader2,
-  AlertCircle,
   CheckCircle,
-  Shield,
   Zap,
-  LayoutDashboard,
-  BarChart3,
-  Award,
-  BookOpen,
-  Info,
   Menu,
   X,
 } from 'lucide-react';
@@ -98,28 +91,13 @@ const KPSLandingPage: FC = () => {
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden items-center gap-1 md:flex">
-            {[
-              { href: '/ujian-kps/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-              { href: '/ujian-kps/scores', label: 'Skor', icon: BarChart3 },
-              { href: '/ujian-kps/credentials', label: 'Sertifikat', icon: Award },
-              { href: '/ujian-kps/riwayat', label: 'Riwayat', icon: History },
-              { href: '/ujian-kps/learning', label: 'Belajar', icon: BookOpen },
-              { href: '/ujian-kps/info', label: 'Info', icon: Info },
-            ].map((nav) => {
-              const Icon = nav.icon;
-              return (
-                <button
-                  key={nav.href}
-                  onClick={() => router.push(nav.href)}
-                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-stone-500 transition-all hover:bg-stone-50 hover:text-violet-600"
-                >
-                  <Icon size={13} />
-                  {nav.label}
-                </button>
-              );
-            })}
-          </nav>
+          <button
+            onClick={() => router.push('/ujian-kps/riwayat')}
+            className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-stone-500 transition-all hover:bg-stone-50 hover:text-violet-600"
+          >
+            <History size={13} />
+            Riwayat
+          </button>
 
           {/* Mobile Toggle */}
           <button className="md:hidden" onClick={() => setMobileNav(!mobileNav)}>
@@ -130,28 +108,13 @@ const KPSLandingPage: FC = () => {
         {/* Mobile Nav */}
         {mobileNav && (
           <div className="border-t border-stone-100 bg-white px-4 py-3 md:hidden">
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { href: '/ujian-kps/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                { href: '/ujian-kps/scores', label: 'Skor', icon: BarChart3 },
-                { href: '/ujian-kps/credentials', label: 'Sertifikat', icon: Award },
-                { href: '/ujian-kps/riwayat', label: 'Riwayat', icon: History },
-                { href: '/ujian-kps/learning', label: 'Belajar', icon: BookOpen },
-                { href: '/ujian-kps/info', label: 'Info', icon: Info },
-              ].map((nav) => {
-                const Icon = nav.icon;
-                return (
-                  <button
-                    key={nav.href}
-                    onClick={() => { router.push(nav.href); setMobileNav(false); }}
-                    className="flex flex-col items-center gap-1 rounded-xl p-3 text-stone-500 transition-all hover:bg-violet-50 hover:text-violet-600"
-                  >
-                    <Icon size={18} />
-                    <span className="text-[10px] font-semibold">{nav.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <button
+              onClick={() => { router.push('/ujian-kps/riwayat'); setMobileNav(false); }}
+              className="flex w-full items-center gap-2 rounded-xl p-3 text-stone-500 transition-all hover:bg-violet-50 hover:text-violet-600"
+            >
+              <History size={18} />
+              <span className="text-sm font-semibold">Riwayat Ujian</span>
+            </button>
           </div>
         )}
       </header>
@@ -189,8 +152,8 @@ const KPSLandingPage: FC = () => {
                   {KPS_CONFIG.totalDurationMinutes} Menit
                 </div>
                 <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white/90 backdrop-blur-sm">
-                  <Shield size={12} />
-                  Anti-Cheat
+                  <Layers size={12} />
+                  3 Tahap Adaptif
                 </div>
               </div>
             </div>
@@ -285,28 +248,23 @@ const KPSLandingPage: FC = () => {
               </div>
             </motion.div>
 
-            {/* Warning Card */}
+            {/* Tips Card */}
             <motion.div {...fade(0.3)}>
-              <div className="rounded-2xl bg-amber-50 p-5 ring-1 ring-amber-100">
-                <div className="flex gap-3">
-                  <AlertCircle size={18} className="mt-0.5 flex-shrink-0 text-amber-500" />
-                  <div>
-                    <p className="text-[13px] font-bold text-amber-800">Perhatian</p>
-                    <ul className="mt-2 space-y-1.5">
-                      {[
-                        'Ujian bersifat strict, tidak bisa di-pause',
-                        'Timer berjalan terus termasuk saat jeda',
-                        'Fullscreen wajib selama ujian',
-                        'Jawaban otomatis dikumpulkan saat waktu habis',
-                      ].map((item) => (
-                        <li key={item} className="flex items-start gap-2 text-xs text-amber-700">
-                          <CheckCircle size={12} className="mt-0.5 flex-shrink-0 text-amber-400" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+              <div className="rounded-2xl bg-blue-50 p-5 ring-1 ring-blue-100">
+                <p className="text-[13px] font-bold text-blue-800">Tips</p>
+                <ul className="mt-2 space-y-1.5">
+                  {[
+                    'Baca stimulus dengan cermat sebelum menjawab',
+                    'Jawab semua soal sebelum mengumpulkan tahap',
+                    'Gunakan waktu dengan bijak — 20 menit per tahap',
+                    'Ada jeda 10 menit antar tahap untuk istirahat',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-xs text-blue-700">
+                      <CheckCircle size={12} className="mt-0.5 flex-shrink-0 text-blue-400" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </motion.div>
           </div>

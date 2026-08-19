@@ -65,14 +65,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  let body: { title?: string; description?: string; maxUses?: number; expiresAt?: string };
+  let body: { title?: string; description?: string; maxAttemptsPerAccount?: number; expiresAt?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { title, description, maxUses, expiresAt } = body;
+  const { title, description, maxAttemptsPerAccount, expiresAt } = body;
   if (!title) return NextResponse.json({ error: 'Judul diperlukan' }, { status: 400 });
 
   // Generate unique code
@@ -95,10 +95,10 @@ export async function POST(req: NextRequest) {
     code,
     title,
     description: description || '',
-    maxUses: maxUses || 0,
+    maxAttemptsPerAccount: maxAttemptsPerAccount || 1,
     currentUses: 0,
     status: 'active',
-    expiresAt: expiresAt ? new Date(expiresAt) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // default 30 days
+    expiresAt: expiresAt ? new Date(expiresAt) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     createdAt: FieldValue.serverTimestamp(),
     createdBy: decoded.uid,
   });
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     code,
     title,
     description: description || '',
-    maxUses: maxUses || 0,
+    maxAttemptsPerAccount: maxAttemptsPerAccount || 1,
     currentUses: 0,
     status: 'active',
     expiresAt: expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
