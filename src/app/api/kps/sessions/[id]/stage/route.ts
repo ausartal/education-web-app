@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { KPSQuestion, KPSQuestionResponse, KPSStageResponse, KPSIndicator, KPSQuestionType, KPS_CONFIG } from '@/types/kps';
+import { KPSQuestion, KPSQuestionResponse, KPSIndicator, KPSQuestionType, KPS_CONFIG } from '@/types/kps';
 import { scoreQuestion, isResponseCorrect, getNextStagePath, getStage3Level, countCorrect, calculateStageScore } from '@/lib/kps-engine';
 
 export const dynamic = 'force-dynamic';
 
-// POST: Submit completed stage OR record tab-switch event
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   let decoded;
-  try {
-    decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  try { decoded = await adminAuth.verifyIdToken(authHeader.slice(7)); } catch { return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); }
 
   const { id: sessionId } = await params;
   const sessionDoc = await adminDb.collection('kps_exam_sessions').doc(sessionId).get();
@@ -26,34 +21,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (session.studentId !== decoded.uid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   if (session.status !== 'in_progress') return NextResponse.json({ error: 'Session sudah selesai' }, { status: 400 });
 
-  // H2 fix: Server-side time validation
-  const startedAt = session.startedAt?.toDate?.() ?? new Date(session.startedAt);
+  // Server-side time validation
+  const startedAt = session.startedAt?.toDate?.() ?? new Date();
   const deadlineMs = startedAt.getTime() + (session.durationMinutes || KPS_CONFIG.totalDurationMinutes) * 60 * 1000;
-  if (Date.now() > deadlineMs + 60_000) { // 1 min grace period
+  if (Date.now() > deadlineMs + 60_000) {
     return NextResponse.json({ error: 'Waktu ujian telah habis' }, { status: 408 });
   }
 
-  let body: {
-    stage: 1 | 2 | 3;
-    responses: Array<{
-      questionId: string;
-      answer: Partial<KPSQuestionResponse>;
-      timeSpentMs: number;
-    }>;
-  };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-  }
+  let body: { stage: 1 | 2 | 3; responses: Array<{ questionId: string; answer: Partial<KPSQuestionResponse>; timeSpentMs: number }> };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
 
   const { stage, responses: rawResponses } = body;
   const actualCount = rawResponses?.length ?? 0;
   if (!stage || !rawResponses || actualCount !== KPS_CONFIG.questionsPerStage) {
     return NextResponse.json({
       error: `Diperlukan ${KPS_CONFIG.questionsPerStage} jawaban untuk stage ${stage}, diterima ${actualCount}`,
-      expected: KPS_CONFIG.questionsPerStage,
-      received: actualCount,
     }, { status: 400 });
   }
 
@@ -80,89 +62,71 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       timeSpentMs: raw.timeSpentMs || 0,
     };
 
-    const score = scoreQuestion(question, response);
-    response.score = score;
-    response.isCorrect = isResponseCorrect(score);
+    try {
+      const score = scoreQuestion(question, response);
+      response.score = score;
+      response.isCorrect = isResponseCorrect(score);
+    } catch {
+      response.score = 0;
+      response.isCorrect = false;
+    }
     scoredResponses.push(response);
   }
 
   const correctCount = countCorrect(scoredResponses);
   const stageScore = calculateStageScore(scoredResponses);
 
-  // Determine path for this stage
+  // Determine path
   const stage2Path = session.stage2Path;
   let currentPath: 'tinggi' | 'rendah' | null = null;
-  if (stage === 1) {
-    currentPath = getNextStagePath(1, null, correctCount);
-  } else if (stage === 2) {
-    currentPath = getNextStagePath(2, stage2Path, correctCount);
-  } else {
-    currentPath = getNextStagePath(3, stage2Path, correctCount);
-  }
+  if (stage === 1) currentPath = getNextStagePath(1, null, correctCount);
+  else if (stage === 2) currentPath = getNextStagePath(2, stage2Path, correctCount);
+  else currentPath = getNextStagePath(3, stage2Path, correctCount);
 
-  // Build stage response
-  const stageResponse: KPSStageResponse = {
+  // Build stage response — use Date instead of FieldValue.serverTimestamp (can't nest sentinels in arrayUnion)
+  const stageResponse = {
     stage,
     path: stage === 1 ? null : currentPath,
     questions: scoredResponses,
     correctCount,
     score: stageScore,
-    submittedAt: FieldValue.serverTimestamp() as unknown as import('firebase/firestore').Timestamp,
+    submittedAt: new Date().toISOString(),
   };
 
-  // Update session
+  // Update session using set with merge (safer than arrayUnion with nested objects)
+  const currentResponses = session.stageResponses || [];
   const updateData: Record<string, unknown> = {
-    stageResponses: FieldValue.arrayUnion(stageResponse),
+    stageResponses: [...currentResponses, stageResponse],
+    currentStage: stage === 1 ? 2 : stage === 2 ? 3 : 3,
   };
-
-  if (stage === 1) {
-    updateData.stage2Path = currentPath;
-    updateData.currentStage = 2;
-  } else if (stage === 2) {
-    updateData.stage3Path = currentPath;
-    updateData.currentStage = 3;
-  } else {
-    // Stage 3 submitted — don't update currentStage, let complete handle it
-    updateData.currentStage = 3;
-  }
+  if (stage === 1) updateData.stage2Path = currentPath;
+  if (stage === 2) updateData.stage3Path = currentPath;
 
   await sessionDoc.ref.update(updateData);
 
-  // If stage 3, return completion signal
+  // Stage 3 → completion signal
   if (stage === 3) {
-    return NextResponse.json({
-      stageCompleted: 3,
-      correctCount,
-      stageScore,
-      completed: true,
-    });
+    return NextResponse.json({ stageCompleted: 3, correctCount, stageScore, completed: true });
   }
 
-  // Fetch next stage questions — pick random stimulus, then filter by stimulusId
+  // Fetch next stage questions
   const nextStage = stage + 1;
   const queryStage = nextStage === 3 ? 2 : nextStage;
   let nextLevel: string;
   if (nextStage === 2) {
     nextLevel = currentPath === 'tinggi' ? 'tinggi' : 'rendah';
   } else {
-    const s2Path = stage2Path!;
-    const s3Path = currentPath!;
-    nextLevel = getStage3Level(s2Path, s3Path);
+    nextLevel = getStage3Level(stage2Path!, currentPath!);
   }
 
-  // Pick random stimulus for this level+stage
   const stimulusSnap = await adminDb.collection('kps_stimuli')
     .where('level', '==', nextLevel)
     .where('stage', '==', queryStage)
     .get();
-
   const activeStimuli = stimulusSnap.docs.filter(d => d.data().status === 'active');
-  const stimulusDoc = activeStimuli.length > 0
-    ? activeStimuli[Math.floor(Math.random() * activeStimuli.length)]
-    : null;
+  const stimulusDoc = activeStimuli.length > 0 ? activeStimuli[Math.floor(Math.random() * activeStimuli.length)] : null;
   const stimulus = stimulusDoc ? { id: stimulusDoc.id, ...stimulusDoc.data() } : null;
 
-  // Fetch questions for this stimulus only
   const questionsSnap = stimulusDoc
     ? await adminDb.collection('kps_questions').where('stimulusId', '==', stimulusDoc.id).get()
     : await adminDb.collection('kps_questions').where('difficultyLevel', '==', nextLevel).where('stage', '==', queryStage).get();
@@ -179,20 +143,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return safe;
     });
 
-  // Update stimulusIds
   if (stimulusDoc) {
-    await sessionDoc.ref.update({
-      stimulusIds: FieldValue.arrayUnion(stimulusDoc.id),
-    });
+    await sessionDoc.ref.update({ stimulusIds: FieldValue.arrayUnion(stimulusDoc.id) });
   }
 
-  return NextResponse.json({
-    stageCompleted: stage,
-    correctCount,
-    stageScore,
-    nextStage,
-    nextPath: currentPath,
-    stimulus,
-    questions,
-  });
+  return NextResponse.json({ stageCompleted: stage, correctCount, stageScore, nextStage, nextPath: currentPath, stimulus, questions });
 }

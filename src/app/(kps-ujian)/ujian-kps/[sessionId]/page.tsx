@@ -65,7 +65,7 @@ const KPSSessionPage: FC = () => {
 
     const initSession = async () => {
       try {
-        // Check sessionStorage for init data
+        // Check sessionStorage for init data (from landing page)
         const initKey = `exam_init_${sessionId}`;
         const initDataStr = sessionStorage.getItem(initKey);
 
@@ -81,7 +81,7 @@ const KPSSessionPage: FC = () => {
           return;
         }
 
-        // Otherwise fetch from API
+        // Resume: fetch session data, then fetch questions for current stage
         const token = await user.getIdToken();
         const res = await fetch(`/api/kps/sessions/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -94,6 +94,8 @@ const KPSSessionPage: FC = () => {
         }
 
         const data = await res.json();
+
+        // If already completed, redirect to results
         if (data.status !== 'in_progress') {
           router.push(`/ujian-kps/${sessionId}/results`);
           return;
@@ -105,27 +107,26 @@ const KPSSessionPage: FC = () => {
           (data.stageResponses || []).map((sr: { stage: number }) => sr.stage)
         );
 
-        // Fetch current stage questions
-        const startRes = await fetch('/api/kps/sessions/start', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ code: 'RESUME' }),
+        // Calculate time left
+        const startedAt = data.startedAt ? new Date(data.startedAt).getTime() : Date.now();
+        const durationMs = (data.durationMinutes || KPS_CONFIG.totalDurationMinutes) * 60 * 1000;
+        const remaining = Math.max(0, startedAt + durationMs - Date.now());
+        setTimeLeftMs(remaining);
+
+        // Fetch questions for current stage via resume endpoint
+        const resumeRes = await fetch(`/api/kps/sessions/${sessionId}/resume`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (startRes.ok) {
-          const startData = await startRes.json();
-          if (startData.resumed && startData.sessionId === sessionId) {
-            setStimulus(startData.stimulus);
-            setQuestions(startData.questions || []);
-            setTimeLeftMs(startData.timeLeftMs || KPS_CONFIG.totalDurationMinutes * 60 * 1000);
-          }
+        if (resumeRes.ok) {
+          const resumeData = await resumeRes.json();
+          setStimulus(resumeData.stimulus);
+          setQuestions(resumeData.questions || []);
         }
 
         setLoading(false);
-      } catch {
+      } catch (err) {
+        console.error('Init session error:', err);
         setError('Gagal memuat sesi ujian');
         setLoading(false);
       }
@@ -203,6 +204,16 @@ const KPSSessionPage: FC = () => {
     };
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
+
+  // Back button lock — push state and intercept popstate
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const onPopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
   const handleTimeUp = useCallback(async () => {
