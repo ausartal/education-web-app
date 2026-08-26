@@ -52,7 +52,7 @@ const MsatCreatePage: FC = () => {
   const [code, setCode] = useState(generateCode());
   const [durationPerStage, setDurationPerStage] = useState(30);
   const [breakDuration, setBreakDuration] = useState(10);
-  const [passingThreshold, setPassingThreshold] = useState(8);
+  const [waitingRoom, setWaitingRoom] = useState(true);
 
   // Questions
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
@@ -118,6 +118,32 @@ const MsatCreatePage: FC = () => {
     });
   };
 
+  // Auto-fill: select first 4 available questions per domain for a branch
+  const autoFillBranch = (branch: StageBranch) => {
+    const newSelections: Record<string, string[]> = {};
+    for (const domain of ['knowing', 'applying', 'reasoning'] as const) {
+      const available = getFilteredQuestions(branch, domain);
+      newSelections[domain] = available.slice(0, 4).map(q => q.id);
+    }
+    setSelectedQuestions(prev => ({
+      ...prev,
+      [branch]: newSelections,
+    }));
+  };
+
+  // Auto-fill all branches
+  const autoFillAll = () => {
+    const newSelections: Record<StageBranch, Record<string, string[]>> = {} as Record<StageBranch, Record<string, string[]>>;
+    for (const branch of Object.keys(BRANCH_CONFIG) as StageBranch[]) {
+      newSelections[branch] = {};
+      for (const domain of ['knowing', 'applying', 'reasoning'] as const) {
+        const available = getFilteredQuestions(branch, domain);
+        newSelections[branch][domain] = available.slice(0, 4).map(q => q.id);
+      }
+    }
+    setSelectedQuestions(newSelections);
+  };
+
   // Count totals
   const getBranchTotal = (branch: StageBranch) => {
     const bq = selectedQuestions[branch];
@@ -143,7 +169,7 @@ const MsatCreatePage: FC = () => {
           code,
           durationPerStage,
           breakDuration,
-          passingThreshold,
+          waitingRoom,
           stageQuestions: selectedQuestions,
         }),
       });
@@ -238,7 +264,7 @@ const MsatCreatePage: FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-stone-500">Durasi per Stage (menit)</label>
                     <input type="number" value={durationPerStage} onChange={e => setDurationPerStage(Number(e.target.value))} min={5} max={120} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none" />
@@ -247,10 +273,28 @@ const MsatCreatePage: FC = () => {
                     <label className="mb-1.5 block text-xs font-semibold text-stone-500">Durasi Istirahat (menit)</label>
                     <input type="number" value={breakDuration} onChange={e => setBreakDuration(Number(e.target.value))} min={1} max={30} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none" />
                   </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-stone-500">Passing Threshold</label>
-                    <input type="number" value={passingThreshold} onChange={e => setPassingThreshold(Number(e.target.value))} min={1} max={12} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none" />
-                    <p className="mt-1 text-[10px] text-stone-400">Minimal benar per stage (dari 12 soal)</p>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-stone-500">Mode Ujian</label>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setWaitingRoom(true)}
+                      className={`flex-1 rounded-xl border-2 px-4 py-3 text-left transition-colors ${
+                        waitingRoom ? 'border-violet-500 bg-violet-50' : 'border-stone-200 bg-white hover:border-stone-300'
+                      }`}
+                    >
+                      <p className={`text-sm font-semibold ${waitingRoom ? 'text-violet-700' : 'text-stone-600'}`}>Ruang Tunggu</p>
+                      <p className="mt-0.5 text-[11px] text-stone-400">Siswa menunggu hingga admin memulai ujian</p>
+                    </button>
+                    <button
+                      onClick={() => setWaitingRoom(false)}
+                      className={`flex-1 rounded-xl border-2 px-4 py-3 text-left transition-colors ${
+                        !waitingRoom ? 'border-violet-500 bg-violet-50' : 'border-stone-200 bg-white hover:border-stone-300'
+                      }`}
+                    >
+                      <p className={`text-sm font-semibold ${!waitingRoom ? 'text-violet-700' : 'text-stone-600'}`}>Langsung Mulai</p>
+                      <p className="mt-0.5 text-[11px] text-stone-400">Siswa langsung masuk ujian setelah input kode</p>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -266,6 +310,24 @@ const MsatCreatePage: FC = () => {
         {/* ── STEP 2: QUESTIONS ── */}
         {step === 'questions' && (
           <motion.div key="questions" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-4">
+            {/* Auto-fill buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={autoFillAll}
+                className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 transition-colors hover:bg-blue-100"
+              >
+                <Sparkles size={13} />
+                Isi Otomatis Semua
+              </button>
+              <button
+                onClick={() => autoFillBranch(activeBranch)}
+                className="flex items-center gap-1.5 rounded-xl bg-stone-50 px-3 py-2 text-xs font-semibold text-stone-600 ring-1 ring-stone-200 transition-colors hover:bg-stone-100"
+              >
+                <Sparkles size={13} />
+                Isi Otomatis {BRANCH_CONFIG[activeBranch].label}
+              </button>
+            </div>
+
             {/* Branch tabs */}
             <div className="flex flex-wrap gap-1.5 rounded-2xl bg-white p-2 ring-1 ring-stone-100">
               {(Object.keys(BRANCH_CONFIG) as StageBranch[]).map(branch => {
@@ -372,7 +434,7 @@ const MsatCreatePage: FC = () => {
                 <div><p className="text-[10px] text-stone-400">Kode</p><p className="font-mono text-sm font-bold text-stone-700">{code}</p></div>
                 <div><p className="text-[10px] text-stone-400">Durasi/Stage</p><p className="text-sm text-stone-700">{durationPerStage} menit</p></div>
                 <div><p className="text-[10px] text-stone-400">Istirahat</p><p className="text-sm text-stone-700">{breakDuration} menit</p></div>
-                <div><p className="text-[10px] text-stone-400">Passing</p><p className="text-sm text-stone-700">{passingThreshold}/12 benar</p></div>
+                <div><p className="text-[10px] text-stone-400">Mode</p><p className="text-sm text-stone-700">{waitingRoom ? 'Ruang Tunggu' : 'Langsung Mulai'}</p></div>
                 <div><p className="text-[10px] text-stone-400">Total Soal</p><p className="text-sm font-bold text-stone-700">{getTotalSelected()} soal</p></div>
               </div>
 
