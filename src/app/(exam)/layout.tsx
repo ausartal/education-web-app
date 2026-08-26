@@ -9,7 +9,7 @@ import { AdminPreviewBanner } from '@/components/admin/AdminPreviewBanner';
 
 const navItems = [
   { label: 'History Ujian', icon: History, href: null },
-  { label: 'Hasil', icon: BarChart3, href: null },
+  { label: 'Hasil', icon: BarChart3, href: '/exam/history' },
   { label: 'Informasi', icon: Info, href: null },
 ];
 
