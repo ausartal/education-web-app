@@ -2,7 +2,7 @@
  * Seed script for AKURAT app config data.
  * Run: npx ts-node --project tsconfig.seed.json scripts/seed.ts
  *
- * Seeds: achievements, MSAT config, gamification config
+ * Seeds: achievements, gamification config
  * Idempotent: safe to run multiple times (uses setDoc with merge)
  */
 
@@ -22,28 +22,6 @@ initializeApp({
 });
 
 const db = getFirestore();
-
-// ===== MSAT CONFIG =====
-const msatConfig = {
-  stagesCount: 3,
-  questionsPerStage: 7,
-  startDifficulty: 'moderate',
-  thetaInitial: 0,
-  thetaMin: -3,
-  thetaMax: 3,
-  promotionRule: 'correct',
-  demotionRule: 'incorrect',
-  timeThresholds: {
-    easy: { fast: 15000, slow: 60000 },
-    moderate: { fast: 20000, slow: 90000 },
-    hard: { fast: 30000, slow: 120000 },
-  },
-  anomalyThresholds: {
-    tooFastMs: 3000,
-    allFastCorrectCount: 5,
-    suddenDropThreshold: 3,
-  },
-};
 
 // ===== GAMIFICATION CONFIG =====
 const gamificationConfig = {
@@ -196,10 +174,6 @@ const achievements = [
 
 async function seed() {
   console.log('🌱 Seeding AKURAT database...\n');
-
-  // Seed MSAT config
-  await db.doc('app_config/msat').set(msatConfig, { merge: true });
-  console.log('✅ MSAT config seeded');
 
   // Seed gamification config
   await db.doc('app_config/gamification').set(gamificationConfig, { merge: true });

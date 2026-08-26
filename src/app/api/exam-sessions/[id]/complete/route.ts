@@ -1,14 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import {
-  encodePattern,
-  getComprehensionCategory,
-  getDomainScore,
-  getNumericScore,
-  detectAnomalies,
-} from '@/lib/msat-engine';
-import { MSATTierPath, CRIResponse } from '@/types/firestore';
+import { MSATTierPath, CRIResponse, ComprehensionCategory, MSATDifficulty } from '@/types/firestore';
+
+// ── Inline MSAT helpers (formerly in msat-engine.ts) ──
+function encodePattern(t1: boolean, t2: boolean, t3: boolean): string {
+  return `${t1 ? 'B' : 'S'}${t2 ? 'B' : 'S'}${t3 ? 'B' : 'S'}`;
+}
+
+function getComprehensionCategory(pattern: string, cri: CRIResponse): ComprehensionCategory {
+  switch (pattern) {
+    case 'BBB': return 'paham_konsep';
+    case 'SBB': return 'paham_sebagian';
+    case 'BBS': return 'paham_sebagian';
+    case 'BSB': return 'paham_sebagian';
+    case 'SBS': return 'tidak_paham';
+    case 'SSB': return 'tidak_paham';
+    case 'SSS': return cri === 'yakin' ? 'miskonsepsi' : 'tidak_paham';
+    case 'BSS': return 'hasil_nebak';
+    default: return 'tidak_paham';
+  }
+}
+
+const DIFFICULTY_WEIGHTS: Record<MSATDifficulty, number> = {
+  sangat_mudah: 1, mudah: 2, sedang: 3, sukar: 4, sangat_sukar: 5,
+};
+const TIER_PATH_DIFFICULTY: Record<MSATTierPath, MSATDifficulty> = {
+  anchor: 'sedang', mudah: 'mudah', sukar: 'sukar',
+  sangat_mudah: 'sangat_mudah', sedang_a: 'sedang', sedang_b: 'sedang', sangat_sukar: 'sangat_sukar',
+};
+
+function getDomainScore(
+  t1Path: MSATTierPath, t1Correct: boolean,
+  t2Path: MSATTierPath, t2Correct: boolean,
+  t3Path: MSATTierPath, t3Correct: boolean,
+): number {
+  const pairs: [MSATTierPath, boolean][] = [[t1Path, t1Correct], [t2Path, t2Correct], [t3Path, t3Correct]];
+  let earned = 0;
+  let maxPossible = 0;
+  for (const [path, correct] of pairs) {
+    const w = DIFFICULTY_WEIGHTS[TIER_PATH_DIFFICULTY[path]];
+    maxPossible += w;
+    if (correct) earned += w;
+  }
+  return maxPossible > 0 ? Math.round((earned / maxPossible) * 100) : 0;
+}
+
+function getNumericScore(domainScores: number[]): number {
+  if (domainScores.length === 0) return 0;
+  const avg = domainScores.reduce((a, b) => a + b, 0) / domainScores.length;
+  return Math.round((avg / 100) * 120);
+}
+
+function detectAnomalies(responses: { timeSpentMs: number; isCorrect: boolean }[]): string[] {
+  const flags: string[] = [];
+  const tooFast = responses.filter((r) => r.timeSpentMs < 3000);
+  if (tooFast.length >= 5) flags.push('TOO_FAST_MULTIPLE');
+  const fastCorrect = responses.filter((r) => r.timeSpentMs < 5000 && r.isCorrect);
+  if (fastCorrect.length >= 5) flags.push('ALL_FAST_CORRECT');
+  let consecutiveRight = 0;
+  let consecutiveWrong = 0;
+  for (const r of responses) {
+    if (r.isCorrect) { consecutiveRight++; consecutiveWrong = 0; }
+    else { consecutiveWrong++; consecutiveRight = 0; }
+    if (consecutiveWrong >= 3 && consecutiveRight === 0) { flags.push('SUDDEN_DROP'); break; }
+  }
+  return flags;
+}
 
 export const dynamic = 'force-dynamic';
 

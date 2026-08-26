@@ -8,7 +8,6 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
 import { PeriodicTableRef } from '@/components/tools/PeriodicTableRef';
-import { getT2Path, getT3Path } from '@/lib/msat-engine';
 import { AnswerKey, MSATTierPath } from '@/types/firestore';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
@@ -55,7 +54,17 @@ interface DomainProgress {
   phaseStartTime: number;
 }
 
-const SESSION_KEY = (sessionId: string) => `msat_session_${sessionId}`;
+// ── Inline MSAT helpers (formerly in msat-engine.ts) ──
+function getT2Path(t1Correct: boolean): 'mudah' | 'sukar' {
+  return t1Correct ? 'sukar' : 'mudah';
+}
+
+function getT3Path(t1Correct: boolean, t2Correct: boolean): MSATTierPath {
+  if (!t1Correct && !t2Correct) return 'sangat_mudah';
+  if (!t1Correct && t2Correct) return 'sedang_a';
+  if (t1Correct && !t2Correct) return 'sedang_b';
+  return 'sangat_sukar';
+}
 
 // Strip "TP1 – " / "TP 2 - " style prefixes from domain names
 const cleanDomainName = (name: string) =>
@@ -103,7 +112,7 @@ const ExamSessionPage: FC = () => {
   useEffect(() => {
     if (!user) return;
     const init = async () => {
-      const cached = localStorage.getItem(SESSION_KEY(sessionId));
+      const cached = localStorage.getItem(`msat_session_${sessionId}`);
       if (cached) {
         const { domainList: dl, domainNames: dn, questions: q, durationMinutes: dur, completedDomains: cd, timeLeft: tl, currentDomainIdx: cdi } = JSON.parse(cached);
         setDomainList(dl);
@@ -169,7 +178,7 @@ const ExamSessionPage: FC = () => {
     setCurrentDomainIdx(startIdx);
     setCompletedDomains(cd);
 
-    localStorage.setItem(SESSION_KEY(sessionId), JSON.stringify({
+    localStorage.setItem(`msat_session_${sessionId}`, JSON.stringify({
       domainList: dl, domainNames: dn, questions: typedQ,
       durationMinutes: dur, completedDomains: cd, currentDomainIdx: startIdx,
       timeLeft: dur * 60,
@@ -387,7 +396,7 @@ const ExamSessionPage: FC = () => {
     setCurrentDomainIdx(nextIdx);
     setCompletedDomains(newCompleted);
 
-    localStorage.setItem(SESSION_KEY(sessionId), JSON.stringify({
+    localStorage.setItem(`msat_session_${sessionId}`, JSON.stringify({
       domainList, domainNames, questions, durationMinutes,
       completedDomains: newCompleted, currentDomainIdx: nextIdx, timeLeft,
     }));
@@ -407,7 +416,7 @@ const ExamSessionPage: FC = () => {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({}),
       });
-      localStorage.removeItem(SESSION_KEY(sessionId));
+      localStorage.removeItem(`msat_session_${sessionId}`);
       if (res.ok) router.push(`/ujian/${sessionId}/results`);
     } catch {
       // Network error — session stays in_progress, user can retry

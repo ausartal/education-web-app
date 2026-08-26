@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { getT2Path, getT3Path } from '@/lib/msat-engine';
+import { MSATTierPath } from '@/types/firestore';
+
+// ── Inline MSAT helpers (formerly in msat-engine.ts) ──
+function getT2Path(t1Correct: boolean): 'mudah' | 'sukar' {
+  return t1Correct ? 'sukar' : 'mudah';
+}
+
+function getT3Path(t1Correct: boolean, t2Correct: boolean): MSATTierPath {
+  if (!t1Correct && !t2Correct) return 'sangat_mudah';
+  if (!t1Correct && t2Correct) return 'sedang_a';
+  if (t1Correct && !t2Correct) return 'sedang_b';
+  return 'sangat_sukar';
+}
 
 export const dynamic = 'force-dynamic';
 

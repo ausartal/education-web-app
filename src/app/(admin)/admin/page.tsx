@@ -9,7 +9,7 @@ import {
   TrendingUp, Zap, RefreshCw, Download, Terminal,
   ChevronRight, AlertTriangle, CheckCircle, ArrowUp, ArrowDown,
   Target, Activity, FileText, BarChart3, FlaskConical, School,
-  Minus, Calendar, ClipboardCheck,
+  Minus, Calendar,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -43,7 +43,6 @@ interface AnalyticsData {
     completedExams: number; activeQuestions: number; activeUsers: number;
     classes?: number; examSchedules?: number;
   };
-  msat?: { avgScore: number; comprehensionDistribution: Record<string, number> };
 }
 
 function fmtDay(iso: string) {
@@ -117,71 +116,6 @@ const diffStyle: Record<string, string> = {
   hard: 'bg-rose-50 text-rose-600',
 };
 
-const mastStatusColors: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-500',
-  active: 'bg-emerald-50 text-emerald-700',
-  in_progress: 'bg-blue-50 text-blue-700',
-  completed: 'bg-violet-50 text-violet-700',
-  archived: 'bg-stone-100 text-stone-500',
-};
-
-function MSATPreviewContent() {
-  const { user } = useAuth();
-  const { data, isLoading } = useAuthSWR<{ exams: Array<{ id: string; title: string; examCode: string; status: string; mode: string; createdAt: string | null }> }>('/api/admin/mast-exams');
-
-  if (isLoading) return (
-    <div className="flex items-center gap-2 py-3">
-      <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
-      <span className="text-xs text-stone-400">Memuat data MSAT...</span>
-    </div>
-  );
-
-  const exams = data?.exams ?? [];
-  if (exams.length === 0) return (
-    <div className="flex items-center gap-3 rounded-xl bg-white/60 p-4">
-      <ClipboardCheck size={18} className="text-indigo-300" />
-      <div>
-        <p className="text-xs font-semibold text-stone-600">Belum ada ujian MSAT</p>
-        <p className="text-[10px] text-stone-400">Buat ujian MSAT pertama Anda</p>
-      </div>
-    </div>
-  );
-
-  const statusCounts = exams.reduce((acc, e) => { acc[e.status] = (acc[e.status] ?? 0) + 1; return acc; }, {} as Record<string, number>);
-
-  return (
-    <div className="space-y-3">
-      <div className="flex gap-2 flex-wrap">
-        {Object.entries(statusCounts).map(([status, count]) => (
-          <span key={status} className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${mastStatusColors[status] ?? 'bg-gray-100 text-gray-500'}`}>
-            {status}: {count}
-          </span>
-        ))}
-        <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-600">
-          Total: {exams.length}
-        </span>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {exams.slice(0, 3).map(exam => (
-          <Link key={exam.id} href={`/msat/exams/${exam.id}`}
-            className="flex items-center gap-3 rounded-xl bg-white/80 p-3 transition-all hover:bg-white hover:shadow-sm">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-100">
-              <ClipboardCheck size={16} className="text-indigo-600" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-bold text-stone-800">{exam.title}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="font-mono text-[10px] font-semibold text-indigo-600">{exam.examCode}</span>
-                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${mastStatusColors[exam.status] ?? ''}`}>{exam.status}</span>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 const fade = (delay: number) => ({
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
@@ -253,13 +187,6 @@ const AdminDashboard: FC = () => {
       sub: `${data.totals.questions} total soal`, href: '/admin/questions',
       cardBg: 'bg-amber-50 border border-amber-100/80',
       numColor: 'text-amber-700', labelColor: 'text-amber-600', subColor: 'text-amber-400', iconColor: 'text-amber-500',
-      trend: null, spark: null,
-    },
-    {
-      icon: FlaskConical, label: 'Skor MSAT Rata-rata', value: data.msat?.avgScore ?? 0,
-      sub: 'dari sesi selesai', href: '/admin/ujian',
-      cardBg: 'bg-rose-50 border border-rose-100/80',
-      numColor: 'text-rose-700', labelColor: 'text-rose-600', subColor: 'text-rose-400', iconColor: 'text-rose-500',
       trend: null, spark: null,
     },
   ];
@@ -346,26 +273,6 @@ const AdminDashboard: FC = () => {
             </Link>
           );
         })}
-      </motion.div>
-
-      {/* ── MSAT EXAM PREVIEW ── */}
-      <motion.div {...fade(0.28)} className="rounded-2xl bg-gradient-to-r from-indigo-50 via-violet-50 to-purple-50 p-5 shadow-xs border border-indigo-100/60">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100">
-              <ClipboardCheck size={16} className="text-indigo-600" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-stone-900">Ujian MSAT</p>
-              <p className="text-[11px] text-stone-400">Multistage Adaptive Scored Testing</p>
-            </div>
-          </div>
-          <Link href="/msat"
-            className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white transition-all hover:bg-indigo-700 hover:-translate-y-0.5">
-            Kelola <ChevronRight size={12} />
-          </Link>
-        </div>
-        <MSATPreviewContent />
       </motion.div>
 
       {/* ── CHARTS ROW ── */}
@@ -558,7 +465,6 @@ const AdminDashboard: FC = () => {
                 { label: 'Pengguna', icon: Users, href: '/admin/users', bg: 'bg-sky-50 hover:bg-sky-100 text-sky-700' },
                 { label: 'Bank Soal', icon: BookOpen, href: '/admin/questions', bg: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
                 { label: 'Ujian Sekolah', icon: FlaskConical, href: '/admin/ujian', bg: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
-                { label: 'Ujian MSAT', icon: ClipboardCheck, href: '/msat', bg: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700' },
                 { label: 'Analitik', icon: BarChart3, href: '/admin/analytics', bg: 'bg-violet-50 hover:bg-violet-100 text-violet-700' },
                 { label: 'Konten', icon: FileText, href: '/admin/content', bg: 'bg-teal-50 hover:bg-teal-100 text-teal-700' },
                 { label: 'Terminal', icon: Terminal, href: '/admin/cli', bg: 'bg-stone-100 hover:bg-stone-200 text-stone-700' },

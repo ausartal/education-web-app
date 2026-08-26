@@ -2,15 +2,15 @@
 
 import { FC } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { GraduationCap, Users, ChevronRight } from 'lucide-react';
+import { GraduationCap, Users, ChevronRight, FileCheck } from 'lucide-react';
 
 const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
   '/admin':           { title: 'Dashboard',           sub: 'Ringkasan platform' },
   '/admin/analytics': { title: 'Analitik',             sub: 'Data & performa' },
   '/admin/users':     { title: 'Pengguna',             sub: 'Manajemen akun' },
   '/admin/teachers':  { title: 'Guru',                 sub: 'Manajemen pengajar' },
-  '/admin/questions': { title: 'Bank Soal',            sub: 'Koleksi soal MSAT' },
-  '/admin/ujian':     { title: 'MSAT Ujian',           sub: 'Jadwal & sesi ujian' },
+  '/admin/questions': { title: 'Bank Soal',            sub: 'Koleksi soal ujian' },
+  '/admin/ujian':     { title: 'Ujian',                sub: 'Jadwal & sesi ujian' },
   '/admin/content':   { title: 'Konten',               sub: 'Materi pembelajaran' },
   '/admin/cli':       { title: 'CLI Terminal',         sub: 'Tools developer' },
   '/admin/config':    { title: 'Pengaturan Platform',  sub: 'Konfigurasi sistem' },
@@ -55,6 +55,13 @@ export const AdminTopbar: FC = () => {
         >
           <GraduationCap size={11} />
           Guru
+        </button>
+        <button
+          onClick={() => router.push('/exam')}
+          className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 shadow-xs transition-all hover:bg-violet-50 hover:text-violet-700"
+        >
+          <FileCheck size={11} />
+          Exam
         </button>
       </div>
     </header>

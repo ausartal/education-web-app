@@ -147,10 +147,6 @@ export async function GET(req: NextRequest) {
   // ── Exam aggregations ─────────────────────────────────────────────────────
   const examStatus = { in_progress: 0, completed: 0, abandoned: 0, flagged: 0 };
   let accuracySum = 0, accuracyCount = 0;
-  let msatScoreSum = 0, msatScoreCount = 0;
-  const msatComprehensionDist: Record<string, number> = {
-    paham_konsep: 0, paham_sebagian: 0, tidak_paham: 0, miskonsepsi: 0, hasil_nebak: 0,
-  };
 
   examsSnap.docs.forEach((d) => {
     const data = d.data();
@@ -158,16 +154,9 @@ export async function GET(req: NextRequest) {
     if (s in examStatus) examStatus[s]++;
     if (data.status === 'completed') {
       if (data.result?.accuracy != null) { accuracySum += data.result.accuracy; accuracyCount++; }
-      if (typeof data.numericScore === 'number') { msatScoreSum += data.numericScore; msatScoreCount++; }
-      const dr = (data.domainResponses ?? []) as Array<{ comprehensionCategory: string }>;
-      for (const resp of dr) {
-        const cat = resp.comprehensionCategory;
-        if (cat && cat in msatComprehensionDist) msatComprehensionDist[cat]++;
-      }
     }
   });
   const avgAccuracy = accuracyCount > 0 ? Math.round((accuracySum / accuracyCount) * 100) : 0;
-  const avgMsatScore = msatScoreCount > 0 ? Math.round(msatScoreSum / msatScoreCount) : 0;
 
   // ── Recent 8 completed exams ──────────────────────────────────────────────
   const userDisplayMap = Object.fromEntries(
@@ -233,10 +222,6 @@ export async function GET(req: NextRequest) {
       activeUsers,
       classes: classesCount.data().count,
       examSchedules: schedulesCount.data().count,
-    },
-    msat: {
-      avgScore: avgMsatScore,
-      comprehensionDistribution: msatComprehensionDist,
     },
   };
 

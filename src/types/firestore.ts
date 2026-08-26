@@ -149,25 +149,8 @@ export interface Message {
 }
 
 // ===== APP CONFIG =====
-export interface MSATConfig {
-  stagesCount: number;
-  questionsPerStage: number;
-  startDifficulty: Difficulty;
-  thetaInitial: number;
-  thetaMin: number;
-  thetaMax: number;
-  promotionRule: 'correct';
-  demotionRule: 'incorrect';
-  timeThresholds: Record<Difficulty, { fast: number; slow: number }>;
-  anomalyThresholds: {
-    tooFastMs: number;
-    allFastCorrectCount: number;
-    suddenDropThreshold: number;
-  };
-}
-
 export interface AppConfig {
-  msat: MSATConfig;
+  // Add config fields here as needed
 }
 
 // ===== AUDIT LOGS =====

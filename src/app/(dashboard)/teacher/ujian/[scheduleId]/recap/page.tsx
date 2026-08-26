@@ -9,8 +9,24 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
-import { COMPREHENSION_LABELS, COMPREHENSION_COLORS } from '@/lib/msat-engine';
 import { ComprehensionCategory, MSATDomainResponse } from '@/types/firestore';
+
+// ── Inline MSAT constants (formerly in msat-engine.ts) ──
+const COMPREHENSION_LABELS: Record<ComprehensionCategory, string> = {
+  paham_konsep: 'Paham Konsep',
+  paham_sebagian: 'Paham Sebagian',
+  tidak_paham: 'Tidak Paham',
+  miskonsepsi: 'Miskonsepsi',
+  hasil_nebak: 'Hasil Nebak',
+};
+
+const COMPREHENSION_COLORS: Record<ComprehensionCategory, { bg: string; text: string; border: string }> = {
+  paham_konsep: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  paham_sebagian: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  tidak_paham: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  miskonsepsi: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+  hasil_nebak: { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200' },
+};
 
 // ── Types ──────────────────────────────────────────────────────────
 interface StudentSession {
