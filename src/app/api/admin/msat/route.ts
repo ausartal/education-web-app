@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
     // Process questions
     const questions: Record<string, unknown>[] = [];
     const difficultyCount: Record<string, number> = {};
+    const categoryLabelCount: Record<string, number> = {};
     const domainCount: Record<string, number> = {};
     const stageCount: Record<number, number> = {};
     let totalQuestions = 0;
@@ -40,6 +41,7 @@ export async function GET(req: NextRequest) {
       questions.push({ id: doc.id, ...d });
 
       if (d.difficulty) difficultyCount[d.difficulty] = (difficultyCount[d.difficulty] || 0) + 1;
+      if (d.categoryLabel) categoryLabelCount[d.categoryLabel] = (categoryLabelCount[d.categoryLabel] || 0) + 1;
       if (d.cognitiveDomain) domainCount[d.cognitiveDomain] = (domainCount[d.cognitiveDomain] || 0) + 1;
       if (d.stage) stageCount[d.stage] = (stageCount[d.stage] || 0) + 1;
     });
@@ -62,6 +64,7 @@ export async function GET(req: NextRequest) {
         totalExams,
         activeExams,
         difficultyCount,
+        categoryLabelCount,
         domainCount,
         stageCount,
       },

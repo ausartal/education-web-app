@@ -14,6 +14,7 @@ interface MSATStats {
   totalExams: number;
   activeExams: number;
   difficultyCount: Record<string, number>;
+  categoryLabelCount: Record<string, number>;
   domainCount: Record<string, number>;
   stageCount: Record<number, number>;
 }
@@ -50,12 +51,14 @@ interface MSATData {
   exams: MSATExam[];
 }
 
-const DIFFICULTY_LABELS: Record<string, { label: string; color: string; bar: string }> = {
-  sangat_mudah: { label: 'Sangat Mudah', color: 'text-emerald-700', bar: 'bg-emerald-400' },
-  mudah: { label: 'Mudah', color: 'text-green-700', bar: 'bg-green-400' },
-  sedang: { label: 'Sedang', color: 'text-amber-700', bar: 'bg-amber-400' },
-  sukar: { label: 'Sukar', color: 'text-orange-700', bar: 'bg-orange-400' },
-  sangat_sukar: { label: 'Sangat Sukar', color: 'text-rose-700', bar: 'bg-rose-400' },
+const CATEGORY_LABELS: Record<string, { label: string; color: string; bar: string }> = {
+  'Lebih Tinggi': { label: 'Lebih Tinggi', color: 'text-rose-700', bar: 'bg-rose-400' },
+  'Tinggi': { label: 'Tinggi', color: 'text-orange-700', bar: 'bg-orange-400' },
+  'Medium Lebih Tinggi': { label: 'Medium Lebih Tinggi', color: 'text-amber-700', bar: 'bg-amber-400' },
+  'Medium': { label: 'Medium', color: 'text-yellow-700', bar: 'bg-yellow-400' },
+  'Medium Lebih Rendah': { label: 'Medium Lebih Rendah', color: 'text-lime-700', bar: 'bg-lime-400' },
+  'Rendah': { label: 'Rendah', color: 'text-green-700', bar: 'bg-green-400' },
+  'Sangat Rendah': { label: 'Sangat Rendah', color: 'text-emerald-700', bar: 'bg-emerald-400' },
 };
 
 const DOMAIN_LABELS: Record<string, { label: string; color: string; bar: string }> = {
@@ -183,8 +186,8 @@ const MsatPage: FC = () => {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="rounded-2xl bg-white p-5 ring-1 ring-stone-100">
           <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-stone-400">Distribusi Kesulitan</h3>
           <div className="space-y-2">
-            {Object.entries(DIFFICULTY_LABELS).map(([key, cfg]) => {
-              const count = stats?.difficultyCount[key] ?? 0;
+            {Object.entries(CATEGORY_LABELS).map(([key, cfg]) => {
+              const count = stats?.categoryLabelCount[key] ?? 0;
               const total = stats?.totalQuestions ?? 1;
               const pct = Math.round((count / total) * 100);
               return (
