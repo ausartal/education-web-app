@@ -166,33 +166,40 @@ export function calculateCognitiveScores(stageResponses: MSATStageResponse[]): {
 /**
  * Get cognitive level description based on score percentage.
  */
-function getCognitiveLevel(score: number): { level: string; description: string } {
-  if (score >= 75) {
-    return { level: 'Tinggi', description: '' };
-  }
-  if (score >= 50) {
-    return { level: 'Sedang', description: '' };
-  }
-  return { level: 'Rendah', description: '' };
+function getCognitiveLevel(score: number): { level: string } {
+  if (score >= 75) return { level: 'Tinggi' };
+  if (score >= 50) return { level: 'Sedang' };
+  return { level: 'Rendah' };
 }
 
+// Detailed cognitive descriptions per level (from PENDEKATAN SIMPULAN HASIL)
 const COGNITIVE_DESCRIPTIONS: Record<string, Record<string, string>> = {
   knowing: {
-    Tinggi: 'Menguasai konsep dasar kimia secara mendalam dan konsisten di semua stage.',
-    Sedang: 'Memahami sebagian besar konsep dasar, namun ada beberapa celah pemahaman.',
-    Rendah: 'Pemahaman konsep dasar masih lemah, perlu penguatan pada hafalan dan definisi.',
+    Tinggi: 'Menguasai seluruh konsep dasar kimia secara mendalam dan konsisten di semua stage. Mampu mengingat, memahami, dan menjelaskan prinsip-prinsip kimia tanpa kekeliruan.',
+    Sedang: 'Memahami istilah dan prinsip-prinsip utama kimia. Mampu mengenali fakta dan definisi dasar, namun masih memiliki beberapa celah pemahaman pada konsep yang lebih kompleks.',
+    Rendah: 'Hanya mengingat sebagian kecil pengetahuan kimia yang sangat parsial. Pemahaman konsep dasar masih lemah dan perlu penguatan pada hafalan serta definisi.',
   },
   applying: {
-    Tinggi: 'Terampil mengaplikasikan rumus dan hukum kimia pada berbagai variasi soal.',
-    Sedang: 'Mampu menerapkan konsep pada soal rutin, namun masih kesulitan pada variasi baru.',
-    Rendah: 'Belum mampu menerapkan rumus/prinsip secara tepat, perlu latihan prosedural.',
+    Tinggi: 'Terampil mengaplikasikan rumus dan hukum kimia tanpa kekeliruan pada berbagai variasi soal, termasuk situasi prosedural dan non-rutin.',
+    Sedang: 'Mampu menerapkan konsep pada perhitungan atau masalah sederhana yang rutin. Namun masih kesulitan pada variasi baru atau situasi yang belum pernah dihadapi.',
+    Rendah: 'Belum mampu menerapkan rumus dan prinsip kimia secara tepat. Masih mengalami kesulitan atau kerap terjadi miskonsepsi saat menerapkan konsep pada soal.',
   },
   reasoning: {
-    Tinggi: 'Mampu menganalisis masalah kompleks, mengintegrasikan multi-konsep, dan memecahkan masalah kontekstual.',
-    Sedang: 'Mulai mampu melakukan penalaran ilmiah, namun masih terbatas pada kasus sederhana.',
-    Rendah: 'Penalaran masih terbatas pada hubungan sebab-akibat langsung, belum mampu analisis mandiri.',
+    Tinggi: 'Mampu menganalisis masalah kompleks, mengintegrasikan multi-konsep, dan memecahkan masalah kontekstual non-rutin melalui penalaran ilmiah yang logis dan kritis.',
+    Sedang: 'Mulai mampu melakukan penalaran ilmiah untuk menginterpretasikan data dan menyelesaikan masalah kontekstual tingkat menengah. Namun penalaran masih terbatas pada hubungan sebab-akibat langsung.',
+    Rendah: 'Penalaran masih terbatas pada hubungan sebab-akibat langsung dan belum konsisten pada kasus terintegrasi. Belum mampu melakukan analisis penalaran secara mandiri.',
   },
 };
+
+// Stage path description helper
+function getStagePathDescription(stageResponses: MSATStageResponse[]): string {
+  const paths: string[] = [];
+  for (const sr of stageResponses) {
+    const status = sr.passed ? 'lulus' : 'tidak lulus';
+    paths.push(`Stage ${sr.stageNumber} (${sr.stageDifficulty}): ${sr.totalCorrect}/12 benar — ${status}`);
+  }
+  return paths.join('; ');
+}
 
 /**
  * Generate all 4 conclusions for the exam results.
@@ -209,26 +216,32 @@ export function generateConclusions(
   const applyingLevel = getCognitiveLevel(cognitive.applying);
   const reasoningLevel = getCognitiveLevel(cognitive.reasoning);
 
+  // Build detailed overall description with cognitive context
+  const kDesc = COGNITIVE_DESCRIPTIONS.knowing[knowingLevel.level];
+  const aDesc = COGNITIVE_DESCRIPTIONS.applying[applyingLevel.level];
+  const rDesc = COGNITIVE_DESCRIPTIONS.reasoning[reasoningLevel.level];
+  const detailedOverall = `Peserta uji ${kDesc.toLowerCase().replace(/^./, c => c.toLowerCase())} (Knowing), ${aDesc.toLowerCase().replace(/^./, c => c.toLowerCase())} (Applying), serta ${rDesc.toLowerCase().replace(/^./, c => c.toLowerCase())} (Reasoning).`;
+
   return {
     overall: {
       score: finalScore,
       predikat,
-      description: overallDesc,
+      description: detailedOverall,
     },
     knowing: {
       score: cognitive.knowing,
       level: knowingLevel.level,
-      description: COGNITIVE_DESCRIPTIONS.knowing[knowingLevel.level],
+      description: kDesc,
     },
     applying: {
       score: cognitive.applying,
       level: applyingLevel.level,
-      description: COGNITIVE_DESCRIPTIONS.applying[applyingLevel.level],
+      description: aDesc,
     },
     reasoning: {
       score: cognitive.reasoning,
       level: reasoningLevel.level,
-      description: COGNITIVE_DESCRIPTIONS.reasoning[reasoningLevel.level],
+      description: rDesc,
     },
   };
 }
