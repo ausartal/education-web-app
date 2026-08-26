@@ -163,7 +163,7 @@ function MSATPreviewContent() {
       </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {exams.slice(0, 3).map(exam => (
-          <Link key={exam.id} href={`/admin/mast/${exam.id}`}
+          <Link key={exam.id} href={`/msat/exams/${exam.id}`}
             className="flex items-center gap-3 rounded-xl bg-white/80 p-3 transition-all hover:bg-white hover:shadow-sm">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-100">
               <ClipboardCheck size={16} className="text-indigo-600" />
@@ -360,7 +360,7 @@ const AdminDashboard: FC = () => {
               <p className="text-[11px] text-stone-400">Multistage Adaptive Scored Testing</p>
             </div>
           </div>
-          <Link href="/admin/mast"
+          <Link href="/msat"
             className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white transition-all hover:bg-indigo-700 hover:-translate-y-0.5">
             Kelola <ChevronRight size={12} />
           </Link>
@@ -558,7 +558,7 @@ const AdminDashboard: FC = () => {
                 { label: 'Pengguna', icon: Users, href: '/admin/users', bg: 'bg-sky-50 hover:bg-sky-100 text-sky-700' },
                 { label: 'Bank Soal', icon: BookOpen, href: '/admin/questions', bg: 'bg-amber-50 hover:bg-amber-100 text-amber-700' },
                 { label: 'Ujian Sekolah', icon: FlaskConical, href: '/admin/ujian', bg: 'bg-rose-50 hover:bg-rose-100 text-rose-700' },
-                { label: 'Ujian MSAT', icon: ClipboardCheck, href: '/admin/mast', bg: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700' },
+                { label: 'Ujian MSAT', icon: ClipboardCheck, href: '/msat', bg: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700' },
                 { label: 'Analitik', icon: BarChart3, href: '/admin/analytics', bg: 'bg-violet-50 hover:bg-violet-100 text-violet-700' },
                 { label: 'Konten', icon: FileText, href: '/admin/content', bg: 'bg-teal-50 hover:bg-teal-100 text-teal-700' },
                 { label: 'Terminal', icon: Terminal, href: '/admin/cli', bg: 'bg-stone-100 hover:bg-stone-200 text-stone-700' },
