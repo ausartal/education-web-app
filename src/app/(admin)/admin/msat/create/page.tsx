@@ -24,13 +24,13 @@ interface Question {
 
 type StageBranch = 'stage1_medium' | 'stage2_tinggi' | 'stage2_rendah' | 'stage3_tinggi' | 'stage3_medium' | 'stage3_rendah';
 
-const BRANCH_CONFIG: Record<StageBranch, { label: string; stage: number; difficulties: string[] }> = {
-  stage1_medium: { label: 'Stage 1 — Medium', stage: 1, difficulties: ['sedang'] },
-  stage2_tinggi: { label: 'Stage 2 — Tinggi', stage: 2, difficulties: ['sukar', 'sangat_sukar'] },
-  stage2_rendah: { label: 'Stage 2 — Rendah', stage: 2, difficulties: ['sangat_mudah', 'mudah'] },
-  stage3_tinggi: { label: 'Stage 3 — Tinggi', stage: 3, difficulties: ['sukar', 'sangat_sukar'] },
-  stage3_medium: { label: 'Stage 3 — Medium', stage: 3, difficulties: ['sedang'] },
-  stage3_rendah: { label: 'Stage 3 — Rendah', stage: 3, difficulties: ['sangat_mudah', 'mudah'] },
+const BRANCH_CONFIG: Record<StageBranch, { label: string; stage: number; categoryLabels: string[] }> = {
+  stage1_medium: { label: 'Stage 1 — Medium', stage: 1, categoryLabels: ['Medium'] },
+  stage2_tinggi: { label: 'Stage 2 — Tinggi', stage: 2, categoryLabels: ['Tinggi', 'Lebih Tinggi'] },
+  stage2_rendah: { label: 'Stage 2 — Rendah', stage: 2, categoryLabels: ['Rendah', 'Sangat Rendah'] },
+  stage3_tinggi: { label: 'Stage 3 — Tinggi', stage: 3, categoryLabels: ['Tinggi', 'Lebih Tinggi'] },
+  stage3_medium: { label: 'Stage 3 — Medium', stage: 3, categoryLabels: ['Medium Lebih Tinggi', 'Medium', 'Medium Lebih Rendah'] },
+  stage3_rendah: { label: 'Stage 3 — Rendah', stage: 3, categoryLabels: ['Rendah', 'Sangat Rendah'] },
 };
 
 const DOMAIN_TABS = ['knowing', 'applying', 'reasoning'] as const;
@@ -99,7 +99,7 @@ const MsatCreatePage: FC = () => {
     const config = BRANCH_CONFIG[branch];
     return allQuestions.filter(q =>
       q.cognitiveDomain === domain &&
-      config.difficulties.includes(q.difficulty) &&
+      config.categoryLabels.includes(q.categoryLabel) &&
       q.stage === config.stage
     );
   }, [allQuestions]);
@@ -397,8 +397,8 @@ const MsatCreatePage: FC = () => {
                       <div className="min-w-0 flex-1">
                         <p className="line-clamp-2 text-[13px] text-stone-700">{q.stem}</p>
                         <div className="mt-1 flex items-center gap-1.5">
-                          <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] font-bold text-stone-500">{q.difficulty}</span>
-                          <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-400">{q.tierPath}</span>
+                          <span className="rounded bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-violet-600">{q.categoryLabel}</span>
+                          <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-400">{q.cognitiveDomain}</span>
                         </div>
                       </div>
                     </button>
