@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminAuth, adminDb, setUserRoleClaim } from '@/lib/firebase-admin';
 import { verifyAdmin } from '@/lib/auth-helpers';
 
 export async function PATCH(
@@ -18,6 +18,11 @@ export async function PATCH(
   }
 
   await adminDb.collection('users').doc(params.uid).update(updates);
+
+  // Sync custom claim when role is updated
+  if ('role' in updates) {
+    await setUserRoleClaim(params.uid, updates.role as string);
+  }
 
   await adminDb.collection('audit_logs').add({
     actorId: admin.uid,

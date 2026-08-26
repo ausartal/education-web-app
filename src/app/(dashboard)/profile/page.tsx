@@ -4,35 +4,20 @@ import { FC, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, BookOpen, Target, Trophy, Flame, Calendar } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { getUserProgress } from '@/services/progress';
-import { getUserAchievements, getAchievements } from '@/services/achievements';
 import { getMaterials } from '@/services/materials';
-import { Achievement, UserAchievement } from '@/types/firestore';
 
 const ProfilePage: FC = () => {
   const { profile } = useAuth();
   const [completedCount, setCompletedCount] = useState(0);
   const [totalMaterials, setTotalMaterials] = useState(0);
-  const [userAchievements, setUserAchievements] = useState<UserAchievement[]>(
-    []
-  );
-  const [allAchievements, setAllAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!profile) return;
     const fetch = async () => {
       try {
-        const [progress, materials, uAch, aAch] = await Promise.all([
-          getUserProgress(profile.uid),
-          getMaterials(),
-          getUserAchievements(profile.uid),
-          getAchievements(),
-        ]);
-        setCompletedCount(progress.filter((p) => p.status === 'completed').length);
+        const materials = await getMaterials();
         setTotalMaterials(materials.length);
-        setUserAchievements(uAch);
-        setAllAchievements(aAch);
       } catch { /* leave defaults on error */ } finally {
         setLoading(false);
       }
@@ -50,20 +35,6 @@ const ProfilePage: FC = () => {
 
   const stats = [
     {
-      icon: Zap,
-      label: 'Total XP',
-      value: profile.stats.xp.toLocaleString(),
-      color: 'text-amber-500',
-      bg: 'bg-amber-50',
-    },
-    {
-      icon: Flame,
-      label: 'Streak',
-      value: `${profile.stats.streak} days`,
-      color: 'text-orange-500',
-      bg: 'bg-orange-50',
-    },
-    {
       icon: BookOpen,
       label: 'Materials',
       value: `${completedCount}/${totalMaterials}`,
@@ -77,23 +48,7 @@ const ProfilePage: FC = () => {
       color: 'text-emerald-500',
       bg: 'bg-emerald-50',
     },
-    {
-      icon: Trophy,
-      label: 'Achievements',
-      value: userAchievements.length.toString(),
-      color: 'text-violet-500',
-      bg: 'bg-violet-50',
-    },
-    {
-      icon: Calendar,
-      label: 'Level',
-      value: profile.stats.level.toString(),
-      color: 'text-rose-500',
-      bg: 'bg-rose-50',
-    },
   ];
-
-  const unlockedIds = userAchievements.map((ua) => ua.achievementId);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -142,37 +97,6 @@ const ProfilePage: FC = () => {
             </div>
           );
         })}
-      </motion.div>
-
-      {/* Achievements */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="rounded-3xl bg-white p-6 shadow-sm"
-      >
-        <h2 className="mb-4 font-display text-base font-bold text-gray-900">
-          Achievements ({userAchievements.length}/{allAchievements.length})
-        </h2>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-          {allAchievements.map((ach) => {
-            const unlocked = unlockedIds.includes(ach.id);
-            return (
-              <div
-                key={ach.id}
-                className={`flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all ${
-                  unlocked ? 'bg-amber-50' : 'bg-gray-50 opacity-40 grayscale'
-                }`}
-                title={ach.description}
-              >
-                <span className="text-2xl">{ach.icon}</span>
-                <span className="text-[10px] font-medium text-gray-700 line-clamp-2">
-                  {ach.name}
-                </span>
-              </div>
-            );
-          })}
-        </div>
       </motion.div>
     </div>
   );

@@ -6,8 +6,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { getMaterials } from '@/services/materials';
-import { getUserProgress } from '@/services/progress';
-import { Material, UserProgress } from '@/types/firestore';
+import { Material } from '@/types/firestore';
 import { CheckCircle, Lock } from 'lucide-react';
 
 // Map materials to colorful topic icons and gradients
@@ -52,32 +51,20 @@ const topicStyles = [
 const MateriPage: FC = () => {
   const { profile } = useAuth();
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!profile) return;
     const fetch = async () => {
       try {
-        const [mats, prog] = await Promise.all([
-          getMaterials(),
-          getUserProgress(profile.uid),
-        ]);
+        const mats = await getMaterials();
         setMaterials(mats);
-        setProgress(prog);
       } catch { /* leave empty on error */ } finally {
         setLoading(false);
       }
     };
     fetch();
   }, [profile]);
-
-  const getStatus = (id: string) =>
-    progress.find((p) => p.materialId === id)?.status || 'not_started';
-
-  const completedCount = progress.filter(
-    (p) => p.status === 'completed'
-  ).length;
 
   if (loading) {
     return (
@@ -99,32 +86,13 @@ const MateriPage: FC = () => {
           Materi Pembelajaran
         </h1>
         <p className="text-sm text-gray-500">
-          {completedCount} dari {materials.length} materi selesai
+          {materials.length} materi tersedia
         </p>
-        {/* Progress */}
-        <div className="mx-auto mt-4 h-3 max-w-xs overflow-hidden rounded-full bg-gray-100">
-          <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-primary to-primary-cyan"
-            initial={{ width: 0 }}
-            animate={{
-              width: `${materials.length > 0 ? (completedCount / materials.length) * 100 : 0}%`,
-            }}
-            transition={{ duration: 0.8 }}
-          />
-        </div>
       </motion.div>
 
       {/* Material Cards - Duolingo style */}
       <div className="space-y-4">
         {materials.map((material, i) => {
-          const status = getStatus(material.id);
-          const isCompleted = status === 'completed';
-          const isInProgress = status === 'in_progress';
-          const isCurrent =
-            !isCompleted &&
-            !isInProgress &&
-            (i === 0 || getStatus(materials[i - 1].id) === 'completed');
-          const isLocked = !isCompleted && !isInProgress && !isCurrent;
           const style = topicStyles[i % topicStyles.length];
 
           return (
@@ -135,14 +103,8 @@ const MateriPage: FC = () => {
               transition={{ delay: i * 0.06 }}
             >
               <Link
-                href={isLocked ? '#' : `/materi/${material.id}`}
-                className={`group relative flex items-center gap-5 overflow-hidden rounded-2xl p-5 transition-all duration-300 ${
-                  isLocked
-                    ? 'cursor-not-allowed bg-gray-100 opacity-50'
-                    : isCompleted
-                      ? 'bg-white shadow-sm hover:shadow-lg hover:-translate-y-0.5'
-                      : 'bg-white shadow-md hover:shadow-xl hover:-translate-y-1'
-                }`}
+                href={`/materi/${material.id}`}
+                className="group relative flex items-center gap-5 overflow-hidden rounded-2xl bg-white p-5 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
               >
                 {/* Icon Circle */}
                 <div
@@ -155,17 +117,6 @@ const MateriPage: FC = () => {
                     height={36}
                     className="brightness-0 invert"
                   />
-                  {/* Status overlay */}
-                  {isCompleted && (
-                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
-                      <CheckCircle size={14} className="text-white" />
-                    </div>
-                  )}
-                  {isLocked && (
-                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-gray-400 ring-2 ring-white">
-                      <Lock size={12} className="text-white" />
-                    </div>
-                  )}
                 </div>
 
                 {/* Content */}
@@ -177,23 +128,6 @@ const MateriPage: FC = () => {
                     {material.description}
                   </p>
                 </div>
-
-                {/* Right badge */}
-                {isCompleted && (
-                  <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-600">
-                    ✓ Selesai
-                  </span>
-                )}
-                {isCurrent && (
-                  <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary animate-pulse">
-                    Mulai →
-                  </span>
-                )}
-                {isInProgress && (
-                  <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-600">
-                    Lanjut
-                  </span>
-                )}
               </Link>
             </motion.div>
           );

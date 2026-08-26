@@ -81,42 +81,6 @@
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "lastAccessedAt", "order": "DESCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "kps_exam_sessions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "studentId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "completedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "kps_exam_sessions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "accessCodeId", "order": "ASCENDING" },
-        { "fieldPath": "studentId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "kps_questions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "difficultyLevel", "order": "ASCENDING" },
-        { "fieldPath": "stage", "order": "ASCENDING" },
-        { "fieldPath": "order", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "kps_stimuli",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "level", "order": "ASCENDING" },
-        { "fieldPath": "stage", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
-      ]
     }
   ],
   "fieldOverrides": []

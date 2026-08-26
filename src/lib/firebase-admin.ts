@@ -35,3 +35,11 @@ export const adminDb = getFirestore(app);
 export const adminStorage = getStorage(app);
 export const adminAppCheck = getAppCheck(app);
 export default app;
+
+/**
+ * Set a custom claim with the user's role on their Firebase Auth token.
+ * This eliminates the need for Firestore lookups in security rules.
+ */
+export async function setUserRoleClaim(uid: string, role: string): Promise<void> {
+  await adminAuth.setCustomUserClaims(uid, { role });
+}

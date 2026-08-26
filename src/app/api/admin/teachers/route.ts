@@ -4,6 +4,10 @@ import { verifyAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
+// ── In-memory cache with TTL ─────────────────────────────────────────
+let teachersCache: { data: unknown; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 function tsToIso(ts: Record<string, number> | null | undefined): string | null {
   if (!ts) return null;
   const secs = ts.seconds ?? ts._seconds;
@@ -13,6 +17,11 @@ function tsToIso(ts: Record<string, number> | null | undefined): string | null {
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  // Return cached response if still fresh
+  if (teachersCache && Date.now() - teachersCache.timestamp < CACHE_TTL) {
+    return NextResponse.json(teachersCache.data);
+  }
 
   const [
     usersSnap, materialsSnap, questionsSnap,
@@ -97,5 +106,10 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return NextResponse.json({ teachers });
+  const result = { teachers };
+
+  // Store in cache
+  teachersCache = { data: result, timestamp: Date.now() };
+
+  return NextResponse.json(result);
 }

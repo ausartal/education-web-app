@@ -116,10 +116,6 @@ async function createUserProfile(
     lastLoginAt: serverTimestamp(),
     profile: {},
     stats: {
-      xp: 0,
-      level: 1,
-      streak: 0,
-      longestStreak: 0,
       totalLessons: 0,
       totalQuizzes: 0,
     },
@@ -130,6 +126,20 @@ async function createUserProfile(
   };
 
   await setDoc(doc(db, 'users', uid), profile);
+
+  // Sync role to Firebase Auth custom claim (eliminates Firestore read in rules)
+  try {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const token = await currentUser.getIdToken();
+      await fetch('/api/auth/sync-claim', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    }
+  } catch {
+    // Non-fatal: custom claim will be synced on next login or admin action
+  }
 }
 
 async function updateLastLogin(): Promise<void> {

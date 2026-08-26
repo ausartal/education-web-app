@@ -23,10 +23,8 @@ interface AnalyticsData {
   auditActivityByDay: Record<string, number>;
   questionsByDifficulty: { easy: number; moderate: number; hard: number };
   questionsByStatus: { active: number; inactive: number };
-  topUsers: Array<{ uid: string; displayName: string; role: string; xp: number; level: number }>;
   examStatusDistribution: Record<string, number>;
   roleDistribution: { student: number; teacher: number; admin: number };
-  avgXp: number;
   avgAccuracy: number;
   recentExams: Array<{
     id: string; userId: string; userName: string; examId: string;
@@ -205,7 +203,6 @@ const AdminDashboard: FC = () => {
     { icon: GraduationCap, label: 'Siswa', value: data.roleDistribution.student, sub: `${data.roleDistribution.teacher} guru`, color: 'text-emerald-600', href: '/admin/users' },
     { icon: Target, label: 'Akurasi Rata-rata', value: `${data.avgAccuracy}%`, sub: 'ujian selesai', color: 'text-teal-600', href: '/admin/analytics' },
     { icon: School, label: 'Kelas', value: data.totals.classes ?? 0, sub: `${data.totals.examSchedules ?? 0} jadwal ujian`, color: 'text-cyan-600', href: '/admin/ujian' },
-    { icon: Zap, label: 'XP Rata-rata', value: data.avgXp, sub: 'per siswa', color: 'text-orange-500', href: '/admin/analytics' },
   ];
 
   return (
@@ -589,58 +586,6 @@ const AdminDashboard: FC = () => {
                 <Download size={10} /> Soal CSV
               </button>
             </div>
-          </div>
-        </motion.div>
-
-        {/* Top users */}
-        <motion.div {...fade(0.65)} className="rounded-2xl bg-white shadow-xs border border-stone-100">
-          <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
-                <TrendingUp size={14} className="text-amber-500" />
-              </div>
-              <p className="text-sm font-bold text-gray-900">Top Pengguna</p>
-            </div>
-            <Link href="/admin/analytics"
-              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-blue-50">
-              Semua <ChevronRight size={12} />
-            </Link>
-          </div>
-          <div className="p-5">
-            {data.topUsers.length === 0 ? (
-              <div className="flex flex-col items-center py-8 text-center">
-                <Zap size={24} className="mb-2 text-gray-200" />
-                <p className="text-xs text-gray-400">Belum ada data XP siswa</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {data.topUsers.map((u, i) => {
-                  const maxXp = data.topUsers[0]?.xp || 1;
-                  const pct = Math.round((u.xp / maxXp) * 100);
-                  const medals = ['🥇', '🥈', '🥉'];
-                  return (
-                    <div key={u.uid} className="flex items-center gap-3">
-                      <span className="w-5 shrink-0 text-center text-sm">
-                        {i < 3 ? medals[i] : <span className="text-xs font-bold text-gray-400">{i + 1}</span>}
-                      </span>
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-300 text-[11px] font-black text-white shadow-sm">
-                        {u.displayName?.charAt(0).toUpperCase() ?? '?'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="truncate text-xs font-semibold text-gray-800">{u.displayName}</p>
-                          <span className="shrink-0 ml-2 text-[11px] font-bold text-amber-500 tabular-nums">{u.xp} XP</span>
-                        </div>
-                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                          <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-300"
-                            style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </motion.div>
       </div>

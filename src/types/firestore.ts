@@ -18,10 +18,6 @@ export interface UserProfile {
     city?: string;
   };
   stats: {
-    xp: number;
-    level: number;
-    streak: number;
-    longestStreak: number;
     totalLessons: number;
     totalQuizzes: number;
   };
@@ -142,46 +138,6 @@ export interface QuizResult {
   completedAt: Timestamp;
 }
 
-// ===== USER PROGRESS =====
-export type ProgressStatus = 'not_started' | 'in_progress' | 'completed';
-
-export interface UserProgress {
-  id: string;
-  userId: string;
-  materialId: string;
-  status: ProgressStatus;
-  completedAt: Timestamp | null;
-  timeSpent: number;
-  lastAccessedAt: Timestamp;
-}
-
-// ===== ACHIEVEMENTS =====
-export type AchievementTier = 'gold' | 'silver' | 'bronze';
-export type AchievementCategory =
-  | 'learning'
-  | 'performance'
-  | 'streak'
-  | 'exploration'
-  | 'special';
-
-export interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: AchievementCategory;
-  tier: AchievementTier;
-  condition: Record<string, unknown>;
-  xpReward: number;
-}
-
-export interface UserAchievement {
-  id: string;
-  userId: string;
-  achievementId: string;
-  unlockedAt: Timestamp;
-}
-
 // ===== MESSAGES =====
 export interface Message {
   id: string;
@@ -212,14 +168,6 @@ export interface MSATConfig {
 
 export interface AppConfig {
   msat: MSATConfig;
-  gamification: {
-    xpPerLesson: number;
-    xpPerCorrectAnswer: number;
-    xpPerExam: number;
-    xpDailyLogin: number;
-    xpStreakBonus: number;
-    levelFormula: string;
-  };
 }
 
 // ===== AUDIT LOGS =====

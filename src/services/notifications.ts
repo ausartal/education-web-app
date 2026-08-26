@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-export type NotificationType = 'achievement' | 'streak' | 'message' | 'system';
+export type NotificationType = 'message' | 'system';
 
 export interface Notification {
   id: string;

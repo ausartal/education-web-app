@@ -6,7 +6,6 @@ interface StatsGridProps {
   materialsCompleted: number;
   totalMaterials: number;
   quizzes: number;
-  achievements: number;
 }
 
 const StatCard: FC<{
@@ -34,10 +33,9 @@ export const StatsGrid: FC<StatsGridProps> = ({
   materialsCompleted,
   totalMaterials,
   quizzes,
-  achievements,
 }) => {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
       <StatCard
         icon="/icons/lighting.png"
         label="Total XP"
@@ -55,12 +53,6 @@ export const StatsGrid: FC<StatsGridProps> = ({
         label="Quiz Selesai"
         value={quizzes.toString()}
         color="#00B84D"
-      />
-      <StatCard
-        icon="/icons/fire.png"
-        label="Achievements"
-        value={achievements.toString()}
-        color="#8B5CF6"
       />
     </div>
   );

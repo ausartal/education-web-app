@@ -6,10 +6,7 @@ service cloud.firestore {
     function isAuth() { return request.auth != null; }
     function uid()    { return request.auth.uid; }
 
-    function userDoc() {
-      return get(/databases/$(database)/documents/users/$(uid()));
-    }
-    function role() { return userDoc().data.role; }
+    function role() { return request.auth.token.role; }
 
     function isAdmin()          { return isAuth() && role() == 'admin'; }
     function isTeacherOrAdmin() { return isAuth() && (role() == 'teacher' || role() == 'admin'); }
@@ -154,26 +151,6 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ── USER PROGRESS ─────────────────────────────────────────────────────────
-    match /user_progress/{docId} {
-      allow read:   if isOwner(resource.data.userId) || isTeacherOrAdmin();
-      allow create: if isAuth() && request.resource.data.userId == uid();
-      allow update: if isOwner(resource.data.userId) || isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // ── ACHIEVEMENTS ─────────────────────────────────────────────────────────
-    match /achievements/{docId} {
-      allow read:  if isAuth();
-      allow write: if isAdmin();
-    }
-    match /user_achievements/{docId} {
-      allow read:   if isOwner(resource.data.userId) || isTeacherOrAdmin();
-      allow create: if false; // server-side only via Admin SDK
-      allow update: if false;
-      allow delete: if isAdmin();
-    }
-
     // ── MESSAGES ─────────────────────────────────────────────────────────────
     match /messages/{docId} {
       allow read: if isAdmin()
@@ -213,34 +190,5 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── KPS ASSESSMENT ──────────────────────────────────────────────────────
-    match /kps_stimuli/{docId} {
-      allow read:   if isAuth();
-      allow write:  if false; // Admin SDK only
-    }
-    match /kps_questions/{docId} {
-      allow read:   if isAuth();
-      allow write:  if false; // Admin SDK only
-    }
-    match /kps_exam_sessions/{docId} {
-      allow read:   if isAuth() && resource.data.studentId == uid();
-      allow create: if false; // Admin SDK only
-      allow update: if false; // Admin SDK only
-      allow delete: if false;
-    }
-    match /kps_access_codes/{docId} {
-      allow read:   if isAdmin();
-      allow write:  if false; // Admin SDK only
-    }
-    match /kps_certificates/{docId} {
-      allow read:   if isAuth() && resource.data.studentId == uid();
-      allow create: if false; // Admin SDK only
-      allow update: if false;
-      allow delete: if false;
-    }
-    match /kps_announcements/{docId} {
-      allow read:   if isAuth();
-      allow write:  if false; // Admin SDK only
-    }
   }
 }

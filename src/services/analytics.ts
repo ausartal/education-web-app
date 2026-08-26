@@ -9,11 +9,7 @@ export type AnalyticsEvent =
   | 'quiz_start'
   | 'quiz_complete'
   | 'exam_start'
-  | 'exam_complete'
-  | 'achievement_unlock'
-  | 'streak_update'
-  | 'xp_earned'
-  | 'level_up';
+  | 'exam_complete';
 
 interface EventData {
   event: AnalyticsEvent;
@@ -61,6 +57,3 @@ export const trackExamComplete = (
     userId,
     properties: { theta, accuracy },
   });
-
-export const trackXPEarned = (userId: string, amount: number, source: string) =>
-  trackEvent({ event: 'xp_earned', userId, properties: { amount, source } });

@@ -5,12 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { getUserProgress } from '@/services/progress';
 import { getMaterials } from '@/services/materials';
-import { Material, UserProgress } from '@/types/firestore';
+import { Material } from '@/types/firestore';
 import {
-  Zap,
-  TrendingUp,
   BookOpen,
   Target,
   Clock,
@@ -98,7 +95,6 @@ const courseTopics = [
 const DashboardPage: FC = () => {
   const { profile } = useAuth();
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [progress, setProgress] = useState<UserProgress[]>([]);
   const [activeCourseIdx, setActiveCourseIdx] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'chart'>('list');
   const [loading, setLoading] = useState(true);
@@ -107,12 +103,8 @@ const DashboardPage: FC = () => {
     if (!profile) return;
     const fetchData = async () => {
       try {
-        const [mats, prog] = await Promise.all([
-          getMaterials(),
-          getUserProgress(profile.uid),
-        ]);
+        const mats = await getMaterials();
         setMaterials(mats);
-        setProgress(prog);
       } catch { /* leave empty on error */ } finally {
         setLoading(false);
       }
@@ -128,40 +120,7 @@ const DashboardPage: FC = () => {
     );
   }
 
-  const completedCount = progress.filter(
-    (p) => p.status === 'completed'
-  ).length;
-  const nextMaterial = materials.find(
-    (m) =>
-      !progress.find((p) => p.materialId === m.id && p.status === 'completed')
-  );
-  const totalTimeSpent = progress.reduce(
-    (acc, p) => acc + (p.timeSpent || 0),
-    0
-  );
-
   const days = ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'];
-  const today = new Date().getDay();
-  const streakDays = days.map((_, i) => i < profile.stats.streak % 7);
-
-  // Calculate weekly activity from real progress data
-  const weeklyXP = (() => {
-    const now = new Date();
-    const weekData = [0, 0, 0, 0, 0, 0, 0]; // M T W Th F S Su
-    progress.forEach((p) => {
-      const accessedAt = p.lastAccessedAt?.toDate?.();
-      if (!accessedAt) return;
-      const diffDays = Math.floor(
-        (now.getTime() - accessedAt.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      if (diffDays < 7) {
-        const dayIdx = (accessedAt.getDay() + 6) % 7; // Convert Sun=0 to Mon=0
-        weekData[dayIdx] += p.status === 'completed' ? 50 : 10;
-      }
-    });
-    return weekData;
-  })();
-  const maxXP = Math.max(...weeklyXP, 1);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -206,44 +165,6 @@ const DashboardPage: FC = () => {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* LEFT COLUMN */}
         <div className="space-y-6">
-          {/* Streak - Gradient card, no border */}
-          <div className="animate-[fadeIn_0.6s_ease-out] rounded-3xl bg-gradient-to-br from-amber-400 via-orange-400 to-red-400 p-6 text-white shadow-lg shadow-orange-200/50">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-medium text-white/80">
-                Daily Streak
-              </span>
-              <Zap size={20} className="fill-white text-white" />
-            </div>
-            <p className="mb-4 text-5xl font-black">{profile.stats.streak}</p>
-            <div className="flex gap-2">
-              {days.map((day, i) => (
-                <div key={day} className="flex flex-col items-center gap-1">
-                  <div
-                    className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 ${
-                      streakDays[i]
-                        ? 'bg-white/30 backdrop-blur-sm'
-                        : i === (today === 0 ? 6 : today - 1)
-                          ? 'bg-white/20 ring-2 ring-white'
-                          : 'bg-white/10'
-                    }`}
-                  >
-                    <Zap
-                      size={14}
-                      className={
-                        streakDays[i]
-                          ? 'fill-white text-white'
-                          : 'text-white/40'
-                      }
-                    />
-                  </div>
-                  <span className="text-[10px] font-medium text-white/70">
-                    {day}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Progress Overview - Soft card */}
           <div className="animate-[fadeIn_0.7s_ease-out] rounded-3xl bg-white p-6 shadow-sm shadow-gray-100">
             <div className="mb-5 flex items-center justify-between">
@@ -286,28 +207,14 @@ const DashboardPage: FC = () => {
                   <div className="flex-1">
                     <p className="text-xs text-gray-500">Materi Selesai</p>
                     <p className="text-sm font-bold text-gray-900">
-                      {completedCount} of {materials.length}
+                      0 of {materials.length}
                     </p>
                   </div>
                   <div className="h-2 w-20 overflow-hidden rounded-full bg-blue-100">
                     <div
                       className="h-full rounded-full bg-primary transition-all duration-700"
-                      style={{
-                        width: `${materials.length > 0 ? (completedCount / materials.length) * 100 : 0}%`,
-                      }}
+                      style={{ width: '0%' }}
                     />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 rounded-2xl bg-amber-50/80 px-4 py-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
-                    <Zap size={16} className="text-amber-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-500">Total XP</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {profile.stats.xp.toLocaleString()}
-                    </p>
                   </div>
                 </div>
 
@@ -319,18 +226,6 @@ const DashboardPage: FC = () => {
                     <p className="text-xs text-gray-500">Quiz Completed</p>
                     <p className="text-sm font-bold text-gray-900">
                       {profile.stats.totalQuizzes}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 rounded-2xl bg-violet-50/80 px-4 py-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100">
-                    <Clock size={16} className="text-violet-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-500">Time Spent</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {Math.round(totalTimeSpent / 60)} min
                     </p>
                   </div>
                 </div>
@@ -361,7 +256,7 @@ const DashboardPage: FC = () => {
                         stroke="url(#progressGradient)"
                         strokeWidth="4"
                         strokeLinecap="round"
-                        strokeDasharray={`${materials.length > 0 ? (completedCount / materials.length) * 88 : 0} 88`}
+                        strokeDasharray="0 88"
                         className="transition-all duration-1000"
                       />
                       <defs>
@@ -373,12 +268,7 @@ const DashboardPage: FC = () => {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-lg font-black text-gray-900">
-                        {materials.length > 0
-                          ? Math.round(
-                              (completedCount / materials.length) * 100
-                            )
-                          : 0}
-                        %
+                        0%
                       </span>
                     </div>
                   </div>
@@ -386,13 +276,13 @@ const DashboardPage: FC = () => {
                     <div className="flex items-center gap-2">
                       <div className="h-2.5 w-2.5 rounded-full bg-primary" />
                       <span className="text-xs text-gray-600">
-                        Completed ({completedCount})
+                        Completed (0)
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="h-2.5 w-2.5 rounded-full bg-gray-200" />
                       <span className="text-xs text-gray-600">
-                        Remaining ({materials.length - completedCount})
+                        Remaining ({materials.length})
                       </span>
                     </div>
                   </div>
@@ -402,22 +292,10 @@ const DashboardPage: FC = () => {
                 <div className="space-y-2.5">
                   {[
                     {
-                      label: 'XP',
-                      value: profile.stats.xp,
-                      max: 500,
-                      color: 'from-amber-400 to-orange-400',
-                    },
-                    {
                       label: 'Quiz',
                       value: profile.stats.totalQuizzes,
                       max: 20,
                       color: 'from-emerald-400 to-teal-400',
-                    },
-                    {
-                      label: 'Time',
-                      value: Math.round(totalTimeSpent / 60),
-                      max: 120,
-                      color: 'from-violet-400 to-purple-400',
                     },
                   ].map((stat) => (
                     <div key={stat.label}>
@@ -440,53 +318,6 @@ const DashboardPage: FC = () => {
                 </div>
               </div>
             )}
-
-            {/* Weekly Activity Graph (always visible) */}
-            <div className="mt-5 border-t border-gray-50 pt-5">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <TrendingUp size={14} className="text-primary" />
-                  <span className="text-xs font-bold text-gray-700">
-                    This Week
-                  </span>
-                </div>
-                <span className="text-xs text-gray-400">Activity</span>
-              </div>
-              <div className="flex items-end gap-3">
-                {weeklyXP.map((xp, i) => {
-                  const isToday = i === (today === 0 ? 6 : today - 1);
-                  return (
-                    <div
-                      key={i}
-                      className="flex flex-1 flex-col items-center gap-2"
-                    >
-                      <span
-                        className={`text-[9px] font-semibold ${isToday ? 'text-primary' : 'text-gray-300'}`}
-                      >
-                        {xp > 0 ? xp : ''}
-                      </span>
-                      <div
-                        className={`w-full rounded-xl transition-all duration-500 ${
-                          isToday
-                            ? 'bg-gradient-to-t from-primary to-primary-cyan shadow-sm shadow-primary/20'
-                            : xp > 0
-                              ? 'bg-gradient-to-t from-gray-200 to-gray-100'
-                              : 'bg-gray-100'
-                        }`}
-                        style={{
-                          height: `${Math.max((xp / maxXP) * 64, 8)}px`,
-                        }}
-                      />
-                      <span
-                        className={`text-[10px] font-medium ${isToday ? 'text-primary' : 'text-gray-400'}`}
-                      >
-                        {days[i]}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -502,7 +333,7 @@ const DashboardPage: FC = () => {
 
                 if (!isVisible) return null;
 
-                const hasProgress = i === 0 && completedCount > 0;
+                const hasProgress = false;
 
                 return (
                   <motion.div
@@ -543,7 +374,7 @@ const DashboardPage: FC = () => {
                             {topic.name}
                           </h3>
                           <p className="text-sm font-medium text-white/70">
-                            Level {Math.min(completedCount + 1, 10)}
+                            Level 1
                           </p>
                         </div>
 
@@ -571,26 +402,12 @@ const DashboardPage: FC = () => {
                             className="mt-auto space-y-3"
                           >
                             {topic.lessons.map((lesson, li) => {
-                              const lessonDone =
-                                i === 0 &&
-                                materials[li] &&
-                                progress.find(
-                                  (p) =>
-                                    p.materialId === materials[li].id &&
-                                    p.status === 'completed'
-                                );
                               return (
                                 <div
                                   key={li}
                                   className="flex items-center gap-3 rounded-2xl bg-white/15 px-5 py-3.5 backdrop-blur-sm"
                                 >
-                                  <div
-                                    className={`h-3 w-3 rounded-full ${
-                                      lessonDone
-                                        ? 'bg-emerald-300'
-                                        : 'bg-white/40'
-                                    }`}
-                                  />
+                                  <div className="h-3 w-3 rounded-full bg-white/40" />
                                   <span className="flex-1 text-sm font-medium text-white/90">
                                     {lesson}
                                   </span>
@@ -600,16 +417,10 @@ const DashboardPage: FC = () => {
 
                             {/* Start / Continue Button */}
                             <Link
-                              href={
-                                nextMaterial
-                                  ? `/materi/${nextMaterial.id}`
-                                  : '/materi'
-                              }
+                              href="/materi"
                               className="mt-4 block w-full rounded-2xl bg-white py-4 text-center text-sm font-extrabold text-gray-900 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
                             >
-                              {hasProgress
-                                ? 'Continue Learning'
-                                : 'Start Learning'}
+                              Start Learning
                             </Link>
                           </motion.div>
                         )}

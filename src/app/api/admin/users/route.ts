@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminAuth, adminDb, setUserRoleClaim } from '@/lib/firebase-admin';
 import { verifyAdmin } from '@/lib/auth-helpers';
 import { UserRole } from '@/types/firestore';
 
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   try {
-    const [usersSnap, sessionsSnap, quizSnap, progressSnap] = await Promise.all([
+    const [usersSnap, sessionsSnap, quizSnap] = await Promise.all([
       adminDb.collection('users')
         .select('displayName', 'email', 'photoURL', 'role', 'isActive', 'createdAt', 'lastLoginAt', 'profile', 'stats', 'settings')
         .get(),
@@ -32,7 +32,6 @@ export async function GET(req: NextRequest) {
         .select('studentId', 'userId', 'status', 'numericScore', 'result')
         .get(),
       adminDb.collection('quiz_results').select('userId').get().catch(() => null),
-      adminDb.collection('user_progress').select('userId').get().catch(() => null),
     ]);
 
     // Aggregate per-user exam session counts
@@ -65,14 +64,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const progressByUser: Record<string, number> = {};
-    if (progressSnap) {
-      progressSnap.docs.forEach(d => {
-        const uid = d.data().userId as string | undefined;
-        if (uid) progressByUser[uid] = (progressByUser[uid] ?? 0) + 1;
-      });
-    }
-
     const users = usersSnap.docs.map(d => {
       const data = d.data();
       return {
@@ -86,10 +77,6 @@ export async function GET(req: NextRequest) {
         lastLoginAt: tsToIso(data.lastLoginAt),
         profile: (data.profile as Record<string, string>) ?? {},
         stats: {
-          xp: (data.stats?.xp as number) ?? 0,
-          level: (data.stats?.level as number) ?? 1,
-          streak: (data.stats?.streak as number) ?? 0,
-          longestStreak: (data.stats?.longestStreak as number) ?? 0,
           totalLessons: (data.stats?.totalLessons as number) ?? 0,
           totalQuizzes: (data.stats?.totalQuizzes as number) ?? 0,
         },
@@ -102,7 +89,6 @@ export async function GET(req: NextRequest) {
         examCompleted: sessionsByUser[d.id]?.completed ?? 0,
         examAvgScore: sessionsByUser[d.id]?.avgScore ?? 0,
         quizCount: quizByUser[d.id] ?? 0,
-        materialsProgress: progressByUser[d.id] ?? 0,
       };
     });
 
@@ -142,10 +128,13 @@ export async function POST(req: NextRequest) {
       createdAt: now,
       lastLoginAt: now,
       profile: {},
-      stats: { xp: 0, level: 1, streak: 0, longestStreak: 0, totalLessons: 0, totalQuizzes: 0 },
+      stats: { totalLessons: 0, totalQuizzes: 0 },
       settings: { notifications: true, language: 'id' },
     };
     await adminDb.collection('users').doc(userRecord.uid).set(profile);
+
+    // Set custom claim for the new user's role
+    await setUserRoleClaim(userRecord.uid, profile.role);
 
     await adminDb.collection('audit_logs').add({
       actorId: admin.uid,

@@ -18,7 +18,7 @@ interface UserRow {
   email: string;
   role: UserRole;
   isActive: boolean;
-  stats?: { xp?: number; level?: number; streak?: number; longestStreak?: number; totalLessons?: number; totalQuizzes?: number };
+  stats?: { totalLessons?: number; totalQuizzes?: number };
   createdAt?: string | null;
   lastLoginAt?: string | null;
   profile?: Record<string, string>;
@@ -27,7 +27,6 @@ interface UserRow {
   examCompleted: number;
   examAvgScore: number;
   quizCount: number;
-  materialsProgress: number;
 }
 
 const roleColors: Record<UserRole, string> = {
@@ -121,10 +120,6 @@ function UserExpandedRow({
                 <span className="font-bold text-amber-600">{u.quizCount}</span>
               </div>
               <div className="flex justify-between">
-                <span>Materi Dibuka</span>
-                <span className="font-bold text-blue-600">{u.materialsProgress}</span>
-              </div>
-              <div className="flex justify-between">
                 <span>Login Terakhir</span>
                 <span className="text-gray-500">{fmtDate(u.lastLoginAt)}</span>
               </div>
@@ -133,13 +128,11 @@ function UserExpandedRow({
           {/* Editable stats */}
           <div className="col-span-2">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-gray-500">Statistik (klik untuk edit)</p>
-            <div className="grid grid-cols-3 gap-2">
-              <EditableStat label="XP" value={u.stats?.xp ?? 0} color="text-amber-600"
-                onSave={v => onUpdateStats(u.uid, 'xp', v)} />
-              <EditableStat label="Level" value={u.stats?.level ?? 1} color="text-violet-600"
-                onSave={v => onUpdateStats(u.uid, 'level', v)} />
-              <EditableStat label="Streak" value={u.stats?.streak ?? 0} color="text-orange-600"
-                onSave={v => onUpdateStats(u.uid, 'streak', v)} />
+            <div className="grid grid-cols-2 gap-2">
+              <EditableStat label="Total Lessons" value={u.stats?.totalLessons ?? 0} color="text-blue-600"
+                onSave={v => onUpdateStats(u.uid, 'totalLessons', v)} />
+              <EditableStat label="Total Quizzes" value={u.stats?.totalQuizzes ?? 0} color="text-emerald-600"
+                onSave={v => onUpdateStats(u.uid, 'totalQuizzes', v)} />
             </div>
           </div>
         </div>
@@ -435,7 +428,6 @@ const AdminUsers: FC = () => {
                       {u.isActive ? 'Aktif' : 'Nonaktif'}
                     </button>
                   </td>
-                  <td className="px-4 py-3 font-bold text-amber-600">{u.stats?.xp ?? 0}</td>
                   <td className="px-4 py-3">
                     <span className={`font-bold ${u.examSessions > 0 ? 'text-fuchsia-600' : 'text-gray-300'}`}>
                       {u.examSessions}
@@ -445,7 +437,6 @@ const AdminUsers: FC = () => {
                     )}
                   </td>
                   <td className="px-4 py-3 font-bold text-amber-500">{u.quizCount || <span className="text-gray-300">0</span>}</td>
-                  <td className="px-4 py-3 font-bold text-blue-500">{u.materialsProgress || <span className="text-gray-300">0</span>}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center gap-1">
                       <button onClick={() => setExpandedId(expandedId === u.uid ? null : u.uid)}

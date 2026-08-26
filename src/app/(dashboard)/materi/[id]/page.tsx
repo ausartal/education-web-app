@@ -12,7 +12,6 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, CheckCircle, Clock, List, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getMaterial, getMaterials } from '@/services/materials';
-import { updateProgress } from '@/services/progress';
 import { Material } from '@/types/firestore';
 
 const MateriDetailPage: FC = () => {
@@ -28,48 +27,31 @@ const MateriDetailPage: FC = () => {
 
   const id = params.id as string;
 
+  const headings = useMemo(() => {
+    if (!material?.content) return [];
+    const regex = /^(#{1,3})\s+(.+)$/gm;
+    const result: { level: number; text: string; slug: string }[] = [];
+    let match;
+    while ((match = regex.exec(material.content)) !== null) {
+      const text = match[2].trim();
+      const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      result.push({ level: match[1].length, text, slug });
+    }
+    return result;
+  }, [material?.content]);
+
   useEffect(() => {
     const fetch = async () => {
       try {
         const [mat, all] = await Promise.all([getMaterial(id), getMaterials()]);
         setMaterial(mat);
         setAllMaterials(all);
-        if (profile && mat) {
-          updateProgress(profile.uid, mat.id, 'in_progress', 0);
-        }
       } catch { /* leave null on error */ } finally {
         setLoading(false);
       }
     };
     fetch();
   }, [id, profile]);
-
-  // Save time spent when leaving page
-  useEffect(() => {
-    const saveTime = () => {
-      if (profile && id) {
-        const seconds = Math.round((Date.now() - startTime.current) / 1000);
-        updateProgress(profile.uid, id, 'in_progress', seconds);
-      }
-    };
-    window.addEventListener('beforeunload', saveTime);
-    return () => {
-      saveTime();
-      window.removeEventListener('beforeunload', saveTime);
-    };
-  }, [profile, id]);
-
-  // Extract headings for TOC
-  const headings = useMemo(() => {
-    if (!material?.content) return [];
-    const matches = material.content.match(/^#{1,3}\s.+$/gm) || [];
-    return matches.map((h) => {
-      const level = h.match(/^#+/)?.[0].length || 1;
-      const text = h.replace(/^#+\s/, '');
-      const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      return { level, text, slug };
-    });
-  }, [material?.content]);
 
   // Navigation
   const currentIdx = allMaterials.findIndex((m) => m.id === id);
@@ -79,8 +61,6 @@ const MateriDetailPage: FC = () => {
 
   const handleMarkComplete = async () => {
     if (!profile || !material) return;
-    const seconds = Math.round((Date.now() - startTime.current) / 1000);
-    await updateProgress(profile.uid, material.id, 'completed', seconds);
     setCompleted(true);
   };
 

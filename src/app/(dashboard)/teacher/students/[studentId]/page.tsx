@@ -15,7 +15,7 @@ import {
 import { db } from '@/lib/firebase';
 import { UserProfile, ExamSession } from '@/types/firestore';
 import { RoleGuard } from '@/components/guards/RoleGuard';
-import { Zap, BookOpen, Target, Flame, Brain, ArrowLeft } from 'lucide-react';
+import { BookOpen, Target, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 const StudentDetail: FC = () => {
@@ -65,20 +65,6 @@ const StudentDetail: FC = () => {
 
   const stats = [
     {
-      icon: Zap,
-      label: 'XP',
-      value: student.stats.xp,
-      color: 'text-amber-500',
-      bg: 'bg-amber-50',
-    },
-    {
-      icon: Flame,
-      label: 'Streak',
-      value: student.stats.streak,
-      color: 'text-orange-500',
-      bg: 'bg-orange-50',
-    },
-    {
       icon: BookOpen,
       label: 'Lessons',
       value: student.stats.totalLessons,
@@ -91,13 +77,6 @@ const StudentDetail: FC = () => {
       value: student.stats.totalQuizzes,
       color: 'text-emerald-500',
       bg: 'bg-emerald-50',
-    },
-    {
-      icon: Brain,
-      label: 'Level',
-      value: student.stats.level,
-      color: 'text-violet-500',
-      bg: 'bg-violet-50',
     },
   ];
 

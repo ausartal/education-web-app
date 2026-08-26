@@ -5,6 +5,10 @@ import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
+// ── In-memory cache with TTL ─────────────────────────────────────────
+let ujianCache: { data: unknown; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 function tsToIso(ts: Record<string, number> | null | undefined): string | null {
   if (!ts) return null;
   const secs = ts.seconds ?? ts._seconds;
@@ -14,6 +18,11 @@ function tsToIso(ts: Record<string, number> | null | undefined): string | null {
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  // Return cached response if still fresh
+  if (ujianCache && Date.now() - ujianCache.timestamp < CACHE_TTL) {
+    return NextResponse.json(ujianCache.data);
+  }
 
   const [classesSnap, schedulesSnap, sessionsSnap, questionsSnap, usersSnap] = await Promise.all([
     adminDb.collection('classes').orderBy('createdAt', 'desc').get(),
@@ -104,7 +113,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({
+  const result = {
     classes,
     schedules,
     sessions,
@@ -118,7 +127,12 @@ export async function GET(req: NextRequest) {
       comprehensionDistribution,
       domainPerformance: domainPerf,
     },
-  });
+  };
+
+  // Store in cache
+  ujianCache = { data: result, timestamp: Date.now() };
+
+  return NextResponse.json(result);
 }
 
 export async function POST(req: NextRequest) {
@@ -140,6 +154,9 @@ export async function POST(req: NextRequest) {
     targetId: docRef.id, targetType: collection, details: data, timestamp: new Date(),
   });
 
+  // Invalidate cache
+  ujianCache = null;
+
   return NextResponse.json({ id: docRef.id });
 }
 
@@ -157,6 +174,9 @@ export async function PATCH(req: NextRequest) {
     actorId: admin.uid, actorRole: 'admin', action: `update_${collection}`,
     targetId: id, targetType: collection, details: data, timestamp: new Date(),
   });
+
+  // Invalidate cache
+  ujianCache = null;
 
   return NextResponse.json({ success: true });
 }
@@ -180,6 +200,9 @@ export async function DELETE(req: NextRequest) {
     actorId: admin.uid, actorRole: 'admin', action: `delete_${collection}`,
     targetId: id, targetType: collection, details: {}, timestamp: new Date(),
   });
+
+  // Invalidate cache
+  ujianCache = null;
 
   return NextResponse.json({ success: true });
 }

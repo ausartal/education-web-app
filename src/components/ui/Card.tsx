@@ -1,6 +1,6 @@
 import { FC, ReactNode } from 'react';
 
-type CardVariant = 'standard' | 'lesson' | 'stat' | 'achievement';
+type CardVariant = 'standard' | 'lesson' | 'stat';
 
 interface CardProps {
   variant?: CardVariant;
@@ -14,8 +14,6 @@ const variantStyles: Record<CardVariant, string> = {
   lesson:
     'bg-white shadow-sm hover:shadow-md hover:-translate-y-1 cursor-pointer',
   stat: 'bg-white shadow-sm border-l-4 border-l-primary',
-  achievement:
-    'bg-white shadow-sm border border-gray-100 text-center hover:shadow-md',
 };
 
 export const Card: FC<CardProps> = ({

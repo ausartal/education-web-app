@@ -4,8 +4,6 @@ import { FC, useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
-  Trophy,
-  Flame,
   MessageCircle,
   Info,
   Check,
@@ -21,15 +19,11 @@ import {
 } from '@/services/notifications';
 
 const typeIcons: Record<NotificationType, LucideIcon> = {
-  achievement: Trophy,
-  streak: Flame,
   message: MessageCircle,
   system: Info,
 };
 
 const typeColors: Record<NotificationType, string> = {
-  achievement: 'bg-amber-100 text-amber-600',
-  streak: 'bg-orange-100 text-orange-600',
   message: 'bg-blue-100 text-primary',
   system: 'bg-gray-100 text-gray-600',
 };

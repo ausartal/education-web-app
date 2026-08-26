@@ -46,9 +46,6 @@
     /* ===== SEMANTIC ===== */
     --info-blue: #3b82f6;
     --info-light: #dbeafe;
-    --achievement-gold: #ffd700;
-    --achievement-silver: #c0c0c0;
-    --achievement-bronze: #cd7f32;
 
     /* ===== GRADIENTS ===== */
     --gradient-primary: linear-gradient(135deg, #1a73e8 0%, #00c2ff 100%);

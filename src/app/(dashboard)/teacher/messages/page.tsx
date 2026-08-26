@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   collection, query, where, onSnapshot, addDoc,
   serverTimestamp, getDocs, or, Timestamp,
+  orderBy, limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
@@ -115,7 +116,9 @@ const TeacherMessages: FC = () => {
       or(
         where('senderId', '==', profile.uid),
         where('receiverId', '==', profile.uid)
-      )
+      ),
+      orderBy('createdAt', 'desc'),
+      limit(50)
     );
 
     const unsub = onSnapshot(q, snap => {

@@ -4,8 +4,8 @@ import { FC } from 'react';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion } from 'framer-motion';
 import {
-  BarChart3, TrendingUp, Users, ClipboardList,
-  RefreshCw, Download, Zap, Target,
+  BarChart3, Users, ClipboardList,
+  RefreshCw, Download, Target,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -16,10 +16,8 @@ interface AnalyticsData {
   auditActivityByDay: Record<string, number>;
   questionsByDifficulty: { easy: number; moderate: number; hard: number };
   questionsByStatus: { active: number; inactive: number };
-  topUsers: Array<{ uid: string; displayName: string; role: string; xp: number; level: number }>;
   examStatusDistribution: Record<string, number>;
   roleDistribution: { student: number; teacher: number; admin: number };
-  avgXp: number;
   avgAccuracy: number;
   totals: {
     users: number; exams: number; questions: number;
@@ -166,11 +164,10 @@ const AdminAnalytics: FC = () => {
       </div>
 
       {/* Summary KPIs */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {[
           { icon: Users, label: 'Total Pengguna', value: data.totals.users, sub: `${data.totals.activeUsers} aktif`, color: 'text-primary', bg: 'bg-blue-50' },
           { icon: ClipboardList, label: 'Total Ujian', value: data.totals.exams, sub: `${data.totals.completedExams} selesai`, color: 'text-violet-600', bg: 'bg-violet-50' },
-          { icon: Zap, label: 'Rata-rata XP', value: data.avgXp, sub: 'per siswa', color: 'text-amber-600', bg: 'bg-amber-50' },
           { icon: Target, label: 'Akurasi Rata2', value: `${data.avgAccuracy}%`, sub: 'ujian selesai', color: 'text-emerald-600', bg: 'bg-emerald-50' },
         ].map((k, i) => {
           const Icon = k.icon;
@@ -314,53 +311,6 @@ const AdminAnalytics: FC = () => {
               <p className="font-display text-lg font-black text-gray-900">{data.totals.examSchedules ?? 0}</p>
               <p className="text-[10px] text-gray-500">Jadwal Ujian</p>
             </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Top Users */}
-      {data.topUsers.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <TrendingUp size={16} className="text-amber-500" />
-            <p className="text-sm font-bold text-gray-900">Leaderboard — Top Pengguna (XP)</p>
-          </div>
-          <div className="space-y-2">
-            {data.topUsers.map((u, i) => {
-              const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-              const maxXp = data.topUsers[0]?.xp || 1;
-              const pct = Math.round((u.xp / maxXp) * 100);
-              const roleColors: Record<string, string> = {
-                student: 'bg-blue-50 text-blue-700',
-                teacher: 'bg-emerald-50 text-emerald-700',
-                admin: 'bg-violet-50 text-violet-700',
-              };
-              return (
-                <div key={u.uid} className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-2.5">
-                  <span className="w-5 text-center text-sm">{medals[i]}</span>
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-300 text-xs font-black text-white">
-                    {u.displayName?.charAt(0).toUpperCase() ?? '?'}
-                  </div>
-                  <div className="min-w-[100px]">
-                    <p className="text-xs font-semibold text-gray-900">{u.displayName}</p>
-                    <span className={`inline-block rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${roleColors[u.role] ?? ''}`}>
-                      {u.role}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: i * 0.1, duration: 0.5 }}
-                        className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-300" />
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-amber-600">{u.xp} XP</p>
-                    <p className="text-[10px] text-gray-400">Lv.{u.level}</p>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </motion.div>
       )}

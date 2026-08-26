@@ -4,6 +4,10 @@ import { verifyAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
+// ── In-memory cache with TTL ─────────────────────────────────────────
+let analyticsCache: { data: unknown; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 function tsToDate(ts: Record<string, number> | null | undefined): Date | null {
   if (!ts) return null;
   const secs = ts.seconds ?? ts._seconds;
@@ -14,6 +18,11 @@ export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+  // Return cached response if still fresh
+  if (analyticsCache && Date.now() - analyticsCache.timestamp < CACHE_TTL) {
+    return NextResponse.json(analyticsCache.data);
+  }
+
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
@@ -21,7 +30,7 @@ export async function GET(req: NextRequest) {
   const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
 
   // Fetch all collections in parallel with minimal field projections to reduce read cost
-  const [usersSnap, examsSnap, questionsSnap, materialsSnap, progressSnap, logsSnap, classesCount, schedulesCount] =
+  const [usersSnap, examsSnap, questionsSnap, materialsSnap, logsSnap, classesCount, schedulesCount] =
     await Promise.all([
       adminDb.collection('users')
         .select('role', 'isActive', 'displayName', 'createdAt', 'stats')
@@ -40,10 +49,6 @@ export async function GET(req: NextRequest) {
 
       adminDb.collection('materials')
         .select('title', 'status', 'topic')
-        .get(),
-
-      adminDb.collection('user_progress')
-        .select('materialId')
         .get(),
 
       adminDb.collection('audit_logs')
@@ -130,19 +135,14 @@ export async function GET(req: NextRequest) {
 
   // ── Roles & top users ─────────────────────────────────────────────────────
   const roleDistribution = { student: 0, teacher: 0, admin: 0 };
-  const topUsers: Array<{ uid: string; displayName: string; role: string; xp: number; level: number }> = [];
-  let activeUsers = 0, xpSum = 0, studentCount = 0;
+  let activeUsers = 0;
 
   usersSnap.docs.forEach((d) => {
     const data = d.data();
     const r = data.role as keyof typeof roleDistribution;
     if (r in roleDistribution) roleDistribution[r]++;
     if (data.isActive) activeUsers++;
-    if (r === 'student') { xpSum += data.stats?.xp ?? 0; studentCount++; }
-    topUsers.push({ uid: d.id, displayName: data.displayName ?? '?', role: data.role, xp: data.stats?.xp ?? 0, level: data.stats?.level ?? 1 });
   });
-  topUsers.sort((a, b) => b.xp - a.xp);
-  const avgXp = studentCount > 0 ? Math.round(xpSum / studentCount) : 0;
 
   // ── Exam aggregations ─────────────────────────────────────────────────────
   const examStatus = { in_progress: 0, completed: 0, abandoned: 0, flagged: 0 };
@@ -198,32 +198,25 @@ export async function GET(req: NextRequest) {
     });
 
   // ── Material progress stats ───────────────────────────────────────────────
-  const materialProgressMap: Record<string, number> = {};
-  progressSnap.docs.forEach((d) => {
-    const mid = d.data().materialId as string;
-    if (mid) materialProgressMap[mid] = (materialProgressMap[mid] ?? 0) + 1;
-  });
   const materialStats = materialsSnap.docs
     .map((d) => ({
       id: d.id,
       title: d.data().title ?? '—',
       status: d.data().status ?? 'draft',
       topic: d.data().topic ?? '—',
-      progressCount: materialProgressMap[d.id] ?? 0,
+      progressCount: 0,
     }))
     .sort((a, b) => b.progressCount - a.progressCount);
 
-  return NextResponse.json({
+  const result = {
     dayKeys,
     userRegistrationsByDay: regByDay,
     examsByDay,
     auditActivityByDay: auditByDay,
     questionsByDifficulty,
     questionsByStatus,
-    topUsers: topUsers.slice(0, 5),
     examStatusDistribution: examStatus,
     roleDistribution,
-    avgXp,
     avgAccuracy,
     recentExams,
     lowAccuracyQuestions: lowAccuracyQuestions.slice(0, 5),
@@ -245,5 +238,10 @@ export async function GET(req: NextRequest) {
       avgScore: avgMsatScore,
       comprehensionDistribution: msatComprehensionDist,
     },
-  });
+  };
+
+  // Store in cache
+  analyticsCache = { data: result, timestamp: Date.now() };
+
+  return NextResponse.json(result);
 }

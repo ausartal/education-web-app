@@ -22,21 +22,10 @@ const AdminConfig: FC = () => {
     suddenDropThreshold: 3,
   });
 
-  const [gamification, setGamification] = useState({
-    xpPerLesson: 50,
-    xpPerCorrectAnswer: 10,
-    xpPerExam: 100,
-    xpDailyLogin: 5,
-    xpStreakBonus: 10,
-  });
-
   useEffect(() => {
     const fetch = async () => {
       try {
-        const [msatSnap, gamSnap] = await Promise.all([
-          getDoc(doc(db, 'app_config', 'msat')),
-          getDoc(doc(db, 'app_config', 'gamification')),
-        ]);
+        const msatSnap = await getDoc(doc(db, 'app_config', 'msat'));
         if (msatSnap.exists()) {
           const d = msatSnap.data();
           setMsat({
@@ -49,16 +38,6 @@ const AdminConfig: FC = () => {
             suddenDropThreshold: d.anomalyThresholds?.suddenDropThreshold || 3,
           });
         }
-        if (gamSnap.exists()) {
-          const d = gamSnap.data();
-          setGamification({
-            xpPerLesson: d.xpPerLesson || 50,
-            xpPerCorrectAnswer: d.xpPerCorrectAnswer || 10,
-            xpPerExam: d.xpPerExam || 100,
-            xpDailyLogin: d.xpDailyLogin || 5,
-            xpStreakBonus: d.xpStreakBonus || 10,
-          });
-        }
       } catch { /* leave defaults on error */ } finally {
         setLoading(false);
       }
@@ -69,30 +48,25 @@ const AdminConfig: FC = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-    await Promise.all([
-      setDoc(
-        doc(db, 'app_config', 'msat'),
-        {
-          stagesCount: msat.stagesCount,
-          questionsPerStage: msat.questionsPerStage,
-          startDifficulty: 'moderate',
-          thetaInitial: 0,
-          thetaMin: msat.thetaMin,
-          thetaMax: msat.thetaMax,
-          promotionRule: 'correct',
-          demotionRule: 'incorrect',
-          anomalyThresholds: {
-            tooFastMs: msat.tooFastMs,
-            allFastCorrectCount: msat.allFastCorrectCount,
-            suddenDropThreshold: msat.suddenDropThreshold,
-          },
+    await setDoc(
+      doc(db, 'app_config', 'msat'),
+      {
+        stagesCount: msat.stagesCount,
+        questionsPerStage: msat.questionsPerStage,
+        startDifficulty: 'moderate',
+        thetaInitial: 0,
+        thetaMin: msat.thetaMin,
+        thetaMax: msat.thetaMax,
+        promotionRule: 'correct',
+        demotionRule: 'incorrect',
+        anomalyThresholds: {
+          tooFastMs: msat.tooFastMs,
+          allFastCorrectCount: msat.allFastCorrectCount,
+          suddenDropThreshold: msat.suddenDropThreshold,
         },
-        { merge: true }
-      ),
-      setDoc(doc(db, 'app_config', 'gamification'), gamification, {
-        merge: true,
-      }),
-    ]);
+      },
+      { merge: true }
+    );
     addToast('success', 'Configuration saved');
     } catch { addToast('error', 'Gagal menyimpan konfigurasi'); } finally {
       setSaving(false);
@@ -175,48 +149,6 @@ const AdminConfig: FC = () => {
               label="Sudden Drop Threshold"
               value={msat.suddenDropThreshold}
               onChange={(v) => setMsat({ ...msat, suddenDropThreshold: v })}
-            />
-          </div>
-        </div>
-
-        {/* Gamification Config */}
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-sm font-bold text-gray-900">Gamification</h2>
-          <div className="space-y-2">
-            <Field
-              label="XP per Lesson"
-              value={gamification.xpPerLesson}
-              onChange={(v) =>
-                setGamification({ ...gamification, xpPerLesson: v })
-              }
-            />
-            <Field
-              label="XP per Correct Answer"
-              value={gamification.xpPerCorrectAnswer}
-              onChange={(v) =>
-                setGamification({ ...gamification, xpPerCorrectAnswer: v })
-              }
-            />
-            <Field
-              label="XP per Exam"
-              value={gamification.xpPerExam}
-              onChange={(v) =>
-                setGamification({ ...gamification, xpPerExam: v })
-              }
-            />
-            <Field
-              label="XP Daily Login"
-              value={gamification.xpDailyLogin}
-              onChange={(v) =>
-                setGamification({ ...gamification, xpDailyLogin: v })
-              }
-            />
-            <Field
-              label="XP Streak Bonus"
-              value={gamification.xpStreakBonus}
-              onChange={(v) =>
-                setGamification({ ...gamification, xpStreakBonus: v })
-              }
             />
           </div>
         </div>
