@@ -69,7 +69,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
   }
 
   const { examId } = params;
-  let body: { action?: string };
+  let body: { action?: string; targetSessionId?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
@@ -81,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
       return NextResponse.json({ error: 'Ujian tidak ditemukan' }, { status: 404 });
     }
 
-    const { action } = body;
+    const { action, targetSessionId } = body;
 
     if (action === 'activate') {
       await examRef.update({ status: 'active' });
@@ -111,6 +111,40 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
         status: 'started',
         startedAt: new Date(),
       }, { merge: true });
+    } else if (action === 'skip_break') {
+      // Skip break for a specific student
+      if (!targetSessionId) {
+        return NextResponse.json({ error: 'targetSessionId diperlukan' }, { status: 400 });
+      }
+      const sessionDoc = await adminDb.collection('msat_sessions').doc(targetSessionId).get();
+      if (!sessionDoc.exists) {
+        return NextResponse.json({ error: 'Sesi tidak ditemukan' }, { status: 404 });
+      }
+      await sessionDoc.ref.update({
+        status: 'in_progress',
+        breakStartedAt: null,
+        breakEndsAt: null,
+        breakSkippedBy: decoded.uid,
+      });
+    } else if (action === 'skip_break_all') {
+      // Skip break for all students on break
+      const onBreakSnap = await adminDb.collection('msat_sessions')
+        .where('examId', '==', examId)
+        .where('status', '==', 'on_break')
+        .get();
+
+      if (!onBreakSnap.empty) {
+        const batch = adminDb.batch();
+        onBreakSnap.docs.forEach(doc => {
+          batch.update(doc.ref, {
+            status: 'in_progress',
+            breakStartedAt: null,
+            breakEndsAt: null,
+            breakSkippedBy: decoded.uid,
+          });
+        });
+        await batch.commit();
+      }
     } else {
       return NextResponse.json({ error: 'Aksi tidak dikenali' }, { status: 400 });
     }
