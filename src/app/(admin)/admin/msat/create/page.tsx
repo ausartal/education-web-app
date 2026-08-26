@@ -22,15 +22,16 @@ interface Question {
   correctAnswer: string;
 }
 
-type StageBranch = 'stage1_medium' | 'stage2_tinggi' | 'stage2_rendah' | 'stage3_tinggi' | 'stage3_medium' | 'stage3_rendah';
+type StageBranch = 'stage1_medium' | 'stage2_tinggi' | 'stage2_rendah' | 'stage3_lebih_tinggi' | 'stage3_medium_tinggi' | 'stage3_sangat_rendah' | 'stage3_medium_rendah';
 
 const BRANCH_CONFIG: Record<StageBranch, { label: string; stage: number; categoryLabels: string[] }> = {
-  stage1_medium: { label: 'Stage 1 — Medium', stage: 1, categoryLabels: ['Medium'] },
-  stage2_tinggi: { label: 'Stage 2 — Tinggi', stage: 2, categoryLabels: ['Tinggi', 'Lebih Tinggi'] },
-  stage2_rendah: { label: 'Stage 2 — Rendah', stage: 2, categoryLabels: ['Rendah', 'Sangat Rendah'] },
-  stage3_tinggi: { label: 'Stage 3 — Tinggi', stage: 3, categoryLabels: ['Tinggi', 'Lebih Tinggi'] },
-  stage3_medium: { label: 'Stage 3 — Medium', stage: 3, categoryLabels: ['Medium Lebih Tinggi', 'Medium', 'Medium Lebih Rendah'] },
-  stage3_rendah: { label: 'Stage 3 — Rendah', stage: 3, categoryLabels: ['Rendah', 'Sangat Rendah'] },
+  stage1_medium: { label: 'Stage 1: Medium', stage: 1, categoryLabels: ['Medium'] },
+  stage2_tinggi: { label: 'Stage 2: Tinggi', stage: 2, categoryLabels: ['Tinggi'] },
+  stage2_rendah: { label: 'Stage 2: Rendah', stage: 2, categoryLabels: ['Rendah'] },
+  stage3_lebih_tinggi: { label: 'Stage 3: Lebih Tinggi', stage: 3, categoryLabels: ['Lebih Tinggi'] },
+  stage3_medium_tinggi: { label: 'Stage 3: Medium Tinggi', stage: 3, categoryLabels: ['Medium Lebih Tinggi'] },
+  stage3_sangat_rendah: { label: 'Stage 3: Sangat Rendah', stage: 3, categoryLabels: ['Sangat Rendah'] },
+  stage3_medium_rendah: { label: 'Stage 3: Medium Rendah', stage: 3, categoryLabels: ['Medium Lebih Rendah'] },
 };
 
 const DOMAIN_TABS = ['knowing', 'applying', 'reasoning'] as const;
@@ -60,9 +61,10 @@ const MsatCreatePage: FC = () => {
     stage1_medium: { knowing: [], applying: [], reasoning: [] },
     stage2_tinggi: { knowing: [], applying: [], reasoning: [] },
     stage2_rendah: { knowing: [], applying: [], reasoning: [] },
-    stage3_tinggi: { knowing: [], applying: [], reasoning: [] },
-    stage3_medium: { knowing: [], applying: [], reasoning: [] },
-    stage3_rendah: { knowing: [], applying: [], reasoning: [] },
+    stage3_lebih_tinggi: { knowing: [], applying: [], reasoning: [] },
+    stage3_medium_tinggi: { knowing: [], applying: [], reasoning: [] },
+    stage3_sangat_rendah: { knowing: [], applying: [], reasoning: [] },
+    stage3_medium_rendah: { knowing: [], applying: [], reasoning: [] },
   });
 
   // UI state
