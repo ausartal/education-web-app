@@ -1,0 +1,194 @@
+import { describe, it, expect } from 'vitest';
+import {
+  calculateStageResult,
+  getNextStageDifficulty,
+  calculateFinalScore,
+  getPredikat,
+  calculateCognitiveScores,
+  generateConclusions,
+  detectAnomalies,
+  hasPassedStage,
+} from '@/lib/msat-engine';
+import type { MSATStageAnswer, MSATStageResponse, MSATAccessCode, MSATCognitiveDomain } from '@/types/msat';
+
+// Helper: generate 12 answers with specified correct counts per domain
+function makeAnswers(
+  knowingCorrect: number,
+  applyingCorrect: number,
+  reasoningCorrect: number,
+  timePerQuestionMs = 30000,
+): MSATStageAnswer[] {
+  const domains: MSATCognitiveDomain[] = [
+    ...Array(4).fill('knowing') as MSATCognitiveDomain[],
+    ...Array(4).fill('applying') as MSATCognitiveDomain[],
+    ...Array(4).fill('reasoning') as MSATCognitiveDomain[],
+  ];
+
+  return domains.map((domain, i) => {
+    let isCorrect = false;
+    if (domain === 'knowing') isCorrect = i < knowingCorrect;
+    else if (domain === 'applying') isCorrect = i - 4 < applyingCorrect;
+    else isCorrect = i - 8 < reasoningCorrect;
+
+    return {
+      questionId: `q${i}`,
+      cognitiveDomain: domain,
+      selectedAnswer: 'A' as const,
+      isCorrect,
+      timeSpentMs: timePerQuestionMs,
+    };
+  });
+}
+
+const defaultPredicates: MSATAccessCode['predicates'] = {
+  istimewa: { min: 81, max: 100, label: 'Istimewa', description: 'desc' },
+  unggul: { min: 61, max: 80, label: 'Unggul', description: 'desc' },
+  madya: { min: 41, max: 60, label: 'Madya', description: 'desc' },
+  semenjana: { min: 21, max: 40, label: 'Semenjana', description: 'desc' },
+  terbatas: { min: 0, max: 20, label: 'Terbatas', description: 'desc' },
+};
+
+describe('calculateStageResult', () => {
+  it('calculates correct K/A/R counts', () => {
+    const answers = makeAnswers(3, 2, 4); // 3K + 2A + 4R = 9/12
+    const result = calculateStageResult(1, 'medium', answers);
+    expect(result.knowingCorrect).toBe(3);
+    expect(result.applyingCorrect).toBe(2);
+    expect(result.reasoningCorrect).toBe(4);
+    expect(result.totalCorrect).toBe(9);
+  });
+
+  it('passes when ≥8/12 correct', () => {
+    const answers = makeAnswers(3, 3, 2); // 8/12
+    const result = calculateStageResult(1, 'medium', answers);
+    expect(result.passed).toBe(true);
+  });
+
+  it('fails when <8/12 correct', () => {
+    const answers = makeAnswers(2, 2, 2); // 6/12
+    const result = calculateStageResult(1, 'medium', answers);
+    expect(result.passed).toBe(false);
+  });
+
+  it('applies correct stage weight', () => {
+    const answers = makeAnswers(4, 4, 4); // 12/12
+    const rendah = calculateStageResult(1, 'rendah', answers);
+    const medium = calculateStageResult(1, 'medium', answers);
+    const tinggi = calculateStageResult(1, 'tinggi', answers);
+    expect(rendah.weightedScore).toBe(12 * 1.0);
+    expect(medium.weightedScore).toBe(12 * 1.2);
+    expect(tinggi.weightedScore).toBe(12 * 1.5);
+  });
+});
+
+describe('getNextStageDifficulty', () => {
+  it('Stage 1 pass → tinggi', () => {
+    expect(getNextStageDifficulty(1, 'medium', true)).toBe('tinggi');
+  });
+
+  it('Stage 1 fail → rendah', () => {
+    expect(getNextStageDifficulty(1, 'medium', false)).toBe('rendah');
+  });
+
+  it('Stage 2 tinggi pass → tinggi', () => {
+    expect(getNextStageDifficulty(2, 'tinggi', true)).toBe('tinggi');
+  });
+
+  it('Stage 2 tinggi fail → medium', () => {
+    expect(getNextStageDifficulty(2, 'tinggi', false)).toBe('medium');
+  });
+
+  it('Stage 2 rendah pass → medium', () => {
+    expect(getNextStageDifficulty(2, 'rendah', true)).toBe('medium');
+  });
+
+  it('Stage 2 rendah fail → rendah', () => {
+    expect(getNextStageDifficulty(2, 'rendah', false)).toBe('rendah');
+  });
+});
+
+describe('calculateFinalScore', () => {
+  it('calculates score for high-performing student', () => {
+    const stages: MSATStageResponse[] = [
+      { ...calculateStageResult(1, 'medium', makeAnswers(4, 3, 3)), stageNumber: 1, stageDifficulty: 'medium' },
+      { ...calculateStageResult(2, 'tinggi', makeAnswers(3, 3, 3)), stageNumber: 2, stageDifficulty: 'tinggi' },
+      { ...calculateStageResult(3, 'tinggi', makeAnswers(4, 4, 3)), stageNumber: 3, stageDifficulty: 'tinggi' },
+    ];
+    // S1: 10×1.2=12, S2: 9×1.5=13.5, S3: 11×1.5=16.5 → total=42, max=12×1.2+12×1.5+12×1.5=50.4
+    // 42/50.4 × 100 = 83.3
+    const score = calculateFinalScore(stages);
+    expect(score).toBe(83);
+  });
+
+  it('returns 0 for empty stages', () => {
+    expect(calculateFinalScore([])).toBe(0);
+  });
+});
+
+describe('getPredikat', () => {
+  it('returns Istimewa for score 81-100', () => {
+    expect(getPredikat(85, defaultPredicates).name).toBe('Istimewa');
+    expect(getPredikat(85, defaultPredicates).peringkat).toBe(1);
+  });
+
+  it('returns Unggul for score 61-80', () => {
+    expect(getPredikat(70, defaultPredicates).name).toBe('Unggul');
+  });
+
+  it('returns Madya for score 41-60', () => {
+    expect(getPredikat(50, defaultPredicates).name).toBe('Madya');
+  });
+
+  it('returns Terbatas for score 0-20', () => {
+    expect(getPredikat(10, defaultPredicates).name).toBe('Terbatas');
+  });
+});
+
+describe('calculateCognitiveScores', () => {
+  it('calculates correct percentages', () => {
+    const stages: MSATStageResponse[] = [
+      { ...calculateStageResult(1, 'medium', makeAnswers(3, 2, 4)), stageNumber: 1, stageDifficulty: 'medium' },
+      { ...calculateStageResult(2, 'tinggi', makeAnswers(4, 3, 2)), stageNumber: 2, stageDifficulty: 'tinggi' },
+    ];
+    const scores = calculateCognitiveScores(stages);
+    // K: (3+4)/(4×2) = 87.5%, A: (2+3)/(4×2) = 62.5%, R: (4+2)/(4×2) = 75%
+    expect(scores.knowing).toBe(88);
+    expect(scores.applying).toBe(63);
+    expect(scores.reasoning).toBe(75);
+  });
+});
+
+describe('hasPassedStage', () => {
+  it('passes at 8/12', () => expect(hasPassedStage(8)).toBe(true));
+  it('passes at 12/12', () => expect(hasPassedStage(12)).toBe(true));
+  it('fails at 7/12', () => expect(hasPassedStage(7)).toBe(false));
+  it('fails at 0/12', () => expect(hasPassedStage(0)).toBe(false));
+});
+
+describe('detectAnomalies', () => {
+  it('flags too-fast answers', () => {
+    const stages: MSATStageResponse[] = [
+      calculateStageResult(1, 'medium', makeAnswers(4, 4, 4, 2000)), // 2s per question, all correct
+    ];
+    const flags = detectAnomalies(stages);
+    expect(flags).toContain('TOO_FAST_STAGE_1');
+    expect(flags).toContain('PERFECT_FAST_STAGE_1');
+  });
+
+  it('flags sudden performance drop', () => {
+    const stages: MSATStageResponse[] = [
+      calculateStageResult(1, 'medium', makeAnswers(4, 3, 3)), // 10/12
+      calculateStageResult(2, 'tinggi', makeAnswers(1, 1, 1)),  // 3/12
+    ];
+    const flags = detectAnomalies(stages);
+    expect(flags).toContain('SUDDEN_DROP_STAGE_1_TO_2');
+  });
+
+  it('returns no flags for normal performance', () => {
+    const stages: MSATStageResponse[] = [
+      calculateStageResult(1, 'medium', makeAnswers(3, 3, 2, 30000)),
+      calculateStageResult(2, 'tinggi', makeAnswers(3, 2, 3, 25000)),
+    ];
+    expect(detectAnomalies(stages)).toHaveLength(0);
+  });
+});
