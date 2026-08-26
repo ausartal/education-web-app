@@ -3093,7 +3093,7 @@ Week 30 │ Phase 4: Deployment & Rollout
 
 All phases completed when:
 
-✅ **Phase 1:**
+ **Phase 1:**
 - All CRUD operations for questions (class & system) working
 - All tests passing (90%+ coverage)
 - All endpoints documented
@@ -3101,7 +3101,7 @@ All phases completed when:
 - Zero critical bugs in first week
 - Positive user feedback
 
-✅ **Phase 2:**
+ **Phase 2:**
 - All security vulnerabilities fixed
 - CSRF protection on all state-changing operations
 - CSP headers configured
@@ -3111,7 +3111,7 @@ All phases completed when:
 - Logging and monitoring working
 - Security team approved
 
-✅ **Phase 3:**
+ **Phase 3:**
 - Penetration testing completed
 - All critical vulnerabilities remediated
 - All high vulnerabilities remediated
@@ -3119,7 +3119,7 @@ All phases completed when:
 - Security report published
 - Monitoring setup for ongoing security
 
-✅ **Phase 4:**
+ **Phase 4:**
 - School role hierarchy implemented
 - Teacher management working
 - School admin can oversee all teachers
