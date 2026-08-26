@@ -1,51 +1,92 @@
 'use client';
 
 import { FC, useEffect, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Loader2, BarChart3, Trophy, Users, Target,
-  Download, ChevronRight, Brain,
+  ChevronDown, ChevronRight, Brain, BookOpen, Lightbulb,
+  TrendingUp, Award, CheckCircle2, XCircle, Download,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+
+interface StageResponse {
+  stageNumber: number;
+  stageDifficulty: string;
+  knowingCorrect: number;
+  applyingCorrect: number;
+  reasoningCorrect: number;
+  totalCorrect: number;
+  passed: boolean;
+  weightedScore: number;
+}
+
+interface Conclusions {
+  overall: { score: number; predikat: string; description: string };
+  knowing: { score: number; level: string; description: string };
+  applying: { score: number; level: string; description: string };
+  reasoning: { score: number; level: string; description: string };
+}
+
+interface SessionDetail {
+  id: string;
+  studentName: string;
+  finalScore: number | null;
+  predikat: string | null;
+  peringkat: number | null;
+  stagePath: string[];
+  stageResponses: StageResponse[];
+  conclusions: Conclusions | null;
+  status: string;
+  completedAt: { _seconds: number } | null;
+}
 
 interface ExamResult {
   examId: string;
   examTitle: string;
   examCode: string;
-  sessions: {
-    id: string;
-    studentName: string;
-    finalScore: number | null;
-    predikat: string | null;
-    peringkat: number | null;
-    stagePath: string[];
-    status: string;
-    completedAt: { _seconds: number } | null;
-  }[];
+  sessions: SessionDetail[];
 }
 
-const PREDIKAT_COLORS: Record<string, string> = {
-  Istimewa: 'bg-violet-50 text-violet-700',
-  Unggul: 'bg-blue-50 text-blue-700',
-  Madya: 'bg-amber-50 text-amber-700',
-  Semenjana: 'bg-orange-50 text-orange-700',
-  Terbatas: 'bg-rose-50 text-rose-700',
+const PREDIKAT_COLORS: Record<string, { text: string; bg: string; ring: string }> = {
+  Istimewa: { text: 'text-violet-700', bg: 'bg-violet-50', ring: 'ring-violet-200' },
+  Unggul: { text: 'text-blue-700', bg: 'bg-blue-50', ring: 'ring-blue-200' },
+  Madya: { text: 'text-amber-700', bg: 'bg-amber-50', ring: 'ring-amber-200' },
+  Semenjana: { text: 'text-orange-700', bg: 'bg-orange-50', ring: 'ring-orange-200' },
+  Terbatas: { text: 'text-rose-700', bg: 'bg-rose-50', ring: 'ring-rose-200' },
 };
 
-const DIFF_LABELS: Record<string, string> = { rendah: 'R', medium: 'M', tinggi: 'T' };
+const DIFF_LABELS: Record<string, string> = { rendah: 'Rendah', medium: 'Medium', tinggi: 'Tinggi' };
+const DIFF_COLORS: Record<string, string> = { rendah: 'text-emerald-600 bg-emerald-50', medium: 'text-amber-600 bg-amber-50', tinggi: 'text-violet-600 bg-violet-50' };
+
+const DOMAIN_CONFIG = {
+  knowing: { icon: BookOpen, label: 'Knowing', color: 'text-blue-600', bg: 'bg-blue-50', barColor: 'bg-blue-500' },
+  applying: { icon: Target, label: 'Applying', color: 'text-violet-600', bg: 'bg-violet-50', barColor: 'bg-violet-500' },
+  reasoning: { icon: Lightbulb, label: 'Reasoning', color: 'text-pink-600', bg: 'bg-pink-50', barColor: 'bg-pink-500' },
+};
+
+function getScoreColor(score: number): string {
+  if (score >= 75) return 'text-emerald-600';
+  if (score >= 50) return 'text-amber-600';
+  return 'text-rose-600';
+}
+
+function getLevelBadge(level: string): { text: string; color: string; bg: string } {
+  if (level === 'Tinggi') return { text: 'Tinggi', color: 'text-emerald-700', bg: 'bg-emerald-50 ring-emerald-200' };
+  if (level === 'Sedang') return { text: 'Sedang', color: 'text-amber-700', bg: 'bg-amber-50 ring-amber-200' };
+  return { text: 'Rendah', color: 'text-rose-700', bg: 'bg-rose-50 ring-rose-200' };
+}
 
 const MsatResultsPage: FC = () => {
   const { user } = useAuth();
   const [results, setResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
     try {
       const idToken = await user.getIdToken();
-
-      // Get all exams
       const examsRes = await fetch('/api/admin/msat', {
         headers: { Authorization: `Bearer ${idToken}` },
       });
@@ -53,7 +94,6 @@ const MsatResultsPage: FC = () => {
       const examsData = await examsRes.json();
       const exams = examsData.exams ?? [];
 
-      // Get sessions for each exam
       const allResults: ExamResult[] = [];
       for (const exam of exams) {
         const detailRes = await fetch(`/api/admin/msat/${exam.id}`, {
@@ -70,6 +110,8 @@ const MsatResultsPage: FC = () => {
               predikat: s.predikat as string | null,
               peringkat: s.peringkat as number | null,
               stagePath: (s.stagePath as string[]) ?? [],
+              stageResponses: (s.stageResponses as StageResponse[]) ?? [],
+              conclusions: s.conclusions as Conclusions | null,
               status: s.status as string,
               completedAt: s.completedAt as { _seconds: number } | null,
             }));
@@ -146,9 +188,10 @@ const MsatResultsPage: FC = () => {
             {['Istimewa', 'Unggul', 'Madya', 'Semenjana', 'Terbatas'].map(p => {
               const count = predikatCounts[p] ?? 0;
               const pct = allSessions.length > 0 ? Math.round((count / allSessions.length) * 100) : 0;
+              const colors = PREDIKAT_COLORS[p];
               return (
-                <div key={p} className="flex-1 rounded-xl bg-stone-50 p-3 text-center ring-1 ring-stone-100">
-                  <p className="font-display text-lg font-black text-stone-700">{count}</p>
+                <div key={p} className={`flex-1 rounded-xl p-3 text-center ring-1 ${colors?.ring ?? 'ring-stone-200'} ${colors?.bg ?? 'bg-stone-50'}`}>
+                  <p className={`font-display text-lg font-black ${colors?.text ?? 'text-stone-700'}`}>{count}</p>
                   <p className="text-[10px] font-semibold text-stone-500">{p}</p>
                   <p className="text-[10px] text-stone-400">{pct}%</p>
                 </div>
@@ -176,26 +219,148 @@ const MsatResultsPage: FC = () => {
               </div>
               <span className="text-[11px] text-stone-400">{examResult.sessions.length} siswa</span>
             </div>
+
             <div className="divide-y divide-stone-50">
-              {examResult.sessions.map(s => (
-                <div key={s.id} className="flex items-center gap-3 px-5 py-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-600">
-                    {s.studentName.charAt(0).toUpperCase()}
+              {examResult.sessions.map(s => {
+                const isExpanded = expandedId === s.id;
+                const predColors = PREDIKAT_COLORS[s.predikat ?? ''] ?? { text: 'text-stone-600', bg: 'bg-stone-50', ring: 'ring-stone-200' };
+
+                return (
+                  <div key={s.id}>
+                    {/* Row header — clickable */}
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : s.id)}
+                      className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-stone-50"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-600">
+                        {s.studentName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] font-semibold text-stone-700">{s.studentName}</p>
+                        <p className="text-[10px] text-stone-400">
+                          {s.stagePath.map(d => DIFF_LABELS[d] ?? d).join(' → ')}
+                        </p>
+                      </div>
+                      <span className="text-sm font-bold text-stone-700">{s.finalScore ?? '-'}</span>
+                      {s.predikat && (
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${predColors.bg} ${predColors.text} ${predColors.ring}`}>
+                          {s.predikat}
+                        </span>
+                      )}
+                      <ChevronDown size={14} className={`shrink-0 text-stone-300 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Expanded detail */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="border-t border-stone-100 bg-stone-50/50 px-5 py-4 space-y-4">
+                            {/* Score + Predikat */}
+                            <div className="flex items-center gap-4">
+                              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 shadow-md">
+                                <span className="font-display text-xl font-black text-white">{s.finalScore}</span>
+                              </div>
+                              <div>
+                                <p className={`text-base font-bold ${predColors.text}`}>{s.predikat}</p>
+                                <p className="text-[11px] text-stone-400">Peringkat {s.peringkat}</p>
+                              </div>
+                            </div>
+
+                            {/* Stage Detail */}
+                            <div>
+                              <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">Detail Per Stage</h4>
+                              <div className="grid gap-2 sm:grid-cols-3">
+                                {s.stageResponses.map((sr, j) => (
+                                  <div key={j} className="rounded-xl bg-white p-3 ring-1 ring-stone-100">
+                                    <div className="mb-2 flex items-center justify-between">
+                                      <span className="text-[10px] font-bold text-stone-400">Stage {sr.stageNumber}</span>
+                                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${DIFF_COLORS[sr.stageDifficulty] ?? 'bg-stone-100 text-stone-600'}`}>
+                                        {DIFF_LABELS[sr.stageDifficulty] ?? sr.stageDifficulty}
+                                      </span>
+                                    </div>
+                                    <div className="mb-1 flex items-center gap-2">
+                                      <span className="text-lg font-black text-stone-700">{sr.totalCorrect}/12</span>
+                                      {sr.passed
+                                        ? <CheckCircle2 size={14} className="text-emerald-500" />
+                                        : <XCircle size={14} className="text-amber-400" />
+                                      }
+                                    </div>
+                                    <div className="flex gap-2 text-[10px] text-stone-400">
+                                      <span>K:{sr.knowingCorrect}</span>
+                                      <span>A:{sr.applyingCorrect}</span>
+                                      <span>R:{sr.reasoningCorrect}</span>
+                                    </div>
+                                    <p className="mt-1 text-[10px] text-stone-300">Bobot: {sr.weightedScore.toFixed(1)}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Cognitive Sub-scores */}
+                            {s.conclusions && (
+                              <div>
+                                <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">Profil Kognitif</h4>
+                                <div className="grid gap-2 sm:grid-cols-3">
+                                  {(['knowing', 'applying', 'reasoning'] as const).map(domain => {
+                                    const data = s.conclusions![domain];
+                                    const cfg = DOMAIN_CONFIG[domain];
+                                    const Icon = cfg.icon;
+                                    const levelBadge = getLevelBadge(data.level);
+                                    return (
+                                      <div key={domain} className="rounded-xl bg-white p-3 ring-1 ring-stone-100">
+                                        <div className="mb-2 flex items-center gap-1.5">
+                                          <Icon size={12} className={cfg.color} />
+                                          <span className="text-[10px] font-bold text-stone-500">{cfg.label}</span>
+                                          <span className={`ml-auto rounded px-1 py-0.5 text-[9px] font-bold ring-1 ${levelBadge.bg} ${levelBadge.color}`}>{levelBadge.text}</span>
+                                        </div>
+                                        <p className={`text-lg font-black ${getScoreColor(data.score)}`}>{data.score}%</p>
+                                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-stone-100">
+                                          <div className={`h-full rounded-full ${cfg.barColor}`} style={{ width: `${data.score}%` }} />
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Simpulan */}
+                            {s.conclusions && (
+                              <div>
+                                <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">Simpulan</h4>
+                                <div className="space-y-2">
+                                  {/* Overall */}
+                                  <div className={`rounded-xl p-3 ring-1 ${predColors.ring} ${predColors.bg}`}>
+                                    <p className={`text-[10px] font-bold ${predColors.text} mb-1`}>Keseluruhan — {s.conclusions.overall.predikat}</p>
+                                    <p className="text-[12px] leading-relaxed text-stone-600">{s.conclusions.overall.description}</p>
+                                  </div>
+                                  {/* Per domain */}
+                                  {(['knowing', 'applying', 'reasoning'] as const).map(domain => {
+                                    const data = s.conclusions![domain];
+                                    const cfg = DOMAIN_CONFIG[domain];
+                                    return (
+                                      <div key={domain} className="rounded-xl bg-white p-3 ring-1 ring-stone-100">
+                                        <p className={`text-[10px] font-bold ${cfg.color} mb-1`}>{cfg.label} — {data.level} ({data.score}%)</p>
+                                        <p className="text-[12px] leading-relaxed text-stone-600">{data.description}</p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-stone-700">{s.studentName}</p>
-                    <p className="text-[10px] text-stone-400">
-                      {s.stagePath.map(d => DIFF_LABELS[d] ?? d).join(' → ')}
-                    </p>
-                  </div>
-                  <span className="text-sm font-bold text-stone-700">{s.finalScore ?? '-'}</span>
-                  {s.predikat && (
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${PREDIKAT_COLORS[s.predikat] ?? 'bg-stone-50 text-stone-600'}`}>
-                      {s.predikat}
-                    </span>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         ))
