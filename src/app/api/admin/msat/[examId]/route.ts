@@ -103,6 +103,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
       });
       await batch.commit();
 
+      // Update exam status so polling detects it
+      await examRef.update({ status: 'in_progress' });
+
       // Update waiting room status
       await adminDb.collection('msat_waiting_room').doc(examId).set({
         status: 'started',

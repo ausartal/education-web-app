@@ -106,6 +106,7 @@ const MsatExamDetailPage: FC = () => {
 
   const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
     active: { label: 'Aktif', color: 'text-emerald-700', bg: 'bg-emerald-50 ring-emerald-200' },
+    in_progress: { label: 'Berlangsung', color: 'text-blue-700', bg: 'bg-blue-50 ring-blue-200' },
     inactive: { label: 'Nonaktif', color: 'text-stone-600', bg: 'bg-stone-50 ring-stone-200' },
     expired: { label: 'Kedaluwarsa', color: 'text-rose-700', bg: 'bg-rose-50 ring-rose-200' },
   };
@@ -156,7 +157,13 @@ const MsatExamDetailPage: FC = () => {
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="rounded-2xl bg-white p-5 ring-1 ring-stone-100">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">Aksi</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {exam.status === 'active' && waitingSessions.length > 0 && (
+              <button onClick={() => handleAction('start')} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#4D38D4] disabled:opacity-50">
+                {actionLoading === 'start' ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
+                Mulai Ujian ({waitingSessions.length} siswa)
+              </button>
+            )}
             {exam.status === 'active' ? (
               <button onClick={() => handleAction('deactivate')} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100 disabled:opacity-50">
                 {actionLoading === 'deactivate' ? <Loader2 size={12} className="animate-spin" /> : <Square size={12} />}
