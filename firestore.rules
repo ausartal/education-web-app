@@ -190,5 +190,37 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── MAST EXAMS ──────────────────────────────────────────────────────────
+    match /mast_exams/{examId} {
+      allow read:   if isAdmin() || isAuth(); // siswa perlu baca saat join
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── MAST QUESTIONS (Bank Soal) ──────────────────────────────────────────
+    match /mast_questions/{questionId} {
+      allow read:   if isAdmin() || isAuth(); // siswa perlu baca soal saat ujian
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── MAST SESSIONS ───────────────────────────────────────────────────────
+    match /mast_sessions/{sessionId} {
+      allow read:   if isOwner(resource.data.studentId) || isAdmin();
+      allow create: if false; // server-side only (Admin SDK)
+      allow update: if false; // server-side only (Admin SDK)
+      allow delete: if isAdmin();
+    }
+
+    // ── MAST WAITING ROOM ───────────────────────────────────────────────────
+    match /mast_waiting_room/{examId} {
+      allow read:   if isAuth(); // siswa & admin perlu baca status
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
   }
 }

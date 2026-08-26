@@ -15,6 +15,7 @@ const navLinks = [
   { href: '/materi', label: 'Materi' },
   { href: '/latihan', label: 'Latihan' },
   { href: '/ujian', label: 'Ujian' },
+  { href: '/exam', label: 'MSAT' },
 ];
 
 export const Navbar: FC = () => {

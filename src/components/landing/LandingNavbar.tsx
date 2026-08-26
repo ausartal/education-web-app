@@ -4,7 +4,7 @@ import { FC, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ClipboardCheck } from 'lucide-react';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -68,6 +68,13 @@ export const LandingNavbar: FC = () => {
         {/* Desktop CTAs */}
         <div className="hidden items-center gap-3 md:flex">
           <Link
+            href="/exam"
+            className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+          >
+            <ClipboardCheck size={15} />
+            MSAT Exam
+          </Link>
+          <Link
             href="/login"
             className="rounded-xl border border-gray-200 bg-white px-6 py-2.5 text-sm font-semibold text-[#0E1E47] transition-colors hover:bg-gray-50"
           >
@@ -107,7 +114,14 @@ export const LandingNavbar: FC = () => {
               </li>
             ))}
           </ul>
-          <div className="flex gap-3 border-t border-gray-100 p-4">
+          <div className="flex gap-2 border-t border-gray-100 p-4">
+            <Link
+              href="/exam"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 py-2.5 text-sm font-semibold text-indigo-700"
+            >
+              <ClipboardCheck size={14} />
+              MSAT
+            </Link>
             <Link
               href="/login"
               className="flex-1 rounded-xl border border-gray-200 py-2.5 text-center text-sm font-semibold text-[#0E1E47]"
