@@ -30,10 +30,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // 1. Find access code
+    // 1. Find access code (allow both active and in_progress exams)
     const codeSnap = await adminDb.collection('msat_access_code')
       .where('code', '==', code.toUpperCase().trim())
-      .where('status', '==', 'active')
+      .where('status', 'in', ['active', 'in_progress'])
       .limit(1)
       .get();
 
@@ -87,15 +87,19 @@ export async function POST(req: NextRequest) {
     const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
     const studentName = userDoc.data()?.displayName ?? 'Siswa';
 
-    // 6. Create session
+    // 6. Determine initial status based on exam status
+    const examIsActive = exam.status === 'in_progress';
+    const initialStatus = examIsActive ? 'in_progress' : 'waiting';
+
+    // 7. Create session
     const sessionRef = adminDb.collection('msat_sessions').doc();
     const sessionData = {
       studentId: decoded.uid,
       studentName,
       examId: examDoc.id,
       examCode: exam.code.toUpperCase(),
-      status: 'waiting',
-      startedAt: null,
+      status: initialStatus,
+      startedAt: examIsActive ? FieldValue.serverTimestamp() : null,
       completedAt: null,
       currentStage: 1,
       currentStageDifficulty: 'medium',
@@ -114,34 +118,36 @@ export async function POST(req: NextRequest) {
     };
     await sessionRef.set(sessionData);
 
-    // 7. Increment use count
+    // 8. Increment use count
     await examDoc.ref.update({ currentUses: FieldValue.increment(1) });
 
-    // 8. Add to waiting room
-    await adminDb.collection('msat_waiting_room').doc(examDoc.id).set({
-      examId: examDoc.id,
-      [`students.${decoded.uid}`]: {
-        joinedAt: FieldValue.serverTimestamp(),
-        displayName: studentName,
-        sessionId: sessionRef.id,
-        ready: true,
-      },
-    }, { merge: true });
+    // 9. Add to waiting room (only if exam is not yet started)
+    if (!examIsActive) {
+      await adminDb.collection('msat_waiting_room').doc(examDoc.id).set({
+        examId: examDoc.id,
+        [`students.${decoded.uid}`]: {
+          joinedAt: FieldValue.serverTimestamp(),
+          displayName: studentName,
+          sessionId: sessionRef.id,
+          ready: true,
+        },
+      }, { merge: true });
+    }
 
-    // 9. Log
+    // 10. Log
     await adminDb.collection('audit_logs').add({
       actorId: decoded.uid,
       actorRole: 'student',
       action: 'join_msat_exam',
       targetId: sessionRef.id,
       targetType: 'msat_session',
-      details: { examId: examDoc.id, code: exam.code },
+      details: { examId: examDoc.id, code: exam.code, initialStatus },
       timestamp: new Date(),
     });
 
     return NextResponse.json({
       sessionId: sessionRef.id,
-      status: 'waiting',
+      status: initialStatus,
       resumed: false,
       exam: {
         id: examDoc.id,

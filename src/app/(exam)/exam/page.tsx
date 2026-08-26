@@ -121,6 +121,13 @@ const ExamPage: FC = () => {
         sessionId: data.sessionId,
       };
       setExamInfo(info);
+
+      // If exam is already in progress, go directly to session
+      if (data.status === 'in_progress') {
+        router.push(`/exam/session/${data.sessionId}`);
+        return;
+      }
+
       setStep('waiting');
     } catch {
       setError('Terjadi kesalahan. Coba lagi.');
