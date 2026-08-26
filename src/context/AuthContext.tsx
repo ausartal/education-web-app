@@ -47,6 +47,10 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         setProfile(null);
       }
       setLoading(false);
+    }, (err) => {
+      // Suppress IndexedDB "Database is closing/hidden" errors during navigation/HMR
+      if (err?.message?.includes('Database is closing')) return;
+      console.error('Auth state error:', err);
     });
     return unsubscribe;
   }, []);
