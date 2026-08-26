@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { History, BarChart3, Info } from 'lucide-react';
 import { AdminPreviewBanner } from '@/components/admin/AdminPreviewBanner';
 
@@ -13,6 +14,19 @@ const navItems = [
 ];
 
 export default function ExamLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const isExamActive = pathname.includes('/session/') || pathname.includes('/break/');
+
+  // During active exam — no navbar, no footer, no distractions
+  if (isExamActive) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#F8F7FF]">
+        <main className="flex-1">{children}</main>
+        <AdminPreviewBanner />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F8F7FF]">
       {/* Top bar */}

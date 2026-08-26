@@ -3,10 +3,9 @@
 import { FC, useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Wifi, WifiOff, ChevronLeft, ChevronRight, AlertTriangle, X, Loader2, Send } from 'lucide-react';
+import { Clock, Wifi, WifiOff, ChevronLeft, ChevronRight, AlertTriangle, X, Loader2, Send, Shield, Maximize } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
-import type { MSATAnswerKey, MSATStageDifficulty } from '@/types/msat';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
@@ -15,10 +14,6 @@ interface Question {
   stem: string;
   options: Record<string, string>;
   cognitiveDomain: string;
-  cognitiveLevel: string;
-  difficulty: string;
-  tierPath: string;
-  categoryLabel: string;
 }
 
 interface SessionData {
@@ -27,6 +22,7 @@ interface SessionData {
   currentStage: number;
   currentStageDifficulty: string;
   stagePath: string[];
+  stageResponses: Array<{ stageNumber: number; totalCorrect: number; passed: boolean }>;
   exam: {
     id: string;
     title: string;
@@ -35,6 +31,32 @@ interface SessionData {
     durationPerStage: number;
     breakDuration: number;
   } | null;
+}
+
+const STORAGE_KEY = (id: string) => `msat_exam_${id}`;
+
+interface StoredState {
+  answers: Record<string, string>;
+  timeSpent: Record<string, number>;
+  currentIdx: number;
+  timeLeft: number;
+  savedAt: number;
+  stage: number;
+}
+
+function saveState(id: string, state: StoredState) {
+  try { localStorage.setItem(STORAGE_KEY(id), JSON.stringify(state)); } catch { /* ignore */ }
+}
+
+function loadState(id: string): StoredState | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY(id));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function clearState(id: string) {
+  try { localStorage.removeItem(STORAGE_KEY(id)); } catch { /* ignore */ }
 }
 
 const ExamSessionPage: FC = () => {
@@ -54,11 +76,14 @@ const ExamSessionPage: FC = () => {
   const [tabWarning, setTabWarning] = useState(false);
   const [tabCount, setTabCount] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showFullscreen, setShowFullscreen] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionStartRef = useRef(Date.now());
+  const timeLeftRef = useRef(timeLeft);
+  timeLeftRef.current = timeLeft;
 
-  // Fetch session + questions
+  // ── Init: fetch session + questions, restore state ──
   useEffect(() => {
     if (!user) return;
     const init = async () => {
@@ -70,27 +95,36 @@ const ExamSessionPage: FC = () => {
           headers: { Authorization: `Bearer ${idToken}` },
         });
         if (!sessionRes.ok) { router.push('/exam'); return; }
-        const sessionData = await sessionRes.json();
+        const sessionData: SessionData = await sessionRes.json();
 
-        if (sessionData.status === 'completed') {
-          router.push(`/exam/results/${id}`);
-          return;
-        }
-        if (sessionData.status === 'on_break') {
-          router.push(`/exam/break/${id}`);
-          return;
-        }
+        if (sessionData.status === 'completed') { router.push(`/exam/results/${id}`); return; }
+        if (sessionData.status === 'on_break') { router.push(`/exam/break/${id}`); return; }
+        if (sessionData.status === 'waiting') { router.push('/exam'); return; }
 
         setSession(sessionData);
-        setTimeLeft((sessionData.exam?.durationPerStage ?? 30) * 60);
 
-        // Fetch questions for current stage
-        const qRes = await fetch(`/api/msat/sessions/${id}/questions`, {
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
-        if (qRes.ok) {
-          const qData = await qRes.json();
-          setQuestions(qData.questions ?? []);
+        // Try to restore from localStorage
+        const stored = loadState(id);
+        const durationSec = (sessionData.exam?.durationPerStage ?? 30) * 60;
+
+        if (stored && stored.stage === sessionData.currentStage) {
+          // Restore saved state — calculate remaining time from savedAt
+          const elapsedSinceSave = Math.floor((Date.now() - stored.savedAt) / 1000);
+          const remainingTime = Math.max(0, stored.timeLeft - elapsedSinceSave);
+          setAnswers(stored.answers);
+          setTimeSpent(stored.timeSpent);
+          setCurrentIdx(stored.currentIdx);
+          setTimeLeft(remainingTime > 0 ? remainingTime : durationSec);
+        } else {
+          // Fresh start — fetch questions
+          const qRes = await fetch(`/api/msat/sessions/${id}/questions`, {
+            headers: { Authorization: `Bearer ${idToken}` },
+          });
+          if (qRes.ok) {
+            const qData = await qRes.json();
+            setQuestions(qData.questions ?? []);
+          }
+          setTimeLeft(durationSec);
         }
       } catch { /* ignore */ }
       setLoading(false);
@@ -98,7 +132,41 @@ const ExamSessionPage: FC = () => {
     init();
   }, [user, id, router]);
 
-  // Timer
+  // ── Fetch questions if not restored ──
+  useEffect(() => {
+    if (!user || questions.length > 0 || loading) return;
+    const fetchQ = async () => {
+      const idToken = await user.getIdToken();
+      const qRes = await fetch(`/api/msat/sessions/${id}/questions`, {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (qRes.ok) {
+        const qData = await qRes.json();
+        setQuestions(qData.questions ?? []);
+      }
+    };
+    fetchQ();
+  }, [user, id, questions.length, loading]);
+
+  // ── Auto-save to localStorage every 5 seconds ──
+  useEffect(() => {
+    if (loading || questions.length === 0) return;
+    const interval = setInterval(() => {
+      saveState(id, { answers, timeSpent, currentIdx, timeLeft: timeLeftRef.current, savedAt: Date.now(), stage: session?.currentStage ?? 1 });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [loading, questions.length, answers, timeSpent, currentIdx, id, session]);
+
+  // ── Save on beforeunload ──
+  useEffect(() => {
+    const handler = () => {
+      saveState(id, { answers, timeSpent, currentIdx, timeLeft: timeLeftRef.current, savedAt: Date.now(), stage: session?.currentStage ?? 1 });
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [answers, timeSpent, currentIdx, id, session]);
+
+  // ── Timer ──
   useEffect(() => {
     if (loading || timeLeft <= 0) return;
     timerRef.current = setInterval(() => {
@@ -114,12 +182,28 @@ const ExamSessionPage: FC = () => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [loading]);
 
-  // Track time per question
+  // ── Track time per question ──
   useEffect(() => {
     questionStartRef.current = Date.now();
   }, [currentIdx]);
 
-  // Anti-cheat
+  // ── Fullscreen ──
+  useEffect(() => {
+    if (loading) return;
+    const enterFs = async () => {
+      try { await document.documentElement.requestFullscreen(); } catch { /* ignore */ }
+    };
+    if (!document.fullscreenElement) {
+      setShowFullscreen(true);
+    }
+    const onFsChange = () => {
+      if (!document.fullscreenElement && !loading) setShowFullscreen(true);
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, [loading]);
+
+  // ── Anti-cheat ──
   useEffect(() => {
     const onVis = () => {
       if (document.hidden) {
@@ -130,20 +214,43 @@ const ExamSessionPage: FC = () => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
     const onOnline = () => setOnline(true);
     const onOffline = () => setOnline(false);
+    const onPopState = (e: PopStateEvent) => {
+      e.preventDefault();
+      window.history.pushState(null, '', window.location.href);
+    };
+
+    // Push state to block back button
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', onPopState);
     document.addEventListener('visibilitychange', onVis);
     window.addEventListener('beforeunload', onBeforeUnload);
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
+
+    // Disable right-click
+    const onContext = (e: Event) => e.preventDefault();
+    document.addEventListener('contextmenu', onContext);
+
+    // Disable common keyboard shortcuts
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'u')) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('keydown', onKeydown);
+
     return () => {
+      window.removeEventListener('popstate', onPopState);
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('beforeunload', onBeforeUnload);
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
+      document.removeEventListener('contextmenu', onContext);
+      document.removeEventListener('keydown', onKeydown);
     };
   }, []);
 
   const handleAnswer = (questionId: string, answer: string) => {
-    // Record time for previous answer
     const prevQ = questions[currentIdx];
     if (prevQ) {
       setTimeSpent(prev => ({
@@ -184,9 +291,9 @@ const ExamSessionPage: FC = () => {
       });
 
       if (res.ok) {
+        clearState(id);
         const data = await res.json();
         if (data.completed) {
-          // Auto-complete
           await fetch(`/api/msat/sessions/${id}/complete`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${idToken}` },
@@ -212,9 +319,7 @@ const ExamSessionPage: FC = () => {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#F8F7FF] text-center">
         <p className="text-gray-500">Soal tidak ditemukan</p>
-        <button onClick={() => router.push('/exam')} className="rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white">
-          Kembali
-        </button>
+        <button onClick={() => router.push('/exam')} className="rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white">Kembali</button>
       </div>
     );
   }
@@ -224,20 +329,34 @@ const ExamSessionPage: FC = () => {
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
   const timerDanger = timeLeft < 300;
-  const stageDiff = session.currentStageDifficulty as MSATStageDifficulty;
-  const diffLabel = { rendah: 'Rendah', medium: 'Medium', tinggi: 'Tinggi' }[stageDiff] ?? stageDiff;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F8F7FF]">
+      {/* Fullscreen Gate */}
+      <AnimatePresence>
+        {showFullscreen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] flex items-center justify-center bg-gray-950/90 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="mx-4 w-full max-w-sm rounded-3xl bg-white p-8 text-center shadow-2xl">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100">
+                <Maximize className="text-violet-600" size={24} />
+              </div>
+              <h2 className="mb-2 text-lg font-bold text-gray-900">Layar Penuh Diperlukan</h2>
+              <p className="mb-6 text-sm text-gray-500">Ujian harus dijalankan dalam mode layar penuh.</p>
+              <button onClick={async () => { try { await document.documentElement.requestFullscreen(); setShowFullscreen(false); } catch { setShowFullscreen(false); } }} className="w-full rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 py-3.5 text-sm font-bold text-white shadow-lg">
+                Masuk Layar Penuh
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Tab Warning */}
       <AnimatePresence>
         {tabWarning && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 backdrop-blur-[2px]" onClick={() => setTabWarning(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={e => e.stopPropagation()} className="mx-4 w-full max-w-xs rounded-2xl bg-white p-6 shadow-2xl">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-950/60 backdrop-blur-[2px]" onClick={() => setTabWarning(false)}>
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} onClick={e => e.stopPropagation()} className="mx-4 w-full max-w-xs rounded-2xl bg-white p-6 shadow-2xl">
               <div className="mb-4 flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
-                  <AlertTriangle className="text-amber-500" size={20} />
-                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50"><AlertTriangle className="text-amber-500" size={20} /></div>
                 <button onClick={() => setTabWarning(false)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100"><X size={16} /></button>
               </div>
               <h3 className="mb-1 text-base font-bold text-gray-900">Perpindahan Tab Terdeteksi</h3>
@@ -251,42 +370,38 @@ const ExamSessionPage: FC = () => {
       {/* Submit Confirm */}
       <AnimatePresence>
         {showConfirm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 backdrop-blur-[2px]" onClick={() => setShowConfirm(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={e => e.stopPropagation()} className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-950/60 backdrop-blur-[2px]" onClick={() => setShowConfirm(false)}>
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} onClick={e => e.stopPropagation()} className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
               <h3 className="mb-2 text-base font-bold text-gray-900">Kumpulkan Jawaban?</h3>
               <p className="mb-1 text-sm text-gray-500">Kamu sudah menjawab <strong>{answeredCount}</strong> dari <strong>{questions.length}</strong> soal.</p>
-              {answeredCount < questions.length && (
-                <p className="mb-4 text-sm text-amber-600">Masih ada {questions.length - answeredCount} soal yang belum dijawab.</p>
-              )}
-              {!answeredCount || answeredCount >= questions.length ? <div className="mb-4" /> : null}
+              {answeredCount < questions.length && <p className="mb-4 text-sm text-amber-600">Masih ada {questions.length - answeredCount} soal yang belum dijawab.</p>}
+              {answeredCount >= questions.length && <div className="mb-4" />}
               <div className="flex gap-3">
-                <button onClick={() => setShowConfirm(false)} className="flex-1 rounded-xl bg-gray-100 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200">Kembali</button>
-                <button onClick={() => handleSubmit(true)} className="flex-1 rounded-xl bg-[#5841EA] py-2.5 text-sm font-bold text-white hover:bg-[#4D38D4]">Kumpulkan</button>
+                <button onClick={() => setShowConfirm(false)} className="flex-1 rounded-xl bg-gray-100 py-2.5 text-sm font-semibold text-gray-700">Kembali</button>
+                <button onClick={() => handleSubmit(true)} className="flex-1 rounded-xl bg-[#5841EA] py-2.5 text-sm font-bold text-white">Kumpulkan</button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Top Bar */}
-      <div className="sticky top-0 z-30 border-b border-gray-100 bg-white/90 px-4 py-3 backdrop-blur-sm">
+      {/* Top Bar — minimal, no distractions */}
+      <div className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 px-4 py-2.5 backdrop-blur-sm">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-bold text-violet-700">
               Stage {session.currentStage}/{session.exam?.totalStages ?? 3}
             </span>
-            <span className="rounded-full bg-stone-100 px-2.5 py-1 text-[10px] font-bold text-stone-500">{diffLabel}</span>
-            <span className="hidden text-xs text-gray-400 sm:block">{answeredCount}/{questions.length} terjawab</span>
+            <span className="text-[11px] text-gray-400">{answeredCount}/{questions.length}</span>
           </div>
-          <div className="flex items-center gap-3">
-            {online ? <Wifi size={14} className="text-emerald-400" /> : <WifiOff size={14} className="text-rose-400" />}
-            <div className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold tabular-nums ${timerDanger ? 'animate-pulse bg-rose-50 text-rose-600' : 'bg-gray-100 text-gray-700'}`}>
-              <Clock size={14} />
+          <div className="flex items-center gap-2">
+            {online ? <Wifi size={13} className="text-emerald-400" /> : <WifiOff size={13} className="text-rose-400" />}
+            <div className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold tabular-nums ${timerDanger ? 'animate-pulse bg-rose-50 text-rose-600' : 'bg-gray-100 text-gray-700'}`}>
+              <Clock size={13} />
               {mins}:{secs.toString().padStart(2, '0')}
             </div>
           </div>
         </div>
-        {/* Progress bar */}
         <div className="mx-auto mt-2 max-w-4xl">
           <div className="h-1 overflow-hidden rounded-full bg-gray-100">
             <motion.div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" animate={{ width: `${(answeredCount / questions.length) * 100}%` }} transition={{ duration: 0.3 }} />
@@ -295,32 +410,26 @@ const ExamSessionPage: FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="mx-auto flex w-full max-w-4xl flex-1 gap-6 px-4 py-6">
+      <div className="mx-auto flex w-full max-w-4xl flex-1 gap-6 px-4 py-5">
         {/* Question Area */}
         <div className="flex-1">
           <AnimatePresence mode="wait">
             {currentQ && (
-              <motion.div key={currentQ.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.15 }}>
-                {/* Question header */}
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="rounded-lg bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-600">
+              <motion.div key={currentQ.id} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.12 }}>
+                {/* Question number only — no cognitiveDomain, no difficulty */}
+                <div className="mb-3">
+                  <span className="rounded-lg bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-600">
                     Soal {currentIdx + 1} dari {questions.length}
-                  </span>
-                  <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">
-                    {currentQ.cognitiveDomain}
-                  </span>
-                  <span className="rounded-lg bg-stone-100 px-2 py-0.5 text-[10px] text-stone-500">
-                    {currentQ.difficulty}
                   </span>
                 </div>
 
                 {/* Question stem */}
-                <div className="mb-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+                <div className="mb-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
                   <QuestionRenderer content={currentQ.stem} className="text-[15px] font-medium leading-relaxed text-gray-800" />
                 </div>
 
                 {/* Options */}
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   {(['A', 'B', 'C', 'D', 'E'] as const).map(key => {
                     const optText = currentQ.options[key];
                     if (!optText) return null;
@@ -347,27 +456,20 @@ const ExamSessionPage: FC = () => {
           </AnimatePresence>
 
           {/* Navigation */}
-          <div className="mt-6 flex items-center gap-3">
+          <div className="mt-5 flex items-center gap-3">
             <button
               onClick={() => setCurrentIdx(i => Math.max(0, i - 1))}
               disabled={currentIdx === 0}
-              className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-600 disabled:opacity-40 hover:bg-gray-200"
+              className="flex items-center gap-1 rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-600 disabled:opacity-40"
             >
               <ChevronLeft size={16} /> Sebelumnya
             </button>
             {currentIdx < questions.length - 1 ? (
-              <button
-                onClick={() => setCurrentIdx(i => i + 1)}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700"
-              >
+              <button onClick={() => setCurrentIdx(i => i + 1)} className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700">
                 Berikutnya <ChevronRight size={16} />
               </button>
             ) : (
-              <button
-                onClick={() => handleSubmit()}
-                disabled={submitting}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white disabled:opacity-50 hover:bg-emerald-700"
-              >
+              <button onClick={() => handleSubmit()} disabled={submitting} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white disabled:opacity-50 hover:bg-emerald-700">
                 {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                 {submitting ? 'Mengirim...' : 'Kumpulkan Jawaban'}
               </button>
@@ -376,15 +478,15 @@ const ExamSessionPage: FC = () => {
         </div>
 
         {/* Sidebar — Question dots */}
-        <div className="hidden w-48 shrink-0 lg:block">
-          <div className="sticky top-28 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-            <h4 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">Navigasi Soal</h4>
-            <div className="grid grid-cols-4 gap-2">
+        <div className="hidden w-44 shrink-0 lg:block">
+          <div className="sticky top-20 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+            <h4 className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Navigasi</h4>
+            <div className="grid grid-cols-4 gap-1.5">
               {questions.map((q, i) => (
                 <button
                   key={q.id}
                   onClick={() => setCurrentIdx(i)}
-                  className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold transition-colors ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg text-[11px] font-bold transition-colors ${
                     i === currentIdx ? 'bg-violet-600 text-white shadow-md' :
                     answers[q.id] ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                   }`}
@@ -392,11 +494,6 @@ const ExamSessionPage: FC = () => {
                   {i + 1}
                 </button>
               ))}
-            </div>
-            <div className="mt-4 space-y-1.5 text-[10px] text-gray-400">
-              <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-violet-600" /> Soal aktif</div>
-              <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-emerald-100" /> Sudah dijawab</div>
-              <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-gray-100" /> Belum dijawab</div>
             </div>
           </div>
         </div>
