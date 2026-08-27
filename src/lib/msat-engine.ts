@@ -7,6 +7,7 @@ import type {
   MSATCognitiveDomain,
   PredikatName,
 } from '@/types/msat';
+import { PREDIKAT_ORDER } from '@/types/msat';
 
 // ===== Stage Weight Multiplier =====
 const STAGE_WEIGHTS: Record<MSATStageDifficulty, number> = {
@@ -133,6 +134,90 @@ export function getPredikat(
   return { name: 'Terbatas', peringkat: 5, description: predicates.terbatas.description };
 }
 
+// Stage-based predikat descriptions (from customer spec)
+const STAGE_BASED_PREDIKAT_DESCRIPTIONS: Record<PredikatName, string> = {
+  Istimewa:
+    'Peserta uji menguasai seluruh konsep dasar kimia secara mendalam (Knowing), terampil mengaplikasikan rumus dan hukum kimia tanpa kekeliruan pada berbagai variasi soal (Applying), serta mampu menganalisis masalah kompleks, mengintegrasikan multi-konsep, dan memecahkan masalah kontekstual non-rutin melalui penalaran ilmiah yang logis dan kritis (Reasoning).',
+  Unggul:
+    'Peserta uji memiliki pemahaman konsep dasar kimia yang kokoh (Knowing) dan mampu menerapkannya secara akurat pada situasi prosedural (Applying), serta mulai mampu melakukan penalaran ilmiah untuk menginterpretasikan data dan menyelesaikan masalah kontekstual tingkat menengah (Reasoning).',
+  Madya:
+    'Peserta uji memahami istilah dan prinsip-prinsip utama kimia (Knowing) serta mampu mengaplikasikannya pada perhitungan atau masalah sederhana yang rutin (Applying), namun penalarannya masih terbatas pada hubungan sebab-akibat langsung dan belum konsisten pada kasus terintegrasi (Reasoning).',
+  Semenjana:
+    'Peserta uji mengenali beberapa fakta dan definisi dasar kimia (Knowing), namun masih mengalami kesulitan atau kerap terjadi miskonsepsi saat menerapkan konsep pada soal (Applying), serta belum mampu melakukan analisis penalaran secara mandiri (Reasoning).',
+  Terbatas:
+    'Peserta uji hanya mengingat sebagian kecil pengetahuan kimia yang sangat parsial (Knowing), belum mampu menerapkan rumus/prinsip secara tepat (Applying), dan belum mampu menunjukkan kemampuan penalaran ilmiah (Reasoning).',
+};
+
+// Score range per predikat (for display purposes)
+const PREDIKAT_SCORE_RANGES: Record<PredikatName, { min: number; max: number }> = {
+  Istimewa: { min: 81, max: 100 },
+  Unggul: { min: 61, max: 80 },
+  Madya: { min: 41, max: 60 },
+  Semenjana: { min: 21, max: 40 },
+  Terbatas: { min: 0, max: 20 },
+};
+
+/**
+ * Determine predikat based on stage pass/fail results (not weighted score).
+ *
+ * Logic:
+ *   Istimewa : S1✓ S2✓ S3✓
+ *   Unggul   : S1✓ S2✓ S3✗  OR  S1✓ S2✗ S3✓
+ *   Madya    : S1✓ S2✗ S3✗  OR  S1✗ S2✓ S3✓
+ *   Semenjana: S1✗ S2✓ S3✗  OR  S1✗ S2✗ S3✓
+ *   Terbatas : S1✗ S2✗ S3✗
+ */
+export function getPredikatFromStageResults(
+  stageResponses: MSATStageResponse[],
+): { name: PredikatName; peringkat: number; description: string; scoreRange: { min: number; max: number } } {
+  // Build pass/fail array (default false if stage missing)
+  const passed = [false, false, false];
+  for (const sr of stageResponses) {
+    passed[sr.stageNumber - 1] = sr.passed;
+  }
+
+  const [s1, s2, s3] = passed;
+  const passCount = (s1 ? 1 : 0) + (s2 ? 1 : 0) + (s3 ? 1 : 0);
+
+  let name: PredikatName;
+
+  if (passCount === 3) {
+    name = 'Istimewa';
+  } else if (passCount === 2) {
+    if (!s3) {
+      // S1✓ S2✓ S3✗
+      name = 'Unggul';
+    } else if (!s2) {
+      // S1✓ S2✗ S3✓
+      name = 'Unggul';
+    } else {
+      // S1✗ S2✓ S3✓
+      name = 'Madya';
+    }
+  } else if (passCount === 1) {
+    if (s2) {
+      // S1✗ S2✓ S3✗
+      name = 'Semenjana';
+    } else if (s3) {
+      // S1✗ S2✗ S3✓
+      name = 'Semenjana';
+    } else {
+      // S1✓ S2✗ S3✗
+      name = 'Madya';
+    }
+  } else {
+    name = 'Terbatas';
+  }
+
+  const peringkat = (PREDIKAT_ORDER.indexOf(name) + 1) as 1 | 2 | 3 | 4 | 5;
+  return {
+    name,
+    peringkat,
+    description: STAGE_BASED_PREDIKAT_DESCRIPTIONS[name],
+    scoreRange: PREDIKAT_SCORE_RANGES[name],
+  };
+}
+
 /**
  * Calculate cognitive sub-scores (independen per domain).
  * Knowing% = (ΣK / (4 × N_stages)) × 100
@@ -203,30 +288,29 @@ function getStagePathDescription(stageResponses: MSATStageResponse[]): string {
 
 /**
  * Generate all 4 conclusions for the exam results.
+ * Overall predikat is determined by stage pass/fail pattern (not weighted score).
  */
 export function generateConclusions(
   stageResponses: MSATStageResponse[],
-  predicates: MSATAccessCode['predicates'],
+  _predicates?: MSATAccessCode['predicates'],
 ): MSATConclusions {
   const finalScore = calculateFinalScore(stageResponses);
-  const { name: predikat, description: overallDesc } = getPredikat(finalScore, predicates);
+  const { name: predikat, description: overallDesc } = getPredikatFromStageResults(stageResponses);
   const cognitive = calculateCognitiveScores(stageResponses);
 
   const knowingLevel = getCognitiveLevel(cognitive.knowing);
   const applyingLevel = getCognitiveLevel(cognitive.applying);
   const reasoningLevel = getCognitiveLevel(cognitive.reasoning);
 
-  // Build detailed overall description with cognitive context
   const kDesc = COGNITIVE_DESCRIPTIONS.knowing[knowingLevel.level];
   const aDesc = COGNITIVE_DESCRIPTIONS.applying[applyingLevel.level];
   const rDesc = COGNITIVE_DESCRIPTIONS.reasoning[reasoningLevel.level];
-  const detailedOverall = `Peserta uji ${kDesc.toLowerCase().replace(/^./, c => c.toLowerCase())} (Knowing), ${aDesc.toLowerCase().replace(/^./, c => c.toLowerCase())} (Applying), serta ${rDesc.toLowerCase().replace(/^./, c => c.toLowerCase())} (Reasoning).`;
 
   return {
     overall: {
       score: finalScore,
       predikat,
-      description: detailedOverall,
+      description: overallDesc,
     },
     knowing: {
       score: cognitive.knowing,

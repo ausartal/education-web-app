@@ -226,6 +226,44 @@ const ExamResultsPage: FC = () => {
           </div>
         </motion.div>
 
+        {/* ── Kriteria Predikat ── */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }} className="mb-4 rounded-2xl bg-white p-6 ring-1 ring-stone-100">
+          <div className="mb-4 flex items-center gap-2">
+            <Award size={16} className="text-stone-400" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-400">Kriteria Predikat</h3>
+          </div>
+
+          {/* Stage status summary */}
+          <div className="mb-4 flex items-center gap-3">
+            {results.stageResponses.map((sr, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-stone-500">S{i + 1}:</span>
+                {sr.passed
+                  ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200">Lulus</span>
+                  : <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 ring-1 ring-rose-200">Tidak Lulus</span>
+                }
+              </div>
+            ))}
+            <span className="text-xs text-stone-400">→</span>
+            <span className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${predColors.bg} ${predColors.text} ${predColors.ring}`}>
+              {results.predikat}
+            </span>
+          </div>
+
+          {/* Criteria explanation */}
+          <div className="rounded-xl bg-stone-50 p-4 ring-1 ring-stone-100">
+            <p className="text-[11px] font-semibold text-stone-500 mb-2">Kriteria berdasarkan kelulusan stage:</p>
+            <div className="space-y-1.5 text-[11px] text-stone-600">
+              <p><span className="font-bold text-violet-700">Istimewa:</span> Lulus semua 3 stage (S1✓ S2✓ S3✓)</p>
+              <p><span className="font-bold text-blue-700">Unggul:</span> Lulus stage 1 & 2, tidak lulus stage 3 (S1✓ S2✓ S3✗) atau lulus stage 1 & 3, tidak lulus stage 2 (S1✓ S2✗ S3✓)</p>
+              <p><span className="font-bold text-amber-700">Madya:</span> Hanya lulus stage 1 (S1✓ S2✗ S3✗) atau lulus stage 2 & 3, tidak lulus stage 1 (S1✗ S2✓ S3✓)</p>
+              <p><span className="font-bold text-orange-700">Semenjana:</span> Hanya lulus stage 2 (S1✗ S2✓ S3✗) atau hanya lulus stage 3 (S1✗ S2✗ S3✓)</p>
+              <p><span className="font-bold text-rose-700">Terbatas:</span> Tidak lulus semua 3 stage (S1✗ S2✗ S3✗)</p>
+            </div>
+            <p className="mt-2 text-[10px] text-stone-400">Lulus = minimal 8 dari 12 soal benar (≥60%) per stage</p>
+          </div>
+        </motion.div>
+
         {/* ── Detail Per Stage ── */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-8 rounded-2xl bg-white p-6 ring-1 ring-stone-100">
           <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-stone-400">Detail Per Stage</h3>

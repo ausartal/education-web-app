@@ -3,7 +3,7 @@ import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import {
   calculateFinalScore,
-  getPredikat,
+  getPredikatFromStageResults,
   generateConclusions,
   detectAnomalies,
 } from '@/lib/msat-engine';
@@ -44,56 +44,41 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Ujian belum selesai' }, { status: 409 });
     }
 
-    // If already scored, return cached results
-    if (session.conclusions) {
-      return NextResponse.json({
-        finalScore: session.finalScore,
-        predikat: session.predikat,
-        peringkat: session.peringkat,
-        stagePath: session.stagePath,
-        conclusions: session.conclusions,
-        stageResponses: session.stageResponses,
-        anomalyFlags: session.anomalyFlags,
-      });
-    }
-
-    // Get exam predicates config
-    const examDoc = await adminDb.collection('msat_access_code').doc(session.examId).get();
-    const exam = examDoc.exists ? examDoc.data() : null;
-    const predicates = exam?.predicates ?? {
-      istimewa: { min: 81, max: 100, label: 'Istimewa', description: '' },
-      unggul: { min: 61, max: 80, label: 'Unggul', description: '' },
-      madya: { min: 41, max: 60, label: 'Madya', description: '' },
-      semenjana: { min: 21, max: 40, label: 'Semenjana', description: '' },
-      terbatas: { min: 0, max: 20, label: 'Terbatas', description: '' },
-    };
-
     const stageResponses = (session.stageResponses ?? []) as MSATStageResponse[];
 
     if (stageResponses.length === 0) {
       return NextResponse.json({ error: 'Tidak ada jawaban yang tercatat' }, { status: 422 });
     }
 
-    // Calculate final score
+    // Always recalculate predikat from stage pass/fail (stage-based logic)
     const finalScore = calculateFinalScore(stageResponses);
+    const { name: predikat, peringkat, description: predikatDesc } = getPredikatFromStageResults(stageResponses);
 
-    // Get predikat
-    const { name: predikat, peringkat, description } = getPredikat(finalScore, predicates);
+    // Generate or update conclusions with stage-based predikat
+    let conclusions = session.conclusions ?? null;
+    if (!conclusions) {
+      conclusions = generateConclusions(stageResponses);
+    } else {
+      // Update existing conclusions to use stage-based predikat
+      conclusions = {
+        ...conclusions,
+        overall: {
+          ...conclusions.overall,
+          predikat,
+          description: predikatDesc,
+        },
+      };
+    }
 
-    // Generate 4 conclusions
-    const conclusions = generateConclusions(stageResponses, predicates);
+    const anomalyFlags = session.anomalyFlags ?? detectAnomalies(stageResponses);
 
-    // Final anomaly detection
-    const anomalyFlags = detectAnomalies(stageResponses);
-
-    // Update session with results
+    // Update session with recalculated results
     await sessionDoc.ref.update({
       finalScore,
       predikat,
       peringkat,
       conclusions,
       anomalyFlags,
-      completedAt: FieldValue.serverTimestamp(),
     });
 
     // Log completion

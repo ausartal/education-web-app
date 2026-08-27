@@ -36,10 +36,51 @@ export async function GET(req: NextRequest, { params }: { params: { examId: stri
       .where('examId', '==', examId)
       .get();
 
-    const sessions = sessionsSnap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const sessions: Record<string, unknown>[] = [];
+    for (const doc of sessionsSnap.docs) {
+      const session = doc.data();
+      let sessionData: Record<string, unknown> = { id: doc.id, ...session };
+
+      // Recalculate predikat for completed sessions using stage-based logic
+      if (session.status === 'completed' && session.stageResponses?.length > 0) {
+        try {
+          const { getPredikatFromStageResults, generateConclusions } = await import('@/lib/msat-engine');
+          const result = getPredikatFromStageResults(session.stageResponses);
+
+          let conclusions = session.conclusions ?? null;
+          if (!conclusions) {
+            conclusions = generateConclusions(session.stageResponses);
+          } else {
+            conclusions = {
+              ...conclusions,
+              overall: {
+                ...conclusions.overall,
+                predikat: result.name,
+                description: result.description,
+              },
+            };
+          }
+
+          // Update if predikat changed
+          if (session.predikat !== result.name || session.peringkat !== result.peringkat) {
+            await doc.ref.update({
+              predikat: result.name,
+              peringkat: result.peringkat,
+              conclusions,
+            });
+          }
+
+          sessionData = {
+            ...sessionData,
+            predikat: result.name,
+            peringkat: result.peringkat,
+            conclusions,
+          };
+        } catch { /* ignore */ }
+      }
+
+      sessions.push(sessionData);
+    }
 
     return NextResponse.json({
       exam: { id: examDoc.id, ...examDoc.data() },

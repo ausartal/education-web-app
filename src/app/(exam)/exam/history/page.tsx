@@ -204,6 +204,36 @@ const ExamHistoryPage: FC = () => {
                           </div>
                         </div>
 
+                        {/* Kriteria Predikat */}
+                        <div>
+                          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">Kriteria Predikat</h4>
+                          <div className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
+                            <div className="mb-3 flex items-center gap-3">
+                              {exam.stageResponses.map((sr, j) => (
+                                <div key={j} className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-semibold text-gray-500">S{j + 1}:</span>
+                                  {sr.passed
+                                    ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 ring-1 ring-emerald-200">Lulus</span>
+                                    : <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[9px] font-bold text-rose-700 ring-1 ring-rose-200">Tidak Lulus</span>
+                                  }
+                                </div>
+                              ))}
+                              <span className="text-[10px] text-gray-400">→</span>
+                              <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ring-1 ${predColors.bg} ${predColors.text} ${predColors.ring}`}>
+                                {exam.predikat}
+                              </span>
+                            </div>
+                            <div className="space-y-1 text-[10px] text-gray-500">
+                              <p><span className="font-bold text-violet-700">Istimewa:</span> Lulus semua 3 stage</p>
+                              <p><span className="font-bold text-blue-700">Unggul:</span> Lulus S1 & S2, atau S1 & S3</p>
+                              <p><span className="font-bold text-amber-700">Madya:</span> Hanya lulus S1, atau lulus S2 & S3</p>
+                              <p><span className="font-bold text-orange-700">Semenjana:</span> Hanya lulus S2 atau hanya lulus S3</p>
+                              <p><span className="font-bold text-rose-700">Terbatas:</span> Tidak lulus semua stage</p>
+                            </div>
+                            <p className="mt-2 text-[9px] text-gray-400">Lulus = minimal 8/12 benar (≥60%) per stage</p>
+                          </div>
+                        </div>
+
                         {/* Detail Per Stage */}
                         <div>
                           <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">Detail Per Stage</h4>

@@ -41,23 +41,38 @@ export async function GET(req: NextRequest) {
         }
       } catch { /* ignore */ }
 
-      // If conclusions not calculated yet, calculate them
+      // Always recalculate predikat from stage results (stage-based logic)
       let conclusions = session.conclusions ?? null;
-      if (!conclusions && session.stageResponses?.length > 0) {
+      let predikat = session.predikat ?? null;
+      let peringkat = session.peringkat ?? null;
+      if (session.stageResponses?.length > 0) {
         try {
-          const { generateConclusions } = await import('@/lib/msat-engine');
-          const examDoc = await adminDb.collection('msat_access_code').doc(session.examId).get();
-          const predicates = examDoc.data()?.predicates ?? {
-            istimewa: { min: 81, max: 100, label: 'Istimewa', description: '' },
-            unggul: { min: 61, max: 80, label: 'Unggul', description: '' },
-            madya: { min: 41, max: 60, label: 'Madya', description: '' },
-            semenjana: { min: 21, max: 40, label: 'Semenjana', description: '' },
-            terbatas: { min: 0, max: 20, label: 'Terbatas', description: '' },
-          };
-          conclusions = generateConclusions(session.stageResponses, predicates);
+          const { generateConclusions, getPredikatFromStageResults } = await import('@/lib/msat-engine');
+
+          // Recalculate conclusions if missing
+          if (!conclusions) {
+            conclusions = generateConclusions(session.stageResponses);
+          }
+
+          // Always recalculate predikat/peringkat from stage pass/fail
+          const result = getPredikatFromStageResults(session.stageResponses);
+          predikat = result.name;
+          peringkat = result.peringkat;
+
+          // Update conclusions.overall to use stage-based predikat
+          if (conclusions) {
+            conclusions = {
+              ...conclusions,
+              overall: {
+                ...conclusions.overall,
+                predikat: result.name,
+                description: result.description,
+              },
+            };
+          }
 
           // Save back to Firestore
-          await doc.ref.update({ conclusions });
+          await doc.ref.update({ conclusions, predikat, peringkat });
         } catch { /* ignore */ }
       }
 
@@ -66,8 +81,8 @@ export async function GET(req: NextRequest) {
         examTitle,
         examCode,
         finalScore: session.finalScore ?? null,
-        predikat: session.predikat ?? null,
-        peringkat: session.peringkat ?? null,
+        predikat,
+        peringkat,
         stagePath: session.stagePath ?? [],
         stageResponses: session.stageResponses ?? [],
         conclusions,

@@ -4,12 +4,13 @@ import {
   getNextStageDifficulty,
   calculateFinalScore,
   getPredikat,
+  getPredikatFromStageResults,
   calculateCognitiveScores,
   generateConclusions,
   detectAnomalies,
   hasPassedStage,
 } from '@/lib/msat-engine';
-import type { MSATStageAnswer, MSATStageResponse, MSATAccessCode, MSATCognitiveDomain } from '@/types/msat';
+import type { MSATStageAnswer, MSATStageResponse, MSATAccessCode, MSATCognitiveDomain, MSATStageDifficulty } from '@/types/msat';
 
 // Helper: generate 12 answers with specified correct counts per domain
 function makeAnswers(
@@ -141,6 +142,138 @@ describe('getPredikat', () => {
 
   it('returns Terbatas for score 0-20', () => {
     expect(getPredikat(10, defaultPredicates).name).toBe('Terbatas');
+  });
+});
+
+// Helper: build a stage response with a given pass/fail status
+function makeStageResponse(stageNumber: 1 | 2 | 3, passed: boolean, difficulty: MSATStageDifficulty = 'medium'): MSATStageResponse {
+  const totalCorrect = passed ? 9 : 5;
+  return {
+    stageNumber,
+    stageDifficulty: difficulty,
+    questions: makeAnswers(
+      passed ? 3 : 2,
+      passed ? 3 : 2,
+      passed ? 3 : 1,
+    ),
+    knowingCorrect: passed ? 3 : 2,
+    applyingCorrect: passed ? 3 : 2,
+    reasoningCorrect: passed ? 3 : 1,
+    totalCorrect,
+    passed,
+    weightedScore: totalCorrect * STAGE_WEIGHTS[difficulty],
+  };
+}
+
+const STAGE_WEIGHTS: Record<string, number> = { rendah: 1.0, medium: 1.2, tinggi: 1.5 };
+
+describe('getPredikatFromStageResults', () => {
+  it('Istimewa: all 3 stages passed', () => {
+    const stages = [
+      makeStageResponse(1, true),
+      makeStageResponse(2, true),
+      makeStageResponse(3, true),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.name).toBe('Istimewa');
+    expect(result.peringkat).toBe(1);
+  });
+
+  it('Unggul: S1✓ S2✓ S3✗', () => {
+    const stages = [
+      makeStageResponse(1, true),
+      makeStageResponse(2, true),
+      makeStageResponse(3, false),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.name).toBe('Unggul');
+    expect(result.peringkat).toBe(2);
+  });
+
+  it('Unggul: S1✓ S2✗ S3✓', () => {
+    const stages = [
+      makeStageResponse(1, true),
+      makeStageResponse(2, false),
+      makeStageResponse(3, true),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.name).toBe('Unggul');
+    expect(result.peringkat).toBe(2);
+  });
+
+  it('Madya: S1✓ S2✗ S3✗', () => {
+    const stages = [
+      makeStageResponse(1, true),
+      makeStageResponse(2, false),
+      makeStageResponse(3, false),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.name).toBe('Madya');
+    expect(result.peringkat).toBe(3);
+  });
+
+  it('Madya: S1✗ S2✓ S3✓', () => {
+    const stages = [
+      makeStageResponse(1, false),
+      makeStageResponse(2, true),
+      makeStageResponse(3, true),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.name).toBe('Madya');
+    expect(result.peringkat).toBe(3);
+  });
+
+  it('Semenjana: S1✗ S2✓ S3✗', () => {
+    const stages = [
+      makeStageResponse(1, false),
+      makeStageResponse(2, true),
+      makeStageResponse(3, false),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.name).toBe('Semenjana');
+    expect(result.peringkat).toBe(4);
+  });
+
+  it('Semenjana: S1✗ S2✗ S3✓', () => {
+    const stages = [
+      makeStageResponse(1, false),
+      makeStageResponse(2, false),
+      makeStageResponse(3, true),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.name).toBe('Semenjana');
+    expect(result.peringkat).toBe(4);
+  });
+
+  it('Terbatas: all 3 stages failed', () => {
+    const stages = [
+      makeStageResponse(1, false),
+      makeStageResponse(2, false),
+      makeStageResponse(3, false),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.name).toBe('Terbatas');
+    expect(result.peringkat).toBe(5);
+  });
+
+  it('returns description from customer spec', () => {
+    const stages = [
+      makeStageResponse(1, true),
+      makeStageResponse(2, true),
+      makeStageResponse(3, true),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.description).toContain('menguasai seluruh konsep dasar kimia');
+  });
+
+  it('returns scoreRange for display', () => {
+    const stages = [
+      makeStageResponse(1, true),
+      makeStageResponse(2, true),
+      makeStageResponse(3, true),
+    ];
+    const result = getPredikatFromStageResults(stages);
+    expect(result.scoreRange).toEqual({ min: 81, max: 100 });
   });
 });
 
