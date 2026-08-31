@@ -322,11 +322,11 @@ const MsatResultsPage: FC = () => {
                                   </span>
                                 </div>
                                 <div className="space-y-1 text-[10px] text-stone-500">
-                                  <p><span className="font-bold text-violet-700">Istimewa:</span> Lulus semua 3 stage</p>
-                                  <p><span className="font-bold text-blue-700">Unggul:</span> Lulus S1 & S2, atau S1 & S3</p>
-                                  <p><span className="font-bold text-amber-700">Madya:</span> Hanya lulus S1, atau lulus S2 & S3</p>
-                                  <p><span className="font-bold text-orange-700">Semenjana:</span> Hanya lulus S2 atau hanya lulus S3</p>
-                                  <p><span className="font-bold text-rose-700">Terbatas:</span> Tidak lulus semua stage</p>
+                                  <p><span className="font-bold text-violet-700">Istimewa:</span> Jalur Lebih Tinggi — lulus S3</p>
+                                  <p><span className="font-bold text-blue-700">Unggul:</span> Jalur Lebih Tinggi — tidak lulus S3, atau Jalur Medium Lebih Tinggi — lulus S3</p>
+                                  <p><span className="font-bold text-amber-700">Madya:</span> Jalur Medium Lebih Tinggi — tidak lulus S3, atau Jalur Medium Lebih Rendah — lulus S3</p>
+                                  <p><span className="font-bold text-orange-700">Semenjana:</span> Jalur Medium Lebih Rendah — tidak lulus S3, atau Jalur Lebih Rendah — lulus S3</p>
+                                  <p><span className="font-bold text-rose-700">Terbatas:</span> Jalur Lebih Rendah — tidak lulus S3</p>
                                 </div>
                                 <p className="mt-2 text-[9px] text-stone-400">Lulus = minimal 8/12 benar (≥60%) per stage</p>
                               </div>

@@ -442,12 +442,11 @@ SW = totalCorrect × Ws
 // Final Scaled Score (0–100)
 Score = (ΣSW / Σ(12 × Ws)) × 100
 
-// Predikat
-81–100  → Istimewa (Peringkat I)
-61–80   → Unggul (Peringkat II)
-41–60   → Madya (Peringkat III)
-21–40   → Semenjana (Peringkat IV)
-0–20    → Terbatas (Peringkat V)
+// Predikat (berdasarkan jalur kesulitan stage + S3 pass/fail)
+S3='tinggi'                   → pass: Istimewa (I)   / fail: Unggul (II)
+S3='medium' + S2='tinggi'    → pass: Unggul (II)    / fail: Madya (III)
+S3='medium' + S2='rendah'    → pass: Madya (III)    / fail: Semenjana (IV)
+S3='rendah'                   → pass: Semenjana (IV) / fail: Terbatas (V)
 
 // Cognitive Sub-scores (independen)
 Knowing%   = (ΣK / (4 × N_stages)) × 100
@@ -457,15 +456,15 @@ Reasoning% = (ΣR / (4 × N_stages)) × 100
 
 ### 5.2 Simpulan (4 Kesimpulan)
 
-**Simpulan 1 — Keseluruhan (berdasarkan predikat):**
+**Simpulan 1 — Keseluruhan (berdasarkan jalur kesulitan stage + S3 pass/fail):**
 
-| Predikat | Skor | Deskripsi |
-|----------|------|-----------|
-| Istimewa | 81–100% | Menguasai seluruh konsep dasar kimia secara mendalam (Knowing), terampil mengaplikasikan rumus dan hukum kimia tanpa kekeliruan (Applying), serta mampu menganalisis masalah kompleks melalui penalaran ilmiah yang logis dan kritis (Reasoning). |
-| Unggul | 61–80% | Memiliki pemahaman konsep dasar kimia yang kokoh (Knowing) dan mampu menerapkannya secara akurat (Applying), serta mulai mampu melakukan penalaran ilmiah tingkat menengah (Reasoning). |
-| Madya | 41–60% | Memahami istilah dan prinsip-prinsip utama kimia (Knowing) serta mampu mengaplikasikannya pada perhitungan sederhana (Applying), namun penalaran masih terbatas pada hubungan sebab-akibat langsung (Reasoning). |
-| Semenjana | 21–40% | Mengenali beberapa fakta dan definisi dasar kimia (Knowing), namun masih mengalami kesulitan saat menerapkan konsep (Applying), serta belum mampu melakukan analisis penalaran secara mandiri (Reasoning). |
-| Terbatas | 0–20% | Hanya mengingat sebagian kecil pengetahuan kimia yang sangat parsial (Knowing), belum mampu menerapkan rumus/prinsip secara tepat (Applying), dan belum mampu menunjukkan kemampuan penalaran ilmiah (Reasoning). |
+| Predikat | Jalur | Kondisi | Deskripsi |
+|----------|-------|---------|-----------|
+| Istimewa | Lebih Tinggi | S2=tinggi, S3=tinggi, lulus S3 | Menguasai seluruh konsep dasar kimia secara mendalam (Knowing), terampil mengaplikasikan rumus dan hukum kimia tanpa kekeliruan (Applying), serta mampu menganalisis masalah kompleks melalui penalaran ilmiah yang logis dan kritis (Reasoning). |
+| Unggul | Lebih Tinggi / Medium Lebih Tinggi | S3=tinggi gagal, atau S3=medium (dari S2=tinggi) lulus | Memiliki pemahaman konsep dasar kimia yang kokoh (Knowing) dan mampu menerapkannya secara akurat (Applying), serta mulai mampu melakukan penalaran ilmiah tingkat menengah (Reasoning). |
+| Madya | Medium Lebih Tinggi / Medium Lebih Rendah | S3=medium (dari S2=tinggi) gagal, atau S3=medium (dari S2=rendah) lulus | Memahami istilah dan prinsip-prinsip utama kimia (Knowing) serta mampu mengaplikasikannya pada perhitungan sederhana (Applying), namun penalaran masih terbatas pada hubungan sebab-akibat langsung (Reasoning). |
+| Semenjana | Medium Lebih Rendah / Lebih Rendah | S3=medium (dari S2=rendah) gagal, atau S3=rendah lulus | Mengenali beberapa fakta dan definisi dasar kimia (Knowing), namun masih mengalami kesulitan saat menerapkan konsep (Applying), serta belum mampu melakukan analisis penalaran secara mandiri (Reasoning). |
+| Terbatas | Lebih Rendah | S2=rendah, S3=rendah, gagal S3 | Hanya mengingat sebagian kecil pengetahuan kimia yang sangat parsial (Knowing), belum mampu menerapkan rumus/prinsip secara tepat (Applying), dan belum mampu menunjukkan kemampuan penalaran ilmiah (Reasoning). |
 
 **Simpulan 2 — Knowing (pemahaman konsep):**
 
@@ -857,7 +856,7 @@ src/components/layout/MobileNav.tsx              ← Tambah link "EXAM" mobile
 ```
 Score = (12.0 + 13.5 + 16.5) / (12×1.2 + 12×1.5 + 12×1.5) × 100
       = 42.0 / 50.4 × 100
-      = 83.3 → Istimewa
+      = 83.3 → Istimewa (S2=tinggi, S3=tinggi, lulus S3)
 
 Knowing%   = (4+3+4) / 12 × 100 = 91.7%
 Applying%  = (3+3+4) / 12 × 100 = 83.3%
@@ -875,7 +874,7 @@ Reasoning% = (3+3+3) / 12 × 100 = 75.0%
 ```
 Score = (9.6 + 7.5 + 10.8) / (12×1.2 + 12×1.5 + 12×1.2) × 100
       = 27.9 / 46.8 × 100
-      = 59.6 → Madya
+      = 59.6 → Unggul (S2=tinggi, S3=medium, lulus S3 — Medium Lebih Tinggi path)
 
 Knowing%   = (3+2+4) / 12 × 100 = 75.0%
 Applying%  = (3+2+3) / 12 × 100 = 66.7%
@@ -893,7 +892,7 @@ Reasoning% = (2+1+2) / 12 × 100 = 41.7%
 ```
 Score = (4.8 + 6.0 + 8.0) / (12×1.2 + 12×1.0 + 12×1.0) × 100
       = 18.8 / 40.8 × 100
-      = 46.1 → Madya
+      = 46.1 → Semenjana (S2=rendah, S3=rendah, lulus S3 — Lebih Rendah path)
 
 Knowing%   = (2+3+4) / 12 × 100 = 75.0%
 Applying%  = (1+2+3) / 12 × 100 = 50.0%

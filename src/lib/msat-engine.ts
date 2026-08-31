@@ -7,7 +7,6 @@ import type {
   MSATCognitiveDomain,
   PredikatName,
 } from '@/types/msat';
-import { PREDIKAT_ORDER } from '@/types/msat';
 
 // ===== Stage Weight Multiplier =====
 const STAGE_WEIGHTS: Record<MSATStageDifficulty, number> = {
@@ -108,32 +107,6 @@ export function calculateFinalScore(stageResponses: MSATStageResponse[]): number
   return Math.round((totalWeighted / totalMaxPossible) * 100);
 }
 
-/**
- * Determine predikat based on score and predicates config.
- */
-export function getPredikat(
-  score: number,
-  predicates: MSATAccessCode['predicates'],
-): { name: PredikatName; peringkat: number; description: string } {
-  const entries: [PredikatName, keyof MSATAccessCode['predicates'], number][] = [
-    ['Istimewa', 'istimewa', 1],
-    ['Unggul', 'unggul', 2],
-    ['Madya', 'madya', 3],
-    ['Semenjana', 'semenjana', 4],
-    ['Terbatas', 'terbatas', 5],
-  ];
-
-  for (const [name, key, peringkat] of entries) {
-    const pred = predicates[key];
-    if (score >= pred.min && score <= pred.max) {
-      return { name, peringkat, description: pred.description };
-    }
-  }
-
-  // Fallback
-  return { name: 'Terbatas', peringkat: 5, description: predicates.terbatas.description };
-}
-
 // Stage-based predikat descriptions (from customer spec)
 const STAGE_BASED_PREDIKAT_DESCRIPTIONS: Record<PredikatName, string> = {
   Istimewa:
@@ -148,73 +121,50 @@ const STAGE_BASED_PREDIKAT_DESCRIPTIONS: Record<PredikatName, string> = {
     'Peserta uji hanya mengingat sebagian kecil pengetahuan kimia yang sangat parsial (Knowing), belum mampu menerapkan rumus/prinsip secara tepat (Applying), dan belum mampu menunjukkan kemampuan penalaran ilmiah (Reasoning).',
 };
 
-// Score range per predikat (for display purposes)
-const PREDIKAT_SCORE_RANGES: Record<PredikatName, { min: number; max: number }> = {
-  Istimewa: { min: 81, max: 100 },
-  Unggul: { min: 61, max: 80 },
-  Madya: { min: 41, max: 60 },
-  Semenjana: { min: 21, max: 40 },
-  Terbatas: { min: 0, max: 20 },
-};
-
 /**
- * Determine predikat based on stage pass/fail results (not weighted score).
+ * Determine predikat based on stage difficulty path and S3 pass/fail.
  *
  * Logic:
- *   Istimewa : S1✓ S2✓ S3✓
- *   Unggul   : S1✓ S2✓ S3✗  OR  S1✓ S2✗ S3✓
- *   Madya    : S1✓ S2✗ S3✗  OR  S1✗ S2✓ S3✓
- *   Semenjana: S1✗ S2✓ S3✗  OR  S1✗ S2✗ S3✓
- *   Terbatas : S1✗ S2✗ S3✗
+ *   S3 = 'tinggi'                   → pass: Istimewa  / fail: Unggul
+ *   S3 = 'medium' + S2 = 'tinggi'  → pass: Unggul    / fail: Madya
+ *   S3 = 'medium' + S2 = 'rendah'  → pass: Madya     / fail: Semenjana
+ *   S3 = 'rendah'                   → pass: Semenjana / fail: Terbatas
  */
 export function getPredikatFromStageResults(
   stageResponses: MSATStageResponse[],
-): { name: PredikatName; peringkat: number; description: string; scoreRange: { min: number; max: number } } {
-  // Build pass/fail array (default false if stage missing)
-  const passed = [false, false, false];
-  for (const sr of stageResponses) {
-    passed[sr.stageNumber - 1] = sr.passed;
-  }
+): { name: PredikatName; peringkat: number; description: string } {
+  const s2 = stageResponses.find(sr => sr.stageNumber === 2);
+  const s3 = stageResponses.find(sr => sr.stageNumber === 3);
 
-  const [s1, s2, s3] = passed;
-  const passCount = (s1 ? 1 : 0) + (s2 ? 1 : 0) + (s3 ? 1 : 0);
+  // Fallback if stages are missing
+  if (!s2 || !s3) {
+    const name: PredikatName = 'Terbatas';
+    return { name, peringkat: 5, description: STAGE_BASED_PREDIKAT_DESCRIPTIONS[name] };
+  }
 
   let name: PredikatName;
 
-  if (passCount === 3) {
-    name = 'Istimewa';
-  } else if (passCount === 2) {
-    if (!s3) {
-      // S1✓ S2✓ S3✗
-      name = 'Unggul';
-    } else if (!s2) {
-      // S1✓ S2✗ S3✓
-      name = 'Unggul';
+  if (s3.stageDifficulty === 'tinggi') {
+    // Lebih Tinggi path
+    name = s3.passed ? 'Istimewa' : 'Unggul';
+  } else if (s3.stageDifficulty === 'medium') {
+    if (s2.stageDifficulty === 'tinggi') {
+      // Medium Lebih Tinggi path
+      name = s3.passed ? 'Unggul' : 'Madya';
     } else {
-      // S1✗ S2✓ S3✓
-      name = 'Madya';
-    }
-  } else if (passCount === 1) {
-    if (s2) {
-      // S1✗ S2✓ S3✗
-      name = 'Semenjana';
-    } else if (s3) {
-      // S1✗ S2✗ S3✓
-      name = 'Semenjana';
-    } else {
-      // S1✓ S2✗ S3✗
-      name = 'Madya';
+      // Medium Lebih Rendah path
+      name = s3.passed ? 'Madya' : 'Semenjana';
     }
   } else {
-    name = 'Terbatas';
+    // Lebih Rendah path (s3.stageDifficulty === 'rendah')
+    name = s3.passed ? 'Semenjana' : 'Terbatas';
   }
 
-  const peringkat = (PREDIKAT_ORDER.indexOf(name) + 1) as 1 | 2 | 3 | 4 | 5;
+  const peringkat = (['Istimewa', 'Unggul', 'Madya', 'Semenjana', 'Terbatas'].indexOf(name) + 1) as 1 | 2 | 3 | 4 | 5;
   return {
     name,
     peringkat,
     description: STAGE_BASED_PREDIKAT_DESCRIPTIONS[name],
-    scoreRange: PREDIKAT_SCORE_RANGES[name],
   };
 }
 
@@ -288,7 +238,7 @@ function getStagePathDescription(stageResponses: MSATStageResponse[]): string {
 
 /**
  * Generate all 4 conclusions for the exam results.
- * Overall predikat is determined by stage pass/fail pattern (not weighted score).
+ * Overall predikat is determined by stage difficulty path + S3 pass/fail.
  */
 export function generateConclusions(
   stageResponses: MSATStageResponse[],

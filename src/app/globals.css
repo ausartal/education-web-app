@@ -235,3 +235,12 @@
 .skip-to-content:focus {
   top: 0;
 }
+
+/* Hide scrollbar for horizontal nav */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

@@ -3,7 +3,6 @@ import {
   calculateStageResult,
   getNextStageDifficulty,
   calculateFinalScore,
-  getPredikat,
   getPredikatFromStageResults,
   calculateCognitiveScores,
   generateConclusions,
@@ -40,14 +39,6 @@ function makeAnswers(
     };
   });
 }
-
-const defaultPredicates: MSATAccessCode['predicates'] = {
-  istimewa: { min: 81, max: 100, label: 'Istimewa', description: 'desc' },
-  unggul: { min: 61, max: 80, label: 'Unggul', description: 'desc' },
-  madya: { min: 41, max: 60, label: 'Madya', description: 'desc' },
-  semenjana: { min: 21, max: 40, label: 'Semenjana', description: 'desc' },
-  terbatas: { min: 0, max: 20, label: 'Terbatas', description: 'desc' },
-};
 
 describe('calculateStageResult', () => {
   it('calculates correct K/A/R counts', () => {
@@ -126,25 +117,6 @@ describe('calculateFinalScore', () => {
   });
 });
 
-describe('getPredikat', () => {
-  it('returns Istimewa for score 81-100', () => {
-    expect(getPredikat(85, defaultPredicates).name).toBe('Istimewa');
-    expect(getPredikat(85, defaultPredicates).peringkat).toBe(1);
-  });
-
-  it('returns Unggul for score 61-80', () => {
-    expect(getPredikat(70, defaultPredicates).name).toBe('Unggul');
-  });
-
-  it('returns Madya for score 41-60', () => {
-    expect(getPredikat(50, defaultPredicates).name).toBe('Madya');
-  });
-
-  it('returns Terbatas for score 0-20', () => {
-    expect(getPredikat(10, defaultPredicates).name).toBe('Terbatas');
-  });
-});
-
 // Helper: build a stage response with a given pass/fail status
 function makeStageResponse(stageNumber: 1 | 2 | 3, passed: boolean, difficulty: MSATStageDifficulty = 'medium'): MSATStageResponse {
   const totalCorrect = passed ? 9 : 5;
@@ -168,88 +140,94 @@ function makeStageResponse(stageNumber: 1 | 2 | 3, passed: boolean, difficulty: 
 const STAGE_WEIGHTS: Record<string, number> = { rendah: 1.0, medium: 1.2, tinggi: 1.5 };
 
 describe('getPredikatFromStageResults', () => {
-  it('Istimewa: all 3 stages passed', () => {
+  // System A: predikat based on stage difficulty path + S3 pass/fail
+  // S3='tinggi'                   → pass: Istimewa  / fail: Unggul
+  // S3='medium' + S2='tinggi'    → pass: Unggul    / fail: Madya
+  // S3='medium' + S2='rendah'    → pass: Madya     / fail: Semenjana
+  // S3='rendah'                   → pass: Semenjana / fail: Terbatas
+
+  it('Istimewa: S2=tinggi, S3=tinggi, S3 passed (Lebih Tinggi path)', () => {
     const stages = [
-      makeStageResponse(1, true),
-      makeStageResponse(2, true),
-      makeStageResponse(3, true),
+      makeStageResponse(1, true, 'medium'),
+      makeStageResponse(2, true, 'tinggi'),
+      makeStageResponse(3, true, 'tinggi'),
     ];
     const result = getPredikatFromStageResults(stages);
     expect(result.name).toBe('Istimewa');
     expect(result.peringkat).toBe(1);
   });
 
-  it('Unggul: S1✓ S2✓ S3✗', () => {
+  it('Unggul: S2=tinggi, S3=tinggi, S3 failed (Lebih Tinggi path)', () => {
     const stages = [
-      makeStageResponse(1, true),
-      makeStageResponse(2, true),
-      makeStageResponse(3, false),
+      makeStageResponse(1, true, 'medium'),
+      makeStageResponse(2, true, 'tinggi'),
+      makeStageResponse(3, false, 'tinggi'),
     ];
     const result = getPredikatFromStageResults(stages);
     expect(result.name).toBe('Unggul');
     expect(result.peringkat).toBe(2);
   });
 
-  it('Unggul: S1✓ S2✗ S3✓', () => {
+  it('Unggul: S2=tinggi, S3=medium, S3 passed (Medium Lebih Tinggi path)', () => {
     const stages = [
-      makeStageResponse(1, true),
-      makeStageResponse(2, false),
-      makeStageResponse(3, true),
+      makeStageResponse(1, true, 'medium'),
+      makeStageResponse(2, true, 'tinggi'),
+      makeStageResponse(3, true, 'medium'),
     ];
     const result = getPredikatFromStageResults(stages);
     expect(result.name).toBe('Unggul');
     expect(result.peringkat).toBe(2);
   });
 
-  it('Madya: S1✓ S2✗ S3✗', () => {
+  it('Madya: S2=tinggi, S3=medium, S3 failed (Medium Lebih Tinggi path)', () => {
     const stages = [
-      makeStageResponse(1, true),
-      makeStageResponse(2, false),
-      makeStageResponse(3, false),
+      makeStageResponse(1, true, 'medium'),
+      makeStageResponse(2, true, 'tinggi'),
+      makeStageResponse(3, false, 'medium'),
     ];
     const result = getPredikatFromStageResults(stages);
     expect(result.name).toBe('Madya');
     expect(result.peringkat).toBe(3);
   });
 
-  it('Madya: S1✗ S2✓ S3✓', () => {
+  it('Madya: S2=rendah, S3=medium, S3 passed (Medium Lebih Rendah path)', () => {
     const stages = [
-      makeStageResponse(1, false),
-      makeStageResponse(2, true),
-      makeStageResponse(3, true),
+      makeStageResponse(1, false, 'medium'),
+      makeStageResponse(2, false, 'rendah'),
+      makeStageResponse(3, true, 'medium'),
     ];
     const result = getPredikatFromStageResults(stages);
     expect(result.name).toBe('Madya');
     expect(result.peringkat).toBe(3);
   });
 
-  it('Semenjana: S1✗ S2✓ S3✗', () => {
+  it('Semenjana: S2=rendah, S3=medium, S3 failed (Medium Lebih Rendah path)', () => {
     const stages = [
-      makeStageResponse(1, false),
-      makeStageResponse(2, true),
-      makeStageResponse(3, false),
+      makeStageResponse(1, false, 'medium'),
+      makeStageResponse(2, false, 'rendah'),
+      makeStageResponse(3, false, 'medium'),
     ];
     const result = getPredikatFromStageResults(stages);
     expect(result.name).toBe('Semenjana');
     expect(result.peringkat).toBe(4);
   });
 
-  it('Semenjana: S1✗ S2✗ S3✓', () => {
+  it('Semenjana: S2=rendah, S3=rendah, S3 passed (Lebih Rendah path)', () => {
     const stages = [
-      makeStageResponse(1, false),
-      makeStageResponse(2, false),
-      makeStageResponse(3, true),
+      makeStageResponse(1, false, 'medium'),
+      makeStageResponse(2, false, 'rendah'),
+      makeStageResponse(3, true, 'rendah'),
     ];
     const result = getPredikatFromStageResults(stages);
     expect(result.name).toBe('Semenjana');
     expect(result.peringkat).toBe(4);
   });
 
-  it('Terbatas: all 3 stages failed', () => {
+  it('Terbatas: S2=rendah, S3=rendah, S3 failed (Lebih Rendah path)', () => {
     const stages = [
-      makeStageResponse(1, false),
-      makeStageResponse(2, false),
-      makeStageResponse(3, false),
+      makeStageResponse(1, false, 'medium'),
+      makeStageResponse(2, false, 'rendah'),
+      makeStageResponse(3, false, 'rendah'),
     ];
     const result = getPredikatFromStageResults(stages);
     expect(result.name).toBe('Terbatas');
@@ -258,22 +236,18 @@ describe('getPredikatFromStageResults', () => {
 
   it('returns description from customer spec', () => {
     const stages = [
-      makeStageResponse(1, true),
-      makeStageResponse(2, true),
-      makeStageResponse(3, true),
+      makeStageResponse(1, true, 'medium'),
+      makeStageResponse(2, true, 'tinggi'),
+      makeStageResponse(3, true, 'tinggi'),
     ];
     const result = getPredikatFromStageResults(stages);
     expect(result.description).toContain('menguasai seluruh konsep dasar kimia');
   });
 
-  it('returns scoreRange for display', () => {
-    const stages = [
-      makeStageResponse(1, true),
-      makeStageResponse(2, true),
-      makeStageResponse(3, true),
-    ];
-    const result = getPredikatFromStageResults(stages);
-    expect(result.scoreRange).toEqual({ min: 81, max: 100 });
+  it('returns Terbatas when stages are missing', () => {
+    const result = getPredikatFromStageResults([]);
+    expect(result.name).toBe('Terbatas');
+    expect(result.peringkat).toBe(5);
   });
 });
 

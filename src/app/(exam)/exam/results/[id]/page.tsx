@@ -252,13 +252,13 @@ const ExamResultsPage: FC = () => {
 
           {/* Criteria explanation */}
           <div className="rounded-xl bg-stone-50 p-4 ring-1 ring-stone-100">
-            <p className="text-[11px] font-semibold text-stone-500 mb-2">Kriteria berdasarkan kelulusan stage:</p>
+            <p className="text-[11px] font-semibold text-stone-500 mb-2">Kriteria berdasarkan jalur kesulitan stage:</p>
             <div className="space-y-1.5 text-[11px] text-stone-600">
-              <p><span className="font-bold text-violet-700">Istimewa:</span> Lulus semua 3 stage (S1✓ S2✓ S3✓)</p>
-              <p><span className="font-bold text-blue-700">Unggul:</span> Lulus stage 1 & 2, tidak lulus stage 3 (S1✓ S2✓ S3✗) atau lulus stage 1 & 3, tidak lulus stage 2 (S1✓ S2✗ S3✓)</p>
-              <p><span className="font-bold text-amber-700">Madya:</span> Hanya lulus stage 1 (S1✓ S2✗ S3✗) atau lulus stage 2 & 3, tidak lulus stage 1 (S1✗ S2✓ S3✓)</p>
-              <p><span className="font-bold text-orange-700">Semenjana:</span> Hanya lulus stage 2 (S1✗ S2✓ S3✗) atau hanya lulus stage 3 (S1✗ S2✗ S3✓)</p>
-              <p><span className="font-bold text-rose-700">Terbatas:</span> Tidak lulus semua 3 stage (S1✗ S2✗ S3✗)</p>
+              <p><span className="font-bold text-violet-700">Istimewa:</span> Jalur Lebih Tinggi — lulus stage 3 (S2=tinggi, S3=tinggi✓)</p>
+              <p><span className="font-bold text-blue-700">Unggul:</span> Jalur Lebih Tinggi — tidak lulus S3 (S2=tinggi, S3=tinggi✗) atau Jalur Medium Lebih Tinggi — lulus S3 (S2=tinggi, S3=medium✓)</p>
+              <p><span className="font-bold text-amber-700">Madya:</span> Jalur Medium Lebih Tinggi — tidak lulus S3 (S2=tinggi, S3=medium✗) atau Jalur Medium Lebih Rendah — lulus S3 (S2=rendah, S3=medium✓)</p>
+              <p><span className="font-bold text-orange-700">Semenjana:</span> Jalur Medium Lebih Rendah — tidak lulus S3 (S2=rendah, S3=medium✗) atau Jalur Lebih Rendah — lulus S3 (S2=rendah, S3=rendah✓)</p>
+              <p><span className="font-bold text-rose-700">Terbatas:</span> Jalur Lebih Rendah — tidak lulus stage 3 (S2=rendah, S3=rendah✗)</p>
             </div>
             <p className="mt-2 text-[10px] text-stone-400">Lulus = minimal 8 dari 12 soal benar (≥60%) per stage</p>
           </div>
