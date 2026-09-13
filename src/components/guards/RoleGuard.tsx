@@ -3,7 +3,7 @@
 import { FC, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { UserRole } from '@/types/user';
+import { UserRole } from '@/types/firestore';
 
 interface RoleGuardProps {
   children: ReactNode;

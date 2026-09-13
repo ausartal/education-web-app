@@ -12,7 +12,7 @@ import {
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/services/auth';
-import { UserProfile } from '@/types/user';
+import { UserProfile } from '@/types/firestore';
 
 interface AuthContextValue {
   user: User | null;

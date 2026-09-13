@@ -6,7 +6,8 @@ import dynamic from 'next/dynamic';
 import { Plus, Pencil, Trash2, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
-import { MSATTierPath, MSATDifficulty, CognitiveLevel, AnswerKey } from '@/types/firestore';
+import { MSATTierPath, CognitiveLevel, AnswerKey } from '@/types/firestore';
+import { MSATDifficulty } from '@/types/msat';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { stripMarkdown } from '@/lib/strip-html';
+import { stripMarkdown } from '@/lib/strip-markdown';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ClassInfo {

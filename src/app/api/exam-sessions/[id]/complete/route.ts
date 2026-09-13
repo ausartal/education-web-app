@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { MSATTierPath, CRIResponse, ComprehensionCategory, MSATDifficulty } from '@/types/firestore';
+import { MSATTierPath, CRIResponse, ComprehensionCategory } from '@/types/firestore';
+import { MSATDifficulty } from '@/types/msat';
 
 // ── Inline MSAT helpers (formerly in msat-engine.ts) ──
 function encodePattern(t1: boolean, t2: boolean, t3: boolean): string {

@@ -9,7 +9,7 @@ import { signUp, signInWithGoogle, getGoogleRedirectResult, getUserProfile } fro
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { useToast } from '@/hooks/useToast';
 import { auth } from '@/lib/firebase';
-import { UserRole } from '@/types/user';
+import { UserRole } from '@/types/firestore';
 
 const RegisterPage: FC = () => {
   const router = useRouter();

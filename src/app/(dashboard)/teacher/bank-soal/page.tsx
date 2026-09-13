@@ -11,7 +11,8 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { RichEditor } from '@/components/teacher/RichEditor';
-import { MSATTierPath, MSATDifficulty, CognitiveLevel, AnswerKey } from '@/types/firestore';
+import { MSATTierPath, CognitiveLevel, AnswerKey } from '@/types/firestore';
+import { MSATDifficulty } from '@/types/msat';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 

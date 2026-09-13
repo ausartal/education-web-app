@@ -15,8 +15,6 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@dataconnect/admin-generated": "file:src/dataconnect-admin-generated",
-    "@dataconnect/generated": "file:src/dataconnect-generated",
     "@tailwindcss/typography": "^0.5.19",
     "firebase": "^12.17.0",
     "firebase-admin": "^13.10.0",
@@ -24,7 +22,6 @@
     "katex": "^0.16.47",
     "lucide-react": "^1.16.0",
     "next": "14.2.35",
-    "next-intl": "^4.12.0",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^10.1.0",

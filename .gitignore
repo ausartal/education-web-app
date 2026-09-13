@@ -51,3 +51,7 @@ ui-debug.log
 
 # OS
 Thumbs.db
+
+# AI tool configs (local only)
+.claude/settings.local.json
+.mimocode/

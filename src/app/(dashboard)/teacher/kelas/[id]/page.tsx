@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { RichEditor } from '@/components/teacher/RichEditor';
 import { useToast } from '@/hooks/useToast';
-import { stripMarkdown } from '@/lib/strip-html';
+import { stripMarkdown } from '@/lib/strip-markdown';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
