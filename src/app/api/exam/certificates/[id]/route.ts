@@ -4,7 +4,7 @@ import { adminAuth, adminDb } from '@/lib/firebase-admin';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/exam/certificates/[id] — get certificate detail
+ * GET /api/exam/certificates/[id] — get certificate detail with session data
  */
 export async function GET(
   req: NextRequest,
@@ -27,14 +27,40 @@ export async function GET(
 
     // Only owner or admin can view
     if (certData.userId !== decoded.uid) {
-      // Check if admin
       const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
       if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
         return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
       }
     }
 
-    return NextResponse.json({ certificate: { id: certDoc.id, ...certData } });
+    // Fetch session data for cognitive scores and exam code
+    let session: Record<string, unknown> | null = null;
+    let examCode = '';
+    if (certData.sessionId) {
+      const sessionDoc = await adminDb.collection('msat_sessions').doc(certData.sessionId).get();
+      if (sessionDoc.exists) {
+        const s = sessionDoc.data()!;
+        session = {
+          conclusions: s.conclusions ?? null,
+          peringkat: s.peringkat ?? null,
+          stagePath: s.stagePath ?? [],
+          examId: s.examId ?? null,
+        };
+        // Fetch exam code
+        if (s.examId) {
+          const examDoc = await adminDb.collection('msat_access_code').doc(s.examId).get();
+          if (examDoc.exists) {
+            examCode = examDoc.data()?.code ?? '';
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({
+      certificate: { id: certDoc.id, ...certData },
+      session,
+      examCode,
+    });
   } catch {
     return NextResponse.json({ error: 'Token tidak valid' }, { status: 401 });
   }
