@@ -7,7 +7,11 @@ import {
   generateConclusions,
   detectAnomalies,
 } from '@/lib/msat-engine';
+import { generateCertificateNo } from '@/lib/exam-validation';
 import type { MSATStageResponse } from '@/types/msat';
+
+/** Predikat names that qualify for automatic certificate. */
+const CERT_PREDIKAT = ['Istimewa', 'Unggul'];
 
 export const dynamic = 'force-dynamic';
 
@@ -81,6 +85,50 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       anomalyFlags,
     });
 
+    // Auto-generate certificate for exam_users with predikat >= Unggul
+    let certificateGenerated = false;
+    if (CERT_PREDIKAT.includes(predikat)) {
+      const examUserDoc = await adminDb.collection('exam_users').doc(decoded.uid).get();
+      if (examUserDoc.exists) {
+        // Get exam title
+        let examTitle = 'Ujian Kimia';
+        if (session.examId) {
+          const examDoc = await adminDb.collection('msat_access_code').doc(session.examId).get();
+          if (examDoc.exists) {
+            examTitle = examDoc.data()?.title ?? examTitle;
+          }
+        }
+
+        // Check if certificate already exists for this session
+        const existingCert = await adminDb.collection('exam_certificates')
+          .where('sessionId', '==', id)
+          .limit(1)
+          .get();
+
+        if (existingCert.empty) {
+          // Generate unique certificate number
+          const year = new Date().getFullYear();
+          const countSnap = await adminDb.collection('exam_certificates')
+            .where('issuedAt', '>=', new Date(`${year}-01-01`))
+            .get();
+          const sequence = countSnap.size + 1;
+          const certificateNo = generateCertificateNo(sequence, year);
+
+          await adminDb.collection('exam_certificates').add({
+            userId: decoded.uid,
+            sessionId: id,
+            examTitle,
+            score: finalScore,
+            predikat,
+            issuedAt: FieldValue.serverTimestamp(),
+            certificateNo,
+            pdfUrl: null,
+          });
+          certificateGenerated = true;
+        }
+      }
+    }
+
     // Log completion
     await adminDb.collection('audit_logs').add({
       actorId: decoded.uid,
@@ -94,6 +142,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         predikat,
         peringkat,
         stagePath: session.stagePath,
+        certificateGenerated,
       },
       timestamp: new Date(),
     });
@@ -106,6 +155,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       conclusions,
       stageResponses,
       anomalyFlags,
+      certificateGenerated,
     });
 
   } catch (err) {
