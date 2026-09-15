@@ -582,14 +582,6 @@ export default function Home() {
       </section>
 
       <section className="relative overflow-hidden bg-[#FAFDEF] px-4 py-20 lg:px-8 lg:py-24">
-        <Image
-          src="/icons/guided-accent-mask.svg"
-          alt=""
-          width={128}
-          height={128}
-          className="pointer-events-none absolute -bottom-4 left-3 h-32 w-32 opacity-80"
-          aria-hidden
-        />
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-12 lg:gap-12">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
