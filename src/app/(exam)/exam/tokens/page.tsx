@@ -237,23 +237,41 @@ const ExamTokensPage: FC = () => {
 
       {/* ── Buy Tokens ── */}
       <div className="mt-10">
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#C4944A]">Beli Token</h2>
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#7C6BC4]">Beli Token</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {PACKAGES.map((pkg) => {
             const isBuying = buying === pkg.quantity;
+            const isFeatured = pkg.quantity === 5;
             return (
               <button key={pkg.quantity} onClick={() => handleBuy(pkg.quantity, pkg.price)}
                 disabled={buying !== null}
-                className="rounded-lg bg-[#FFF9EE] p-4 text-left ring-1 ring-[#F0D9A8] transition-all hover:ring-[#D4AA6B] disabled:opacity-50">
-                <div className="flex items-center gap-2">
-                  <Package size={14} className="text-[#C4944A]" />
-                  <span className="text-sm font-bold text-[#6B4E1E]">{pkg.label}</span>
-                </div>
-                <p className="mt-1.5 font-display text-lg font-extrabold text-[#3B2F6B]">{formatCurrency(pkg.price)}</p>
+                className={`relative rounded-lg p-5 text-left transition-all disabled:opacity-50 ${
+                  isFeatured
+                    ? 'bg-[#6320EE] text-white shadow-md shadow-[#6320EE]/20 ring-2 ring-[#6320EE]'
+                    : 'bg-[#F0EDFF] ring-1 ring-[#DCCFFC] hover:ring-[#6320EE]/40'
+                }`}>
                 {pkg.discount && (
-                  <span className="mt-1 inline-block rounded bg-[#C4944A]/10 px-2 py-0.5 text-[10px] font-bold text-[#C4944A]">{pkg.discount}</span>
+                  <span className={`absolute -top-2 right-3 rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                    isFeatured ? 'bg-white text-[#6320EE]' : 'bg-[#6320EE] text-white'
+                  }`}>
+                    {pkg.discount}
+                  </span>
                 )}
-                <div className="mt-3 flex items-center justify-center gap-1.5 rounded-lg bg-[#C4944A] py-2 text-[11px] font-bold text-white">
+                <div className="flex items-center gap-2">
+                  <Package size={14} className={isFeatured ? 'text-white/70' : 'text-[#6320EE]'} />
+                  <span className={`text-sm font-bold ${isFeatured ? 'text-white' : 'text-[#3B2F6B]'}`}>{pkg.label}</span>
+                </div>
+                <p className={`mt-2 font-display text-xl font-extrabold ${isFeatured ? 'text-white' : 'text-[#1a1040]'}`}>
+                  {formatCurrency(pkg.price)}
+                </p>
+                <p className={`text-[11px] ${isFeatured ? 'text-white/60' : 'text-[#9B8FC7]'}`}>
+                  {formatCurrency(Math.round(pkg.price / pkg.quantity))}/token
+                </p>
+                <div className={`mt-4 flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-[11px] font-bold transition-colors ${
+                  isFeatured
+                    ? 'bg-white text-[#6320EE] hover:bg-white/90'
+                    : 'bg-[#6320EE] text-white hover:bg-[#5218C7]'
+                }`}>
                   {isBuying ? <Loader2 size={12} className="animate-spin" /> : null}
                   {isBuying ? 'Memproses...' : 'Pilih'}
                 </div>
