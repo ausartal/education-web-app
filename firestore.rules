@@ -190,5 +190,38 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── EXAM USERS (UjiTuntas — separate from AKURAT users) ──────────────────
+    match /exam_users/{userId} {
+      allow read:   if isOwner(userId) || isAdmin();
+      // Anyone can create (registration is open), but must match their own UID
+      allow create: if isAuth() && userId == uid()
+        && request.resource.data.uid == uid()
+        && request.resource.data.verificationStatus == 'unverified'
+        && request.resource.data.tokenBalance == 0;
+      // User can update own profile (non-admin fields only)
+      allow update: if isOwner(userId)
+        && !request.resource.data.diff(resource.data)
+           .affectedKeys().hasAny(['verificationStatus','verifiedAt','verificationNotes','tokenBalance','isActive','uid','email','createdAt']);
+      // Admin can update everything
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── EXAM TOKENS ──────────────────────────────────────────────────────────
+    match /exam_tokens/{tokenId} {
+      allow read:   if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAdmin(); // server-side purchase or admin grant
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── EXAM CERTIFICATES ────────────────────────────────────────────────────
+    match /exam_certificates/{certId} {
+      allow read:   if isOwner(resource.data.userId) || isAdmin();
+      allow create: if false; // server-side only
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
   }
 }

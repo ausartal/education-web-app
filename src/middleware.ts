@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password'];
+const EXAM_AUTH_ROUTES = ['/exam/login', '/exam/register'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,14 +13,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Page-level guards are handled by AuthGuard + RoleGuard components.
+  // Page-level guards are handled by AuthGuard + RoleGuard + ExamAuthGuard components.
   // Middleware only needs to pass through for all other routes.
-  const isAuthRoute = AUTH_ROUTES.some(r => pathname.startsWith(r));
-  void isAuthRoute;
+  void AUTH_ROUTES;
+  void EXAM_AUTH_ROUTES;
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*', '/teacher/:path*'],
+  matcher: ['/admin/:path*', '/api/admin/:path*', '/teacher/:path*', '/exam/:path*', '/api/exam/:path*'],
 };
