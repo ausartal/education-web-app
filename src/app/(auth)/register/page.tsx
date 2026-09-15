@@ -1,32 +1,37 @@
 'use client';
 
-import { FC, FormEvent, useState, useEffect } from 'react';
+import { FC, FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User } from 'lucide-react';
-import { signUp, signInWithGoogle, getGoogleRedirectResult, getUserProfile } from '@/services/auth';
+import { Lock, Mail, User } from 'lucide-react';
+import {
+  getGoogleRedirectResult,
+  getUserProfile,
+  signInWithGoogle,
+  signUp,
+} from '@/services/auth';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
-import { useToast } from '@/hooks/useToast';
 import { auth } from '@/lib/firebase';
 import { UserRole } from '@/types/firestore';
 
+const fieldClass =
+  'w-full rounded-xl border border-slate-200 bg-[#FCFCFE] py-3.5 pl-11 pr-3 text-sm text-slate-900 outline-none transition focus:border-[#6320EE] focus:bg-white focus:ring-4 focus:ring-[#6320EE]/10';
+
 const RegisterPage: FC = () => {
   const router = useRouter();
-  const { addToast } = useToast();
   const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('student');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
     setError('');
     if (password.length < 6) {
-      setError('Password minimal 6 karakter.');
+      setError('Password must contain at least 6 characters.');
       return;
     }
     setLoading(true);
@@ -34,22 +39,22 @@ const RegisterPage: FC = () => {
       await signUp(email, password, fullName, role);
       router.push(role === 'teacher' ? '/teacher' : '/onboarding');
     } catch (err) {
-      const msg = getAuthErrorMessage(err);
-      if (msg) setError(msg);
+      const message = getAuthErrorMessage(err);
+      if (message) setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Google redirect result (fallback from popup-blocked)
   useEffect(() => {
     const checkRedirect = async () => {
       try {
         const profile = await getGoogleRedirectResult();
-        if (profile) router.push(profile.role === 'teacher' ? '/teacher' : '/dashboard');
+        if (profile)
+          router.push(profile.role === 'teacher' ? '/teacher' : '/dashboard');
       } catch (err) {
-        const msg = getAuthErrorMessage(err);
-        if (msg) setError(msg);
+        const message = getAuthErrorMessage(err);
+        if (message) setError(message);
       }
     };
     checkRedirect();
@@ -65,205 +70,189 @@ const RegisterPage: FC = () => {
         const profile = await getUserProfile(auth.currentUser!.uid);
         router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
       }
-      // 'redirect' mode: page will reload, useEffect picks up the result
     } catch (err) {
-      const msg = getAuthErrorMessage(err);
-      if (msg) setError(msg);
+      const message = getAuthErrorMessage(err);
+      if (message) setError(message);
       setLoading(false);
     }
   };
 
   return (
-    <>
-      <h1 className="mb-1 font-display text-3xl font-extrabold text-[#0E1E47]">
-        Create Account
+    <div className="rounded-[28px] border border-[#E6E1EF] bg-white p-6 shadow-[0_24px_70px_rgba(39,37,79,0.10)] sm:p-8">
+      <span className="text-xs font-bold uppercase tracking-[0.1em] text-[#6320EE]">
+        Start with AKURAT
+      </span>
+      <h1 className="mt-3 font-display text-3xl font-extrabold text-[#27254F] sm:text-4xl">
+        Create your account
       </h1>
-      <p className="mb-7 text-sm text-gray-500">
-        Choose your account type and start your journey with us
+      <p className="mb-6 mt-2 text-sm leading-6 text-slate-500">
+        Choose how you will use AKURAT and begin learning with clarity.
       </p>
 
       {error && (
-        <div className="mb-4 rounded-md bg-error-light p-3 text-sm text-error-dark">
+        <div
+          role="alert"
+          className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           {error}
         </div>
       )}
 
-      {/* Role Selection */}
       <div className="mb-5 grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => setRole('student')}
-          className={`flex flex-col items-center gap-1.5 rounded-2xl border px-4 py-5 transition-all ${
-            role === 'student'
-              ? 'border-[#5841EA] bg-[#EFE9FF]'
-              : 'border-gray-200 bg-white hover:bg-gray-50'
-          }`}
-        >
-          <Image
-            src="/icons/icon-student.svg"
-            alt=""
-            width={28}
-            height={28}
-            className="opacity-90"
-          />
-          <span className="text-sm font-bold text-[#0E1E47]">Student</span>
-          <span className="px-1 text-center text-[11px] text-gray-500">
-            Take quizzes and track your progress
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setRole('teacher')}
-          className={`flex flex-col items-center gap-1.5 rounded-2xl border px-4 py-5 transition-all ${
-            role === 'teacher'
-              ? 'border-[#5841EA] bg-[#EFE9FF]'
-              : 'border-gray-200 bg-white hover:bg-gray-50'
-          }`}
-        >
-          <Image
-            src="/icons/icon-teacher.svg"
-            alt=""
-            width={28}
-            height={28}
-            className="opacity-90"
-          />
-          <span className="text-sm font-bold text-[#0E1E47]">Teacher</span>
-          <span className="px-1 text-center text-[11px] text-gray-500">
-            Create quizzes and manage students
-          </span>
-        </button>
+        {[
+          {
+            value: 'student' as UserRole,
+            label: 'Student',
+            description: 'Learn and track progress',
+            icon: '/icons/icon-student.svg',
+          },
+          {
+            value: 'teacher' as UserRole,
+            label: 'Teacher',
+            description: 'Guide and manage classes',
+            icon: '/icons/icon-teacher.svg',
+          },
+        ].map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setRole(option.value)}
+            aria-pressed={role === option.value}
+            className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition-all ${role === option.value ? 'border-[#6320EE] bg-[#F4EFFF] shadow-sm' : 'border-slate-200 bg-white hover:border-[#CDBDF8]'}`}
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+              <Image src={option.icon} alt="" width={25} height={25} />
+            </span>
+            <span>
+              <span className="block text-sm font-bold text-[#27254F]">
+                {option.label}
+              </span>
+              <span className="block text-[11px] leading-4 text-slate-500">
+                {option.description}
+              </span>
+            </span>
+          </button>
+        ))}
       </div>
 
-      {/* Social Buttons */}
-      <div className="mb-5 grid grid-cols-2 gap-3">
-        <button
-          onClick={handleGoogle}
-          disabled={loading}
-          className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
-        >
-          <Image src="/icons/google.svg" alt="" width={18} height={18} />
-          Google
-        </button>
-        <button
-          disabled={loading}
-          onClick={() => addToast('info', 'Facebook login coming soon!')}
-          className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 disabled:opacity-50"
-        >
-          <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="#1877F2">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-          </svg>
-          Facebook
-        </button>
+      <button
+        type="button"
+        onClick={handleGoogle}
+        disabled={loading}
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:border-[#CDBDF8] hover:bg-[#FAF8FF] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <Image src="/icons/google.svg" alt="" width={18} height={18} />
+        Continue with Google
+      </button>
+
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-slate-200" />
+        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">
+          Or register with email
+        </span>
+        <div className="h-px flex-1 bg-slate-200" />
       </div>
 
-      {/* Divider */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs text-gray-400">OR</span>
-        <div className="h-px flex-1 bg-gray-200" />
-      </div>
-
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label
+            htmlFor="register-name"
+            className="mb-2 block text-sm font-semibold text-[#27254F]"
+          >
+            Full name
+          </label>
+          <div className="relative">
+            <User
+              size={17}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+              aria-hidden
+            />
+            <input
+              id="register-name"
+              type="text"
+              required
+              autoComplete="name"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              className={fieldClass}
+              placeholder="Your full name"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-semibold text-[#0E1E47]">
-              Full Name
+            <label
+              htmlFor="register-email"
+              className="mb-2 block text-sm font-semibold text-[#27254F]"
+            >
+              Email address
             </label>
             <div className="relative">
-              <User
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              <Mail
+                size={17}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                aria-hidden
               />
               <input
-                type="text"
+                id="register-email"
+                type="email"
                 required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-3 text-sm outline-none transition-colors focus:border-[#5841EA] focus:ring-1 focus:ring-[#5841EA]"
-                placeholder="John Doe"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className={fieldClass}
+                placeholder="name@example.com"
               />
             </div>
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-semibold text-[#0E1E47]">
-              Username
+            <label
+              htmlFor="register-password"
+              className="mb-2 block text-sm font-semibold text-[#27254F]"
+            >
+              Password
             </label>
             <div className="relative">
-              <User
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              <Lock
+                size={17}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                aria-hidden
               />
               <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-3 text-sm outline-none transition-colors focus:border-[#5841EA] focus:ring-1 focus:ring-[#5841EA]"
-                placeholder="John Doe"
+                id="register-password"
+                type="password"
+                required
+                minLength={6}
+                autoComplete="new-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className={fieldClass}
+                placeholder="At least 6 characters"
               />
             </div>
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-sm font-semibold text-[#0E1E47]">
-            Email
-          </label>
-          <div className="relative">
-            <Mail
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-3 text-sm outline-none transition-colors focus:border-[#5841EA] focus:ring-1 focus:ring-[#5841EA]"
-              placeholder="name @example.com"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-sm font-semibold text-[#0E1E47]">
-            Password
-          </label>
-          <div className="relative">
-            <Lock
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-3 text-sm outline-none transition-colors focus:border-[#5841EA] focus:ring-1 focus:ring-[#5841EA]"
-              placeholder="••••••••••"
-            />
           </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 w-full rounded-xl bg-[#8B5CF6] px-4 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#7C3FF0] disabled:opacity-50"
+          className="mt-2 w-full rounded-xl bg-[#6320EE] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#6320EE]/20 transition-all hover:-translate-y-0.5 hover:bg-[#5516D8] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? 'Creating account...' : 'Sign Up'}
+          {loading ? 'Creating account...' : 'Create account'}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-5 text-center text-sm text-slate-500">
         Already have an account?{' '}
         <Link
           href="/login"
-          className="font-semibold text-[#8B5CF6] hover:underline"
+          className="font-bold text-[#6320EE] hover:underline"
         >
-          Sign In
+          Sign in
         </Link>
       </p>
-    </>
+    </div>
   );
 };
 

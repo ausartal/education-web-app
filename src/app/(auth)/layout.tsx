@@ -1,5 +1,7 @@
 import { FC, ReactNode } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowLeft, CheckCircle2, FlaskConical } from 'lucide-react';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -7,113 +9,98 @@ interface AuthLayoutProps {
 
 const AuthLayout: FC<AuthLayoutProps> = ({ children }) => {
   return (
-    <main className="flex min-h-screen bg-white">
-      {/* Left Panel - Branded with decorative shapes */}
-      <div className="relative hidden w-1/2 overflow-hidden bg-[#F4F5F8] lg:block">
-        {/* Grid background — perspective grid */}
+    <main className="relative min-h-screen overflow-hidden bg-[#FBFAFE] lg:grid lg:grid-cols-[0.92fr_1.08fr]">
+      <section className="relative hidden min-h-screen overflow-hidden border-r border-[#E7E1F1] bg-[#F4F0FC] px-12 py-10 lg:flex lg:flex-col xl:px-16">
         <div
-          className="absolute inset-0 opacity-[0.35]"
+          className="absolute inset-0 opacity-60"
           style={{
             backgroundImage:
-              'linear-gradient(to right, #C7CDD9 1px, transparent 1px), linear-gradient(to bottom, #C7CDD9 1px, transparent 1px)',
-            backgroundSize: '52px 52px',
-            transform: 'perspective(800px) rotateX(45deg) scale(1.4)',
-            transformOrigin: 'center bottom',
+              'radial-gradient(circle at center, rgba(99,32,238,0.11) 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
           }}
           aria-hidden
         />
+        <div className="absolute -left-28 top-1/4 h-64 w-64 rounded-full bg-[#F59E0B]/15 blur-2xl" />
+        <div className="absolute -right-28 bottom-20 h-80 w-80 rounded-full bg-[#6320EE]/15 blur-3xl" />
 
-        {/* Top-left: Cyan partial circle (ring) */}
-        <div
-          className="absolute -left-16 -top-16 h-44 w-44 rounded-full border-[28px] border-[#00C2FF]"
-          aria-hidden
-        />
-
-        {/* Top-center: Purple blur blob */}
-        <Image
-          src="/icons/shape-rounded.svg"
-          alt=""
-          width={400}
-          height={280}
-          className="absolute -top-10 left-1/2 -translate-x-1/4 opacity-90"
-          aria-hidden
-        />
-
-        {/* Right-middle: Yellow crescent */}
-        <div className="absolute right-[12%] top-[42%]" aria-hidden>
-          <svg
-            width="120"
-            height="120"
-            viewBox="0 0 120 120"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M60 0C93.137 0 120 26.863 120 60C120 93.137 93.137 120 60 120C57.5 120 55 119.8 52.5 119.4C76 116 95 96 99 72C103 48 91 26 71 14C68 12 65 11 62 10C61.3 6 60.7 3 60 0Z"
-              fill="#FBD300"
-            />
-          </svg>
-        </div>
-
-        {/* Left-middle: Blue/cyan half-moon */}
-        <div className="absolute left-[6%] top-[50%]" aria-hidden>
-          <svg
-            width="120"
-            height="120"
-            viewBox="0 0 120 120"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M0 60C0 26.863 26.863 0 60 0C60 0 60 26 47 47C34 68 0 60 0 60Z"
-              fill="#00C2FF"
-            />
-          </svg>
-        </div>
-
-        {/* Bottom-left: Orange star/flame */}
-        <Image
-          src="/icons/star.svg"
-          alt=""
-          width={170}
-          height={180}
-          className="absolute -bottom-2 -left-4"
-          aria-hidden
-        />
-
-        {/* Bottom-right: Yellow rounded shape */}
-        <div className="absolute bottom-[6%] right-[12%]" aria-hidden>
-          <svg
-            width="140"
-            height="140"
-            viewBox="0 0 140 140"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M30 10 Q60 0 100 10 Q130 30 130 70 Q120 110 80 130 Q40 130 20 100 Q10 60 30 10 Z"
-              fill="#FBD300"
-            />
-          </svg>
-        </div>
-
-        {/* Center Logo */}
-        <div className="relative z-10 flex h-full items-center justify-center px-8">
+        <Link href="/" className="relative z-10 w-fit" aria-label="AKURAT home">
           <Image
             src="/icons/Akurat_Logo_Text.svg"
             alt="AKURAT"
-            width={280}
-            height={105}
-            className="h-auto w-[260px]"
+            width={152}
+            height={56}
+            className="h-11 w-auto object-contain"
             priority
           />
-        </div>
-      </div>
+        </Link>
 
-      {/* Right Panel - Form */}
-      <div className="flex w-full items-center justify-center bg-white px-6 py-12 lg:w-1/2 lg:px-16">
-        <div className="w-full max-w-md">{children}</div>
-      </div>
+        <div className="relative z-10 my-auto max-w-xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#DCCFFC] bg-white/75 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#6320EE] backdrop-blur">
+            <FlaskConical size={15} aria-hidden />
+            Learn chemistry with clarity
+          </span>
+          <h2 className="mt-7 font-display text-5xl font-extrabold leading-[1.04] text-[#27254F] xl:text-6xl">
+            Build confidence,
+            <span className="block text-[#6320EE]">one concept</span>
+            <span className="block">
+              at a <span className="text-[#F59E0B]">time.</span>
+            </span>
+          </h2>
+          <p className="mt-7 max-w-lg text-base leading-7 text-slate-600">
+            Understand misconceptions, follow a personalized learning path, and
+            see measurable progress in chemistry.
+          </p>
+
+          <div className="mt-9 grid gap-3 sm:grid-cols-2">
+            {[
+              'Adaptive assessments',
+              'Clear learning progress',
+              'Guided chemistry practice',
+              'Support for every level',
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex items-center gap-2.5 text-sm font-semibold text-[#343150]"
+              >
+                <CheckCircle2
+                  size={18}
+                  className="text-[#6320EE]"
+                  aria-hidden
+                />
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="relative z-10 text-xs text-slate-500">
+          © 2026 AKURAT. Chemistry learning, measured with precision.
+        </p>
+      </section>
+
+      <section className="relative flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 lg:px-12 xl:px-20">
+        <div className="absolute left-5 top-5 flex w-[calc(100%-2.5rem)] items-center justify-between lg:left-10 lg:top-8 lg:w-auto">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-[#6320EE]"
+          >
+            <ArrowLeft size={16} aria-hidden />
+            Back to home
+          </Link>
+          <Link href="/" className="lg:hidden" aria-label="AKURAT home">
+            <Image
+              src="/icons/Akurat_Logo_Text.svg"
+              alt="AKURAT"
+              width={112}
+              height={42}
+              className="h-8 w-auto"
+              priority
+            />
+          </Link>
+        </div>
+
+        <div className="w-full max-w-[500px] pt-12 lg:pt-0">{children}</div>
+      </section>
     </main>
   );
 };
