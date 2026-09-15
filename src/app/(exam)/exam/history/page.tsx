@@ -104,7 +104,7 @@ const ExamHistoryPage: FC = () => {
       </div>
 
       {history.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-16 ring-1 ring-gray-100">
+        <div className="flex flex-col items-center justify-center rounded-2xl bg-[#F8F7FF] py-16 ring-1 ring-[#E5E0F5]">
           <BarChart3 size={28} className="text-gray-300" />
           <p className="mt-3 text-sm font-semibold text-gray-500">Belum ada hasil ujian</p>
           <p className="mt-1 text-xs text-gray-400">Hasil akan muncul setelah kamu menyelesaikan ujian</p>
@@ -127,7 +127,7 @@ const ExamHistoryPage: FC = () => {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="overflow-hidden rounded-2xl bg-white ring-1 ring-gray-100"
+                className="overflow-hidden rounded-2xl bg-white ring-1 ring-[#E5E0F5]"
               >
                 {/* Header — clickable */}
                 <button

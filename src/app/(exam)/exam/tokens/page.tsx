@@ -1,204 +1,217 @@
 'use client';
 
 import { FC, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  CreditCard, Loader2, CheckCircle2, AlertCircle, ArrowRight, Package,
+  Calendar, Clock, Users, FileText, Loader2, ChevronRight,
+  AlertCircle, CheckCircle2, ArrowRight,
 } from 'lucide-react';
 import { useExamAuth } from '@/context/ExamAuthContext';
 
-interface TokenRecord {
+interface ScheduledExam {
   id: string;
-  status: 'active' | 'used' | 'expired';
-  purchasedAt: { _seconds: number } | null;
-  usedAt: { _seconds: number } | null;
-  amount: number;
+  title: string;
+  description: string;
+  code: string;
+  totalStages: number;
+  questionsPerStage: number;
+  durationPerStage: number;
+  breakDuration: number;
+  status: string;
+  enrolled: boolean;
+  sessionStatus: string | null;
+  sessionId: string | null;
+  createdAt: { _seconds: number } | null;
 }
 
-const PACKAGES = [
-  { quantity: 1, price: 25000, label: '1 Token', discount: null },
-  { quantity: 5, price: 100000, label: '5 Token', discount: 'Hemat 20%' },
-  { quantity: 10, price: 175000, label: '10 Token', discount: 'Hemat 30%' },
-];
-
-const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  active: { label: 'Aktif', color: 'text-emerald-700 bg-emerald-50' },
-  used: { label: 'Terpakai', color: 'text-gray-600 bg-gray-100' },
-  expired: { label: 'Kedaluwarsa', color: 'text-red-600 bg-red-50' },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  waiting: { label: 'Menunggu', color: 'text-amber-700', bg: 'bg-amber-50 ring-amber-200' },
+  in_progress: { label: 'Sedang Berlangsung', color: 'text-blue-700', bg: 'bg-blue-50 ring-blue-200' },
+  on_break: { label: 'Istirahat', color: 'text-blue-700', bg: 'bg-blue-50 ring-blue-200' },
+  completed: { label: 'Selesai', color: 'text-emerald-700', bg: 'bg-emerald-50 ring-emerald-200' },
+  active: { label: 'Tersedia', color: 'text-violet-700', bg: 'bg-violet-50 ring-violet-200' },
 };
 
-function formatDate(ts: { _seconds: number } | null): string {
-  if (!ts) return '-';
-  return new Date(ts._seconds * 1000).toLocaleDateString('id-ID', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  });
-}
-
-function formatCurrency(n: number): string {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
-}
-
 const ExamTokensPage: FC = () => {
-  const { user, examUser, refreshProfile } = useExamAuth();
-  const [tokens, setTokens] = useState<TokenRecord[]>([]);
+  const router = useRouter();
+  const { user, examUser } = useExamAuth();
+  const [exams, setExams] = useState<ScheduledExam[]>([]);
   const [loading, setLoading] = useState(true);
-  const [buying, setBuying] = useState<number | null>(null);
-  const [success, setSuccess] = useState('');
+  const [joining, setJoining] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   const tokenBalance = examUser?.tokenBalance ?? 0;
 
-  const fetchTokens = useCallback(async () => {
+  const fetchExams = useCallback(async () => {
     if (!user) return;
     try {
-      const idToken = await user.getIdToken();
-      const res = await fetch('/api/exam/tokens', {
-        headers: { Authorization: `Bearer ${idToken}` },
+      const token = await user.getIdToken();
+      const res = await fetch('/api/exam/scheduled', {
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
-        setTokens(data.tokens ?? []);
+        setExams(data.exams ?? []);
       }
     } catch { /* ignore */ }
     setLoading(false);
   }, [user]);
 
-  useEffect(() => { fetchTokens(); }, [fetchTokens]);
+  useEffect(() => { fetchExams(); }, [fetchExams]);
 
-  const handleBuy = async (quantity: number, amount: number) => {
+  const handleJoin = async (exam: ScheduledExam) => {
     if (!user) return;
     setError('');
-    setSuccess('');
-    setBuying(quantity);
-    try {
-      const idToken = await user.getIdToken();
-      const res = await fetch('/api/exam/tokens', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({ quantity, amount }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Gagal membeli token');
-      }
-      await refreshProfile();
-      await fetchTokens();
-      setSuccess(`${quantity} token berhasil dibeli.`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
-    } finally {
-      setBuying(null);
+
+    // If already enrolled, navigate to current state
+    if (exam.enrolled && exam.sessionId) {
+      if (exam.sessionStatus === 'completed') router.push(`/exam/results/${exam.sessionId}`);
+      else if (exam.sessionStatus === 'on_break') router.push(`/exam/break/${exam.sessionId}`);
+      else router.push(`/exam/session/${exam.sessionId}`);
+      return;
     }
+
+    setJoining(exam.id);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/msat/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ code: exam.code }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Gagal bergabung');
+        setJoining(null);
+        return;
+      }
+
+      if (data.status === 'in_progress') {
+        router.push(`/exam/session/${data.sessionId}`);
+      } else {
+        router.push(`/exam`);
+      }
+    } catch {
+      setError('Terjadi kesalahan.');
+    }
+    setJoining(null);
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 size={20} className="animate-spin text-[#9CA3AF]" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="font-display text-xl font-extrabold text-[#0E1E47]">Token Ujian</h1>
-      <p className="mt-1 text-sm text-[#5B6475]">
-        Token digunakan untuk mengikuti ujian. Setiap ujian menghabiskan 1 token.
-      </p>
+      <div className="mb-6">
+        <h1 className="font-display text-xl font-extrabold text-[#0E1E47]">Ujian Terjadwal</h1>
+        <p className="mt-1 text-sm text-[#5B6475]">
+          Daftar ujian yang dijadwalkan oleh admin. Pilih ujian untuk bergabung.
+        </p>
+      </div>
 
       {/* Token balance */}
-      <div className="mt-6 flex items-center gap-4 rounded-lg bg-white p-5 ring-1 ring-[#DCE5F2]">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#F0EDFF]">
-          <CreditCard size={22} className="text-[#6320EE]" />
-        </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#5B6475]">Token Aktif</p>
-          <p className="font-display text-3xl font-extrabold text-[#0E1E47]">{tokenBalance}</p>
+      <div className="mb-6 rounded-lg bg-[#F0EDFF] p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#7C6BC4]">Token Aktif</p>
+            <p className="font-display text-2xl font-extrabold text-[#3B2F6B]">{tokenBalance}</p>
+          </div>
+          <Link href="/exam/profile"
+            className="rounded-md bg-[#6320EE]/10 px-3 py-1.5 text-[11px] font-bold text-[#6320EE] transition-colors hover:bg-[#6320EE]/20">
+            Profil
+          </Link>
         </div>
       </div>
 
-      {/* Messages */}
-      {success && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-emerald-100">
-          <CheckCircle2 size={14} /> {success}
-        </div>
-      )}
       {error && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100">
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100">
           <AlertCircle size={14} /> {error}
         </div>
       )}
 
-      {/* Packages */}
-      <div className="mt-8">
-        <h2 className="mb-4 text-xs font-bold uppercase tracking-wide text-[#9CA3AF]">Paket Token</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {PACKAGES.map((pkg) => {
-            const isBuying = buying === pkg.quantity;
+      {/* Scheduled exams */}
+      {exams.length === 0 ? (
+        <div className="rounded-lg bg-[#F8F7FF] py-12 text-center ring-1 ring-[#E5E0F5]">
+          <Calendar size={24} className="mx-auto text-[#9CA3AF]" />
+          <p className="mt-3 text-sm font-semibold text-[#5B6475]">Belum ada ujian terjadwal</p>
+          <p className="mt-1 text-xs text-[#9CA3AF]">
+            Ujian akan muncul di sini setelah admin menjadwalkannya.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {exams.map((exam) => {
+            const totalQ = exam.questionsPerStage * exam.totalStages;
+            const totalTime = exam.durationPerStage * exam.totalStages;
+            const isJoining = joining === exam.id;
+
+            let statusLabel = 'Tersedia';
+            let statusColor = 'text-violet-700 bg-violet-50 ring-violet-200';
+            if (exam.enrolled && exam.sessionStatus) {
+              const cfg = STATUS_CONFIG[exam.sessionStatus];
+              if (cfg) { statusLabel = cfg.label; statusColor = `${cfg.color} ${cfg.bg}`; }
+            }
+            const examStatus = exam.status === 'in_progress' ? STATUS_CONFIG.in_progress : null;
+
             return (
-              <button key={pkg.quantity} onClick={() => handleBuy(pkg.quantity, pkg.price)}
-                disabled={buying !== null}
-                className="rounded-lg bg-white p-5 text-left ring-1 ring-[#DCE5F2] transition-all hover:ring-[#6320EE]/40 disabled:opacity-50">
-                <div className="flex items-center gap-2">
-                  <Package size={16} className="text-[#6320EE]" />
-                  <span className="text-sm font-bold text-[#0E1E47]">{pkg.label}</span>
+              <div key={exam.id} className="rounded-lg bg-white p-5 ring-1 ring-[#DCE5F2]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-[#0E1E47] truncate">{exam.title}</h3>
+                      {exam.enrolled && (
+                        <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-bold ring-1 ${statusColor}`}>
+                          {statusLabel}
+                        </span>
+                      )}
+                      {!exam.enrolled && examStatus && (
+                        <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-bold ring-1 ${examStatus.bg} ${examStatus.color} ring-${examStatus.bg.replace('bg-', '')}`}>
+                          Sedang berlangsung
+                        </span>
+                      )}
+                    </div>
+                    {exam.description && (
+                      <p className="mt-1 text-xs text-[#5B6475] line-clamp-2">{exam.description}</p>
+                    )}
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#9CA3AF]">
+                      <span className="flex items-center gap-1"><FileText size={12} /> {totalQ} soal</span>
+                      <span className="flex items-center gap-1"><Clock size={12} /> {totalTime} menit</span>
+                      <span className="flex items-center gap-1"><Users size={12} /> {exam.totalStages} stage</span>
+                    </div>
+                  </div>
+
+                  {exam.enrolled ? (
+                    <button
+                      onClick={() => handleJoin(exam)}
+                      disabled={isJoining}
+                      className="shrink-0 flex items-center gap-1.5 rounded-lg bg-[#6320EE] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-[#5218C7] disabled:opacity-40"
+                    >
+                      {isJoining ? <Loader2 size={13} className="animate-spin" /> : <ArrowRight size={13} />}
+                      Lanjutkan
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleJoin(exam)}
+                      disabled={isJoining}
+                      className="shrink-0 flex items-center gap-1.5 rounded-lg bg-[#F0EDFF] px-4 py-2 text-xs font-bold text-[#6320EE] ring-1 ring-[#DCCFFC] transition-colors hover:bg-[#E2D9FC] disabled:opacity-40"
+                    >
+                      {isJoining ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
+                      Gabung
+                    </button>
+                  )}
                 </div>
-                <p className="mt-2 font-display text-xl font-extrabold text-[#0E1E47]">
-                  {formatCurrency(pkg.price)}
-                </p>
-                {pkg.discount && (
-                  <span className="mt-1 inline-block rounded bg-[#6320EE]/5 px-2 py-0.5 text-[10px] font-bold text-[#6320EE]">
-                    {pkg.discount}
-                  </span>
-                )}
-                <div className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-[#6320EE] py-2 text-xs font-bold text-white">
-                  {isBuying ? <Loader2 size={13} className="animate-spin" /> : null}
-                  {isBuying ? 'Memproses...' : 'Pilih'}
-                </div>
-              </button>
+              </div>
             );
           })}
         </div>
-        <p className="mt-3 text-xs text-[#9CA3AF]">
-          Pembayaran diproses secara instan. Token langsung masuk setelah pembelian.
-        </p>
-      </div>
-
-      {/* History */}
-      <div className="mt-10">
-        <h2 className="mb-4 text-xs font-bold uppercase tracking-wide text-[#9CA3AF]">Riwayat Pembelian</h2>
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 size={18} className="animate-spin text-[#9CA3AF]" />
-          </div>
-        ) : tokens.length === 0 ? (
-          <div className="rounded-lg bg-white py-10 text-center ring-1 ring-[#DCE5F2]">
-            <CreditCard size={20} className="mx-auto text-[#9CA3AF]" />
-            <p className="mt-2 text-sm text-[#5B6475]">Belum ada pembelian</p>
-            <p className="text-xs text-[#9CA3AF]">Pilih paket di atas untuk membeli token.</p>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-lg bg-white ring-1 ring-[#DCE5F2]">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-[#DCE5F2] bg-[#F8F7FF]">
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[#5B6475]">Tanggal</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[#5B6475]">Harga</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[#5B6475]">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tokens.map((t) => {
-                  const st = STATUS_LABEL[t.status] ?? STATUS_LABEL.active;
-                  return (
-                    <tr key={t.id} className="border-b border-[#DCE5F2] last:border-0">
-                      <td className="px-4 py-3 text-[#0E1E47]">{formatDate(t.purchasedAt)}</td>
-                      <td className="px-4 py-3 text-[#0E1E47]">{formatCurrency(t.amount)}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${st.color}`}>
-                          {st.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };

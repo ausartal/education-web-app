@@ -69,8 +69,8 @@ const ExamCertificatesPage: FC = () => {
       </p>
 
       {certificates.length === 0 ? (
-        <div className="mt-8 rounded-lg bg-white py-12 text-center ring-1 ring-[#DCE5F2]">
-          <Award size={28} className="mx-auto text-[#9CA3AF]" />
+        <div className="mt-8 rounded-lg bg-[#F8F7FF] py-12 text-center ring-1 ring-[#E5E0F5]">
+          <Award size={28} className="mx-auto text-[#9B8FC7]" />
           <p className="mt-3 text-sm font-semibold text-[#5B6475]">Belum ada sertifikat</p>
           <p className="mt-1 text-xs text-[#9CA3AF]">
             Selesaikan ujian untuk mendapatkan sertifikat kompetensi.
@@ -85,7 +85,7 @@ const ExamCertificatesPage: FC = () => {
           {certificates.map((cert) => {
             const predStyle = PREDIKAT_STYLES[cert.predikat] ?? 'text-gray-600 bg-gray-50 ring-gray-200';
             return (
-              <div key={cert.id} className="rounded-lg bg-white p-5 ring-1 ring-[#DCE5F2]">
+              <div key={cert.id} className="rounded-lg bg-[#F8F7FF] p-5 ring-1 ring-[#E5E0F5]">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold text-[#0E1E47]">{cert.examTitle}</p>

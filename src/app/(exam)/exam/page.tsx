@@ -280,7 +280,7 @@ const ExamDashboard: FC = () => {
 
       {/* Exam code input */}
       <div className="rounded-lg bg-white p-6 ring-1 ring-[#DCE5F2]">
-        <label className="mb-3 block text-xs font-bold uppercase tracking-wide text-[#5B6475]">
+        <label className="mb-3 block text-xs font-bold uppercase tracking-wide text-[#7C6BC4]">
           Masukkan Kode Ujian
         </label>
         <div className="flex gap-3">
@@ -318,57 +318,38 @@ const ExamDashboard: FC = () => {
         )}
 
         <p className="mt-3 text-xs text-[#9CA3AF]">
-          Kode didapatkan dari guru atau setelah membeli token.
+          Kode didapatkan dari admin penyelenggara ujian.
         </p>
       </div>
 
       {/* Stats row */}
       <div className="mt-6 grid grid-cols-3 gap-3">
-        <div className="rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2]">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">Token</p>
-          <p className="mt-1 font-display text-2xl font-extrabold text-[#0E1E47]">{tokenBalance}</p>
-          <p className="text-[11px] text-[#9CA3AF]">aktif</p>
+        <div className="rounded-lg bg-[#F0EDFF] p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#7C6BC4]">Token</p>
+          <p className="mt-1 font-display text-2xl font-extrabold text-[#3B2F6B]">{tokenBalance}</p>
+          <p className="text-[11px] text-[#9B8FC7]">aktif</p>
         </div>
-        <div className="rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2]">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">Ujian</p>
-          <p className="mt-1 font-display text-2xl font-extrabold text-[#0E1E47]">
+        <div className="rounded-lg bg-[#EDF6FF] p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#5B8DC7]">Ujian</p>
+          <p className="mt-1 font-display text-2xl font-extrabold text-[#1E3A5F]">
             {lastExam ? lastExam.finalScore ?? '-' : '-'}
           </p>
-          <p className="text-[11px] text-[#9CA3AF]">skor terakhir</p>
+          <p className="text-[11px] text-[#8BB0D6]">skor terakhir</p>
         </div>
-        <div className="rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2]">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">Predikat</p>
-          <p className="mt-1 font-display text-lg font-extrabold text-[#6320EE]">
+        <div className="rounded-lg bg-[#FFF6E5] p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#C4944A]">Predikat</p>
+          <p className="mt-1 font-display text-lg font-extrabold text-[#6B4E1E]">
             {lastExam?.predikat ?? '-'}
           </p>
-          <p className="text-[11px] text-[#9CA3AF]">terakhir</p>
+          <p className="text-[11px] text-[#D4AA6B]">terakhir</p>
         </div>
-      </div>
-
-      {/* Quick actions */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { label: 'Riwayat', icon: History, href: '/exam/history', color: 'text-[#5B6475]' },
-          { label: 'Sertifikat', icon: Award, href: '/exam/certificates', color: 'text-[#6320EE]' },
-          { label: 'Token', icon: CreditCard, href: '/exam/tokens', color: 'text-[#D97706]' },
-          { label: 'Profil', icon: User, href: '/exam/profile', color: 'text-[#059669]' },
-        ].map((action) => {
-          const Icon = action.icon;
-          return (
-            <Link key={action.label} href={action.href}
-              className="flex items-center gap-2.5 rounded-lg bg-white px-4 py-3 ring-1 ring-[#DCE5F2] transition-all hover:ring-[#6320EE]/30">
-              <Icon size={16} className={action.color} />
-              <span className="text-xs font-semibold text-[#0E1E47]">{action.label}</span>
-            </Link>
-          );
-        })}
       </div>
 
       {/* Last exam detail */}
       {lastExam && (
-        <div className="mt-4 rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2]">
+        <div className="mt-4 rounded-lg bg-[#F8F7FF] p-4 ring-1 ring-[#E5E0F5]">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wide text-[#9CA3AF]">Ujian Terakhir</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-[#7C6BC4]">Ujian Terakhir</p>
             <Link href="/exam/history" className="text-[11px] font-bold text-[#6320EE] hover:underline">
               Lihat semua
             </Link>
