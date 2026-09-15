@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, History, Award, User } from 'lucide-react';
-import { useExamAuth } from '@/context/ExamAuthContext';
+import { ExamAuthProvider, useExamAuth } from '@/context/ExamAuthContext';
 import { AdminPreviewBanner } from '@/components/admin/AdminPreviewBanner';
 
 const navItems = [
@@ -15,6 +15,14 @@ const navItems = [
 ];
 
 export default function ExamLayout({ children }: { children: ReactNode }) {
+  return (
+    <ExamAuthProvider>
+      <ExamLayoutInner>{children}</ExamLayoutInner>
+    </ExamAuthProvider>
+  );
+}
+
+function ExamLayoutInner({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, examUser } = useExamAuth();
 
