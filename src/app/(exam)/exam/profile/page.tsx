@@ -5,6 +5,8 @@ import {
   User, Mail, Phone, MapPin, Building2, Calendar,
   AlertCircle, CheckCircle2, Loader2, Camera, Save,
 } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, storage } from '@/lib/firebase';
 import { useExamAuth } from '@/context/ExamAuthContext';
 import type { ExamUser, ExamUserGender, ExamUserIdentityType } from '@/types/exam-user';
 
@@ -274,16 +276,50 @@ const ExamProfilePage: FC = () => {
             Foto Diri (untuk sertifikat)
           </h2>
           <div className="flex items-center gap-4">
-            <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-[#F0EDFF] ring-1 ring-[#DCE5F2]">
+            <label className="group relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-[#F0EDFF] ring-1 ring-[#DCE5F2] transition hover:ring-[#6320EE]/40">
               {examUser?.photoURL ? (
-                <img src={examUser.photoURL} alt="Foto" className="h-full w-full rounded-lg object-cover" />
+                <img src={examUser.photoURL} alt="Foto" className="h-full w-full object-cover" />
               ) : (
                 <Camera size={24} className="text-[#9CA3AF]" />
               )}
-            </div>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+                <Camera size={18} className="text-white" />
+              </div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !auth.currentUser) return;
+                  if (file.size > 2 * 1024 * 1024) {
+                    setError('Ukuran foto maksimal 2MB.');
+                    return;
+                  }
+                  setSaving(true);
+                  try {
+                    const storageRef = ref(storage, `exam_photos/${auth.currentUser.uid}`);
+                    await uploadBytes(storageRef, file, { contentType: file.type });
+                    const url = await getDownloadURL(storageRef);
+                    const token = await auth.currentUser.getIdToken();
+                    await fetch('/api/exam/profile', {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ photoURL: url }),
+                    });
+                    await refreshProfile();
+                    setSuccess('Foto berhasil diunggah.');
+                  } catch {
+                    setError('Gagal mengunggah foto.');
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              />
+            </label>
             <div>
               <p className="text-sm font-semibold text-[#0E1E47]">Upload foto</p>
-              <p className="text-xs text-[#9CA3AF]">Format JPG/PNG, minimal 300x400px</p>
+              <p className="text-xs text-[#9CA3AF]">Klik untuk memilih. JPG/PNG, maks 2MB.</p>
             </div>
           </div>
         </section>

@@ -8,10 +8,11 @@ import {
   Mail, Lock, User, Phone, MapPin, Building2, Calendar,
   AlertCircle, Loader2, ChevronRight, ChevronLeft,
 } from 'lucide-react';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { validateRegistration, sanitizeInput } from '@/lib/exam-validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
+import { getExamUserProfile } from '@/services/exam-auth';
 import type { ExamRegistrationData, ExamUserGender, ExamUserIdentityType } from '@/types/exam-user';
 
 const fieldClass =
@@ -105,12 +106,39 @@ const ExamRegisterPage: FC = () => {
 
     setLoading(true);
     try {
-      // 1. Create Firebase Auth user
-      const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
-      await updateProfile(user, { displayName: sanitizeInput(form.displayName) });
+      let user;
+
+      // 1. Create or sign in Firebase Auth user
+      try {
+        const result = await createUserWithEmailAndPassword(auth, form.email, form.password);
+        user = result.user;
+        await updateProfile(user, { displayName: sanitizeInput(form.displayName) });
+      } catch (createErr: unknown) {
+        const code = (createErr as { code?: string }).code ?? '';
+        if (code === 'auth/email-already-in-use') {
+          // Email already exists in Firebase Auth (school account).
+          // Sign in with the provided password to link the exam profile.
+          const { user: existingUser } = await signInWithEmailAndPassword(auth, form.email, form.password);
+          user = existingUser;
+
+          // Check if exam profile already exists
+          const existingProfile = await getExamUserProfile(user.uid);
+          if (existingProfile) {
+            setError('Akun UjiTuntas sudah terdaftar untuk email ini. Silakan masuk.');
+            setLoading(false);
+            return;
+          }
+          // Update display name if different
+          if (user.displayName !== sanitizeInput(form.displayName)) {
+            await updateProfile(user, { displayName: sanitizeInput(form.displayName) });
+          }
+        } else {
+          throw createErr;
+        }
+      }
 
       // 2. Register exam profile via API
-      const idToken = await user.getIdToken();
+      const idToken = await user!.getIdToken();
       const res = await fetch('/api/exam/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },

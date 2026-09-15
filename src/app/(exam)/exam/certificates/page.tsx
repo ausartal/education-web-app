@@ -102,18 +102,14 @@ const ExamCertificatesPage: FC = () => {
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <button title="Lihat"
+                    <Link href={`/exam/certificates/${cert.id}`} title="Lihat"
                       className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#DCE5F2] text-[#5B6475] transition-colors hover:bg-gray-50">
                       <FileText size={14} />
-                    </button>
-                    <button title="Unduh PDF"
+                    </Link>
+                    <Link href={`/exam/certificates/${cert.id}`} title="Unduh PDF"
                       className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#DCE5F2] text-[#5B6475] transition-colors hover:bg-gray-50">
                       <Download size={14} />
-                    </button>
-                    <button title="Cetak"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#DCE5F2] text-[#5B6475] transition-colors hover:bg-gray-50">
-                      <Printer size={14} />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
