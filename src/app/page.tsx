@@ -164,6 +164,49 @@ const assessmentSteps = [
   },
 ];
 
+const frequentlyAskedQuestions = [
+  {
+    question: 'What makes AKURAT different from a regular chemistry quiz?',
+    answer:
+      'AKURAT connects structured chemistry materials, practice, classroom activities, and adaptive assessment in one learning flow. Instead of showing only a final score, the assessment helps identify the concepts and misconceptions that need more attention.',
+  },
+  {
+    question: 'How do students join a class?',
+    answer:
+      'After signing in as a student, open the Classes page and enter the class code provided by your teacher. Once the code is accepted, the class, assigned materials, tasks, and scheduled assessments will appear in your account.',
+  },
+  {
+    question: 'How does the 3-stage adaptive assessment work?',
+    answer:
+      'Stage 1 establishes a baseline. Your performance then determines the difficulty route used in Stages 2 and 3. Each stage contains its own question set and timing, allowing AKURAT to measure your chemistry understanding more precisely than a fixed test.',
+  },
+  {
+    question: 'What information is included in my assessment results?',
+    answer:
+      'After completing the assessment, you can review your final score, performance across the measured competencies, and diagnostic information about concepts that may have been misunderstood. These results help guide what to study next.',
+  },
+  {
+    question: 'Is there a score penalty for an incorrect answer?',
+    answer:
+      'There is no separate negative-marking penalty for an incorrect answer. However, your responses influence the adaptive route and the difficulty of later questions, so every answer should reflect your best understanding.',
+  },
+  {
+    question: 'What happens if my internet connection is interrupted?',
+    answer:
+      'Answers that have already been submitted remain saved. You can reconnect and continue from the latest available stage, but the assessment timer may continue running. We recommend using a stable connection before starting an exam.',
+  },
+  {
+    question: 'What can teachers manage in AKURAT?',
+    answer:
+      'Teachers can organize classes, share learning materials, create assignments and assessments, review submissions, and monitor student or class performance. The available insight is designed to help teachers decide which concepts need reinforcement.',
+  },
+  {
+    question: 'Can I use AKURAT on a phone or tablet?',
+    answer:
+      'Yes. Learning materials, practice, class updates, and progress views are responsive on phones and tablets. For timed assessments, a larger screen and a stable connection are recommended for the clearest experience.',
+  },
+];
+
 export default function Home() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
@@ -703,6 +746,49 @@ export default function Home() {
               ))}
             </ul>
           </motion.div>
+        </div>
+      </section>
+
+      <section
+        id="faq"
+        className="border-t border-white bg-[#F8FAFC] px-4 py-20 lg:px-8 lg:py-28"
+      >
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center">
+            <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#27254F] lg:text-4xl">
+              Frequently Asked Questions
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#64748B] sm:text-base">
+              Clear answers about learning chemistry, joining a class, adaptive
+              assessments, and using AKURAT.
+            </p>
+          </div>
+
+          <div className="mt-12 space-y-4">
+            {frequentlyAskedQuestions.map((item) => (
+              <details
+                key={item.question}
+                className="group overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white open:border-[#D6C5FA] open:shadow-[0_8px_24px_rgba(99,32,238,0.07)]"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 px-5 py-4 text-left sm:px-6 [&::-webkit-details-marker]:hidden">
+                  <span className="text-sm font-bold leading-6 text-[#27254F] sm:text-base">
+                    {item.question}
+                  </span>
+                  <span
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F1E8FF] text-xl font-bold leading-none text-[#6320EE] transition-transform duration-200 group-open:rotate-45"
+                    aria-hidden="true"
+                  >
+                    +
+                  </span>
+                </summary>
+                <div className="border-t border-[#EEF1F5] px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+                  <p className="max-w-3xl text-sm leading-6 text-[#64748B]">
+                    {item.answer}
+                  </p>
+                </div>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 
