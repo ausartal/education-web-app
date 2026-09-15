@@ -267,21 +267,36 @@ export default function Home() {
         id="learning-material"
         className="relative px-4 py-20 lg:px-8 lg:py-28"
       >
-        {/* Decorative shapes */}
         <Image
           src="/icons/dot-purple.svg"
           alt=""
           width={36}
           height={36}
-          className="absolute right-[6%] top-[8%] hidden lg:block"
+          className="pointer-events-none absolute right-[6%] top-[8%] hidden lg:block"
           aria-hidden
         />
         <Image
-          src="/icons/dot-blue.svg"
+          src="/icons/dot-cyan.svg"
           alt=""
           width={32}
           height={32}
-          className="absolute left-[5%] top-[40%] hidden lg:block"
+          className="pointer-events-none absolute left-[5%] top-[28%] hidden lg:block"
+          aria-hidden
+        />
+        <Image
+          src="/icons/dot-yellow.svg"
+          alt=""
+          width={24}
+          height={24}
+          className="pointer-events-none absolute right-[12%] top-[40%] hidden xl:block"
+          aria-hidden
+        />
+        <Image
+          src="/icons/dot-orange.svg"
+          alt=""
+          width={22}
+          height={22}
+          className="pointer-events-none absolute left-[13%] top-[12%] hidden xl:block"
           aria-hidden
         />
 
