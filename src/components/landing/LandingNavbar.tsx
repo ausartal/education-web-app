@@ -7,10 +7,10 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 
 const navLinks = [
-  { href: '#learning-material', label: 'Materi' },
-  { href: '#learning-resources', label: 'Sumber belajar' },
-  { href: '#assessment', label: 'Asesmen' },
-  { href: '/about', label: 'Tentang' },
+  { href: '#learning-material', label: 'Learning material' },
+  { href: '#learning-resources', label: 'Learning resources' },
+  { href: '#assessment', label: 'Assessment' },
+  { href: '/about', label: 'About' },
 ];
 
 export const LandingNavbar: FC = () => {
@@ -28,8 +28,8 @@ export const LandingNavbar: FC = () => {
     <header
       className={`sticky top-0 z-50 border-b transition-colors duration-200 ${
         scrolled
-          ? 'border-[#DCE5F2] bg-white/95 backdrop-blur-md'
-          : 'border-[#DCE5F2] bg-white'
+          ? 'border-[#E1E4ED] bg-[#FFFEFC]/95 backdrop-blur-md'
+          : 'border-[#E1E4ED] bg-[#FFFEFC]'
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-20 lg:px-8">
@@ -54,8 +54,8 @@ export const LandingNavbar: FC = () => {
                   href={link.href}
                   className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
                     isActive
-                      ? 'bg-[#EFF6FF] text-[#1D4ED8]'
-                      : 'text-[#5B6475] hover:text-[#1D4ED8]'
+                      ? 'bg-[#EAF0FB] text-[#4867B1]'
+                      : 'text-[#626B7E] hover:text-[#4867B1]'
                   }`}
                 >
                   {link.label}
@@ -69,21 +69,21 @@ export const LandingNavbar: FC = () => {
         <div className="hidden items-center gap-3 md:flex">
           <Link
             href="/login"
-            className="rounded-lg border border-[#B8C7DC] bg-white px-5 py-2.5 text-sm font-semibold text-[#172033] transition-colors hover:border-[#1D4ED8] hover:text-[#1D4ED8]"
+            className="rounded-lg border border-[#C9CFE0] bg-white px-5 py-2.5 text-sm font-semibold text-[#25314D] transition-colors hover:border-[#7389BE] hover:text-[#4867B1]"
           >
-            Masuk
+            Sign in
           </Link>
           <Link
             href="/register"
-            className="rounded-lg bg-[#1D4ED8] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1E40AF]"
+            className="rounded-lg bg-[#4867B1] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#395696]"
           >
-            Daftar
+            Get started
           </Link>
           <Link
             href="/exam"
-            className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-2.5 text-sm font-semibold text-[#1D4ED8] transition-colors hover:bg-[#DBEAFE]"
+            className="rounded-lg border border-[#D1D8E8] bg-[#EAF0FB] px-4 py-2.5 text-sm font-semibold text-[#4867B1] transition-colors hover:bg-[#DCE6F7]"
           >
-            Ujian MSAT
+            MSAT exam
           </Link>
         </div>
 
@@ -91,7 +91,7 @@ export const LandingNavbar: FC = () => {
         <button
           className="md:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -118,19 +118,19 @@ export const LandingNavbar: FC = () => {
               href="/login"
               className="flex-1 rounded-xl border border-gray-200 py-2.5 text-center text-sm font-semibold text-[#0E1E47]"
             >
-              Masuk
+              Sign in
             </Link>
             <Link
               href="/register"
               className="flex-1 rounded-xl bg-[#5841EA] py-2.5 text-center text-sm font-semibold text-white"
             >
-              Daftar
+              Get started
             </Link>
             <Link
               href="/exam"
               className="flex-1 rounded-xl bg-[#7B6AEF] py-2.5 text-center text-sm font-semibold text-white"
             >
-              Ujian
+              Exam
             </Link>
           </div>
         </div>

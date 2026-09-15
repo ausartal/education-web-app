@@ -123,71 +123,71 @@ export default function Home() {
       <LandingNavbar />
 
       <main id="main-content">
-        <section className="border-b border-[#DCE5F2] bg-[#F8FBFF] px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">
+        <section className="border-b border-[#E5E7F0] bg-[#FCFBF8] px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">
           <div className="mx-auto grid max-w-7xl items-center gap-12 lg:min-h-[570px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
             <div className="max-w-2xl">
-              <p className="mb-5 text-sm font-bold uppercase tracking-[0.12em] text-[#1D4ED8]">
-                Belajar kimia dengan arah yang jelas
+              <p className="mb-5 text-sm font-bold uppercase tracking-[0.12em] text-[#4867B1]">
+                Chemistry learning with a clear direction
               </p>
-              <h1 className="font-display text-[42px] font-extrabold leading-[1.08] tracking-[-0.035em] text-[#172033] sm:text-5xl lg:text-[64px]">
-                Pahami kimia,
-                <span className="block text-[#1D4ED8]">
-                  bukan sekadar menghafal.
+              <h1 className="font-display text-[42px] font-extrabold leading-[1.08] tracking-[-0.035em] text-[#25314D] sm:text-5xl lg:text-[64px]">
+                Understand chemistry,
+                <span className="block text-[#4867B1]">
+                  not just memorize it.
                 </span>
               </h1>
-              <p className="mt-6 max-w-xl text-base leading-7 text-[#5B6475] sm:text-lg sm:leading-8">
-                AKURAT membantu kamu menemukan konsep yang belum dipahami,
-                berlatih sesuai kebutuhan, dan melihat perkembangan belajar
-                secara nyata.
+              <p className="mt-6 max-w-xl text-base leading-7 text-[#626B7E] sm:text-lg sm:leading-8">
+                AKURAT helps you uncover concepts that need more attention,
+                practise at the right level, and see meaningful progress as you
+                learn.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
                   href="/register"
-                  className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#1D4ED8] px-7 py-3 text-base font-bold text-white shadow-[0_4px_12px_rgba(29,78,216,0.18)] transition-colors duration-200 hover:bg-[#1E40AF]"
+                  className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#4867B1] px-7 py-3 text-base font-bold text-white shadow-[0_4px_12px_rgba(72,103,177,0.16)] transition-colors duration-200 hover:bg-[#395696]"
                 >
-                  Mulai belajar
+                  Start learning
                 </Link>
                 <Link
                   href="/register?role=teacher"
-                  className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#B8C7DC] bg-white px-7 py-3 text-base font-bold text-[#172033] transition-colors duration-200 hover:border-[#1D4ED8] hover:text-[#1D4ED8]"
+                  className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#C9CFE0] bg-white px-7 py-3 text-base font-bold text-[#25314D] transition-colors duration-200 hover:border-[#7389BE] hover:text-[#4867B1]"
                 >
-                  Saya seorang guru
+                  I&apos;m a teacher
                 </Link>
               </div>
-              <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-3 border-t border-[#DCE5F2] pt-6 text-sm font-medium text-[#5B6475]">
+              <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-3 border-t border-[#E5E7F0] pt-6 text-sm font-medium text-[#626B7E]">
                 <li className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[#1D4ED8]" />
-                  Materi terstruktur
+                  <span className="h-2 w-2 rounded-full bg-[#7C91C4]" />
+                  Structured lessons
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[#0EA5E9]" />
-                  Asesmen adaptif
+                  <span className="h-2 w-2 rounded-full bg-[#84B6CE]" />
+                  Adaptive assessment
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[#EAB308]" />
-                  Umpan balik konsep
+                  <span className="h-2 w-2 rounded-full bg-[#D7B55B]" />
+                  Conceptual feedback
                 </li>
               </ul>
             </div>
 
             <div
               className="relative mx-auto h-[430px] w-full max-w-[540px] sm:h-[500px]"
-              aria-label="Gambaran pengalaman belajar di AKURAT"
+              aria-label="A preview of the learning experience in AKURAT"
             >
-              <div className="absolute right-2 top-3 h-56 w-56 rounded-full bg-[#EAB308] sm:h-64 sm:w-64" />
-              <div className="absolute bottom-3 left-2 h-64 w-64 rounded-full bg-[#1D4ED8] sm:h-72 sm:w-72" />
-              <div className="absolute left-1/2 top-1/2 flex h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#EFF6FF] shadow-[0_18px_45px_rgba(23,32,51,0.16)] sm:h-[350px] sm:w-[350px]">
+              <div className="absolute right-2 top-3 h-56 w-56 rounded-full bg-[#F6E7AE] sm:h-64 sm:w-64" />
+              <div className="absolute bottom-3 left-2 h-64 w-64 rounded-full bg-[#C9D7F2] sm:h-72 sm:w-72" />
+              <div className="absolute left-1/2 top-1/2 flex h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#F1F4FB] shadow-[0_18px_45px_rgba(47,61,92,0.13)] sm:h-[350px] sm:w-[350px]">
                 <Image
                   src="/images/hero-pelajar.svg"
-                  alt="Pelajar menggunakan tablet untuk belajar"
+                  alt="A student using a tablet to learn"
                   width={302}
                   height={302}
                   className="h-[84%] w-[84%]"
                   priority
                 />
               </div>
-              <div className="absolute left-0 top-8 flex items-center gap-3 rounded-lg border border-[#DCE5F2] bg-white px-4 py-3 shadow-md sm:left-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EFF6FF]">
+              <div className="absolute left-0 top-8 flex items-center gap-3 rounded-lg border border-[#E1E4ED] bg-white px-4 py-3 shadow-md sm:left-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EAF0FB]">
                   <Image
                     src="/icons/hero-kelas.svg"
                     alt=""
@@ -196,16 +196,16 @@ export default function Home() {
                   />
                 </span>
                 <div>
-                  <p className="text-xs font-semibold text-[#5B6475]">
-                    Belajar bersama
+                  <p className="text-xs font-semibold text-[#626B7E]">
+                    Learn together
                   </p>
-                  <p className="text-sm font-bold text-[#172033]">
-                    Kelas terhubung
+                  <p className="text-sm font-bold text-[#25314D]">
+                    Connected classes
                   </p>
                 </div>
               </div>
-              <div className="absolute left-0 top-[145px] flex items-center gap-3 rounded-lg border border-[#DCE5F2] bg-white px-4 py-3 shadow-md sm:-left-4 sm:top-[180px]">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FEF9C3]">
+              <div className="absolute left-0 top-[145px] flex items-center gap-3 rounded-lg border border-[#E1E4ED] bg-white px-4 py-3 shadow-md sm:-left-4 sm:top-[180px]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FBF2CF]">
                   <Image
                     src="/icons/hero-materi.svg"
                     alt=""
@@ -214,16 +214,16 @@ export default function Home() {
                   />
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-[#172033]">
-                    Materi yang relevan
+                  <p className="text-sm font-bold text-[#25314D]">
+                    Relevant lessons
                   </p>
-                  <p className="text-xs text-[#5B6475]">
-                    Sesuai kebutuhan belajarmu
+                  <p className="text-xs text-[#626B7E]">
+                    Matched to your learning needs
                   </p>
                 </div>
               </div>
-              <div className="absolute bottom-3 right-0 flex items-center gap-3 rounded-lg border border-[#DCE5F2] bg-white px-4 py-3 shadow-md sm:right-2">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EFF6FF]">
+              <div className="absolute bottom-3 right-0 flex items-center gap-3 rounded-lg border border-[#E1E4ED] bg-white px-4 py-3 shadow-md sm:right-2">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E7F2F5]">
                   <Image
                     src="/icons/hero-ujian.svg"
                     alt=""
@@ -232,11 +232,11 @@ export default function Home() {
                   />
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-[#172033]">
-                    Asesmen adaptif
+                  <p className="text-sm font-bold text-[#25314D]">
+                    Adaptive assessment
                   </p>
-                  <p className="text-xs text-[#5B6475]">
-                    Mengukur pemahaman konsep
+                  <p className="text-xs text-[#626B7E]">
+                    Measures conceptual understanding
                   </p>
                 </div>
               </div>

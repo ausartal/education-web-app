@@ -30,9 +30,9 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'AKURAT - Asesmen Kimia Ukur Adaptif Terpadu',
+  title: 'AKURAT — Adaptive Chemistry Learning',
   description:
-    'Platform pembelajaran dan asesmen kimia adaptif untuk siswa dan guru.',
+    'An adaptive chemistry learning and assessment platform for students and teachers.',
   manifest: '/manifest.json',
   icons: {
     icon: '/icons/Akurat_Logo.svg',
@@ -40,9 +40,9 @@ export const metadata: Metadata = {
     shortcut: '/icons/Akurat_Logo.svg',
   },
   openGraph: {
-    title: 'AKURAT - Asesmen Kimia Ukur Adaptif Terpadu',
+    title: 'AKURAT — Adaptive Chemistry Learning',
     description:
-      'Platform pembelajaran dan asesmen kimia adaptif untuk siswa dan guru.',
+      'An adaptive chemistry learning and assessment platform for students and teachers.',
     images: [
       {
         url: '/icons/Akurat_Logo_Text.svg',
@@ -56,9 +56,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AKURAT - Asesmen Kimia Ukur Adaptif Terpadu',
+    title: 'AKURAT — Adaptive Chemistry Learning',
     description:
-      'Platform pembelajaran dan asesmen kimia adaptif untuk siswa dan guru.',
+      'An adaptive chemistry learning and assessment platform for students and teachers.',
     images: ['/icons/Akurat_Logo_Text.svg'],
   },
 };
@@ -80,7 +80,7 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             <a href="#main-content" className="skip-to-content">
-              Lewati ke konten utama
+              Skip to main content
             </a>
             <OfflineIndicator />
             {children}

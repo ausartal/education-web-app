@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 export const LandingFooter: FC = () => {
   return (
-    <footer className="bg-[#F8F9FB] px-4 pt-16 lg:px-8 lg:pt-20">
+    <footer className="bg-[#F7F5F1] px-4 pt-16 lg:px-8 lg:pt-20">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-12 lg:grid-cols-[1fr_2fr] lg:gap-16">
           {/* Brand */}
@@ -100,13 +100,12 @@ export const LandingFooter: FC = () => {
           </div>
         </div>
 
-        {/* Gradient Divider */}
-        <div className="mt-12 h-[2px] rounded-full bg-gradient-to-r from-primary via-blue-500 to-primary-cyan" />
+        <div className="mt-12 h-px bg-[#DDDDE5]" />
 
         {/* Bottom */}
         <div className="flex flex-col items-center justify-between gap-3 py-6 sm:flex-row">
           <p className="text-xs text-gray-500">
-            @2026 AKURAT RISET GROUP — All rights reserved
+            © 2026 AKURAT. All rights reserved.
           </p>
           <Link
             href="/cookies"
