@@ -10,7 +10,8 @@ const navLinks = [
   { href: '#learning-material', label: 'Learning material' },
   { href: '#learning-resources', label: 'Learning resources' },
   { href: '#assessment', label: 'Assessment' },
-  { href: '/about', label: 'About' },
+  { href: '#faq', label: 'FAQ' },
+  { href: '/contact', label: 'Contact' },
 ];
 
 export const LandingNavbar: FC = () => {
@@ -66,24 +67,25 @@ export const LandingNavbar: FC = () => {
         </ul>
 
         {/* Desktop CTAs */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
+          <Link
+            href="/exam"
+            className="flex items-center gap-2 rounded-full border border-[#C9D8F5] bg-[#EDF4FF] px-4 py-2.5 text-sm font-semibold text-[#5278D7] transition-colors hover:bg-[#E1ECFC]"
+          >
+            <Image src="/icons/hero-ujian.svg" alt="" width={16} height={16} />
+            MSAT exam
+          </Link>
           <Link
             href="/login"
-            className="rounded-lg border border-[#C9CFE0] bg-white px-5 py-2.5 text-sm font-semibold text-[#25314D] transition-colors hover:border-[#7389BE] hover:text-[#4867B1]"
+            className="rounded-full border border-[#D9DDE6] bg-white px-5 py-2.5 text-sm font-semibold text-[#344057] transition-colors hover:border-[#AEB7C8]"
           >
             Sign in
           </Link>
           <Link
             href="/register"
-            className="rounded-lg bg-[#4867B1] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#395696]"
+            className="rounded-full bg-[#7659D8] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#6549C5]"
           >
             Get started
-          </Link>
-          <Link
-            href="/exam"
-            className="rounded-lg border border-[#D1D8E8] bg-[#EAF0FB] px-4 py-2.5 text-sm font-semibold text-[#4867B1] transition-colors hover:bg-[#DCE6F7]"
-          >
-            MSAT exam
           </Link>
         </div>
 

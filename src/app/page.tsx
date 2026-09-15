@@ -123,71 +123,71 @@ export default function Home() {
       <LandingNavbar />
 
       <main id="main-content">
-        <section className="border-b border-[#E5E7F0] bg-[#FCFBF8] px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:min-h-[570px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
-            <div className="max-w-2xl">
-              <p className="mb-5 text-sm font-bold uppercase tracking-[0.12em] text-[#4867B1]">
-                Chemistry learning with a clear direction
-              </p>
-              <h1 className="font-display text-[42px] font-extrabold leading-[1.08] tracking-[-0.035em] text-[#25314D] sm:text-5xl lg:text-[64px]">
-                Understand chemistry,
-                <span className="block text-[#4867B1]">
-                  not just memorize it.
+        <section className="overflow-hidden border-b border-[#EEF0F5] bg-[#FBFAFE] px-5 pb-20 pt-12 sm:px-8 lg:pb-28 lg:pt-16">
+          <div className="mx-auto grid max-w-[1228px] items-center gap-12 lg:min-h-[597px] lg:grid-cols-12 lg:gap-8">
+            <div className="lg:col-span-6">
+              <h1 className="font-display text-[46px] font-extrabold uppercase leading-[0.92] tracking-[0.035em] text-[#27254F] sm:text-[58px] lg:text-[70px]">
+                From <span className="text-[#5278D7]">curious</span>
+                <span className="block">
+                  <span className="text-[#5278D7]">to</span> confident
                 </span>
               </h1>
-              <p className="mt-6 max-w-xl text-base leading-7 text-[#626B7E] sm:text-lg sm:leading-8">
-                AKURAT helps you uncover concepts that need more attention,
-                practise at the right level, and see meaningful progress as you
-                learn.
+              <p className="mt-14 max-w-xl text-base leading-7 text-[#596780] sm:text-lg">
+                Go beyond scores. Diagnose chemistry understanding and
+                misconceptions with precision through an integrated adaptive
+                platform.
               </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                 <Link
                   href="/register"
-                  className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#4867B1] px-7 py-3 text-base font-bold text-white shadow-[0_4px_12px_rgba(72,103,177,0.16)] transition-colors duration-200 hover:bg-[#395696]"
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#7659D8] px-8 text-base font-bold text-white shadow-[0_8px_18px_rgba(118,89,216,0.2)] transition-colors duration-200 hover:bg-[#6549C5]"
                 >
                   Start learning
                 </Link>
                 <Link
                   href="/register?role=teacher"
-                  className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#C9CFE0] bg-white px-7 py-3 text-base font-bold text-[#25314D] transition-colors duration-200 hover:border-[#7389BE] hover:text-[#4867B1]"
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#F6D56B] px-8 text-base font-bold text-[#27254F] shadow-[0_6px_14px_rgba(196,157,43,0.14)] transition-colors duration-200 hover:bg-[#EFCA51]"
                 >
-                  I&apos;m a teacher
+                  Start teaching
                 </Link>
               </div>
-              <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-3 border-t border-[#E5E7F0] pt-6 text-sm font-medium text-[#626B7E]">
-                <li className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[#7C91C4]" />
-                  Structured lessons
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[#84B6CE]" />
-                  Adaptive assessment
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[#D7B55B]" />
-                  Conceptual feedback
-                </li>
-              </ul>
+              <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#E8EAF1] pt-3 text-sm font-medium text-[#68758B]">
+                <span>✧ Interactive learning</span>
+                <span className="text-[#CBD1DC]">•</span>
+                <span>🎯 Adaptive assessment</span>
+                <span className="text-[#CBD1DC]">•</span>
+                <span>⚗ Expert guidance</span>
+              </div>
+              <div
+                className="mt-7 flex items-center gap-2"
+                aria-label="Slide 1 of 4"
+              >
+                <span className="h-2 w-12 rounded-full bg-[#9AA8BD]" />
+                <span className="h-2 w-2 rounded-full bg-[#D2D8E2]" />
+                <span className="h-2 w-2 rounded-full bg-[#D2D8E2]" />
+                <span className="h-2 w-2 rounded-full bg-[#D2D8E2]" />
+              </div>
             </div>
 
             <div
-              className="relative mx-auto h-[430px] w-full max-w-[540px] sm:h-[500px]"
-              aria-label="A preview of the learning experience in AKURAT"
+              className="relative mx-auto h-[430px] w-full max-w-[460px] sm:h-[460px] lg:col-span-6"
+              aria-label="AKURAT learning experience preview"
             >
-              <div className="absolute right-2 top-3 h-56 w-56 rounded-full bg-[#F6E7AE] sm:h-64 sm:w-64" />
-              <div className="absolute bottom-3 left-2 h-64 w-64 rounded-full bg-[#C9D7F2] sm:h-72 sm:w-72" />
-              <div className="absolute left-1/2 top-1/2 flex h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#F1F4FB] shadow-[0_18px_45px_rgba(47,61,92,0.13)] sm:h-[350px] sm:w-[350px]">
+              <div className="absolute right-2 top-0 h-64 w-64 rounded-full bg-[#F6DA72] sm:-right-2 sm:-top-4 sm:h-72 sm:w-72" />
+              <div className="absolute bottom-0 left-2 h-72 w-72 rounded-full bg-[#8062DD] sm:-bottom-4 sm:left-0 sm:h-80 sm:w-80" />
+              <div className="absolute left-1/2 top-1/2 flex h-72 w-72 -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#F1F0FC] p-5 shadow-[0_20px_44px_rgba(39,37,79,0.18)] sm:h-80 sm:w-80">
                 <Image
                   src="/images/hero-pelajar.svg"
-                  alt="A student using a tablet to learn"
-                  width={302}
-                  height={302}
-                  className="h-[84%] w-[84%]"
+                  alt="Student learning with a digital tablet"
+                  width={264}
+                  height={264}
+                  className="h-[264px] w-[264px]"
                   priority
                 />
               </div>
-              <div className="absolute left-0 top-8 flex items-center gap-3 rounded-lg border border-[#E1E4ED] bg-white px-4 py-3 shadow-md sm:left-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EAF0FB]">
+
+              <div className="absolute left-2 top-0 flex items-center gap-3 rounded-full border border-[#E8EAF1] bg-white/95 px-4 py-2.5 shadow-[0_10px_24px_rgba(39,37,79,0.12)] sm:-left-4 sm:-top-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F4A86A]">
                   <Image
                     src="/icons/hero-kelas.svg"
                     alt=""
@@ -196,16 +196,14 @@ export default function Home() {
                   />
                 </span>
                 <div>
-                  <p className="text-xs font-semibold text-[#626B7E]">
-                    Learn together
+                  <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#99A3B5]">
+                    Live
                   </p>
-                  <p className="text-sm font-bold text-[#25314D]">
-                    Connected classes
-                  </p>
+                  <p className="text-sm font-extrabold text-[#27254F]">Class</p>
                 </div>
               </div>
-              <div className="absolute left-0 top-[145px] flex items-center gap-3 rounded-lg border border-[#E1E4ED] bg-white px-4 py-3 shadow-md sm:-left-4 sm:top-[180px]">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FBF2CF]">
+              <div className="absolute left-0 top-[116px] flex items-center gap-3 rounded-2xl border border-[#E8EAF1] bg-white/95 px-4 py-3 shadow-[0_10px_24px_rgba(39,37,79,0.12)] sm:-left-12 sm:top-28">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E98080]">
                   <Image
                     src="/icons/hero-materi.svg"
                     alt=""
@@ -214,30 +212,49 @@ export default function Home() {
                   />
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-[#25314D]">
-                    Relevant lessons
+                  <p className="text-base font-extrabold leading-none text-[#27254F]">
+                    203+
                   </p>
-                  <p className="text-xs text-[#626B7E]">
-                    Matched to your learning needs
+                  <p className="mt-1 text-xs text-[#68758B]">
+                    Learning resources
                   </p>
                 </div>
               </div>
-              <div className="absolute bottom-3 right-0 flex items-center gap-3 rounded-lg border border-[#E1E4ED] bg-white px-4 py-3 shadow-md sm:right-2">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E7F2F5]">
-                  <Image
-                    src="/icons/hero-ujian.svg"
-                    alt=""
-                    width={18}
-                    height={18}
-                  />
-                </span>
-                <div>
-                  <p className="text-sm font-bold text-[#25314D]">
-                    Adaptive assessment
-                  </p>
-                  <p className="text-xs text-[#626B7E]">
-                    Measures conceptual understanding
-                  </p>
+              <div className="absolute bottom-0 right-0 min-w-[190px] rounded-2xl border border-[#E8EAF1] bg-white/95 p-3.5 shadow-[0_10px_24px_rgba(39,37,79,0.12)] sm:-bottom-2 sm:-right-8">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6D56B]">
+                    <Image
+                      src="/icons/hero-pelajar-aktif.svg"
+                      alt=""
+                      width={16}
+                      height={16}
+                    />
+                  </span>
+                  <div>
+                    <p className="text-sm font-extrabold leading-none text-[#27254F]">
+                      98
+                    </p>
+                    <p className="mt-1 text-[11px] text-[#68758B]">
+                      Online students
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-2 flex pl-1 text-[9px] font-bold">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E2D4F4] text-[#624C8C] ring-2 ring-white">
+                    JS
+                  </span>
+                  <span className="-ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#CDDEF4] text-[#3D5F8D] ring-2 ring-white">
+                    AK
+                  </span>
+                  <span className="-ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#CDEBDD] text-[#386A55] ring-2 ring-white">
+                    RD
+                  </span>
+                  <span className="-ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#F6E6A8] text-[#785F24] ring-2 ring-white">
+                    MN
+                  </span>
+                  <span className="-ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#E4E7EC] text-[#596273] ring-2 ring-white">
+                    +94
+                  </span>
                 </div>
               </div>
             </div>
