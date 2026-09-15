@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, FlaskConical } from 'lucide-react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -35,11 +35,7 @@ const AuthLayout: FC<AuthLayoutProps> = ({ children }) => {
         </Link>
 
         <div className="relative z-10 my-auto max-w-xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#DCCFFC] bg-white/75 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#6320EE] backdrop-blur">
-            <FlaskConical size={15} aria-hidden />
-            Learn chemistry with clarity
-          </span>
-          <h2 className="mt-7 font-display text-5xl font-extrabold leading-[1.04] text-[#27254F] xl:text-6xl">
+          <h2 className="font-display text-5xl font-extrabold leading-[1.04] text-[#27254F] xl:text-6xl">
             Build confidence,
             <span className="block text-[#6320EE]">one concept</span>
             <span className="block">
