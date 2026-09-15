@@ -7,7 +7,7 @@ import {
   Lightbulb, CheckCircle2, XCircle, Award, TrendingUp, Brain,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useExamAuth } from '@/context/ExamAuthContext';
 
 interface StageResponse {
   stageNumber: number;
@@ -70,7 +70,7 @@ function getLevelBadge(level: string): { text: string; color: string; bg: string
 }
 
 const ExamHistoryPage: FC = () => {
-  const { user } = useAuth();
+  const { user } = useExamAuth();
   const [history, setHistory] = useState<ExamHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -100,7 +100,7 @@ const ExamHistoryPage: FC = () => {
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-6">
         <h1 className="font-display text-2xl font-extrabold text-[#0E1E47]">Hasil Ujian</h1>
-        <p className="mt-1 text-sm text-gray-400">Riwayat dan detail hasil ujian MSAT kamu</p>
+        <p className="mt-1 text-sm text-[#5B6475]">Riwayat dan detail hasil ujian kamu</p>
       </div>
 
       {history.length === 0 ? (
