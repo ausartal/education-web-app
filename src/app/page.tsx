@@ -103,30 +103,30 @@ const features = [
 
 const assessmentSpecifications = [
   {
-    title: '3-Stage Adaptive Format',
+    title: 'Adaptive 3-Stage Format',
     description:
-      'Each stage delivers a targeted question set, with difficulty adjusted from your performance in the previous stage.',
+      'Semua siswa memulai dari stage yang sama. Tingkat kesulitan stage berikutnya menyesuaikan performa di stage sebelumnya.',
     icon: '/icons/assessment-stages.svg',
     iconBg: 'bg-[#F1E8FF]',
   },
   {
-    title: 'Stage Score Weighting',
+    title: 'Skor Berbobot Kesulitan',
     description:
-      'Question difficulty determines score weight, so stronger performance unlocks more challenging, higher-value questions.',
+      'Semakin tinggi jalur kesulitan yang ditempuh, semakin besar bobot skor. Performa lebih baik = pertanyaan lebih bernilai.',
     icon: '/icons/assessment-weighting.svg',
     iconBg: 'bg-[#E7EFFF]',
   },
   {
-    title: 'Topics & Stage Timing',
+    title: '3 Domain Kognitif',
     description:
-      'Covers stoichiometry, equilibrium, chemical bonding, and thermochemistry with an independent timer for every stage.',
+      'Mengukur Knowing, Applying, dan Reasoning secara terpisah di setiap stage untuk diagnosis kompetensi yang akurat.',
     icon: '/icons/assessment-timing.svg',
     iconBg: 'bg-[#FFF0D7]',
   },
   {
-    title: 'Direct Results Without Retakes',
+    title: 'Hasil Langsung & Sertifikat',
     description:
-      'Receive a final score and an individualized diagnosis of conceptual misconceptions immediately after completion.',
+      'Skor akhir, predikat, dan diagnosis miskonsepsi langsung tersedia setelah ujian selesai. Sertifikat diterbitkan otomatis.',
     icon: '/icons/assessment-results.svg',
     iconBg: 'bg-[#E1F7EB]',
   },
@@ -135,32 +135,32 @@ const assessmentSpecifications = [
 const assessmentSteps = [
   {
     number: '01',
-    title: 'Token Verification',
-    description: 'Enter the session code provided by your instructor.',
+    title: 'Masukkan Kode',
+    description: 'Masukkan kode ujian yang diberikan guru atau dari pembelian token.',
     color: 'text-[#9B6CFF]',
   },
   {
     number: '02',
-    title: 'Stage 1 (Baseline)',
-    description: 'Establish your baseline conceptual mastery.',
+    title: 'Stage 1',
+    description: 'Kerjakan 12 soal dasar. Semua siswa mendapat tingkat kesulitan yang sama.',
     color: 'text-[#60A5FA]',
   },
   {
     number: '03',
-    title: 'Stages 2 & 3',
-    description: 'Follow an adaptive route based on each response.',
+    title: 'Stage 2 & 3',
+    description: 'Jalur adaptif — soal menyesuaikan hasil stage sebelumnya.',
     color: 'text-[#F59E0B]',
   },
   {
     number: '04',
-    title: 'Score Calculation',
-    description: 'Calculate results using stage difficulty and weighting.',
+    title: 'Skor & Predikat',
+    description: 'Skor akhir dihitung dari bobot kesulitan setiap stage.',
     color: 'text-[#34D399]',
   },
   {
     number: '05',
-    title: 'Instant Final Results',
-    description: 'Review your score and misconception analysis.',
+    title: 'Hasil & Sertifikat',
+    description: 'Lihat diagnosis kompetensi dan unduh sertifikat.',
     color: 'text-[#F472B6]',
   },
 ];
@@ -661,16 +661,15 @@ export default function Home() {
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#27254F] lg:text-4xl">
-              3-Stage Adaptive Multi-Stage Testing
+              3-Stage Adaptive Testing
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-[#64748B] sm:text-base">
-              A tiered adaptive chemistry assessment with dynamic score
-              weighting, calibrated stage difficulty, and detailed cognitive
-              diagnostics without remedial retests.
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#64748B] sm:text-base">
+              Ujian adaptif kimia yang menyesuaikan tingkat kesulitan secara
+              real-time berdasarkan performa siswa di setiap stage.
             </p>
           </div>
 
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {assessmentSpecifications.map((item, index) => (
               <motion.article
                 key={item.title}
@@ -701,22 +700,22 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="mt-12 rounded-3xl border border-[#DED3F4] bg-[#F5F1FC] px-6 py-9 sm:px-8 lg:px-10">
-            <h3 className="text-center font-display text-2xl font-extrabold text-[#27254F]">
-              How the assessment works
+          <div className="mt-12 rounded-2xl border border-[#E4E8F0] bg-[#F8FAFC] px-6 py-8 sm:px-8 lg:px-10">
+            <h3 className="text-center text-xs font-bold uppercase tracking-[0.12em] text-[#9CA3AF]">
+              Alur Ujian
             </h3>
-            <ol className="mt-9 grid gap-8 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
+            <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
               {assessmentSteps.map((step) => (
-                <li key={step.number} className="relative">
+                <li key={step.number} className="relative text-center">
                   <p
-                    className={`font-display text-2xl font-extrabold ${step.color}`}
+                    className={`font-display text-xl font-extrabold ${step.color}`}
                   >
                     {step.number}
                   </p>
-                  <h4 className="mt-2 text-sm font-bold text-[#27254F]">
+                  <h4 className="mt-1.5 text-sm font-bold text-[#27254F]">
                     {step.title}
                   </h4>
-                  <p className="mt-2 text-xs leading-5 text-[#64748B]">
+                  <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
                     {step.description}
                   </p>
                 </li>
