@@ -127,9 +127,9 @@ export default function Home() {
           <div className="mx-auto grid max-w-[1228px] items-center gap-12 lg:min-h-[597px] lg:grid-cols-12 lg:gap-8">
             <div className="lg:col-span-6">
               <h1 className="font-display text-[46px] font-extrabold uppercase leading-[0.92] tracking-[0.035em] text-[#27254F] sm:text-[58px] lg:text-[70px]">
-                From <span className="text-[#5278D7]">curious</span>
+                From <span className="text-[#6320EE]">curious</span>
                 <span className="block">
-                  <span className="text-[#5278D7]">to</span> confident
+                  <span className="text-[#6320EE]">to</span> confident
                 </span>
               </h1>
               <p className="mt-14 max-w-xl text-base leading-7 text-[#596780] sm:text-lg">
@@ -140,13 +140,13 @@ export default function Home() {
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                 <Link
                   href="/register"
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#7659D8] px-8 text-base font-bold text-white shadow-[0_8px_18px_rgba(118,89,216,0.2)] transition-colors duration-200 hover:bg-[#6549C5]"
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#6320EE] px-8 text-base font-bold text-white shadow-[0_8px_18px_rgba(99,32,238,0.24)] transition-colors duration-200 hover:bg-[#5218C7]"
                 >
                   Start learning
                 </Link>
                 <Link
                   href="/register?role=teacher"
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#F6D56B] px-8 text-base font-bold text-[#27254F] shadow-[0_6px_14px_rgba(196,157,43,0.14)] transition-colors duration-200 hover:bg-[#EFCA51]"
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#F59E0B] px-8 text-base font-bold text-[#27254F] shadow-[0_6px_14px_rgba(245,158,11,0.2)] transition-colors duration-200 hover:bg-[#D97706]"
                 >
                   Start teaching
                 </Link>
@@ -173,8 +173,8 @@ export default function Home() {
               className="relative mx-auto h-[430px] w-full max-w-[460px] sm:h-[460px] lg:col-span-6"
               aria-label="AKURAT learning experience preview"
             >
-              <div className="absolute right-2 top-0 h-64 w-64 rounded-full bg-[#F6DA72] sm:-right-2 sm:-top-4 sm:h-72 sm:w-72" />
-              <div className="absolute bottom-0 left-2 h-72 w-72 rounded-full bg-[#8062DD] sm:-bottom-4 sm:left-0 sm:h-80 sm:w-80" />
+              <div className="absolute right-2 top-0 h-64 w-64 rounded-full bg-[#F59E0B] sm:-right-2 sm:-top-4 sm:h-72 sm:w-72" />
+              <div className="absolute bottom-0 left-2 h-72 w-72 rounded-full bg-[#6320EE] sm:-bottom-4 sm:left-0 sm:h-80 sm:w-80" />
               <div className="absolute left-1/2 top-1/2 flex h-72 w-72 -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#F1F0FC] p-5 shadow-[0_20px_44px_rgba(39,37,79,0.18)] sm:h-80 sm:w-80">
                 <Image
                   src="/images/hero-pelajar.svg"
@@ -222,7 +222,7 @@ export default function Home() {
               </div>
               <div className="absolute bottom-0 right-0 min-w-[190px] rounded-2xl border border-[#E8EAF1] bg-white/95 p-3.5 shadow-[0_10px_24px_rgba(39,37,79,0.12)] sm:-bottom-2 sm:-right-8">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6D56B]">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F59E0B]">
                     <Image
                       src="/icons/hero-pelajar-aktif.svg"
                       alt=""

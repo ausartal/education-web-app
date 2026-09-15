@@ -70,7 +70,7 @@ export const LandingNavbar: FC = () => {
         <div className="hidden items-center gap-3 lg:flex">
           <Link
             href="/exam"
-            className="flex items-center gap-2 rounded-full border border-[#C9D8F5] bg-[#EDF4FF] px-4 py-2.5 text-sm font-semibold text-[#5278D7] transition-colors hover:bg-[#E1ECFC]"
+            className="flex items-center gap-2 rounded-full border border-[#D8C8FB] bg-[#F4EFFF] px-4 py-2.5 text-sm font-semibold text-[#6320EE] transition-colors hover:bg-[#EADFFF]"
           >
             <Image src="/icons/hero-ujian.svg" alt="" width={16} height={16} />
             MSAT exam
@@ -83,7 +83,7 @@ export const LandingNavbar: FC = () => {
           </Link>
           <Link
             href="/register"
-            className="rounded-full bg-[#7659D8] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#6549C5]"
+            className="rounded-full bg-[#6320EE] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#5218C7]"
           >
             Get started
           </Link>
