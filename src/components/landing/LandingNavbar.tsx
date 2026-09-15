@@ -3,21 +3,19 @@
 import { FC, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 
 const navLinks = [
-  { href: '#learning-material', label: 'Learning material' },
-  { href: '#learning-resources', label: 'Learning resources' },
-  { href: '#assessment', label: 'Assessment' },
-  { href: '#faq', label: 'FAQ' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/#learning-material', label: 'Learning material' },
+  { href: '/#learning-resources', label: 'Learning resources' },
+  { href: '/#assessment', label: 'Assessment' },
+  { href: '/#faq', label: 'FAQ' },
+  { href: '/#contact', label: 'Contact' },
 ];
 
 export const LandingNavbar: FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const pathname = usePathname();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -47,23 +45,16 @@ export const LandingNavbar: FC = () => {
 
         {/* Desktop Nav */}
         <ul className="hidden items-center gap-1 md:flex">
-          {navLinks.map((link) => {
-            const isActive = link.href === pathname;
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                    isActive
-                      ? 'bg-[#EAF0FB] text-[#4867B1]'
-                      : 'text-[#626B7E] hover:text-[#4867B1]'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            );
-          })}
+          {navLinks.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className="rounded-md px-3 py-2 text-sm font-semibold text-[#626B7E] transition-colors hover:bg-[#F4EFFF] hover:text-[#6320EE]"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
         </ul>
 
         {/* Desktop CTAs */}
@@ -115,22 +106,22 @@ export const LandingNavbar: FC = () => {
               </li>
             ))}
           </ul>
-          <div className="flex gap-2 border-t border-gray-100 p-4">
+          <div className="grid grid-cols-2 gap-2 border-t border-gray-100 p-4">
             <Link
               href="/login"
-              className="flex-1 rounded-xl border border-gray-200 py-2.5 text-center text-sm font-semibold text-[#0E1E47]"
+              className="rounded-xl border border-gray-200 py-2.5 text-center text-sm font-semibold text-[#0E1E47]"
             >
               Sign in
             </Link>
             <Link
               href="/register"
-              className="flex-1 rounded-xl bg-[#5841EA] py-2.5 text-center text-sm font-semibold text-white"
+              className="rounded-xl bg-[#6320EE] py-2.5 text-center text-sm font-semibold text-white"
             >
               Get started
             </Link>
             <Link
               href="/exam"
-              className="flex-1 rounded-xl bg-[#7B6AEF] py-2.5 text-center text-sm font-semibold text-white"
+              className="col-span-2 rounded-xl border border-[#D8C8FB] bg-[#F4EFFF] py-2.5 text-center text-sm font-semibold text-[#6320EE]"
             >
               Exam
             </Link>

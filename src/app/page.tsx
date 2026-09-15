@@ -329,7 +329,10 @@ export default function Home() {
       <LandingNavbar />
 
       <main id="main-content">
-        <section className="overflow-hidden border-b border-[#EEF0F5] bg-[#FBFAFE] px-5 pb-20 pt-12 sm:px-8 lg:pb-28 lg:pt-16">
+        <section
+          id="home"
+          className="scroll-mt-20 overflow-hidden border-b border-[#EEF0F5] bg-[#FBFAFE] px-5 pb-20 pt-12 sm:px-8 lg:pb-28 lg:pt-16"
+        >
           <div className="mx-auto grid max-w-[1228px] items-center gap-12 lg:min-h-[597px] lg:grid-cols-12 lg:gap-8">
             <div className="lg:col-span-6">
               <h1 className="font-display text-[46px] font-extrabold uppercase leading-[0.92] tracking-[0.035em] text-[#27254F] sm:text-[58px] lg:text-[70px]">
@@ -471,7 +474,7 @@ export default function Home() {
       {/* Learning Material — Chemistry Topics */}
       <section
         id="learning-material"
-        className="relative px-4 py-20 lg:px-8 lg:py-28"
+        className="relative scroll-mt-20 px-4 py-20 lg:px-8 lg:py-28"
       >
         <Image
           src="/icons/dot-purple.svg"
@@ -590,7 +593,7 @@ export default function Home() {
       {/* Learning Resources — What you get */}
       <section
         id="learning-resources"
-        className="border-y border-[#E8E1F5] bg-[#F7F4FC] px-4 py-20 lg:px-8 lg:py-28"
+        className="scroll-mt-20 border-y border-[#E8E1F5] bg-[#F7F4FC] px-4 py-20 lg:px-8 lg:py-28"
       >
         <div className="mx-auto max-w-6xl">
           {/* Header */}
@@ -653,7 +656,7 @@ export default function Home() {
 
       <section
         id="assessment"
-        className="border-b border-[#E8EAF1] bg-white px-4 py-20 lg:px-8 lg:py-28"
+        className="scroll-mt-20 border-b border-[#E8EAF1] bg-white px-4 py-20 lg:px-8 lg:py-28"
       >
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-3xl text-center">
@@ -850,7 +853,7 @@ export default function Home() {
 
       <section
         id="faq"
-        className="border-t border-white bg-[#F8FAFC] px-4 py-20 lg:px-8 lg:py-28"
+        className="scroll-mt-20 border-t border-white bg-[#F8FAFC] px-4 py-20 lg:px-8 lg:py-28"
       >
         <div className="mx-auto max-w-4xl">
           <div className="text-center">
@@ -893,7 +896,7 @@ export default function Home() {
 
       <section
         id="pricing"
-        className="border-t border-[#EEE8F8] bg-[#FAF8FF] px-4 py-20 lg:px-8 lg:py-28"
+        className="scroll-mt-20 border-t border-[#EEE8F8] bg-[#FAF8FF] px-4 py-20 lg:px-8 lg:py-28"
       >
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-3xl text-center">
@@ -1055,7 +1058,10 @@ export default function Home() {
       </section>
 
       {/* Contact */}
-      <section id="contact" className="bg-white px-4 py-20 lg:px-8 lg:py-28">
+      <section
+        id="contact"
+        className="scroll-mt-20 bg-white px-4 py-20 lg:px-8 lg:py-28"
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
