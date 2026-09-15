@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sertifikat UjiTuntas — AKR-2026-00001</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Ubuntu:wght@300;400;500;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Ubuntu', sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .certificate {
+      width: 210mm;
+      min-height: 297mm;
+      background: #ffffff;
+      padding: 48px 56px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    /* Subtle watermark pattern */
+    .certificate::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, #6320EE 0.5px, transparent 0.5px);
+      background-size: 24px 24px;
+      opacity: 0.018;
+      pointer-events: none;
+    }
+
+    /* Top decorative bar */
+    .certificate::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #6320EE, #F59E0B, #6320EE);
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #E5E7EB;
+      margin-bottom: 40px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: #6320EE;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
+
+    .brand-text {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 16px;
+      color: #0E1E47;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text span {
+      color: #6320EE;
+    }
+
+    .cert-no {
+      font-family: monospace;
+      font-size: 11px;
+      color: #9CA3AF;
+      letter-spacing: 0.05em;
+    }
+
+    /* Body */
+    .body {
+      text-align: center;
+      padding: 0 24px;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: #6320EE;
+      margin-bottom: 16px;
+    }
+
+    .exam-title {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 32px;
+      color: #0E1E47;
+      line-height: 1.15;
+      margin-bottom: 36px;
+    }
+
+    .divider {
+      width: 64px;
+      height: 2px;
+      background: #E5E7EB;
+      margin: 0 auto 32px;
+    }
+
+    .given-to {
+      font-size: 12px;
+      color: #5B6475;
+      margin-bottom: 8px;
+    }
+
+    .student-name {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 28px;
+      color: #0E1E47;
+      margin-bottom: 6px;
+    }
+
+    .student-id {
+      font-size: 13px;
+      color: #5B6475;
+      margin-bottom: 2px;
+    }
+
+    .student-institution {
+      font-size: 13px;
+      color: #5B6475;
+      margin-bottom: 40px;
+    }
+
+    /* Score section */
+    .score-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 40px;
+    }
+
+    .score-block {
+      text-align: center;
+    }
+
+    .score-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #9CA3AF;
+      margin-bottom: 6px;
+    }
+
+    .score-value {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 42px;
+      color: #0E1E47;
+      line-height: 1;
+    }
+
+    .score-divider {
+      width: 1px;
+      height: 48px;
+      background: #DCE5F2;
+    }
+
+    .predikat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #9CA3AF;
+      margin-bottom: 6px;
+    }
+
+    .predikat-value {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      color: #6320EE;
+    }
+
+    /* Description */
+    .description {
+      max-width: 420px;
+      margin: 0 auto 40px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: #9CA3AF;
+    }
+
+    /* Stage path */
+    .stage-path {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .stage-item {
+      text-align: center;
+      background: #F8F7FF;
+      border: 1px solid #E5E7EB;
+      border-radius: 10px;
+      padding: 10px 16px;
+      min-width: 100px;
+    }
+
+    .stage-num {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #9CA3AF;
+      margin-bottom: 2px;
+    }
+
+    .stage-diff {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      color: #0E1E47;
+    }
+
+    .stage-diff.tinggi { color: #6320EE; }
+    .stage-diff.medium { color: #D97706; }
+    .stage-diff.rendah { color: #059669; }
+
+    .stage-score {
+      font-size: 11px;
+      color: #5B6475;
+      margin-top: 2px;
+    }
+
+    .stage-arrow {
+      color: #D1D5DB;
+      font-size: 18px;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 2px solid #E5E7EB;
+      padding-top: 20px;
+      text-align: center;
+    }
+
+    .issued-date {
+      font-size: 11px;
+      color: #9CA3AF;
+      margin-bottom: 6px;
+    }
+
+    .issued-note {
+      font-size: 9px;
+      color: #D1D5DB;
+    }
+
+    /* Cognitive scores */
+    .cognitive-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 36px;
+    }
+
+    .cognitive-item {
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .cognitive-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #9CA3AF;
+      margin-bottom: 4px;
+    }
+
+    .cognitive-score {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      color: #0E1E47;
+    }
+
+    .cognitive-level {
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .cognitive-level.tinggi { color: #059669; }
+    .cognitive-level.sedang { color: #D97706; }
+    .cognitive-level.rendah { color: #DC2626; }
+
+    .bar-bg {
+      width: 80px;
+      height: 4px;
+      background: #E5E7EB;
+      border-radius: 2px;
+      margin: 6px auto 0;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .bar-fill.knowing { background: #3B82F6; }
+    .bar-fill.applying { background: #6320EE; }
+    .bar-fill.reasoning { background: #EC4899; }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .certificate { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="certificate">
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="brand-text">UjiTuntas <span>by AKURAT</span></div>
+      </div>
+      <div class="cert-no">AKR-2026-00001</div>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+      <div class="label">Sertifikat Kompetensi</div>
+
+      <div class="exam-title">Ujian Kimia Stoichiometry<br>Semester Genap 2026</div>
+
+      <div class="divider"></div>
+
+      <div class="given-to">Diberikan kepada</div>
+      <div class="student-name">Ahmad Nabalfalah</div>
+      <div class="student-id">NIM: 2024101001</div>
+      <div class="student-institution">Universitas Negeri Jakarta</div>
+
+      <!-- Score -->
+      <div class="score-section">
+        <div class="score-block">
+          <div class="score-label">Skor Akhir</div>
+          <div class="score-value">83</div>
+        </div>
+        <div class="score-divider"></div>
+        <div class="score-block">
+          <div class="predikat-label">Predikat</div>
+          <div class="predikat-value">Unggul</div>
+        </div>
+      </div>
+
+      <!-- Cognitive scores -->
+      <div class="cognitive-row">
+        <div class="cognitive-item">
+          <div class="cognitive-label">Knowing</div>
+          <div class="cognitive-score">92%</div>
+          <div class="cognitive-level tinggi">Tinggi</div>
+          <div class="bar-bg"><div class="bar-fill knowing" style="width:92%"></div></div>
+        </div>
+        <div class="cognitive-item">
+          <div class="cognitive-label">Applying</div>
+          <div class="cognitive-score">83%</div>
+          <div class="cognitive-level tinggi">Tinggi</div>
+          <div class="bar-bg"><div class="bar-fill applying" style="width:83%"></div></div>
+        </div>
+        <div class="cognitive-item">
+          <div class="cognitive-label">Reasoning</div>
+          <div class="cognitive-score">75%</div>
+          <div class="cognitive-level tinggi">Tinggi</div>
+          <div class="bar-bg"><div class="bar-fill reasoning" style="width:75%"></div></div>
+        </div>
+      </div>
+
+      <!-- Stage path -->
+      <div class="stage-path">
+        <div class="stage-item">
+          <div class="stage-num">Stage 1</div>
+          <div class="stage-diff medium">Medium</div>
+          <div class="stage-score">10/12</div>
+        </div>
+        <div class="stage-arrow">&rarr;</div>
+        <div class="stage-item">
+          <div class="stage-num">Stage 2</div>
+          <div class="stage-diff tinggi">Tinggi</div>
+          <div class="stage-score">8/12</div>
+        </div>
+        <div class="stage-arrow">&rarr;</div>
+        <div class="stage-item">
+          <div class="stage-num">Stage 3</div>
+          <div class="stage-diff tinggi">Tinggi</div>
+          <div class="stage-score">9/12</div>
+        </div>
+      </div>
+
+      <div class="description">
+        Sertifikat ini diterbitkan oleh UjiTuntas by AKURAT sebagai bukti kompetensi kimia berdasarkan asesmen adaptif multistage. Peserta memiliki pemahaman konsep dasar kimia yang kokoh (Knowing) dan mampu menerapkannya secara akurat pada situasi prosedural (Applying), serta mulai mampu melakukan penalaran ilmiah untuk menginterpretasikan data dan menyelesaikan masalah kontekstual tingkat menengah (Reasoning).
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="issued-date">Diterbitkan pada 16 September 2026</div>
+      <div class="issued-note">Dokumen ini divalidasi secara digital oleh sistem UjiTuntas.</div>
+    </div>
+  </div>
+</body>
+</html>
