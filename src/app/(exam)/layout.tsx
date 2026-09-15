@@ -50,7 +50,7 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
           <Link href="/exam" className="flex items-center gap-2">
             <Image src="/icons/Akurat_Logo.svg" alt="AKURAT" width={24} height={24} />
             <span className="font-display text-sm font-extrabold tracking-tight text-[#0E1E47]">
-              UjiTuntas
+              AKURAT Exam
             </span>
           </Link>
 

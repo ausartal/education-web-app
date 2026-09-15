@@ -227,7 +227,7 @@ const pricingPlans = [
     arrowSize: 16,
     cta: 'Register as a student',
     features: [
-      'Full 3-stage adaptive UjiTuntas access',
+      'Full 3-stage adaptive AKURAT Exam access',
       'Latent ability and competency report',
       'Chemistry misconception mapping',
       'Active student verification',
@@ -251,7 +251,7 @@ const pricingPlans = [
     cta: 'Choose university plan',
     featured: true,
     features: [
-      'Full 3-stage adaptive UjiTuntas access',
+      'Full 3-stage adaptive AKURAT Exam access',
       'IRT-based theta ability analysis',
       'Detailed competency diagnostics',
       'University email or student ID verification',

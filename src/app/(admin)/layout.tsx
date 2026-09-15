@@ -17,7 +17,7 @@ const adminLinks = [
   { href: '/admin/teachers', label: 'Guru', icon: GraduationCap },
   { href: '/admin/questions', label: 'Bank Soal', icon: BookOpen },
   { href: '/admin/ujian', label: 'Ujian Sekolah', icon: FlaskConical },
-  { href: '/admin/msat', label: 'UjiTuntas', icon: Brain },
+  { href: '/admin/msat', label: 'AKURAT Exam', icon: Brain },
   { href: '/admin/exam-users', label: 'Peserta Ujian', icon: Users },
   { href: '/admin/content', label: 'Konten', icon: FileText },
   { href: '/admin/cli', label: 'CLI Terminal', icon: Terminal },

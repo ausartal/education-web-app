@@ -96,7 +96,7 @@ const AdminExamUsersPage: FC = () => {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="font-display text-xl font-extrabold text-stone-800">Peserta Ujian</h1>
-          <p className="mt-0.5 text-xs text-stone-400">Kelola akun UjiTuntas dan verifikasi identitas</p>
+          <p className="mt-0.5 text-xs text-stone-400">Kelola akun AKURAT Exam dan verifikasi identitas</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-lg bg-stone-100 px-3 py-1.5 text-xs font-bold text-stone-600">

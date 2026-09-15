@@ -124,7 +124,7 @@ const ExamRegisterPage: FC = () => {
           // Check if exam profile already exists
           const existingProfile = await getExamUserProfile(user.uid);
           if (existingProfile) {
-            setError('Akun UjiTuntas sudah terdaftar untuk email ini. Silakan masuk.');
+            setError('Akun AKURAT Exam sudah terdaftar untuk email ini. Silakan masuk.');
             setLoading(false);
             return;
           }
@@ -167,14 +167,14 @@ const ExamRegisterPage: FC = () => {
           <Link href="/exam" className="flex items-center gap-2.5">
             <Image src="/icons/Akurat_Logo.svg" alt="AKURAT" width={28} height={28} />
             <span className="font-display text-[15px] font-extrabold tracking-tight text-[#0E1E47]">
-              UjiTuntas
+              AKURAT Exam
             </span>
           </Link>
         </div>
 
         <div>
           <h1 className="font-display text-[28px] font-extrabold leading-[1.1] text-[#0E1E47]">
-            Daftar akun<br />UjiTuntas.
+            Daftar akun<br />AKURAT Exam.
           </h1>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#5B6475]">
             Satu akun untuk semua kebutuhan ujian adaptif kimia kamu.
@@ -210,7 +210,7 @@ const ExamRegisterPage: FC = () => {
           <div className="mb-6 lg:hidden">
             <Link href="/exam" className="flex items-center gap-2">
               <Image src="/icons/Akurat_Logo.svg" alt="AKURAT" width={24} height={24} />
-              <span className="font-display text-sm font-extrabold text-[#0E1E47]">UjiTuntas</span>
+              <span className="font-display text-sm font-extrabold text-[#0E1E47]">AKURAT Exam</span>
             </Link>
           </div>
 

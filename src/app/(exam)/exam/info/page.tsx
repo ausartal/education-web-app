@@ -125,9 +125,9 @@ const faqData = [
   { q: 'Bisakah ujian di-pause?', a: 'Tidak bisa. Setelah dimulai, ujian harus diselesaikan sampai akhir. Pastikan kamu sudah siap sebelum menekan tombol "Mulai Ujian".' },
   { q: 'Apa yang terjadi jika koneksi internet terputus?', a: 'Jawaban yang sudah dikirim tetap tersimpan. Kamu bisa melanjutkan dari stage terakhir yang belum selesai. Namun, waktu ujian tetap berjalan, jadi pastikan koneksi stabil.' },
   { q: 'Mengapa soal terasa lebih sulit di stage berikutnya?', a: 'Itu berarti kamu lulus di stage sebelumnya! Sistem adaptif akan memberikan soal yang lebih menantang untuk mengukur batas kemampuanmu. Jangan panik — ini adalah fitur, bukan bug.' },
-  { q: 'Apa bedanya UjiTuntas dengan ujian biasa?', a: 'UjiTuntas menggunakan sistem adaptif multistage — tingkat kesulitan soal menyesuaikan performamu. Ujian biasa memberikan soal yang sama untuk semua siswa. UjiTuntas dirancang untuk mengukur kompetensi secara lebih akurat.' },
+  { q: 'Apa bedanya AKURAT Exam dengan ujian biasa?', a: 'AKURAT Exam menggunakan sistem adaptif multistage — tingkat kesulitan soal menyesuaikan performamu. Ujian biasa memberikan soal yang sama untuk semua siswa. AKURAT Exam dirancang untuk mengukur kompetensi secara lebih akurat.' },
   { q: 'Bagaimana jika saya hanya lulus di Stage 1?', a: 'Jika kamu hanya lulus di Stage 1, kamu akan masuk jalur Rendah di Stage 2 dan 3. Predikat akhir tergantung performa di stage selanjutnya. Tetap berusaha di setiap stage!' },
-  { q: 'Apakah hasil UjiTuntas bisa diulang?', a: 'Tergantung kebijakan guru. Beberapa ujian bisa diulang, beberapa hanya bisa sekali. Tanyakan kepada gurumu tentang kebijakan pengulangan.' },
+  { q: 'Apakah hasil AKURAT Exam bisa diulang?', a: 'Tergantung kebijakan guru. Beberapa ujian bisa diulang, beberapa hanya bisa sekali. Tanyakan kepada gurumu tentang kebijakan pengulangan.' },
   { q: 'Apa yang dimaksud dengan "jalur" di Stage 3?', a: 'Jalur menunjukkan tingkat kesulitan soal yang kamu terima. Ada 4 jalur: Lebih Tinggi (paling sulit), Medium Lebih Tinggi, Medium Lebih Rendah, dan Lebih Rendah (paling mudah). Jalur ditentukan oleh performa di Stage 1 dan 2.' },
 ];
 
@@ -184,7 +184,7 @@ const ExamInfoPage: FC = () => {
               <FlaskConical size={30} />
             </div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">Panduan Lengkap</p>
-            <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">UjiTuntas by AKURAT</h1>
+            <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">AKURAT Exam</h1>
             <p className="mt-1 text-base font-medium text-white/70 sm:text-lg">Multistage Adaptive Scored Testing</p>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-[15px]">
               Sistem ujian adaptif kimia yang mengukur kompetensi siswa secara menyeluruh. Tingkat kesulitan soal menyesuaikan kemampuanmu di setiap stage, memberikan gambaran akurat tentang penguasaan konsep kimia.

@@ -253,7 +253,7 @@ const CertificateDetailPage: FC = () => {
               <div className="flex items-center gap-2">
                 <Image src="/icons/Akurat_Logo.svg" alt="" width={18} height={18} className="opacity-30" />
                 <div className="text-[7px] leading-relaxed text-[#D1D5DB]">
-                  Diterbitkan secara digital oleh sistem UjiTuntas.<br />
+                  Diterbitkan secara digital oleh sistem AKURAT Exam.<br />
                   Dokumen ini dapat diverifikasi secara daring.
                 </div>
               </div>

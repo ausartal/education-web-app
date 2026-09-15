@@ -42,14 +42,14 @@ const ExamLoginPage: FC = () => {
           <Link href="/exam" className="flex items-center gap-2.5">
             <Image src="/icons/Akurat_Logo.svg" alt="AKURAT" width={28} height={28} />
             <span className="font-display text-[15px] font-extrabold tracking-tight text-[#0E1E47]">
-              UjiTuntas
+              AKURAT Exam
             </span>
           </Link>
         </div>
 
         <div>
           <h1 className="font-display text-[28px] font-extrabold leading-[1.1] text-[#0E1E47]">
-            Masuk ke akun<br />UjiTuntas kamu.
+            Masuk ke akun<br />AKURAT Exam kamu.
           </h1>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#5B6475]">
             Ikuti ujian adaptif, lihat hasil, dan cetak sertifikat dari satu tempat.
@@ -82,7 +82,7 @@ const ExamLoginPage: FC = () => {
             <Link href="/exam" className="flex items-center gap-2">
               <Image src="/icons/Akurat_Logo.svg" alt="AKURAT" width={24} height={24} />
               <span className="font-display text-sm font-extrabold text-[#0E1E47]">
-                UjiTuntas
+                AKURAT Exam
               </span>
             </Link>
           </div>
