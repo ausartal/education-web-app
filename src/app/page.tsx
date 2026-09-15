@@ -8,7 +8,6 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Sparkles, BookOpen, FlaskConical } from 'lucide-react';
 
 const targetUsers = [
   'Students who want to get grading on chemistry',
@@ -101,46 +100,6 @@ const features = [
   },
 ];
 
-// Periodic table elements for hero composition
-const elements = [
-  {
-    number: 1,
-    symbol: 'H',
-    name: 'Hydrogen',
-    gradient: 'from-cyan-400 to-sky-500',
-    text: 'text-cyan-50',
-    position: 'left-[8%] top-[8%]',
-    delay: 0.55,
-  },
-  {
-    number: 8,
-    symbol: 'O',
-    name: 'Oxygen',
-    gradient: 'from-rose-400 to-red-500',
-    text: 'text-rose-50',
-    position: 'right-[6%] top-[14%]',
-    delay: 0.7,
-  },
-  {
-    number: 11,
-    symbol: 'Na',
-    name: 'Sodium',
-    gradient: 'from-violet-500 to-purple-600',
-    text: 'text-violet-50',
-    position: 'left-[2%] bottom-[28%]',
-    delay: 0.85,
-  },
-  {
-    number: 6,
-    symbol: 'C',
-    name: 'Carbon',
-    gradient: 'from-slate-700 to-gray-900',
-    text: 'text-slate-100',
-    position: 'right-[12%] bottom-[20%]',
-    delay: 1.0,
-  },
-];
-
 export default function Home() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
@@ -163,224 +122,128 @@ export default function Home() {
     <>
       <LandingNavbar />
 
-      {/* HERO — MEASURE PRECISELY, LEARN ACCURATELY */}
-      <section className="px-4 pt-4 lg:px-8 lg:pt-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-gradient-to-br from-[#F4F6F8] via-[#EEF1F8] to-[#E9EEFA] px-8 pb-14 pt-14 lg:min-h-[600px] lg:px-16 lg:pt-20"
-        >
-          {/* Subtle chemistry formulas as bg decoration */}
-          <span className="pointer-events-none absolute left-[8%] top-[42%] hidden font-display text-3xl font-bold text-[#5841EA]/[0.04] lg:block">
-            H₂O
-          </span>
-          <span className="pointer-events-none absolute left-[3%] bottom-[18%] hidden font-display text-2xl font-bold text-[#1A73E8]/[0.05] lg:block">
-            CO₂
-          </span>
-          <span className="pointer-events-none absolute right-[40%] top-[20%] hidden font-display text-xl font-bold text-[#FF9500]/[0.05] lg:block">
-            NaCl
-          </span>
-          <span className="pointer-events-none absolute right-[36%] bottom-[12%] hidden font-display text-lg font-bold text-[#5841EA]/[0.04] lg:block">
-            C₆H₁₂O₆
-          </span>
-
-          {/* LEFT — Title + Copy + CTAs */}
-          <div className="relative z-20 max-w-lg">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mb-5 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-[0_4px_16px_rgba(15,30,71,0.06)]"
-            >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-[#FF9500] to-[#EE1908] text-white">
-                <Sparkles size={11} />
-              </span>
-              <span className="text-xs font-semibold text-[#0E1E47]">
-                Adaptive Chemistry Diagnosis
-              </span>
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1 }}
-              className="font-display text-[42px] font-extrabold uppercase leading-[1.08] tracking-tight text-[#0E1E47] sm:text-5xl lg:text-[58px]"
-            >
-              From <span className="text-[#1A73E8]">Curious</span>
-              <br />
-              <span className="text-[#1A73E8]">To</span> Confident
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.25 }}
-              className="mt-6 max-w-[440px] text-[15px] leading-[1.7] text-gray-500"
-            >
-              Go Beyond Scores. Diagnose chemistry understanding and
-              misconceptions with precision through an integrated adaptive
-              platform
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-9 flex flex-wrap items-center gap-4"
-            >
-              <Link
-                href="/register"
-                className="rounded-xl bg-[#5841EA] px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-[#5841EA]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl"
-              >
-                Start Learning
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-xl bg-[#FBD300] px-8 py-4 text-sm font-semibold text-[#0E1E47] shadow-lg shadow-amber-200/40 transition-all hover:-translate-y-0.5 hover:shadow-xl"
-              >
-                Start Teaching
-              </Link>
-            </motion.div>
-
-            <div className="mt-12 flex items-center gap-2">
-              <span className="h-[3px] w-10 rounded-full bg-[#5841EA]" />
-              <span className="h-[3px] w-3 rounded-full bg-gray-300" />
-              <span className="h-[3px] w-3 rounded-full bg-gray-300" />
-              <span className="h-[3px] w-3 rounded-full bg-gray-300" />
-            </div>
-          </div>
-
-          {/* RIGHT — Chemistry composition (desktop only) */}
-          <div className="pointer-events-none absolute bottom-0 right-0 top-0 hidden w-[52%] lg:block">
-            {/* Centerpiece atom container */}
-            <div className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2">
-              {/* Soft glow background */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#5841EA]/10 via-[#1A73E8]/10 to-[#00C2FF]/10 blur-2xl" />
-              <div className="absolute inset-8 rounded-full bg-gradient-to-br from-white to-[#F4F6F8] shadow-[0_8px_40px_rgba(88,65,234,0.08)]" />
-
-              {/* Orbital ring 1 — horizontal */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-0"
-              >
-                <div className="absolute left-1/2 top-1/2 h-[140px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#1A73E8]/25" />
-                <span className="absolute left-[calc(50%+170px)] top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#1A73E8] shadow-md shadow-[#1A73E8]/40" />
-              </motion.div>
-
-              {/* Orbital ring 2 — tilted 60deg */}
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 11, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-0 rotate-[60deg]"
-              >
-                <div className="absolute left-1/2 top-1/2 h-[140px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#FF9500]/25" />
-                <span className="absolute left-[calc(50%+170px)] top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF9500] shadow-md shadow-[#FF9500]/40" />
-              </motion.div>
-
-              {/* Orbital ring 3 — tilted -60deg */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 17, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-0 -rotate-[60deg]"
-              >
-                <div className="absolute left-1/2 top-1/2 h-[140px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#5841EA]/25" />
-                <span className="absolute left-[calc(50%+170px)] top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5841EA] shadow-md shadow-[#5841EA]/40" />
-              </motion.div>
-
-              {/* Nucleus — flask icon inside gradient circle */}
-              <motion.div
-                initial={{ scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.7, delay: 0.3 }}
-                className="absolute left-1/2 top-1/2 flex h-[110px] w-[110px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-gradient-to-br from-[#5841EA] via-[#1A73E8] to-[#00C2FF] text-white shadow-xl shadow-[#5841EA]/30"
-              >
-                <FlaskConical size={42} strokeWidth={1.8} />
-              </motion.div>
-            </div>
-
-            {/* Floating periodic element tiles */}
-            {elements.map((el) => (
-              <motion.div
-                key={el.symbol}
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  duration: 0.5,
-                  delay: el.delay,
-                  type: 'spring',
-                }}
-                className={`absolute ${el.position} z-30`}
-              >
-                <motion.div
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{
-                    duration: 3 + Math.random(),
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                  className={`flex h-[88px] w-[78px] flex-col justify-between rounded-2xl bg-gradient-to-br ${el.gradient} p-2.5 shadow-[0_8px_24px_rgba(15,30,71,0.12)]`}
+      <main id="main-content">
+        <section className="border-b border-[#DCE5F2] bg-[#F8FBFF] px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:min-h-[570px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+            <div className="max-w-2xl">
+              <p className="mb-5 text-sm font-bold uppercase tracking-[0.12em] text-[#1D4ED8]">
+                Belajar kimia dengan arah yang jelas
+              </p>
+              <h1 className="font-display text-[42px] font-extrabold leading-[1.08] tracking-[-0.035em] text-[#172033] sm:text-5xl lg:text-[64px]">
+                Pahami kimia,
+                <span className="block text-[#1D4ED8]">
+                  bukan sekadar menghafal.
+                </span>
+              </h1>
+              <p className="mt-6 max-w-xl text-base leading-7 text-[#5B6475] sm:text-lg sm:leading-8">
+                AKURAT membantu kamu menemukan konsep yang belum dipahami,
+                berlatih sesuai kebutuhan, dan melihat perkembangan belajar
+                secara nyata.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Link
+                  href="/register"
+                  className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#1D4ED8] px-7 py-3 text-base font-bold text-white shadow-[0_4px_12px_rgba(29,78,216,0.18)] transition-colors duration-200 hover:bg-[#1E40AF]"
                 >
-                  <span
-                    className={`text-[10px] font-semibold ${el.text} opacity-80`}
-                  >
-                    {el.number}
-                  </span>
-                  <div className="flex flex-col items-center">
-                    <span
-                      className={`font-display text-2xl font-extrabold ${el.text}`}
-                    >
-                      {el.symbol}
-                    </span>
-                    <span
-                      className={`text-[9px] font-medium ${el.text} opacity-80`}
-                    >
-                      {el.name}
-                    </span>
-                  </div>
-                </motion.div>
-              </motion.div>
-            ))}
-
-            {/* Stat badge — 203+ Resources (top-right area) */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.65 }}
-              className="absolute right-[8%] top-[44%] z-30 flex items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-5 shadow-[0_4px_16px_rgba(15,30,71,0.06)]"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#1A73E8] to-[#00C2FF] text-white">
-                <BookOpen size={16} />
-              </span>
-              <div>
-                <p className="text-base font-extrabold leading-tight text-[#0E1E47]">
-                  203+
-                </p>
-                <p className="text-[11px] text-gray-500">Learning Resources</p>
+                  Mulai belajar
+                </Link>
+                <Link
+                  href="/register?role=teacher"
+                  className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#B8C7DC] bg-white px-7 py-3 text-base font-bold text-[#172033] transition-colors duration-200 hover:border-[#1D4ED8] hover:text-[#1D4ED8]"
+                >
+                  Saya seorang guru
+                </Link>
               </div>
-            </motion.div>
+              <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-3 border-t border-[#DCE5F2] pt-6 text-sm font-medium text-[#5B6475]">
+                <li className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-[#1D4ED8]" />
+                  Materi terstruktur
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-[#0EA5E9]" />
+                  Asesmen adaptif
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-[#EAB308]" />
+                  Umpan balik konsep
+                </li>
+              </ul>
+            </div>
 
-            {/* Stat badge — 96 Topics covered (bottom-left) */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.95 }}
-              className="absolute bottom-[8%] left-[28%] z-30 flex items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-5 shadow-[0_4px_16px_rgba(15,30,71,0.06)]"
+            <div
+              className="relative mx-auto h-[430px] w-full max-w-[540px] sm:h-[500px]"
+              aria-label="Gambaran pengalaman belajar di AKURAT"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF9500] to-[#EE1908] text-white">
-                <FlaskConical size={16} />
-              </span>
-              <div>
-                <p className="text-base font-extrabold leading-tight text-[#0E1E47]">
-                  96
-                </p>
-                <p className="text-[11px] text-gray-500">Adaptive Questions</p>
+              <div className="absolute right-2 top-3 h-56 w-56 rounded-full bg-[#EAB308] sm:h-64 sm:w-64" />
+              <div className="absolute bottom-3 left-2 h-64 w-64 rounded-full bg-[#1D4ED8] sm:h-72 sm:w-72" />
+              <div className="absolute left-1/2 top-1/2 flex h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#EFF6FF] shadow-[0_18px_45px_rgba(23,32,51,0.16)] sm:h-[350px] sm:w-[350px]">
+                <Image
+                  src="/images/hero-pelajar.svg"
+                  alt="Pelajar menggunakan tablet untuk belajar"
+                  width={302}
+                  height={302}
+                  className="h-[84%] w-[84%]"
+                  priority
+                />
               </div>
-            </motion.div>
+              <div className="absolute left-0 top-8 flex items-center gap-3 rounded-lg border border-[#DCE5F2] bg-white px-4 py-3 shadow-md sm:left-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EFF6FF]">
+                  <Image
+                    src="/icons/hero-kelas.svg"
+                    alt=""
+                    width={16}
+                    height={16}
+                  />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold text-[#5B6475]">
+                    Belajar bersama
+                  </p>
+                  <p className="text-sm font-bold text-[#172033]">
+                    Kelas terhubung
+                  </p>
+                </div>
+              </div>
+              <div className="absolute left-0 top-[145px] flex items-center gap-3 rounded-lg border border-[#DCE5F2] bg-white px-4 py-3 shadow-md sm:-left-4 sm:top-[180px]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FEF9C3]">
+                  <Image
+                    src="/icons/hero-materi.svg"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-[#172033]">
+                    Materi yang relevan
+                  </p>
+                  <p className="text-xs text-[#5B6475]">
+                    Sesuai kebutuhan belajarmu
+                  </p>
+                </div>
+              </div>
+              <div className="absolute bottom-3 right-0 flex items-center gap-3 rounded-lg border border-[#DCE5F2] bg-white px-4 py-3 shadow-md sm:right-2">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EFF6FF]">
+                  <Image
+                    src="/icons/hero-ujian.svg"
+                    alt=""
+                    width={18}
+                    height={18}
+                  />
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-[#172033]">
+                    Asesmen adaptif
+                  </p>
+                  <p className="text-xs text-[#5B6475]">
+                    Mengukur pemahaman konsep
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        </motion.div>
-      </section>
+        </section>
+      </main>
 
       {/* Learning Material — Chemistry Topics */}
       <section

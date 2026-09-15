@@ -7,10 +7,10 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 
 const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '#learning-material', label: 'Learning Material' },
-  { href: '#learning-resources', label: 'Learning Resources' },
-  { href: '#assessment', label: 'Assessment' },
+  { href: '#learning-material', label: 'Materi' },
+  { href: '#learning-resources', label: 'Sumber belajar' },
+  { href: '#assessment', label: 'Asesmen' },
+  { href: '/about', label: 'Tentang' },
 ];
 
 export const LandingNavbar: FC = () => {
@@ -26,10 +26,10 @@ export const LandingNavbar: FC = () => {
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
+      className={`sticky top-0 z-50 border-b transition-colors duration-200 ${
         scrolled
-          ? 'border-b border-gray-100 bg-white/85 shadow-sm backdrop-blur-md'
-          : 'bg-white'
+          ? 'border-[#DCE5F2] bg-white/95 backdrop-blur-md'
+          : 'border-[#DCE5F2] bg-white'
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-20 lg:px-8">
@@ -38,24 +38,24 @@ export const LandingNavbar: FC = () => {
           <Image
             src="/icons/Akurat_Logo_Text.svg"
             alt="AKURAT"
-            width={150}
-            height={56}
-            className="h-11 w-auto object-contain"
+            width={132}
+            height={48}
+            className="h-10 w-auto object-contain"
           />
         </Link>
 
         {/* Desktop Nav */}
         <ul className="hidden items-center gap-1 md:flex">
           {navLinks.map((link) => {
-            const isActive = link.href === '/' && pathname === '/';
+            const isActive = link.href === pathname;
             return (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
                     isActive
-                      ? 'text-[#5841EA]'
-                      : 'text-gray-600 hover:text-[#5841EA]'
+                      ? 'bg-[#EFF6FF] text-[#1D4ED8]'
+                      : 'text-[#5B6475] hover:text-[#1D4ED8]'
                   }`}
                 >
                   {link.label}
@@ -69,21 +69,21 @@ export const LandingNavbar: FC = () => {
         <div className="hidden items-center gap-3 md:flex">
           <Link
             href="/login"
-            className="rounded-xl border border-gray-200 bg-white px-6 py-2.5 text-sm font-semibold text-[#0E1E47] transition-colors hover:bg-gray-50"
+            className="rounded-lg border border-[#B8C7DC] bg-white px-5 py-2.5 text-sm font-semibold text-[#172033] transition-colors hover:border-[#1D4ED8] hover:text-[#1D4ED8]"
           >
-            Sign In
+            Masuk
           </Link>
           <Link
             href="/register"
-            className="rounded-xl bg-[#5841EA] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#5841EA]/25 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+            className="rounded-lg bg-[#1D4ED8] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1E40AF]"
           >
-            Get Started
+            Daftar
           </Link>
           <Link
             href="/exam"
-            className="rounded-xl bg-[#7B6AEF] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#7B6AEF]/25 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+            className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-2.5 text-sm font-semibold text-[#1D4ED8] transition-colors hover:bg-[#DBEAFE]"
           >
-            Go Exam
+            Ujian MSAT
           </Link>
         </div>
 
@@ -91,7 +91,7 @@ export const LandingNavbar: FC = () => {
         <button
           className="md:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
+          aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'}
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -118,19 +118,19 @@ export const LandingNavbar: FC = () => {
               href="/login"
               className="flex-1 rounded-xl border border-gray-200 py-2.5 text-center text-sm font-semibold text-[#0E1E47]"
             >
-              Sign In
+              Masuk
             </Link>
             <Link
               href="/register"
               className="flex-1 rounded-xl bg-[#5841EA] py-2.5 text-center text-sm font-semibold text-white"
             >
-              Get Started
+              Daftar
             </Link>
             <Link
               href="/exam"
               className="flex-1 rounded-xl bg-[#7B6AEF] py-2.5 text-center text-sm font-semibold text-white"
             >
-              Go Exam
+              Ujian
             </Link>
           </div>
         </div>

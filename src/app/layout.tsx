@@ -32,7 +32,7 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: 'AKURAT - Asesmen Kimia Ukur Adaptif Terpadu',
   description:
-    'Platform edukasi berbasis AI untuk asesmen Chemistry Stoichiometry dengan Multistage Adaptive Testing',
+    'Platform pembelajaran dan asesmen kimia adaptif untuk siswa dan guru.',
   manifest: '/manifest.json',
   icons: {
     icon: '/icons/Akurat_Logo.svg',
@@ -42,15 +42,23 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'AKURAT - Asesmen Kimia Ukur Adaptif Terpadu',
     description:
-      'Platform edukasi berbasis AI untuk asesmen Chemistry Stoichiometry dengan Multistage Adaptive Testing',
-    images: [{ url: '/icons/Akurat_Logo_Text.svg', width: 1600, height: 600, alt: 'AKURAT' }],
+      'Platform pembelajaran dan asesmen kimia adaptif untuk siswa dan guru.',
+    images: [
+      {
+        url: '/icons/Akurat_Logo_Text.svg',
+        width: 1600,
+        height: 600,
+        alt: 'AKURAT',
+      },
+    ],
     type: 'website',
     siteName: 'AKURAT',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'AKURAT - Asesmen Kimia Ukur Adaptif Terpadu',
-    description: 'Platform edukasi berbasis AI untuk asesmen Chemistry Stoichiometry',
+    description:
+      'Platform pembelajaran dan asesmen kimia adaptif untuk siswa dan guru.',
     images: ['/icons/Akurat_Logo_Text.svg'],
   },
 };
@@ -72,7 +80,7 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             <a href="#main-content" className="skip-to-content">
-              Skip to content
+              Lewati ke konten utama
             </a>
             <OfflineIndicator />
             {children}
