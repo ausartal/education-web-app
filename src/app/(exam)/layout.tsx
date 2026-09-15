@@ -52,7 +52,10 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
           <Link href="/exam" className="flex items-center gap-2">
             <Image src="/icons/Akurat_Logo.svg" alt="AKURAT" width={24} height={24} />
             <span className="font-display text-sm font-extrabold tracking-tight text-[#0E1E47]">
-              AKURAT Exam
+              AKURAT
+            </span>
+            <span className="rounded-full bg-[#6320EE]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#6320EE]">
+              Exam
             </span>
           </Link>
 
