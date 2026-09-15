@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { ArrowRight, Building2, Mail, Phone } from 'lucide-react';
 
 const targetUsers = [
   'Students seeking precision chemistry grading',
@@ -1053,49 +1054,137 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="px-4 py-20 lg:px-8">
+      {/* Contact */}
+      <section id="contact" className="bg-white px-4 py-20 lg:px-8 lg:py-28">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative mx-auto max-w-5xl overflow-hidden rounded-[40px] bg-gradient-to-br from-primary via-blue-600 to-primary-cyan p-12 text-center text-white shadow-2xl shadow-primary/20 lg:p-20"
+          viewport={{ once: true, amount: 0.15 }}
+          className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-12"
         >
-          {/* Decorative */}
-          <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10" />
-          <div className="absolute -bottom-12 -left-12 h-56 w-56 rounded-full bg-white/10" />
-          <Image
-            src="/icons/star.svg"
-            alt=""
-            width={32}
-            height={32}
-            className="absolute right-12 top-8 opacity-60"
-            aria-hidden
-          />
-
-          <div className="relative">
-            <h2 className="mb-4 font-display text-3xl font-extrabold leading-tight lg:text-5xl">
-              Ready to Master Chemistry?
+          <div className="lg:col-span-5">
+            <span className="inline-flex rounded-full bg-[#FAF5FF] px-3 py-1 text-xs font-bold uppercase tracking-[0.05em] text-[#6320EE]">
+              Contact support
+            </span>
+            <h2 className="mt-6 max-w-lg font-display text-4xl font-extrabold leading-[1.1] text-[#1E1B4B] lg:text-[44px]">
+              Have Questions?
+              <span className="block">We&apos;re Here to Help.</span>
             </h2>
-            <p className="mx-auto mb-8 max-w-xl text-sm text-white/80 lg:text-base">
-              Join AKURAT today and experience personalized, adaptive learning
-              that helps you understand chemistry deeply.
+            <p className="mt-6 max-w-lg text-base leading-7 text-slate-600">
+              Whether you are an individual learner preparing for chemistry
+              exams or an academic coordinator looking to integrate diagnostic
+              assessments into your school, our team is ready to assist.
             </p>
-            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link
-                href="/register"
-                className="rounded-full bg-white px-10 py-4 text-sm font-bold text-primary shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
-              >
-                Get Started Free
-              </Link>
-              <Link
-                href="/login"
-                className="rounded-full border-2 border-white/30 bg-white/10 px-10 py-4 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
-              >
-                Sign In
-              </Link>
+
+            <div className="mt-9 space-y-4">
+              {[
+                {
+                  label: 'Email inquiries',
+                  value: 'akurat.support@gmail.com',
+                  href: 'mailto:akurat.support@gmail.com',
+                  icon: Mail,
+                  iconClass: 'bg-[#F3E8FF] text-[#6320EE]',
+                },
+                {
+                  label: 'Direct line',
+                  value: '+62 123 456 789 000',
+                  href: 'tel:+62123456789000',
+                  icon: Phone,
+                  iconClass: 'bg-blue-100 text-blue-600',
+                },
+                {
+                  label: 'Research group',
+                  value: 'AKURAT RISET GROUP',
+                  icon: Building2,
+                  iconClass: 'bg-amber-100 text-amber-700',
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+                const detail = (
+                  <>
+                    <span className="text-xs font-bold uppercase tracking-[0.05em] text-slate-400">
+                      {item.label}
+                    </span>
+                    <span className="block font-semibold text-[#1E1B4B]">
+                      {item.value}
+                    </span>
+                  </>
+                );
+
+                return (
+                  <div key={item.label} className="flex items-center gap-4">
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${item.iconClass}`}
+                    >
+                      <Icon size={18} strokeWidth={2} aria-hidden />
+                    </span>
+                    {item.href ? (
+                      <a href={item.href}>{detail}</a>
+                    ) : (
+                      <div>{detail}</div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+            <p className="mt-8 text-xs italic text-slate-400">
+              *We typically respond within 1–2 business days.
+            </p>
           </div>
+
+          <form
+            className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm sm:p-8 lg:col-span-7"
+            onSubmit={(event) => event.preventDefault()}
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-2 text-xs font-bold uppercase tracking-[0.05em] text-slate-700">
+                Full name
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="e.g. Sarah Jenkins"
+                  className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal normal-case tracking-normal text-slate-900 outline-none transition focus:border-[#6320EE] focus:ring-4 focus:ring-[#6320EE]/10"
+                />
+              </label>
+              <label className="space-y-2 text-xs font-bold uppercase tracking-[0.05em] text-slate-700">
+                Email address
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="sarah@school.edu"
+                  className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal normal-case tracking-normal text-slate-900 outline-none transition focus:border-[#6320EE] focus:ring-4 focus:ring-[#6320EE]/10"
+                />
+              </label>
+            </div>
+            <label className="mt-4 block text-xs font-bold uppercase tracking-[0.05em] text-slate-700">
+              Subject / inquiry type
+              <select
+                name="subject"
+                defaultValue="assessment"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal normal-case tracking-normal text-slate-700 outline-none transition focus:border-[#6320EE] focus:ring-4 focus:ring-[#6320EE]/10"
+              >
+                <option value="assessment">Student Assessment Questions</option>
+                <option value="learning">Learning Material Support</option>
+                <option value="school">School Partnership</option>
+                <option value="other">Other Inquiry</option>
+              </select>
+            </label>
+            <label className="mt-4 block text-xs font-bold uppercase tracking-[0.05em] text-slate-700">
+              Your message
+              <textarea
+                name="message"
+                rows={4}
+                placeholder="Tell us how we can assist your chemistry learning or teaching..."
+                className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-normal normal-case tracking-normal text-slate-900 outline-none transition focus:border-[#6320EE] focus:ring-4 focus:ring-[#6320EE]/10"
+              />
+            </label>
+            <button
+              type="submit"
+              className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#6320EE] text-sm font-bold text-white shadow-lg shadow-[#6320EE]/20 transition hover:-translate-y-0.5 hover:bg-[#5516D8]"
+            >
+              Send Message <ArrowRight size={16} aria-hidden />
+            </button>
+          </form>
         </motion.div>
       </section>
 
