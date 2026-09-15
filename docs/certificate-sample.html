@@ -293,8 +293,8 @@
     .cognitive-row {
       display: flex;
       justify-content: center;
-      gap: 32px;
-      margin-bottom: 12px;
+      gap: 56px;
+      margin-bottom: 16px;
     }
 
     .cog-item {
@@ -306,45 +306,25 @@
       font-size: 8px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       color: #9CA3AF;
-      margin-bottom: 1px;
+      margin-bottom: 4px;
     }
 
     .cog-score {
-      font-family: 'Nunito', sans-serif;
-      font-weight: 800;
-      font-size: 16px;
-      color: #1a1040;
-    }
-
-    .cog-level {
-      font-size: 8px;
+      font-family: 'Cormorant Garamond', serif;
       font-weight: 600;
-      margin-top: 0;
+      font-size: 22px;
+      color: #1a1040;
+      line-height: 1;
     }
 
-    .cog-level.tinggi { color: #059669; }
-    .cog-level.sedang { color: #D97706; }
-    .cog-level.rendah { color: #DC2626; }
-
-    .cog-bar {
-      width: 60px;
-      height: 3px;
-      background: #F3F4F6;
-      border-radius: 2px;
-      margin: 3px auto 0;
-      overflow: hidden;
+    .cog-divider {
+      width: 24px;
+      height: 0.5px;
+      background: #E5E7EB;
+      margin: 8px auto 0;
     }
-
-    .cog-bar-fill {
-      height: 100%;
-      border-radius: 2px;
-    }
-
-    .cog-bar-fill.k { background: #3B82F6; }
-    .cog-bar-fill.a { background: #6320EE; }
-    .cog-bar-fill.r { background: #EC4899; }
 
     /* ── Description ── */
     .description {
@@ -497,20 +477,17 @@
           <div class="cog-item">
             <div class="cog-label">Knowing</div>
             <div class="cog-score">92%</div>
-            <div class="cog-level tinggi">Tinggi</div>
-            <div class="cog-bar"><div class="cog-bar-fill k" style="width:92%"></div></div>
+            <div class="cog-divider"></div>
           </div>
           <div class="cog-item">
             <div class="cog-label">Applying</div>
             <div class="cog-score">83%</div>
-            <div class="cog-level tinggi">Tinggi</div>
-            <div class="cog-bar"><div class="cog-bar-fill a" style="width:83%"></div></div>
+            <div class="cog-divider"></div>
           </div>
           <div class="cog-item">
             <div class="cog-label">Reasoning</div>
             <div class="cog-score">75%</div>
-            <div class="cog-level tinggi">Tinggi</div>
-            <div class="cog-bar"><div class="cog-bar-fill r" style="width:75%"></div></div>
+            <div class="cog-divider"></div>
           </div>
         </div>
 
