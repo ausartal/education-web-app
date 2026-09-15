@@ -83,11 +83,27 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 5. Get student name
-    const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
-    const studentName = userDoc.data()?.displayName ?? 'Siswa';
+    // 5. Check token balance for exam_users
+    const examUserDoc = await adminDb.collection('exam_users').doc(decoded.uid).get();
+    const isExamUser = examUserDoc.exists && examUserDoc.data()?.isActive === true;
 
-    // 6. Determine initial status based on exam status
+    if (isExamUser) {
+      const tokenBalance = examUserDoc.data()?.tokenBalance ?? 0;
+      if (tokenBalance < 1) {
+        return NextResponse.json({ error: 'Token ujian habis. Beli token terlebih dahulu.' }, { status: 403 });
+      }
+    }
+
+    // 6. Get student name (try exam_users first, then regular users)
+    let studentName = 'Siswa';
+    if (isExamUser) {
+      studentName = examUserDoc.data()?.displayName ?? 'Peserta';
+    } else {
+      const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
+      studentName = userDoc.data()?.displayName ?? 'Siswa';
+    }
+
+    // 7. Determine initial status based on exam status
     const examIsActive = exam.status === 'in_progress';
     const initialStatus = examIsActive ? 'in_progress' : 'waiting';
 
@@ -118,8 +134,25 @@ export async function POST(req: NextRequest) {
     };
     await sessionRef.set(sessionData);
 
-    // 8. Increment use count
+    // 8. Increment use count + decrement token for exam_users
     await examDoc.ref.update({ currentUses: FieldValue.increment(1) });
+
+    if (isExamUser) {
+      await adminDb.collection('exam_users').doc(decoded.uid).update({
+        tokenBalance: FieldValue.increment(-1),
+      });
+      // Create token usage record
+      await adminDb.collection('exam_tokens').add({
+        userId: decoded.uid,
+        status: 'used',
+        purchasedAt: FieldValue.serverTimestamp(),
+        usedAt: FieldValue.serverTimestamp(),
+        examSessionId: sessionRef.id,
+        amount: 0,
+        paymentMethod: 'deduction',
+        paymentRef: `USED-${sessionRef.id}`,
+      });
+    }
 
     // 9. Add to waiting room (only if exam is not yet started)
     if (!examIsActive) {
