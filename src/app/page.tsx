@@ -10,11 +10,11 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 const targetUsers = [
-  'Students who want to get grading on chemistry',
-  'Students who want to prepare learn chemistry',
-  'Students who want to improve their grades',
-  'Students who have high interest in chemistry',
-  'Students who want to test their knowledge',
+  'Students seeking precision chemistry grading',
+  'Students preparing for chemistry exams',
+  'Students looking to boost academic grades',
+  'Students with a passion for chemistry',
+  'Students testing comprehensive mastery',
 ];
 
 const chemistryTopics = [
@@ -97,6 +97,70 @@ const features = [
       'Test your understanding with challenging interactive exercises and quizzes.',
     icon: '/icons/feature-reading-book.svg',
     bg: 'bg-[#F1F3F8]',
+  },
+];
+
+const assessmentSpecifications = [
+  {
+    title: '3-Stage Adaptive Format',
+    description:
+      'Each stage delivers a targeted question set, with difficulty adjusted from your performance in the previous stage.',
+    icon: '/icons/assessment-stages.svg',
+    iconBg: 'bg-[#F1E8FF]',
+  },
+  {
+    title: 'Stage Score Weighting',
+    description:
+      'Question difficulty determines score weight, so stronger performance unlocks more challenging, higher-value questions.',
+    icon: '/icons/assessment-weighting.svg',
+    iconBg: 'bg-[#E7EFFF]',
+  },
+  {
+    title: 'Topics & Stage Timing',
+    description:
+      'Covers stoichiometry, equilibrium, chemical bonding, and thermochemistry with an independent timer for every stage.',
+    icon: '/icons/assessment-timing.svg',
+    iconBg: 'bg-[#FFF0D7]',
+  },
+  {
+    title: 'Direct Results Without Retakes',
+    description:
+      'Receive a final score and an individualized diagnosis of conceptual misconceptions immediately after completion.',
+    icon: '/icons/assessment-results.svg',
+    iconBg: 'bg-[#E1F7EB]',
+  },
+];
+
+const assessmentSteps = [
+  {
+    number: '01',
+    title: 'Token Verification',
+    description: 'Enter the session code provided by your instructor.',
+    color: 'text-[#9B6CFF]',
+  },
+  {
+    number: '02',
+    title: 'Stage 1 (Baseline)',
+    description: 'Establish your baseline conceptual mastery.',
+    color: 'text-[#60A5FA]',
+  },
+  {
+    number: '03',
+    title: 'Stages 2 & 3',
+    description: 'Follow an adaptive route based on each response.',
+    color: 'text-[#F59E0B]',
+  },
+  {
+    number: '04',
+    title: 'Score Calculation',
+    description: 'Calculate results using stage difficulty and weighting.',
+    color: 'text-[#34D399]',
+  },
+  {
+    number: '05',
+    title: 'Instant Final Results',
+    description: 'Review your score and misconception analysis.',
+    color: 'text-[#F472B6]',
   },
 ];
 
@@ -445,11 +509,83 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Assessment Section — Adaptive demo */}
       <section
         id="assessment"
-        className="relative overflow-hidden bg-[#FFFCEF] px-4 py-20 lg:px-8 lg:py-28"
+        className="border-b border-[#E8EAF1] bg-white px-4 py-20 lg:px-8 lg:py-28"
       >
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mx-auto mb-3 w-fit rounded-full bg-[#F1E8FF] px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#6320EE]">
+              Standardized assessment
+            </p>
+            <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#27254F] lg:text-4xl">
+              3-Stage Adaptive Multi-Stage Testing
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-[#64748B] sm:text-base">
+              A tiered adaptive chemistry assessment with dynamic score
+              weighting, calibrated stage difficulty, and detailed cognitive
+              diagnostics without remedial retests.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {assessmentSpecifications.map((item, index) => (
+              <motion.article
+                key={item.title}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05 }}
+                className="rounded-2xl border border-[#E4E8F0] bg-[#F8FAFC] p-6"
+              >
+                <span
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.iconBg}`}
+                >
+                  <Image
+                    src={item.icon}
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="h-5 w-5"
+                  />
+                </span>
+                <h3 className="mt-4 font-display text-base font-bold leading-6 text-[#27254F]">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm leading-5 text-[#64748B]">
+                  {item.description}
+                </p>
+              </motion.article>
+            ))}
+          </div>
+
+          <div className="mt-12 rounded-3xl bg-[#121A2D] px-6 py-9 sm:px-8 lg:px-10">
+            <h3 className="text-center font-display text-2xl font-extrabold text-white">
+              How the assessment works
+            </h3>
+            <ol className="mt-9 grid gap-8 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
+              {assessmentSteps.map((step) => (
+                <li key={step.number} className="relative">
+                  <p
+                    className={`font-display text-2xl font-extrabold ${step.color}`}
+                  >
+                    {step.number}
+                  </p>
+                  <h4 className="mt-2 text-sm font-bold text-white">
+                    {step.title}
+                  </h4>
+                  <p className="mt-2 text-xs leading-5 text-[#CBD5E1]">
+                    {step.description}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      {/* Assessment Section — Adaptive demo */}
+      <section className="relative overflow-hidden bg-[#FFFCEF] px-4 py-20 lg:px-8 lg:py-28">
         {/* Decorative shapes */}
         <Image
           src="/icons/shape-rect-blue.svg"
@@ -519,9 +655,9 @@ export default function Home() {
             className="flex-1"
           >
             <h2 className="mb-4 font-display text-3xl font-extrabold leading-[1.15] text-gray-900 lg:text-5xl">
-              <span className="text-primary-orange">Guided</span>{' '}
+              <span className="text-[#F59E0B]">Guided</span>{' '}
               <span className="text-gray-900">Courses With Every</span>{' '}
-              <span className="text-primary">Journey</span>
+              <span className="text-[#6320EE]">Journey</span>
             </h2>
             <p className="mb-8 max-w-md text-sm leading-relaxed text-gray-500">
               Experience how AKURAT maps misconceptions in real-time. Select an
@@ -540,7 +676,7 @@ export default function Home() {
                   className="flex items-center justify-between rounded-xl bg-white px-5 py-3.5 shadow-sm ring-1 ring-gray-100/80 transition-all hover:shadow-md hover:ring-primary/30"
                 >
                   <span className="text-sm font-medium text-gray-800">{u}</span>
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-orange text-xs font-bold text-white shadow-sm">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F59E0B] text-xs font-bold text-[#27254F] shadow-sm">
                     {i + 1}
                   </span>
                 </motion.li>
