@@ -103,30 +103,30 @@ const features = [
 
 const assessmentSpecifications = [
   {
-    title: 'Adaptive 3-Stage Format',
+    title: '3-Stage Adaptive Format',
     description:
-      'Semua siswa memulai dari stage yang sama. Tingkat kesulitan stage berikutnya menyesuaikan performa di stage sebelumnya.',
+      'Every student starts at the same baseline. Difficulty in later stages adjusts based on how well you performed earlier.',
     icon: '/icons/assessment-stages.svg',
     iconBg: 'bg-[#F1E8FF]',
   },
   {
-    title: 'Skor Berbobot Kesulitan',
+    title: 'Difficulty-Weighted Scoring',
     description:
-      'Semakin tinggi jalur kesulitan yang ditempuh, semakin besar bobot skor. Performa lebih baik = pertanyaan lebih bernilai.',
+      'Harder paths carry higher score weights — stronger performance earns more points per question.',
     icon: '/icons/assessment-weighting.svg',
     iconBg: 'bg-[#E7EFFF]',
   },
   {
-    title: '3 Domain Kognitif',
+    title: 'Three Cognitive Domains',
     description:
-      'Mengukur Knowing, Applying, dan Reasoning secara terpisah di setiap stage untuk diagnosis kompetensi yang akurat.',
+      'Knowing, Applying, and Reasoning measured independently at every stage for precise competency diagnosis.',
     icon: '/icons/assessment-timing.svg',
     iconBg: 'bg-[#FFF0D7]',
   },
   {
-    title: 'Hasil Langsung & Sertifikat',
+    title: 'Instant Results & Certificate',
     description:
-      'Skor akhir, predikat, dan diagnosis miskonsepsi langsung tersedia setelah ujian selesai. Sertifikat diterbitkan otomatis.',
+      'Final score, predikat, and misconception analysis available immediately. Certificate issued automatically.',
     icon: '/icons/assessment-results.svg',
     iconBg: 'bg-[#E1F7EB]',
   },
@@ -135,32 +135,32 @@ const assessmentSpecifications = [
 const assessmentSteps = [
   {
     number: '01',
-    title: 'Masukkan Kode',
-    description: 'Masukkan kode ujian yang diberikan guru atau dari pembelian token.',
+    title: 'Enter Code',
+    description: 'Enter the exam code provided by your teacher or purchased via token.',
     color: 'text-[#9B6CFF]',
   },
   {
     number: '02',
     title: 'Stage 1',
-    description: 'Kerjakan 12 soal dasar. Semua siswa mendapat tingkat kesulitan yang sama.',
+    description: 'Answer 12 baseline questions. Everyone starts at the same difficulty.',
     color: 'text-[#60A5FA]',
   },
   {
     number: '03',
-    title: 'Stage 2 & 3',
-    description: 'Jalur adaptif — soal menyesuaikan hasil stage sebelumnya.',
+    title: 'Stages 2 & 3',
+    description: 'Adaptive routing — difficulty follows your performance from the previous stage.',
     color: 'text-[#F59E0B]',
   },
   {
     number: '04',
-    title: 'Skor & Predikat',
-    description: 'Skor akhir dihitung dari bobot kesulitan setiap stage.',
+    title: 'Score & Predikat',
+    description: 'Final score calculated from difficulty-weighted performance across all stages.',
     color: 'text-[#34D399]',
   },
   {
     number: '05',
-    title: 'Hasil & Sertifikat',
-    description: 'Lihat diagnosis kompetensi dan unduh sertifikat.',
+    title: 'Results & Certificate',
+    description: 'Review your competency diagnosis and download your certificate.',
     color: 'text-[#F472B6]',
   },
 ];
@@ -335,38 +335,58 @@ export default function Home() {
         >
           <div className="mx-auto grid max-w-[1228px] items-center gap-12 lg:min-h-[597px] lg:grid-cols-12 lg:gap-8">
             <div className="lg:col-span-6">
-              <h1 className="font-display text-[46px] font-extrabold uppercase leading-[0.92] tracking-[0.035em] text-[#27254F] sm:text-[58px] lg:text-[70px]">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="font-display text-[46px] font-extrabold uppercase leading-[0.92] tracking-[0.035em] text-[#27254F] sm:text-[58px] lg:text-[70px]"
+              >
                 From <span className="text-[#6320EE]">curious</span>
                 <span className="block">
                   <span className="text-[#F59E0B]">to</span> confident
                 </span>
-              </h1>
-              <p className="mt-14 max-w-xl text-base leading-7 text-[#596780] sm:text-lg">
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-14 max-w-xl text-base leading-7 text-[#596780] sm:text-lg"
+              >
                 Go beyond scores. Diagnose chemistry understanding and
                 misconceptions with precision through an integrated adaptive
                 platform.
-              </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
+              >
                 <Link
                   href="/register"
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#6320EE] px-8 text-base font-bold text-white shadow-[0_8px_18px_rgba(99,32,238,0.24)] transition-colors duration-200 hover:bg-[#5218C7]"
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#6320EE] px-8 text-base font-bold text-white shadow-[0_8px_18px_rgba(99,32,238,0.24)] transition-all duration-200 hover:bg-[#5218C7] hover:shadow-[0_12px_24px_rgba(99,32,238,0.3)]"
                 >
                   Start learning
                 </Link>
                 <Link
                   href="/register?role=teacher"
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#F59E0B] px-8 text-base font-bold text-[#27254F] shadow-[0_6px_14px_rgba(245,158,11,0.2)] transition-colors duration-200 hover:bg-[#D97706]"
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#F59E0B] px-8 text-base font-bold text-[#27254F] shadow-[0_6px_14px_rgba(245,158,11,0.2)] transition-all duration-200 hover:bg-[#D97706] hover:shadow-[0_10px_20px_rgba(245,158,11,0.3)]"
                 >
                   Start teaching
                 </Link>
-              </div>
-              <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#E8EAF1] pt-3 text-sm font-medium text-[#68758B]">
-                <span>✧ Interactive learning</span>
-                <span className="text-[#CBD1DC]">•</span>
-                <span>🎯 Adaptive assessment</span>
-                <span className="text-[#CBD1DC]">•</span>
-                <span>⚗ Expert guidance</span>
-              </div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.35 }}
+                className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#E8EAF1] pt-3 text-sm font-medium text-[#68758B]"
+              >
+                <span>Interactive learning</span>
+                <span className="text-[#CBD1DC]">·</span>
+                <span>Adaptive assessment</span>
+                <span className="text-[#CBD1DC]">·</span>
+                <span>Expert guidance</span>
+              </motion.div>
               <div
                 className="mt-7 flex items-center gap-2"
                 aria-label="Slide 1 of 4"
@@ -378,7 +398,10 @@ export default function Home() {
               </div>
             </div>
 
-            <div
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
               className="relative mx-auto h-[430px] w-full max-w-[460px] sm:h-[460px] lg:col-span-6"
               aria-label="AKURAT learning experience preview"
             >
@@ -466,7 +489,7 @@ export default function Home() {
                   </span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
       </main>
@@ -664,8 +687,8 @@ export default function Home() {
               3-Stage Adaptive Testing
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#64748B] sm:text-base">
-              Ujian adaptif kimia yang menyesuaikan tingkat kesulitan secara
-              real-time berdasarkan performa siswa di setiap stage.
+              A chemistry assessment that adapts in real time — each stage
+              calibrates difficulty based on your performance in the one before.
             </p>
           </div>
 
@@ -855,7 +878,12 @@ export default function Home() {
         className="scroll-mt-20 border-t border-white bg-[#F8FAFC] px-4 py-20 lg:px-8 lg:py-28"
       >
         <div className="mx-auto max-w-4xl">
-          <div className="text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
             <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#27254F] lg:text-4xl">
               Frequently Asked Questions
             </h2>
@@ -863,12 +891,16 @@ export default function Home() {
               Clear answers about learning chemistry, joining a class, adaptive
               assessments, and using AKURAT.
             </p>
-          </div>
+          </motion.div>
 
           <div className="mt-12 space-y-4">
-            {frequentlyAskedQuestions.map((item) => (
-              <details
+            {frequentlyAskedQuestions.map((item, index) => (
+              <motion.details
                 key={item.question}
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.04 }}
                 className="group overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white open:border-[#D6C5FA] open:shadow-[0_8px_24px_rgba(99,32,238,0.07)]"
               >
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-6 px-5 py-4 text-left sm:px-6 [&::-webkit-details-marker]:hidden">
@@ -887,7 +919,7 @@ export default function Home() {
                     {item.answer}
                   </p>
                 </div>
-              </details>
+              </motion.details>
             ))}
           </div>
         </div>
@@ -898,7 +930,12 @@ export default function Home() {
         className="scroll-mt-20 border-t border-[#EEE8F8] bg-[#FAF8FF] px-4 py-20 lg:px-8 lg:py-28"
       >
         <div className="mx-auto max-w-6xl">
-          <div className="mx-auto max-w-3xl text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mx-auto max-w-3xl text-center"
+          >
             <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#27254F] sm:text-4xl lg:text-5xl">
               Assessment Pricing
               <span className="mt-1 block text-[#6320EE]">
@@ -918,11 +955,15 @@ export default function Home() {
                 Institutional packages
               </span>
             </div>
-          </div>
+          </motion.div>
 
           <div className="mt-14 grid items-stretch gap-6 lg:grid-cols-3">
-            {pricingPlans.map((plan) => (
-              <article
+            {pricingPlans.map((plan, index) => (
+              <motion.article
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.08 }}
                 key={plan.title}
                 className={`relative flex flex-col rounded-3xl border bg-white p-7 shadow-xs ${plan.borderClass}`}
               >
@@ -995,7 +1036,7 @@ export default function Home() {
                     }}
                   />
                 </Link>
-              </article>
+              </motion.article>
             ))}
           </div>
 
