@@ -388,7 +388,7 @@ export default function Home() {
       >
         <div className="mx-auto max-w-6xl">
           {/* Header */}
-          <div className="mb-14 max-w-2xl">
+          <div className="mb-14 grid gap-6 lg:grid-cols-2">
             <motion.h2
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -404,7 +404,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="mt-5 text-sm leading-relaxed text-gray-500"
+              className="self-end text-sm leading-relaxed text-gray-500"
             >
               AKURAT is an online learning platform specifically designed to
               help you learn chemistry easily, fun and effectively. We offer a
