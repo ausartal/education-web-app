@@ -6,19 +6,15 @@ import { useExamAuth } from '@/context/ExamAuthContext';
 
 interface ExamAuthGuardProps {
   children: ReactNode;
-  requireVerification?: boolean;
 }
 
 /**
  * Guard component for exam pages.
- * - requireVerification=false: only requires login (for dashboard, profile)
- * - requireVerification=true: requires verified profile (for taking exams)
+ * Only requires login — verification is not enforced as a hard block.
+ * Dashboard shows an info banner if not verified.
  */
-export const ExamAuthGuard: FC<ExamAuthGuardProps> = ({
-  children,
-  requireVerification = false,
-}) => {
-  const { user, examUser, loading } = useExamAuth();
+export const ExamAuthGuard: FC<ExamAuthGuardProps> = ({ children }) => {
+  const { user, loading } = useExamAuth();
   const router = useRouter();
 
   if (loading) {
@@ -31,11 +27,6 @@ export const ExamAuthGuard: FC<ExamAuthGuardProps> = ({
 
   if (!user) {
     router.push('/exam/login');
-    return null;
-  }
-
-  if (requireVerification && examUser && examUser.verificationStatus !== 'verified') {
-    router.push('/exam/profile');
     return null;
   }
 

@@ -10,9 +10,6 @@ import {
 import { generateCertificateNo } from '@/lib/exam-validation';
 import type { MSATStageResponse } from '@/types/msat';
 
-/** Predikat names that qualify for automatic certificate. */
-const CERT_PREDIKAT = ['Istimewa', 'Unggul'];
-
 export const dynamic = 'force-dynamic';
 
 /**
@@ -85,47 +82,42 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       anomalyFlags,
     });
 
-    // Auto-generate certificate for exam_users with predikat >= Unggul
+    // Auto-generate certificate for all exam_users (no predikat restriction)
     let certificateGenerated = false;
-    if (CERT_PREDIKAT.includes(predikat)) {
-      const examUserDoc = await adminDb.collection('exam_users').doc(decoded.uid).get();
-      if (examUserDoc.exists) {
-        // Get exam title
-        let examTitle = 'Ujian Kimia';
-        if (session.examId) {
-          const examDoc = await adminDb.collection('msat_access_code').doc(session.examId).get();
-          if (examDoc.exists) {
-            examTitle = examDoc.data()?.title ?? examTitle;
-          }
+    const examUserDoc = await adminDb.collection('exam_users').doc(decoded.uid).get();
+    if (examUserDoc.exists) {
+      let examTitle = 'Ujian Kimia';
+      if (session.examId) {
+        const examDoc = await adminDb.collection('msat_access_code').doc(session.examId).get();
+        if (examDoc.exists) {
+          examTitle = examDoc.data()?.title ?? examTitle;
         }
+      }
 
-        // Check if certificate already exists for this session
-        const existingCert = await adminDb.collection('exam_certificates')
-          .where('sessionId', '==', id)
-          .limit(1)
+      const existingCert = await adminDb.collection('exam_certificates')
+        .where('sessionId', '==', id)
+        .limit(1)
+        .get();
+
+      if (existingCert.empty) {
+        const year = new Date().getFullYear();
+        const countSnap = await adminDb.collection('exam_certificates')
+          .where('issuedAt', '>=', new Date(`${year}-01-01`))
           .get();
+        const sequence = countSnap.size + 1;
+        const certificateNo = generateCertificateNo(sequence, year);
 
-        if (existingCert.empty) {
-          // Generate unique certificate number
-          const year = new Date().getFullYear();
-          const countSnap = await adminDb.collection('exam_certificates')
-            .where('issuedAt', '>=', new Date(`${year}-01-01`))
-            .get();
-          const sequence = countSnap.size + 1;
-          const certificateNo = generateCertificateNo(sequence, year);
-
-          await adminDb.collection('exam_certificates').add({
-            userId: decoded.uid,
-            sessionId: id,
-            examTitle,
-            score: finalScore,
-            predikat,
-            issuedAt: FieldValue.serverTimestamp(),
-            certificateNo,
-            pdfUrl: null,
-          });
-          certificateGenerated = true;
-        }
+        await adminDb.collection('exam_certificates').add({
+          userId: decoded.uid,
+          sessionId: id,
+          examTitle,
+          score: finalScore,
+          predikat,
+          issuedAt: FieldValue.serverTimestamp(),
+          certificateNo,
+          pdfUrl: null,
+        });
+        certificateGenerated = true;
       }
     }
 

@@ -169,7 +169,7 @@ const ExamDashboard: FC = () => {
 
   const isVerified = examUser?.verificationStatus === 'verified';
   const tokenBalance = examUser?.tokenBalance ?? 0;
-  const canTakeExam = isVerified && tokenBalance > 0;
+  const canTakeExam = tokenBalance > 0;
 
   // Loading state
   if (authLoading) {
@@ -258,29 +258,29 @@ const ExamDashboard: FC = () => {
         </p>
       </div>
 
-      {/* Banner: not verified */}
+      {/* Banner: not verified — informational only */}
       {user && !isVerified && (
-        <div className="mb-6 rounded-lg bg-amber-50 p-4 ring-1 ring-amber-200">
-          <p className="text-sm font-semibold text-amber-800">Lengkapi profil untuk mulai ujian</p>
-          <p className="mt-1 text-xs text-amber-600">
-            Identitas kamu belum diverifikasi. Lengkapi profil agar bisa mengikuti ujian.
+        <div className="mb-6 rounded-lg bg-blue-50 p-4 ring-1 ring-blue-100">
+          <p className="text-sm font-semibold text-blue-800">Verifikasi identitas</p>
+          <p className="mt-1 text-xs text-blue-600">
+            Lengkapi profil dan verifikasi identitas agar sertifikat dapat diterbitkan dengan data yang valid.
           </p>
           <Link href="/exam/profile"
-            className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-800 hover:underline">
+            className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline">
             Lengkapi Profil <ArrowRight size={12} />
           </Link>
         </div>
       )}
 
       {/* Banner: no tokens */}
-      {isVerified && tokenBalance === 0 && (
-        <div className="mb-6 rounded-lg bg-blue-50 p-4 ring-1 ring-blue-200">
-          <p className="text-sm font-semibold text-blue-800">Token ujian habis</p>
-          <p className="mt-1 text-xs text-blue-600">
+      {tokenBalance === 0 && (
+        <div className="mb-6 rounded-lg bg-amber-50 p-4 ring-1 ring-amber-200">
+          <p className="text-sm font-semibold text-amber-800">Token ujian habis</p>
+          <p className="mt-1 text-xs text-amber-600">
             Beli token untuk mengikuti ujian.
           </p>
           <Link href="/exam/tokens"
-            className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-800 hover:underline">
+            className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:underline">
             Beli Token <ArrowRight size={12} />
           </Link>
         </div>
