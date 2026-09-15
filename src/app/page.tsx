@@ -515,9 +515,6 @@ export default function Home() {
       >
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="mx-auto mb-3 w-fit rounded-full bg-[#F1E8FF] px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#6320EE]">
-              Standardized assessment
-            </p>
             <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#27254F] lg:text-4xl">
               3-Stage Adaptive Multi-Stage Testing
             </h2>
@@ -559,8 +556,8 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="mt-12 rounded-3xl bg-[#121A2D] px-6 py-9 sm:px-8 lg:px-10">
-            <h3 className="text-center font-display text-2xl font-extrabold text-white">
+          <div className="mt-12 rounded-3xl border border-[#DED3F4] bg-[#F5F1FC] px-6 py-9 sm:px-8 lg:px-10">
+            <h3 className="text-center font-display text-2xl font-extrabold text-[#27254F]">
               How the assessment works
             </h3>
             <ol className="mt-9 grid gap-8 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
@@ -571,10 +568,10 @@ export default function Home() {
                   >
                     {step.number}
                   </p>
-                  <h4 className="mt-2 text-sm font-bold text-white">
+                  <h4 className="mt-2 text-sm font-bold text-[#27254F]">
                     {step.title}
                   </h4>
-                  <p className="mt-2 text-xs leading-5 text-[#CBD5E1]">
+                  <p className="mt-2 text-xs leading-5 text-[#64748B]">
                     {step.description}
                   </p>
                 </li>
@@ -584,102 +581,133 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Assessment Section — Adaptive demo */}
-      <section className="relative overflow-hidden bg-[#FFFCEF] px-4 py-20 lg:px-8 lg:py-28">
-        {/* Decorative shapes */}
+      <section className="relative overflow-hidden bg-[#FAFDEF] px-4 py-20 lg:px-8 lg:py-24">
         <Image
-          src="/icons/shape-rect-blue.svg"
+          src="/icons/guided-accent-mask.svg"
           alt=""
-          width={80}
-          height={80}
-          className="absolute left-[5%] top-[15%] hidden h-20 w-20 lg:block"
+          width={128}
+          height={128}
+          className="pointer-events-none absolute -bottom-4 left-3 h-32 w-32 opacity-80"
           aria-hidden
         />
-        <Image
-          src="/icons/dot-cyan.svg"
-          alt=""
-          width={48}
-          height={48}
-          className="absolute left-[8%] top-[30%] hidden lg:block"
-          aria-hidden
-        />
-        <Image
-          src="/icons/shape-rect-purple.svg"
-          alt=""
-          width={120}
-          height={120}
-          className="absolute left-[42%] top-[20%] hidden h-32 w-32 lg:block"
-          aria-hidden
-        />
-        <Image
-          src="/icons/dot-yellow.svg"
-          alt=""
-          width={56}
-          height={56}
-          className="absolute bottom-[20%] left-[8%] hidden lg:block"
-          aria-hidden
-        />
-        <Image
-          src="/icons/star.svg"
-          alt=""
-          width={56}
-          height={56}
-          className="absolute bottom-[15%] left-[35%] hidden lg:block"
-          aria-hidden
-        />
-
-        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-12 lg:flex-row lg:gap-16">
-          {/* Left - Quiz Mockup */}
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-12 lg:gap-12">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="relative flex-1"
+            transition={{ duration: 0.45 }}
+            className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_24px_42px_rgba(30,41,59,0.14)] sm:p-8 lg:col-span-7"
           >
-            <Image
-              src="/images/hero-quiz-mockup.png"
-              alt="AKURAT adaptive assessment showing misconception detection"
-              width={620}
-              height={480}
-              className="relative z-10 w-full max-w-xl drop-shadow-2xl"
-            />
+            <div className="flex items-center justify-between gap-4 border-b border-[#EDF0F5] pb-4 text-xs font-semibold sm:text-sm">
+              <span className="text-[#64748B]">
+                Topic: Stoichiometry Basics
+              </span>
+              <span className="flex items-center gap-2 text-[#6320EE]">
+                <Image
+                  src="/icons/guided-question.svg"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="h-4 w-4"
+                />
+                Question 4 of 10
+              </span>
+            </div>
+            <div className="mt-5 rounded-2xl border border-[#EEF1F5] bg-[#F8FAFC] px-5 py-6 text-center font-display text-2xl font-extrabold tracking-[0.05em] text-[#27254F] sm:text-3xl">
+              2 H₂ + O₂ → ?
+            </div>
+            <div className="mt-5 space-y-3">
+              {[
+                ['A', 'H₂O'],
+                ['B', 'H₂O₂'],
+                ['C', '2 H₂O'],
+                ['D', 'OH'],
+              ].map(([label, answer]) => {
+                const selected = label === 'B';
+                return (
+                  <div
+                    key={label}
+                    className={`flex items-center justify-between rounded-xl border px-4 py-3.5 ${selected ? 'border-2 border-[#EF4444] bg-[#FEF8F8]' : 'border-[#DEE4EC] bg-white'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span
+                        className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${selected ? 'bg-[#EF4444] text-white' : 'bg-[#F1F5F9] text-[#64748B]'}`}
+                      >
+                        {label}
+                      </span>
+                      <span
+                        className={`text-sm sm:text-base ${selected ? 'font-bold text-[#27254F]' : 'font-medium text-[#475569]'}`}
+                      >
+                        {answer}
+                      </span>
+                    </div>
+                    {selected && (
+                      <span className="text-lg font-bold text-[#EF4444]">
+                        ×
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-5 rounded-2xl border border-[#F5C75B] bg-[#FFF9ED] p-4 sm:p-5">
+              <h3 className="text-sm font-bold text-[#7C3C12]">
+                Misconception Detected: Subscript vs. Coefficient Confusion
+              </h3>
+              <p className="mt-2 text-xs leading-5 text-[#9A4A16]">
+                You selected H₂O₂ (Hydrogen Peroxide). This changes the chemical
+                identity of the product instead of balancing the equation with a
+                coefficient.
+              </p>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span className="flex items-center gap-2 text-xs font-semibold text-[#6320EE]">
+                  <Image
+                    src="/icons/guided-path.svg"
+                    alt=""
+                    width={14}
+                    height={14}
+                    className="h-3.5 w-3.5"
+                  />
+                  Adaptive path initiated
+                </span>
+                <span className="rounded-lg bg-[#6320EE] px-4 py-2 text-center text-xs font-bold text-white">
+                  Next: Foundation question →
+                </span>
+              </div>
+            </div>
           </motion.div>
 
-          {/* Right - Content */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex-1"
+            transition={{ duration: 0.45, delay: 0.08 }}
+            className="lg:col-span-5"
           >
-            <h2 className="mb-4 font-display text-3xl font-extrabold leading-[1.15] text-gray-900 lg:text-5xl">
-              <span className="text-[#F59E0B]">Guided</span>{' '}
-              <span className="text-gray-900">Courses With Every</span>{' '}
-              <span className="text-[#6320EE]">Journey</span>
+            <h2 className="font-display text-4xl font-extrabold leading-[0.98] tracking-tight text-[#27254F] lg:text-5xl">
+              <span className="text-[#F59E0B]">Guided</span> Courses
+              <span className="block">
+                With Every <span className="text-[#6320EE]">Journey</span>
+              </span>
             </h2>
-            <p className="mb-8 max-w-md text-sm leading-relaxed text-gray-500">
+            <p className="mt-5 max-w-lg text-sm leading-6 text-[#64748B] sm:text-base">
               Experience how AKURAT maps misconceptions in real-time. Select an
-              answer to see the adaptive routing.
+              answer to see the adaptive routing path customized for every
+              student profile.
             </p>
-
-            {/* Target Users */}
-            <ul className="space-y-3">
-              {targetUsers.map((u, i) => (
-                <motion.li
-                  key={i}
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.15 + i * 0.05 }}
-                  className="flex items-center justify-between rounded-xl bg-white px-5 py-3.5 shadow-sm ring-1 ring-gray-100/80 transition-all hover:shadow-md hover:ring-primary/30"
+            <ul className="mt-7 space-y-3">
+              {targetUsers.map((userType, index) => (
+                <li
+                  key={userType}
+                  className="flex items-center justify-between gap-4 rounded-xl border border-[#E5E9F0] bg-white px-4 py-3.5 shadow-xs"
                 >
-                  <span className="text-sm font-medium text-gray-800">{u}</span>
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F59E0B] text-xs font-bold text-[#27254F] shadow-sm">
-                    {i + 1}
+                  <span className="text-sm font-medium text-[#27254F]">
+                    {userType}
                   </span>
-                </motion.li>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F59E0B] text-xs font-bold text-[#27254F]">
+                    {index + 1}
+                  </span>
+                </li>
               ))}
             </ul>
           </motion.div>
