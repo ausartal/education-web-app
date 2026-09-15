@@ -64,7 +64,7 @@ export const LandingNavbar: FC = () => {
             className="flex items-center gap-2 rounded-full border border-[#D8C8FB] bg-[#F4EFFF] px-4 py-2.5 text-sm font-semibold text-[#6320EE] transition-colors hover:bg-[#EADFFF]"
           >
             <Image src="/icons/hero-ujian.svg" alt="" width={16} height={16} />
-            MSAT exam
+            Exam
           </Link>
           <Link
             href="/login"
