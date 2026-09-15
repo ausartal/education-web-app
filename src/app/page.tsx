@@ -284,7 +284,7 @@ export default function Home() {
           aria-hidden
         />
         <Image
-          src="/icons/dot-yellow.svg"
+          src="/icons/dot-orange.svg"
           alt=""
           width={24}
           height={24}
@@ -292,7 +292,7 @@ export default function Home() {
           aria-hidden
         />
         <Image
-          src="/icons/dot-orange.svg"
+          src="/icons/dot-yellow.svg"
           alt=""
           width={22}
           height={22}
@@ -384,11 +384,11 @@ export default function Home() {
       {/* Learning Resources — What you get */}
       <section
         id="learning-resources"
-        className="bg-gray-50/40 px-4 py-20 lg:px-8 lg:py-28"
+        className="border-y border-[#E8E1F5] bg-[#F7F4FC] px-4 py-20 lg:px-8 lg:py-28"
       >
         <div className="mx-auto max-w-6xl">
           {/* Header */}
-          <div className="mb-14 grid gap-6 lg:grid-cols-2">
+          <div className="mb-14 max-w-2xl">
             <motion.h2
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -397,14 +397,14 @@ export default function Home() {
             >
               What do you get at
               <br />
-              <span className="text-primary">AKURAT?</span>
+              <span className="text-[#6320EE]">AKURAT?</span>
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="self-end text-sm leading-relaxed text-gray-500"
+              className="mt-5 text-sm leading-relaxed text-gray-500"
             >
               AKURAT is an online learning platform specifically designed to
               help you learn chemistry easily, fun and effectively. We offer a
