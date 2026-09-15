@@ -207,6 +207,104 @@ const frequentlyAskedQuestions = [
   },
 ];
 
+const pricingPlans = [
+  {
+    audience: 'Elementary / Middle / High School',
+    title: 'Student',
+    description:
+      'For active school students participating in chemistry learning and assessment programs.',
+    price: 'IDR 0',
+    unit: '/ participant',
+    note: '100% free access',
+    noteClass: 'bg-[#DDF8E9] text-[#047857]',
+    accentClass: 'text-[#059669]',
+    borderClass: 'border-[#DDE8E3]',
+    buttonClass:
+      'border border-[#A7E8CA] bg-[#ECFDF5] text-[#047857] hover:bg-[#DDF8E9]',
+    checkIcon: '/icons/pricing-check-student.svg',
+    arrowIcon: '/icons/pricing-arrow-student.svg',
+    arrowSize: 16,
+    cta: 'Register as a student',
+    features: [
+      'Full 3-stage adaptive MSAT access',
+      'Latent ability and competency report',
+      'Chemistry misconception mapping',
+      'Active student verification',
+    ],
+  },
+  {
+    audience: 'Undergraduate / Graduate',
+    title: 'University Student',
+    description:
+      'For active university students who need a deeper diagnostic assessment of chemistry competency.',
+    price: 'IDR 100,000',
+    unit: '/ session',
+    note: 'Verified university rate',
+    noteClass: 'bg-[#F1E8FF] text-[#6320EE]',
+    accentClass: 'text-[#6320EE]',
+    borderClass: 'border-[#6320EE] ring-2 ring-[#DCCBFF]',
+    buttonClass: 'bg-[#6320EE] text-white hover:bg-[#5218C7]',
+    checkIcon: '/icons/pricing-check-university.svg',
+    arrowIcon: '/icons/pricing-arrow-university.svg',
+    arrowSize: 20,
+    cta: 'Choose university plan',
+    featured: true,
+    features: [
+      'Full 3-stage adaptive MSAT access',
+      'IRT-based theta ability analysis',
+      'Detailed competency diagnostics',
+      'University email or student ID verification',
+    ],
+  },
+  {
+    audience: 'Public / Professional',
+    title: 'General',
+    description:
+      'For educators, professionals, institutions, and independent participants seeking certified assessment access.',
+    price: 'IDR 300,000',
+    unit: '/ session',
+    note: 'Professional assessment rate',
+    noteClass: 'bg-[#E8EEFF] text-[#3E5BA9]',
+    accentClass: 'text-[#4F46E5]',
+    borderClass: 'border-[#DFE4EE]',
+    buttonClass:
+      'border border-[#C9D4F4] bg-[#EEF3FF] text-[#3E5BA9] hover:bg-[#E2EAFE]',
+    checkIcon: '/icons/pricing-check-general.svg',
+    arrowIcon: '/icons/pricing-arrow-general.svg',
+    arrowSize: 16,
+    cta: 'Register as a participant',
+    features: [
+      'Full adaptive assessment session',
+      'Individual diagnostic report',
+      'Misconception and item analysis',
+      'Downloadable assessment result',
+    ],
+  },
+];
+
+const pricingQuestions = [
+  {
+    question: 'How is student eligibility verified?',
+    answer:
+      'School students may be asked to provide an active student identity or school identification number. University students can use an active academic email address or student card. Verification requirements may vary by assessment program.',
+  },
+  {
+    question: 'Which payment methods are supported?',
+    answer:
+      'Paid assessment sessions are displayed in IDR. Available payment instructions are provided during registration or by the organizing institution before access is activated.',
+  },
+  {
+    question: 'Are institutional or bulk assessment packages available?',
+    answer:
+      'Yes. Schools, universities, and learning institutions can request a tailored package based on participant volume, assessment schedule, and reporting needs.',
+  },
+  {
+    question: 'Does the fee include the assessment report?',
+    answer:
+      'Yes. Each completed paid assessment includes the result and diagnostic report associated with that session. The exact report detail follows the assessment configuration used by the organizer.',
+  },
+];
+
 export default function Home() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
@@ -236,7 +334,7 @@ export default function Home() {
               <h1 className="font-display text-[46px] font-extrabold uppercase leading-[0.92] tracking-[0.035em] text-[#27254F] sm:text-[58px] lg:text-[70px]">
                 From <span className="text-[#6320EE]">curious</span>
                 <span className="block">
-                  <span className="text-[#6320EE]">to</span> confident
+                  <span className="text-[#F59E0B]">to</span> confident
                 </span>
               </h1>
               <p className="mt-14 max-w-xl text-base leading-7 text-[#596780] sm:text-lg">
@@ -788,6 +886,169 @@ export default function Home() {
                 </div>
               </details>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="pricing"
+        className="border-t border-[#EEE8F8] bg-[#FAF8FF] px-4 py-20 lg:px-8 lg:py-28"
+      >
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#27254F] sm:text-4xl lg:text-5xl">
+              Assessment Pricing
+              <span className="mt-1 block text-[#6320EE]">
+                Open, Transparent, Calibrated
+              </span>
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-[#64748B] sm:text-base">
+              Choose an adaptive chemistry assessment plan for your academic
+              level or professional needs. All prices are shown in Indonesian
+              Rupiah.
+            </p>
+            <div className="mx-auto mt-7 flex w-fit items-center rounded-2xl border border-[#E2D8F7] bg-white p-1.5 shadow-xs">
+              <span className="rounded-xl bg-[#6320EE] px-5 py-2.5 text-sm font-bold text-white">
+                Pay per session
+              </span>
+              <span className="px-5 py-2.5 text-sm font-semibold text-[#64748B]">
+                Institutional packages
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-14 grid items-stretch gap-6 lg:grid-cols-3">
+            {pricingPlans.map((plan) => (
+              <article
+                key={plan.title}
+                className={`relative flex flex-col rounded-3xl border bg-white p-7 shadow-xs ${plan.borderClass}`}
+              >
+                {plan.featured && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#6320EE] px-4 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white">
+                    Most popular
+                  </span>
+                )}
+                <div className="flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-[#F1F5F9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-[#475569]">
+                    {plan.audience}
+                  </span>
+                  <span className="text-xs text-[#94A3B8]">
+                    Participant plan
+                  </span>
+                </div>
+                <h3 className="mt-5 font-display text-2xl font-bold text-[#27254F]">
+                  {plan.title}
+                </h3>
+                <p className="mt-2 min-h-[66px] text-sm leading-[22px] text-[#64748B]">
+                  {plan.description}
+                </p>
+                <div className="mt-5 border-t border-[#EEF1F5] pt-5">
+                  <div className="flex flex-wrap items-baseline gap-1">
+                    <span
+                      className={`font-display text-3xl font-extrabold tracking-tight ${plan.accentClass}`}
+                    >
+                      {plan.price}
+                    </span>
+                    <span className="text-xs font-medium text-[#64748B]">
+                      {plan.unit}
+                    </span>
+                  </div>
+                  <span
+                    className={`mt-2 inline-flex rounded-md px-3 py-1 text-xs font-bold ${plan.noteClass}`}
+                  >
+                    {plan.note}
+                  </span>
+                </div>
+                <ul className="mt-6 flex-1 space-y-3">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-sm leading-5 text-[#475569]"
+                    >
+                      <Image
+                        src={plan.checkIcon}
+                        alt=""
+                        width={20}
+                        height={20}
+                        className="mt-px h-5 w-5 shrink-0"
+                      />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/register"
+                  className={`mt-8 flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold transition-colors ${plan.buttonClass}`}
+                >
+                  {plan.cta}
+                  <Image
+                    src={plan.arrowIcon}
+                    alt=""
+                    width={plan.arrowSize}
+                    height={plan.arrowSize}
+                    style={{
+                      width: plan.arrowSize,
+                      height: plan.arrowSize,
+                    }}
+                  />
+                </Link>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-col gap-6 rounded-2xl border border-[#E3E7EE] bg-white p-6 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+            <div>
+              <h3 className="font-display text-lg font-bold text-[#27254F]">
+                Planning a school or campus assessment?
+              </h3>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748B]">
+                Request a tailored package for multiple participants, scheduled
+                sessions, monitoring, and institution-level reporting.
+              </p>
+            </div>
+            <Link
+              href="/contact"
+              className="shrink-0 rounded-xl bg-[#6320EE] px-6 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-[#5218C7]"
+            >
+              Contact AKURAT
+            </Link>
+          </div>
+
+          <div className="mx-auto mt-20 max-w-4xl">
+            <div className="text-center">
+              <h3 className="font-display text-3xl font-extrabold text-[#27254F]">
+                Assessment Pricing Questions
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-[#64748B]">
+                Details about eligibility, payments, institutional packages, and
+                assessment reports.
+              </p>
+            </div>
+            <div className="mt-10 space-y-4">
+              {pricingQuestions.map((item) => (
+                <details
+                  key={item.question}
+                  className="group overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white open:border-[#D6C5FA] open:shadow-[0_8px_24px_rgba(99,32,238,0.07)]"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 px-5 py-4 text-left sm:px-6 [&::-webkit-details-marker]:hidden">
+                    <span className="text-sm font-bold leading-6 text-[#27254F] sm:text-base">
+                      {item.question}
+                    </span>
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F1E8FF] text-xl font-bold leading-none text-[#6320EE] transition-transform duration-200 group-open:rotate-45"
+                      aria-hidden="true"
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <div className="border-t border-[#EEF1F5] px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+                    <p className="text-sm leading-6 text-[#64748B]">
+                      {item.answer}
+                    </p>
+                  </div>
+                </details>
+              ))}
+            </div>
           </div>
         </div>
       </section>
