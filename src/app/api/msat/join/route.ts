@@ -83,16 +83,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 5. Check token balance for exam_users
+    // 5. Check exam_user existence (token check disabled for development)
     const examUserDoc = await adminDb.collection('exam_users').doc(decoded.uid).get();
     const isExamUser = examUserDoc.exists && examUserDoc.data()?.isActive === true;
-
-    if (isExamUser) {
-      const tokenBalance = examUserDoc.data()?.tokenBalance ?? 0;
-      if (tokenBalance < 1) {
-        return NextResponse.json({ error: 'Token ujian habis. Beli token terlebih dahulu.' }, { status: 403 });
-      }
-    }
 
     // 6. Get student name (try exam_users first, then regular users)
     let studentName = 'Siswa';
@@ -134,25 +127,14 @@ export async function POST(req: NextRequest) {
     };
     await sessionRef.set(sessionData);
 
-    // 8. Increment use count + decrement token for exam_users
+    // 8. Increment use count (token decrement disabled for development)
     await examDoc.ref.update({ currentUses: FieldValue.increment(1) });
-
-    if (isExamUser) {
-      await adminDb.collection('exam_users').doc(decoded.uid).update({
-        tokenBalance: FieldValue.increment(-1),
-      });
-      // Create token usage record
-      await adminDb.collection('exam_tokens').add({
-        userId: decoded.uid,
-        status: 'used',
-        purchasedAt: FieldValue.serverTimestamp(),
-        usedAt: FieldValue.serverTimestamp(),
-        examSessionId: sessionRef.id,
-        amount: 0,
-        paymentMethod: 'deduction',
-        paymentRef: `USED-${sessionRef.id}`,
-      });
-    }
+    // TODO: re-enable token decrement when payment gateway is integrated
+    // if (isExamUser) {
+    //   await adminDb.collection('exam_users').doc(decoded.uid).update({
+    //     tokenBalance: FieldValue.increment(-1),
+    //   });
+    // }
 
     // 9. Add to waiting room (only if exam is not yet started)
     if (!examIsActive) {

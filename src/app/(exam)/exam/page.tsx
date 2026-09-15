@@ -169,7 +169,7 @@ const ExamDashboard: FC = () => {
 
   const isVerified = examUser?.verificationStatus === 'verified';
   const tokenBalance = examUser?.tokenBalance ?? 0;
-  const canTakeExam = tokenBalance > 0;
+  const canTakeExam = true; // Token requirement disabled for development
 
   // Loading state
   if (authLoading) {
@@ -268,20 +268,6 @@ const ExamDashboard: FC = () => {
           <Link href="/exam/profile"
             className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline">
             Lengkapi Profil <ArrowRight size={12} />
-          </Link>
-        </div>
-      )}
-
-      {/* Banner: no tokens */}
-      {tokenBalance === 0 && (
-        <div className="mb-6 rounded-lg bg-amber-50 p-4 ring-1 ring-amber-200">
-          <p className="text-sm font-semibold text-amber-800">Token ujian habis</p>
-          <p className="mt-1 text-xs text-amber-600">
-            Beli token untuk mengikuti ujian.
-          </p>
-          <Link href="/exam/tokens"
-            className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:underline">
-            Beli Token <ArrowRight size={12} />
           </Link>
         </div>
       )}
