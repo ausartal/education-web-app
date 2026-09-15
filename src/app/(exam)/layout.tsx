@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, History, Award, User } from 'lucide-react';
+import { Home, History, Award, CreditCard, Info, User } from 'lucide-react';
 import { ExamAuthProvider, useExamAuth } from '@/context/ExamAuthContext';
 import { AdminPreviewBanner } from '@/components/admin/AdminPreviewBanner';
 
@@ -12,6 +12,8 @@ const navItems = [
   { label: 'Beranda', icon: Home, href: '/exam' },
   { label: 'Riwayat', icon: History, href: '/exam/history' },
   { label: 'Sertifikat', icon: Award, href: '/exam/certificates' },
+  { label: 'Token', icon: CreditCard, href: '/exam/tokens' },
+  { label: 'Info', icon: Info, href: '/exam/info' },
 ];
 
 export default function ExamLayout({ children }: { children: ReactNode }) {
@@ -103,8 +105,8 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
 
       {/* Mobile nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#DCE5F2] bg-white/90 backdrop-blur-sm sm:hidden">
-        <div className="mx-auto flex h-14 max-w-lg items-center justify-around px-4">
-          {navItems.map((item) => {
+        <div className="mx-auto flex h-14 max-w-lg items-center justify-around px-2">
+          {navItems.filter(i => i.label !== 'Info').map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (

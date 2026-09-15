@@ -6,6 +6,7 @@ import Link from 'next/link';
 import {
   KeyRound, AlertCircle, Loader2, ChevronRight, ArrowRight,
   CreditCard, History, Clock, WifiOff, CheckCircle2, XCircle,
+  Award, User,
 } from 'lucide-react';
 import { useExamAuth } from '@/context/ExamAuthContext';
 
@@ -247,7 +248,8 @@ const ExamDashboard: FC = () => {
 
   // Main dashboard
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+
       {/* Greeting */}
       <div className="mb-8">
         <h1 className="font-display text-xl font-extrabold text-[#0E1E47] sm:text-2xl">
@@ -258,17 +260,21 @@ const ExamDashboard: FC = () => {
         </p>
       </div>
 
-      {/* Banner: not verified — informational only */}
+      {/* Banner: not verified — informational */}
       {user && !isVerified && (
-        <div className="mb-6 rounded-lg bg-blue-50 p-4 ring-1 ring-blue-100">
-          <p className="text-sm font-semibold text-blue-800">Verifikasi identitas</p>
-          <p className="mt-1 text-xs text-blue-600">
-            Lengkapi profil dan verifikasi identitas agar sertifikat dapat diterbitkan dengan data yang valid.
-          </p>
-          <Link href="/exam/profile"
-            className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline">
-            Lengkapi Profil <ArrowRight size={12} />
-          </Link>
+        <div className="mb-6 rounded-lg bg-blue-50 px-4 py-3.5 ring-1 ring-blue-100">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-blue-800">Verifikasi identitas</p>
+              <p className="mt-0.5 text-xs text-blue-600">
+                Lengkapi profil dan verifikasi identitas agar sertifikat diterbitkan dengan data yang valid.
+              </p>
+            </div>
+            <Link href="/exam/profile"
+              className="shrink-0 rounded-md bg-blue-100 px-3 py-1.5 text-[11px] font-bold text-blue-700 transition-colors hover:bg-blue-200">
+              Lengkapi
+            </Link>
+          </div>
         </div>
       )}
 
@@ -316,57 +322,79 @@ const ExamDashboard: FC = () => {
         </p>
       </div>
 
-      {/* Bottom cards */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {/* Token balance */}
-        <Link href="/exam/tokens"
-          className="rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2] transition-colors hover:ring-[#6320EE]/30">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CreditCard size={15} className="text-[#6320EE]" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-[#5B6475]">Token</span>
-            </div>
-            <ChevronRight size={14} className="text-[#9CA3AF]" />
-          </div>
-          <p className="mt-2 font-display text-2xl font-extrabold text-[#0E1E47]">
-            {tokenBalance}
+      {/* Stats row */}
+      <div className="mt-6 grid grid-cols-3 gap-3">
+        <div className="rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2]">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">Token</p>
+          <p className="mt-1 font-display text-2xl font-extrabold text-[#0E1E47]">{tokenBalance}</p>
+          <p className="text-[11px] text-[#9CA3AF]">aktif</p>
+        </div>
+        <div className="rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2]">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">Ujian</p>
+          <p className="mt-1 font-display text-2xl font-extrabold text-[#0E1E47]">
+            {lastExam ? lastExam.finalScore ?? '-' : '-'}
           </p>
-          <p className="text-xs text-[#9CA3AF]">
-            {tokenBalance > 0 ? 'token aktif' : 'Beli token untuk mulai ujian'}
+          <p className="text-[11px] text-[#9CA3AF]">skor terakhir</p>
+        </div>
+        <div className="rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2]">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">Predikat</p>
+          <p className="mt-1 font-display text-lg font-extrabold text-[#6320EE]">
+            {lastExam?.predikat ?? '-'}
           </p>
-        </Link>
-
-        {/* Last exam */}
-        <Link href="/exam/history"
-          className="rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2] transition-colors hover:ring-[#6320EE]/30">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <History size={15} className="text-[#5B6475]" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-[#5B6475]">Ujian Terakhir</span>
-            </div>
-            <ChevronRight size={14} className="text-[#9CA3AF]" />
-          </div>
-          {lastExam ? (
-            <div className="mt-2">
-              <p className="text-sm font-semibold text-[#0E1E47] truncate">
-                {lastExam.examTitle}
-              </p>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="font-display text-lg font-extrabold text-[#0E1E47]">
-                  {lastExam.finalScore ?? '-'}
-                </span>
-                {lastExam.predikat && (
-                  <span className={`rounded px-2 py-0.5 text-[10px] font-bold ring-1 ${PREDIKAT_STYLES[lastExam.predikat] ?? 'text-gray-600 bg-gray-50 ring-gray-200'}`}>
-                    {lastExam.predikat}
-                  </span>
-                )}
-              </div>
-            </div>
-          ) : (
-            <p className="mt-2 text-xs text-[#9CA3AF]">Belum ada ujian</p>
-          )}
-        </Link>
+          <p className="text-[11px] text-[#9CA3AF]">terakhir</p>
+        </div>
       </div>
+
+      {/* Quick actions */}
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: 'Riwayat', icon: History, href: '/exam/history', color: 'text-[#5B6475]' },
+          { label: 'Sertifikat', icon: Award, href: '/exam/certificates', color: 'text-[#6320EE]' },
+          { label: 'Token', icon: CreditCard, href: '/exam/tokens', color: 'text-[#D97706]' },
+          { label: 'Profil', icon: User, href: '/exam/profile', color: 'text-[#059669]' },
+        ].map((action) => {
+          const Icon = action.icon;
+          return (
+            <Link key={action.label} href={action.href}
+              className="flex items-center gap-2.5 rounded-lg bg-white px-4 py-3 ring-1 ring-[#DCE5F2] transition-all hover:ring-[#6320EE]/30">
+              <Icon size={16} className={action.color} />
+              <span className="text-xs font-semibold text-[#0E1E47]">{action.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Last exam detail */}
+      {lastExam && (
+        <div className="mt-4 rounded-lg bg-white p-4 ring-1 ring-[#DCE5F2]">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wide text-[#9CA3AF]">Ujian Terakhir</p>
+            <Link href="/exam/history" className="text-[11px] font-bold text-[#6320EE] hover:underline">
+              Lihat semua
+            </Link>
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-[#0E1E47]">{lastExam.examTitle}</p>
+              <p className="text-xs text-[#9CA3AF]">
+                {lastExam.completedAt?._seconds
+                  ? new Date(lastExam.completedAt._seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                  : '-'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-display text-xl font-extrabold text-[#0E1E47]">
+                {lastExam.finalScore ?? '-'}
+              </span>
+              {lastExam.predikat && (
+                <span className={`rounded px-2 py-0.5 text-[10px] font-bold ring-1 ${PREDIKAT_STYLES[lastExam.predikat] ?? 'text-gray-600 bg-gray-50 ring-gray-200'}`}>
+                  {lastExam.predikat}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
