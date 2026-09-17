@@ -45,6 +45,7 @@ interface QuestionForm {
   topic: string;
   stage: number;
   difficulty: string;
+  categoryLabel: string;
   cognitiveDomain: string;
   cognitiveLevel: string;
   stem: string;
@@ -54,11 +55,29 @@ interface QuestionForm {
   competency: string;
 }
 
+// Stage-locked difficulty/categoryLabel options (matches existing question bank)
+const STAGE_OPTIONS: Record<number, Array<{ difficulty: string; categoryLabel: string; label: string }>> = {
+  1: [
+    { difficulty: 'sedang', categoryLabel: 'Medium', label: 'Sedang (Medium)' },
+  ],
+  2: [
+    { difficulty: 'sukar', categoryLabel: 'Tinggi', label: 'Sukar (Tinggi)' },
+    { difficulty: 'mudah', categoryLabel: 'Rendah', label: 'Mudah (Rendah)' },
+  ],
+  3: [
+    { difficulty: 'sangat_mudah', categoryLabel: 'Sangat Rendah', label: 'Sangat Mudah (Sangat Rendah)' },
+    { difficulty: 'mudah', categoryLabel: 'Medium Lebih Rendah', label: 'Mudah (Medium Lebih Rendah)' },
+    { difficulty: 'sedang', categoryLabel: 'Medium Lebih Tinggi', label: 'Sedang (Medium Lebih Tinggi)' },
+    { difficulty: 'sangat_sukar', categoryLabel: 'Lebih Tinggi', label: 'Sangat Sukar (Lebih Tinggi)' },
+  ],
+};
+
 const emptyForm: QuestionForm = {
   module: 'stoikiometri',
   topic: '',
   stage: 1,
   difficulty: 'sedang',
+  categoryLabel: 'Medium',
   cognitiveDomain: 'knowing',
   cognitiveLevel: 'L1',
   stem: '',
@@ -321,7 +340,11 @@ const MsatQuestionsPage: FC = () => {
                 </div>
                 <div>
                   <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Stage</label>
-                  <select value={form.stage} onChange={e => setForm(f => ({ ...f, stage: Number(e.target.value) }))}
+                  <select value={form.stage} onChange={e => {
+                    const newStage = Number(e.target.value);
+                    const firstOpt = STAGE_OPTIONS[newStage][0];
+                    setForm(f => ({ ...f, stage: newStage, difficulty: firstOpt.difficulty, categoryLabel: firstOpt.categoryLabel }));
+                  }}
                     className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300">
                     <option value={1}>Stage 1</option>
                     <option value={2}>Stage 2</option>
@@ -330,10 +353,16 @@ const MsatQuestionsPage: FC = () => {
                 </div>
                 <div>
                   <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Kesulitan</label>
-                  <select value={form.difficulty} onChange={e => setForm(f => ({ ...f, difficulty: e.target.value }))}
+                  <select value={form.difficulty} onChange={e => {
+                    const opt = STAGE_OPTIONS[form.stage].find(o => o.difficulty === e.target.value);
+                    setForm(f => ({ ...f, difficulty: e.target.value, categoryLabel: opt?.categoryLabel ?? f.categoryLabel }));
+                  }}
                     className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300">
-                    {Object.entries(DIFFICULTY_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                    {STAGE_OPTIONS[form.stage].map(opt => (
+                      <option key={opt.difficulty} value={opt.difficulty}>{opt.label}</option>
+                    ))}
                   </select>
+                  <p className="mt-0.5 text-[10px] text-stone-400">Terkunci sesuai stage</p>
                 </div>
                 <div>
                   <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Domain Kognitif</label>
