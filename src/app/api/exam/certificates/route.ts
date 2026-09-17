@@ -17,7 +17,6 @@ export async function GET(req: NextRequest) {
 
     const certsSnap = await adminDb.collection('exam_certificates')
       .where('userId', '==', decoded.uid)
-      .orderBy('issuedAt', 'desc')
       .limit(50)
       .get();
 
@@ -26,8 +25,16 @@ export async function GET(req: NextRequest) {
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(cert => {
         const status = (cert as Record<string, unknown>).status;
-        return status === 'approved' || status === 'sent';
+        // Include 'sent', 'approved', or legacy certs without status field
+        return status === 'approved' || status === 'sent' || !status;
       });
+
+    // Sort by issuedAt descending in memory
+    certificates.sort((a, b) => {
+      const aTime = ((a as Record<string, unknown>).issuedAt as { _seconds?: number })?._seconds ?? 0;
+      const bTime = ((b as Record<string, unknown>).issuedAt as { _seconds?: number })?._seconds ?? 0;
+      return bTime - aTime;
+    });
 
     return NextResponse.json({ certificates });
   } catch {
