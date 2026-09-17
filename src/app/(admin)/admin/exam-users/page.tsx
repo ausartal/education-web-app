@@ -3,7 +3,7 @@
 import { FC, useState, useEffect, useCallback } from 'react';
 import {
   Users, Loader2, CheckCircle2, XCircle, AlertCircle, Shield,
-  Search, ChevronDown, CreditCard, Eye,
+  Search, ChevronDown, Eye, X, Camera, Phone, MapPin, Building2, Calendar,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -16,7 +16,12 @@ interface ExamUser {
   identityType: string;
   identityNumber: string;
   institution: string;
+  birthPlace: string;
+  birthDate: string;
+  address: string;
+  photoURL: string | null;
   verificationStatus: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationNotes: string;
   tokenBalance: number;
   isActive: boolean;
   createdAt: { _seconds: number } | null;
@@ -43,6 +48,8 @@ const AdminExamUsersPage: FC = () => {
   const [filter, setFilter] = useState<string>('');
   const [search, setSearch] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [detailUser, setDetailUser] = useState<ExamUser | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
 
   const fetchUsers = useCallback(async () => {
     if (!user) return;
@@ -75,6 +82,9 @@ const AdminExamUsersPage: FC = () => {
       });
       if (res.ok) {
         await fetchUsers();
+        if (detailUser?.id === uid) {
+          setDetailUser(null);
+        }
       }
     } catch { /* ignore */ }
     setActionLoading(null);
@@ -161,8 +171,19 @@ const AdminExamUsersPage: FC = () => {
                 return (
                   <tr key={u.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50/50">
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-stone-800">{u.displayName}</p>
-                      <p className="text-xs text-stone-400">{u.email}</p>
+                      <div className="flex items-center gap-2.5">
+                        {u.photoURL ? (
+                          <img src={u.photoURL} alt="" className="h-8 w-8 rounded-full object-cover ring-1 ring-stone-200" />
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 ring-1 ring-stone-200">
+                            <Camera size={12} className="text-stone-400" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-stone-800">{u.displayName}</p>
+                          <p className="text-xs text-stone-400">{u.email}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-stone-600">{u.institution || '-'}</td>
                     <td className="px-4 py-3">
@@ -180,6 +201,13 @@ const AdminExamUsersPage: FC = () => {
                     <td className="px-4 py-3 text-xs text-stone-400">{formatDate(u.createdAt)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => { setDetailUser(u); setRejectNote(''); }}
+                          title="Lihat detail"
+                          className="flex h-7 w-7 items-center justify-center rounded text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+                        >
+                          <Eye size={14} />
+                        </button>
                         {u.verificationStatus !== 'verified' && (
                           <button
                             onClick={() => handleAction(u.id, { verificationStatus: 'verified' })}
@@ -217,6 +245,129 @@ const AdminExamUsersPage: FC = () => {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {detailUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setDetailUser(null)}>
+          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-stone-200 px-6 py-4">
+              <h3 className="font-display text-lg font-extrabold text-stone-800">Detail Peserta</h3>
+              <button onClick={() => setDetailUser(null)} className="rounded-lg p-1 text-stone-400 hover:bg-stone-100">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+              {/* Photo + Identity */}
+              <div className="flex items-start gap-4">
+                {detailUser.photoURL ? (
+                  <img src={detailUser.photoURL} alt="" className="h-20 w-20 rounded-lg object-cover ring-1 ring-stone-200" />
+                ) : (
+                  <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-stone-100 ring-1 ring-stone-200">
+                    <Camera size={24} className="text-stone-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="text-base font-bold text-stone-800">{detailUser.displayName}</p>
+                  <p className="text-sm text-stone-500">{detailUser.email}</p>
+                  <div className="mt-2">
+                    {(() => {
+                      const s = STATUS_CONFIG[detailUser.verificationStatus] ?? STATUS_CONFIG.unverified;
+                      return (
+                        <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${s.color} ${s.bg}`}>
+                          {s.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Detail fields */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center gap-2 text-stone-600">
+                  <Phone size={13} className="shrink-0 text-stone-400" />
+                  <span>{detailUser.phoneNumber || '-'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-stone-600">
+                  <Users size={13} className="shrink-0 text-stone-400" />
+                  <span>{detailUser.gender === 'L' ? 'Laki-laki' : 'Perempuan'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-stone-600">
+                  <MapPin size={13} className="shrink-0 text-stone-400" />
+                  <span>{detailUser.birthPlace || '-'}, {detailUser.birthDate || '-'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-stone-600">
+                  <Building2 size={13} className="shrink-0 text-stone-400" />
+                  <span>{detailUser.institution || '-'}</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-stone-50 px-4 py-3 text-sm ring-1 ring-stone-200">
+                <p className="text-xs font-bold uppercase tracking-wide text-stone-400">Identitas</p>
+                <p className="mt-1 font-semibold text-stone-700">{detailUser.identityType}: {detailUser.identityNumber}</p>
+              </div>
+
+              {detailUser.address && (
+                <div className="rounded-lg bg-stone-50 px-4 py-3 text-sm ring-1 ring-stone-200">
+                  <p className="text-xs font-bold uppercase tracking-wide text-stone-400">Alamat</p>
+                  <p className="mt-1 text-stone-600">{detailUser.address}</p>
+                </div>
+              )}
+
+              {/* Reject note input */}
+              {detailUser.verificationStatus !== 'rejected' && (
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-stone-500">Catatan Penolakan (opsional)</label>
+                  <input
+                    value={rejectNote}
+                    onChange={(e) => setRejectNote(e.target.value)}
+                    placeholder="Alasan penolakan..."
+                    className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                  />
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 border-t border-stone-100 pt-4">
+                {detailUser.verificationStatus !== 'verified' && (
+                  <button
+                    onClick={() => handleAction(detailUser.id, { verificationStatus: 'verified' })}
+                    disabled={actionLoading === detailUser.id}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-40"
+                  >
+                    <CheckCircle2 size={15} /> Verifikasi
+                  </button>
+                )}
+                {detailUser.verificationStatus !== 'rejected' && (
+                  <button
+                    onClick={() => handleAction(detailUser.id, {
+                      verificationStatus: 'rejected',
+                      verificationNotes: rejectNote || 'Ditolak oleh admin',
+                    })}
+                    disabled={actionLoading === detailUser.id}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-500 py-2.5 text-sm font-bold text-white transition hover:bg-red-600 disabled:opacity-40"
+                  >
+                    <XCircle size={15} /> Tolak
+                  </button>
+                )}
+                <button
+                  onClick={() => handleAction(detailUser.id, { isActive: !detailUser.isActive })}
+                  disabled={actionLoading === detailUser.id}
+                  className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition disabled:opacity-40 ${
+                    detailUser.isActive
+                      ? 'bg-stone-200 text-stone-600 hover:bg-stone-300'
+                      : 'bg-amber-500 text-white hover:bg-amber-600'
+                  }`}
+                >
+                  <Shield size={15} /> {detailUser.isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

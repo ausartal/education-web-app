@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useState, useEffect, useCallback } from 'react';
+import { FC, useState, useEffect } from 'react';
 import {
   User, Mail, Phone, MapPin, Building2, Calendar,
   AlertCircle, CheckCircle2, Loader2, Camera, Save,
@@ -8,7 +8,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, storage } from '@/lib/firebase';
 import { useExamAuth } from '@/context/ExamAuthContext';
-import type { ExamUser, ExamUserGender, ExamUserIdentityType } from '@/types/exam-user';
+import type { ExamUserGender, ExamUserIdentityType } from '@/types/exam-user';
 
 const fieldClass =
   'w-full rounded-lg border border-[#DCE5F2] bg-white py-2.5 pl-10 pr-3 text-sm text-[#172033] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#6320EE] focus:ring-2 focus:ring-[#6320EE]/10';
@@ -48,8 +48,14 @@ const ExamProfilePage: FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState('');
+
+  // Photo-specific state
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const [photoSuccess, setPhotoSuccess] = useState('');
 
   useEffect(() => {
     if (examUser) {
@@ -64,23 +70,24 @@ const ExamProfilePage: FC = () => {
         institution: examUser.institution ?? '',
         address: examUser.address ?? '',
       });
+      setPhotoPreview(examUser.photoURL ?? null);
       setLoading(false);
     }
   }, [examUser]);
 
   const set = (key: keyof ProfileForm, val: string) => {
     setForm((prev) => ({ ...prev, [key]: val }));
-    setError('');
-    setSuccess('');
+    setSaveError('');
+    setSaveSuccess('');
   };
 
   const handleSave = async () => {
-    setError('');
-    setSuccess('');
+    setSaveError('');
+    setSaveSuccess('');
     setSaving(true);
     try {
       const user = (await import('@/lib/firebase')).auth.currentUser;
-      if (!user) { setError('Sesi habis. Silakan masuk kembali.'); return; }
+      if (!user) { setSaveError('Sesi habis. Silakan masuk kembali.'); return; }
       const token = await user.getIdToken();
       const res = await fetch('/api/exam/profile', {
         method: 'PATCH',
@@ -92,11 +99,55 @@ const ExamProfilePage: FC = () => {
         throw new Error(data.error || 'Gagal menyimpan');
       }
       await refreshProfile();
-      setSuccess('Profil berhasil disimpan.');
+      setSaveSuccess('Profil berhasil disimpan.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
+      setSaveError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePhotoUpload = async (file: File) => {
+    setPhotoError('');
+    setPhotoSuccess('');
+    if (file.size > 2 * 1024 * 1024) {
+      setPhotoError('Ukuran foto maksimal 2MB.');
+      return;
+    }
+    if (!auth.currentUser) {
+      setPhotoError('Sesi habis. Silakan masuk kembali.');
+      return;
+    }
+
+    setPhotoUploading(true);
+    try {
+      // Show local preview immediately
+      const localUrl = URL.createObjectURL(file);
+      setPhotoPreview(localUrl);
+
+      const storageRef = ref(storage, `exam_photos/${auth.currentUser.uid}`);
+      await uploadBytes(storageRef, file, { contentType: file.type });
+      const url = await getDownloadURL(storageRef);
+
+      // Update preview to permanent URL
+      setPhotoPreview(url);
+
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch('/api/exam/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ photoURL: url }),
+      });
+      if (!res.ok) throw new Error('Gagal menyimpan foto');
+
+      await refreshProfile();
+      setPhotoSuccess('Foto berhasil diunggah.');
+    } catch {
+      setPhotoError('Gagal mengunggah foto. Coba lagi.');
+      // Revert preview on error
+      setPhotoPreview(examUser?.photoURL ?? null);
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -148,18 +199,6 @@ const ExamProfilePage: FC = () => {
           )}
         </div>
       </div>
-
-      {/* Error/Success messages */}
-      {error && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100">
-          <AlertCircle size={14} /> {error}
-        </div>
-      )}
-      {success && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-emerald-100">
-          <CheckCircle2 size={14} /> {success}
-        </div>
-      )}
 
       {/* Form */}
       <div className="mt-6 space-y-6">
@@ -275,65 +314,76 @@ const ExamProfilePage: FC = () => {
           <h2 className="mb-4 text-xs font-bold uppercase tracking-wide text-[#9CA3AF]">
             Foto Diri (untuk sertifikat)
           </h2>
-          <div className="flex items-center gap-4">
-            <label className="group relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-[#F0EDFF] ring-1 ring-[#DCE5F2] transition hover:ring-[#6320EE]/40">
-              {examUser?.photoURL ? (
-                <img src={examUser.photoURL} alt="Foto" className="h-full w-full object-cover" />
+          <div className="flex items-start gap-4">
+            <label className="group relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-[#F0EDFF] ring-1 ring-[#DCE5F2] transition hover:ring-[#6320EE]/40">
+              {photoPreview ? (
+                <img src={photoPreview} alt="Foto" className="h-full w-full object-cover" />
               ) : (
                 <Camera size={24} className="text-[#9CA3AF]" />
               )}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
-                <Camera size={18} className="text-white" />
-              </div>
+              {photoUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <Loader2 size={18} className="animate-spin text-white" />
+                </div>
+              )}
+              {!photoUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+                  <Camera size={18} className="text-white" />
+                </div>
+              )}
               <input
                 type="file"
                 accept="image/jpeg,image/png"
                 className="hidden"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (!file || !auth.currentUser) return;
-                  if (file.size > 2 * 1024 * 1024) {
-                    setError('Ukuran foto maksimal 2MB.');
-                    return;
-                  }
-                  setSaving(true);
-                  try {
-                    const storageRef = ref(storage, `exam_photos/${auth.currentUser.uid}`);
-                    await uploadBytes(storageRef, file, { contentType: file.type });
-                    const url = await getDownloadURL(storageRef);
-                    const token = await auth.currentUser.getIdToken();
-                    await fetch('/api/exam/profile', {
-                      method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ photoURL: url }),
-                    });
-                    await refreshProfile();
-                    setSuccess('Foto berhasil diunggah.');
-                  } catch {
-                    setError('Gagal mengunggah foto.');
-                  } finally {
-                    setSaving(false);
-                  }
+                  if (file) await handlePhotoUpload(file);
+                  e.target.value = '';
                 }}
               />
             </label>
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-semibold text-[#0E1E47]">Upload foto</p>
-              <p className="text-xs text-[#9CA3AF]">Klik untuk memilih. JPG/PNG, maks 2MB.</p>
+              <p className="text-xs text-[#9CA3AF]">Klik foto untuk memilih. Format JPG/PNG, maks 2MB.</p>
+
+              {/* Photo-specific messages */}
+              {photoError && (
+                <div className="mt-2 flex items-center gap-1.5 text-xs text-red-600">
+                  <AlertCircle size={12} /> {photoError}
+                </div>
+              )}
+              {photoSuccess && (
+                <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-600">
+                  <CheckCircle2 size={12} /> {photoSuccess}
+                </div>
+              )}
             </div>
           </div>
         </section>
 
-        {/* Save button */}
-        <div className="flex items-center justify-between border-t border-[#DCE5F2] pt-6">
-          <p className="text-xs text-[#9CA3AF]">
-            Semua field wajib diisi untuk verifikasi.
-          </p>
-          <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 rounded-lg bg-[#6320EE] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#5218C7] disabled:opacity-40">
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-            {saving ? 'Menyimpan...' : 'Simpan'}
-          </button>
+        {/* Save button + messages */}
+        <div className="border-t border-[#DCE5F2] pt-6">
+          {/* Save-specific messages */}
+          {saveError && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100">
+              <AlertCircle size={14} /> {saveError}
+            </div>
+          )}
+          {saveSuccess && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-emerald-100">
+              <CheckCircle2 size={14} /> {saveSuccess}
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-[#9CA3AF]">
+              Semua field wajib diisi untuk verifikasi.
+            </p>
+            <button onClick={handleSave} disabled={saving}
+              className="flex items-center gap-2 rounded-lg bg-[#6320EE] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#5218C7] disabled:opacity-40">
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              {saving ? 'Menyimpan...' : 'Simpan'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

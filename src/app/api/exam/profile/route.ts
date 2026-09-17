@@ -75,10 +75,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    await adminDb.collection('exam_users').doc(decoded.uid).update({
+    await adminDb.collection('exam_users').doc(decoded.uid).set({
       ...updates,
       updatedAt: new Date(),
-    });
+    }, { merge: true });
 
     return NextResponse.json({ success: true });
   } catch (err) {
