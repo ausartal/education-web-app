@@ -4,9 +4,9 @@ import { FC, useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  KeyRound, AlertCircle, Loader2, ChevronRight, ArrowRight,
-  CreditCard, History, Clock, WifiOff, CheckCircle2, XCircle,
-  Award, User,
+  KeyRound, AlertCircle, Loader2, ArrowRight,
+  CreditCard, History, Clock, WifiOff, CheckCircle2,
+  Award, User, Shield,
 } from 'lucide-react';
 import { useExamAuth } from '@/context/ExamAuthContext';
 
@@ -103,6 +103,11 @@ const ExamDashboard: FC = () => {
               clearInterval(pollRef.current!);
               router.push(`/exam/session/${examInfo.sessionId}`);
             }
+            // If session was abandoned/cleaned up, go back to dashboard
+            if (data.status === 'abandoned' || data.status === 'completed') {
+              clearInterval(pollRef.current!);
+              handleBack();
+            }
           }
         } catch { /* ignore */ }
       }, 3000);
@@ -110,6 +115,7 @@ const ExamDashboard: FC = () => {
     }
   }, [step, examInfo, user, router]);
 
+  // Validate code and fetch exam info (don't create session yet)
   const handleValidate = async () => {
     if (!code.trim() || !user) return;
     setLoading(true);
@@ -129,13 +135,34 @@ const ExamDashboard: FC = () => {
         return;
       }
 
+      // If resuming an active/break session, go directly
       if (data.resumed) {
-        if (data.status === 'completed') router.push(`/exam/results/${data.sessionId}`);
-        else if (data.status === 'on_break') router.push(`/exam/break/${data.sessionId}`);
-        else router.push(`/exam/session/${data.sessionId}`);
+        if (data.status === 'completed') {
+          router.push(`/exam/results/${data.sessionId}`);
+        } else if (data.status === 'on_break') {
+          router.push(`/exam/break/${data.sessionId}`);
+        } else if (data.status === 'in_progress') {
+          router.push(`/exam/session/${data.sessionId}`);
+        } else if (data.status === 'waiting') {
+          // Resume waiting — go back to waiting room
+          const info: ExamInfo = {
+            id: data.exam.id,
+            title: data.exam.title,
+            code: data.exam.code,
+            totalStages: data.exam.totalStages,
+            questionsPerStage: data.exam.questionsPerStage,
+            durationPerStage: data.exam.durationPerStage,
+            breakDuration: data.exam.breakDuration,
+            sessionId: data.sessionId,
+            resumed: true,
+          };
+          setExamInfo(info);
+          setStep('waiting');
+        }
         return;
       }
 
+      // New session — show confirmation popup
       const info: ExamInfo = {
         id: data.exam.id,
         title: data.exam.title,
@@ -153,11 +180,17 @@ const ExamDashboard: FC = () => {
         return;
       }
 
-      setStep('waiting');
+      setStep('confirm');
     } catch {
       setError('Terjadi kesalahan. Coba lagi.');
     }
     setLoading(false);
+  };
+
+  // Confirm and enter waiting room
+  const handleConfirmJoin = () => {
+    if (!examInfo) return;
+    setStep('waiting');
   };
 
   const handleBack = () => {
@@ -165,7 +198,7 @@ const ExamDashboard: FC = () => {
     setStep('dashboard');
     setExamInfo(null);
     setError('');
-    setCode('');
+    // Don't clear code so user can re-enter easily
   };
 
   const isVerified = examUser?.verificationStatus === 'verified';
@@ -200,6 +233,84 @@ const ExamDashboard: FC = () => {
             className="flex flex-1 items-center justify-center rounded-lg border border-[#DCE5F2] py-3 text-sm font-bold text-[#5B6475] transition-colors hover:bg-gray-50">
             Daftar
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Confirmation popup before joining
+  if (step === 'confirm' && examInfo) {
+    const totalQuestions = examInfo.questionsPerStage * examInfo.totalStages;
+    const totalTime = examInfo.durationPerStage * examInfo.totalStages;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+          <div className="border-b border-stone-100 px-6 py-4">
+            <h3 className="font-display text-lg font-extrabold text-stone-800">Konfirmasi Masuk Ujian</h3>
+          </div>
+
+          <div className="px-6 py-5 space-y-4">
+            {/* Exam info */}
+            <div>
+              <p className="text-base font-bold text-stone-800">{examInfo.title}</p>
+              <p className="mt-0.5 text-xs text-stone-400">Kode: {examInfo.code}</p>
+            </div>
+
+            {/* Details grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg bg-stone-50 px-3 py-2.5 ring-1 ring-stone-200">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-stone-400">Jumlah Soal</p>
+                <p className="mt-0.5 text-sm font-bold text-stone-800">{totalQuestions} soal</p>
+              </div>
+              <div className="rounded-lg bg-stone-50 px-3 py-2.5 ring-1 ring-stone-200">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-stone-400">Total Durasi</p>
+                <p className="mt-0.5 text-sm font-bold text-stone-800">{totalTime} menit</p>
+              </div>
+              <div className="rounded-lg bg-stone-50 px-3 py-2.5 ring-1 ring-stone-200">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-stone-400">Stage</p>
+                <p className="mt-0.5 text-sm font-bold text-stone-800">{examInfo.totalStages} stage</p>
+              </div>
+              <div className="rounded-lg bg-stone-50 px-3 py-2.5 ring-1 ring-stone-200">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-stone-400">Durasi/Stage</p>
+                <p className="mt-0.5 text-sm font-bold text-stone-800">{examInfo.durationPerStage} menit</p>
+              </div>
+            </div>
+
+            {/* Token cost */}
+            <div className="rounded-lg bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
+              <div className="flex items-center gap-2">
+                <CreditCard size={14} className="text-amber-600" />
+                <p className="text-sm font-semibold text-amber-800">1 token akan digunakan</p>
+              </div>
+              <p className="mt-1 text-xs text-amber-600">Token tidak dapat dikembalikan setelah ujian dimulai.</p>
+            </div>
+
+            {/* Rules */}
+            <div className="rounded-lg bg-stone-50 px-4 py-3 ring-1 ring-stone-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield size={14} className="text-stone-500" />
+                <p className="text-xs font-bold text-stone-700">Aturan Ujian</p>
+              </div>
+              <ul className="space-y-1.5 text-xs text-stone-600">
+                <li>- Ujian harus dijalankan dalam mode layar penuh</li>
+                <li>- Dilarang berpindah tab atau aplikasi selama ujian</li>
+                <li>- Pelanggaran tab lebih dari 3x akan mengakhiri ujian secara paksa</li>
+                <li>- Jawaban yang sudah dikumpulkan tidak dapat diubah</li>
+                <li>- Pastikan koneksi internet stabil sebelum memulai</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex gap-3 border-t border-stone-100 px-6 py-4">
+            <button onClick={handleBack}
+              className="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm font-semibold text-stone-600 transition-colors hover:bg-stone-50">
+              Batal
+            </button>
+            <button onClick={handleConfirmJoin}
+              className="flex-1 rounded-lg bg-[#6320EE] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#5218C7]">
+              Masuk Ruang Tunggu
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -260,7 +371,7 @@ const ExamDashboard: FC = () => {
         </p>
       </div>
 
-      {/* Banner: not verified — informational */}
+      {/* Banner: not verified */}
       {user && !isVerified && (
         <div className="mb-6 rounded-lg bg-blue-50 px-4 py-3.5 ring-1 ring-blue-100">
           <div className="flex items-start justify-between gap-3">
