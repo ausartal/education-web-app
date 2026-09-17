@@ -77,6 +77,7 @@ const ExamSessionPage: FC = () => {
   const [tabCount, setTabCount] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showFullscreen, setShowFullscreen] = useState(false);
+  const [terminated, setTerminated] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionStartRef = useRef(Date.now());
@@ -205,9 +206,16 @@ const ExamSessionPage: FC = () => {
 
   // ── Anti-cheat ──
   useEffect(() => {
+    const MAX_VIOLATIONS = 3;
     const onVis = () => {
       if (document.hidden) {
-        setTabCount(c => c + 1);
+        setTabCount(c => {
+          const next = c + 1;
+          if (next > MAX_VIOLATIONS) {
+            setTerminated(true);
+          }
+          return next;
+        });
         setTabWarning(true);
       }
     };
@@ -249,6 +257,38 @@ const ExamSessionPage: FC = () => {
       document.removeEventListener('keydown', onKeydown);
     };
   }, []);
+
+  // ── Force-terminate on violation limit ──
+  useEffect(() => {
+    if (!terminated) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    // Force-submit after short delay so user sees the popup
+    const timeout = setTimeout(async () => {
+      try {
+        const idToken = await user!.getIdToken();
+        const payload = {
+          answers: questions.map(q => ({
+            questionId: q.id,
+            selectedAnswer: answers[q.id] ?? 'A',
+            timeSpentMs: timeSpent[q.id] ?? 0,
+          })),
+        };
+        await fetch(`/api/msat/sessions/${id}/submit-stage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify(payload),
+        });
+        await fetch(`/api/msat/sessions/${id}/complete`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+      } catch { /* ignore */ }
+      clearState(id);
+      router.push('/exam');
+    }, 3000);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [terminated]);
 
   const handleAnswer = (questionId: string, answer: string) => {
     const prevQ = questions[currentIdx];
@@ -352,7 +392,7 @@ const ExamSessionPage: FC = () => {
 
       {/* Tab Warning */}
       <AnimatePresence>
-        {tabWarning && (
+        {tabWarning && !terminated && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-950/60 backdrop-blur-[2px]" onClick={() => setTabWarning(false)}>
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} onClick={e => e.stopPropagation()} className="mx-4 w-full max-w-xs rounded-2xl bg-white p-6 shadow-2xl">
               <div className="mb-4 flex items-start justify-between">
@@ -361,7 +401,27 @@ const ExamSessionPage: FC = () => {
               </div>
               <h3 className="mb-1 text-base font-bold text-gray-900">Perpindahan Tab Terdeteksi</h3>
               <p className="mb-4 text-sm text-gray-500">Pelanggaran ke-<strong className="text-amber-600">{tabCount}</strong>. Hindari berpindah tab.</p>
+              <p className="mb-4 text-xs text-rose-500 font-semibold">Pelanggaran melebihi 3x akan mengakhiri ujian secara paksa.</p>
               <button onClick={() => setTabWarning(false)} className="w-full rounded-xl bg-gray-900 py-2.5 text-sm font-semibold text-white">Saya Mengerti</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Termination Popup */}
+      <AnimatePresence>
+        {terminated && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[80] flex items-center justify-center bg-gray-950/90 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="mx-4 w-full max-w-sm rounded-3xl bg-white p-8 text-center shadow-2xl">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100">
+                <Shield className="text-rose-600" size={24} />
+              </div>
+              <h2 className="mb-2 text-lg font-bold text-gray-900">Ujian Diakhiri Paksa</h2>
+              <p className="mb-2 text-sm text-gray-500">Kamu telah melakukan pelanggaran sebanyak <strong className="text-rose-600">{tabCount}</strong> kali.</p>
+              <p className="mb-6 text-xs text-gray-400">Ujian akan ditandai dan dikumpulkan secara otomatis.</p>
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                <Loader2 size={14} className="animate-spin" /> Mengumpulkan jawaban...
+              </div>
             </motion.div>
           </motion.div>
         )}

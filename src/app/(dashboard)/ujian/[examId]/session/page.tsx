@@ -3,7 +3,7 @@
 import { FC, useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Wifi, WifiOff, Maximize, AlertTriangle, X } from 'lucide-react';
+import { Clock, Wifi, WifiOff, Maximize, AlertTriangle, X, Shield, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
@@ -94,6 +94,7 @@ const ExamSessionPage: FC = () => {
   const [checkingAnswer, setCheckingAnswer] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFullscreenGate, setShowFullscreenGate] = useState(false);
+  const [terminated, setTerminated] = useState(false);
 
   // ── Custom exam mode state ──
   const [customMode, setCustomMode] = useState(false);
@@ -256,9 +257,16 @@ const ExamSessionPage: FC = () => {
 
   // ── Anti-cheat ──
   useEffect(() => {
+    const MAX_VIOLATIONS = 3;
     const onVisibility = () => {
       if (document.hidden) {
-        setTabWarningCount(c => c + 1);
+        setTabWarningCount(c => {
+          const next = c + 1;
+          if (next > MAX_VIOLATIONS) {
+            setTerminated(true);
+          }
+          return next;
+        });
         setShowTabWarning(true);
       }
     };
@@ -272,6 +280,25 @@ const ExamSessionPage: FC = () => {
       window.removeEventListener('beforeunload', onBeforeUnload);
     };
   }, []);
+
+  // ── Force-terminate on violation limit ──
+  useEffect(() => {
+    if (!terminated) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    const timeout = setTimeout(async () => {
+      try {
+        if (customMode) {
+          await submitCustomExam();
+        } else {
+          await handleAutoSubmit();
+        }
+      } catch { /* ignore */ }
+      localStorage.removeItem(`msat_session_${sessionId}`);
+      router.push('/ujian');
+    }, 3000);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [terminated]);
 
   const getTimeSpent = () => Date.now() - phaseStartRef.current;
 
@@ -665,7 +692,7 @@ const ExamSessionPage: FC = () => {
 
       {/* ── Tab Warning Popup ── */}
       <AnimatePresence>
-        {showTabWarning && (
+        {showTabWarning && !terminated && (
           <motion.div
             key="tab-warn"
             initial={{ opacity: 0 }}
@@ -694,15 +721,43 @@ const ExamSessionPage: FC = () => {
                 </button>
               </div>
               <h3 className="mb-1 text-base font-bold text-gray-900">Perpindahan Tab Terdeteksi</h3>
-              <p className="mb-4 text-sm leading-relaxed text-gray-500">
+              <p className="mb-1 text-sm leading-relaxed text-gray-500">
                 Tindakan ini telah dicatat. Pelanggaran ke-<strong className="text-amber-600">{tabWarningCount}</strong> — hindari berpindah tab selama ujian berlangsung.
               </p>
+              <p className="mb-4 text-xs font-semibold text-rose-500">Pelanggaran melebihi 3x akan mengakhiri ujian secara paksa.</p>
               <button
                 onClick={() => setShowTabWarning(false)}
                 className="w-full rounded-xl bg-gray-900 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
               >
                 Saya Mengerti
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Termination Popup ── */}
+      <AnimatePresence>
+        {terminated && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-gray-950/90 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="mx-4 w-full max-w-sm rounded-3xl bg-white p-8 text-center shadow-2xl"
+            >
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100">
+                <Shield className="text-rose-600" size={24} />
+              </div>
+              <h2 className="mb-2 text-lg font-bold text-gray-900">Ujian Diakhiri Paksa</h2>
+              <p className="mb-2 text-sm text-gray-500">Kamu telah melakukan pelanggaran sebanyak <strong className="text-rose-600">{tabWarningCount}</strong> kali.</p>
+              <p className="mb-6 text-xs text-gray-400">Ujian akan ditandai dan dikumpulkan secara otomatis.</p>
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                <Loader2 size={14} className="animate-spin" /> Mengumpulkan jawaban...
+              </div>
             </motion.div>
           </motion.div>
         )}
