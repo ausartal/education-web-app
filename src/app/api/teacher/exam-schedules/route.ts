@@ -3,12 +3,20 @@ import { adminDb } from '@/lib/firebase-admin';
 import { verifyTeacher } from '@/lib/auth-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 import { randomBytes } from 'crypto';
+import {
+  isExamQuestionAccessible,
+  parseCreateExamSchedule,
+  toStoredExamQuestion,
+  type StoredExamQuestion,
+} from '@/lib/exam-schedule-validation';
 
 export const dynamic = 'force-dynamic';
 
 function generateExamToken(): string {
   return randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
 }
+
+class ExamTokenCollisionError extends Error {}
 
 export async function GET(req: NextRequest) {
   const teacher = await verifyTeacher(req);
@@ -70,159 +78,170 @@ export async function POST(req: NextRequest) {
   const teacher = await verifyTeacher(req);
   if (!teacher) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  let body: Record<string, unknown>;
+  let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
-  const {
-    classId, title, module = 'stoikiometri', domainIds, scheduledAt,
-    durationMinutes = 50, maxAttempts = 1, shuffleQuestions = false,
-    examType = 'tp', customQuestions = [], selectedQuestionIds = [],
-  } = body as {
-    classId?: string; title?: string; module?: string; domainIds?: string[];
-    scheduledAt?: string; durationMinutes?: number; maxAttempts?: number;
-    shuffleQuestions?: boolean; examType?: string; customQuestions?: unknown[];
-    selectedQuestionIds?: string[];
-  };
+  const parsed = parseCreateExamSchedule(body);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
+  const {
+    classId, title, module, domainIds, scheduledAt, durationMinutes,
+    maxAttempts, shuffleQuestions, examType, customQuestions, selectedQuestionIds,
+  } = parsed.value;
   const isCustom = examType === 'custom';
   const isManual = examType === 'manual';
 
-  if (!classId || !title) {
-    return NextResponse.json({ error: 'classId and title required' }, { status: 400 });
-  }
-  if (!isCustom && !isManual && !domainIds?.length) {
-    return NextResponse.json({ error: 'domainIds required for TP exam' }, { status: 400 });
-  }
-  if (isCustom && (!Array.isArray(customQuestions) || customQuestions.length === 0)) {
-    return NextResponse.json({ error: 'customQuestions required for custom exam' }, { status: 400 });
-  }
-  if (isManual && (!Array.isArray(selectedQuestionIds) || selectedQuestionIds.length === 0)) {
-    return NextResponse.json({ error: 'selectedQuestionIds required for manual exam' }, { status: 400 });
-  }
-
-  // Verify class belongs to teacher
-  const classSnap = await adminDb.collection('classes').doc(classId).get();
-  if (!classSnap.exists || classSnap.data()!.teacherId !== teacher.uid) {
-    return NextResponse.json({ error: 'Class not found' }, { status: 404 });
-  }
-
-  // For TP exams: verify all selected domains have complete question sets
-  if (!isCustom && !isManual && domainIds?.length) {
-    const LEGACY_TIER_MAP: Record<string, string> = {
-      K1: 'anchor', K2: 'mudah', K3: 'sukar',
-      K4: 'sangat_mudah', K5: 'sedang_a', K6: 'sedang_b', K7: 'sangat_sukar',
-    };
-    const requiredPaths = ['anchor', 'mudah', 'sukar', 'sangat_mudah', 'sedang_a', 'sedang_b', 'sangat_sukar'];
-
-    // Query questions for selected domains
-    const chunks: string[][] = [];
-    for (let i = 0; i < domainIds.length; i += 10) chunks.push(domainIds.slice(i, i + 10));
-    const allDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
-    for (const chunk of chunks) {
-      const snap = await adminDb.collection('exam_questions')
-        .where('domainId', 'in', chunk)
-        .where('status', '==', 'active')
-        .get();
-      allDocs.push(...snap.docs);
+  try {
+    // Never trust classId from the client: the authenticated teacher must own it.
+    const classSnap = await adminDb.collection('classes').doc(classId).get();
+    if (!classSnap.exists || classSnap.data()!.teacherId !== teacher.uid) {
+      return NextResponse.json({ error: 'Class not found' }, { status: 404 });
     }
 
-    // Filter accessible questions and build per-domain tierPath sets
-    const domainTierPaths: Record<string, Set<string>> = {};
-    const domainNameMap: Record<string, string> = {};
-    allDocs.forEach(d => {
-      const q = d.data();
-      const visibility = (q.visibility as string) || 'global';
-      const approvalStatus = (q.approvalStatus as string) || 'approved';
-      const ownerId = q.ownerId as string;
-      const isAccessible =
-        visibility === 'global' && approvalStatus === 'approved' ||
-        visibility === 'private' && ownerId === teacher.uid;
-      if (!isAccessible) return;
+    // For TP exams: verify every selected domain has an accessible, complete set.
+    if (examType === 'tp') {
+      const LEGACY_TIER_MAP: Record<string, string> = {
+        K1: 'anchor', K2: 'mudah', K3: 'sukar',
+        K4: 'sangat_mudah', K5: 'sedang_a', K6: 'sedang_b', K7: 'sangat_sukar',
+      };
+      const requiredPaths = ['anchor', 'mudah', 'sukar', 'sangat_mudah', 'sedang_a', 'sedang_b', 'sangat_sukar'];
 
-      const tpId = q.domainId as string;
-      const tierPath = LEGACY_TIER_MAP[q.tierPath as string] || q.tierPath;
-      if (!domainTierPaths[tpId]) domainTierPaths[tpId] = new Set();
-      domainTierPaths[tpId].add(tierPath);
-      if (!domainNameMap[tpId]) domainNameMap[tpId] = (q.domainName as string) || tpId;
-    });
+      const chunks: string[][] = [];
+      for (let i = 0; i < domainIds.length; i += 10) chunks.push(domainIds.slice(i, i + 10));
+      const allDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+      for (const chunk of chunks) {
+        const snap = await adminDb.collection('exam_questions')
+          .where('domainId', 'in', chunk)
+          .where('status', '==', 'active')
+          .get();
+        allDocs.push(...snap.docs);
+      }
 
-    const incompleteDomains = domainIds.filter(id => {
-      const paths = domainTierPaths[id];
-      return !paths || requiredPaths.some(p => !paths.has(p));
-    });
+      const domainTierPaths: Record<string, Set<string>> = {};
+      const domainNameMap: Record<string, string> = {};
+      allDocs.forEach(d => {
+        const q = d.data();
+        if (!isExamQuestionAccessible(q, teacher.uid, teacher.role === 'admin')) return;
 
-    if (incompleteDomains.length > 0) {
-      const readableNames = incompleteDomains.map(id => domainNameMap[id] || id);
-      return NextResponse.json({
-        error: `Bank soal belum lengkap untuk: ${readableNames.join(', ')}. Pastikan setiap topik memiliki soal di semua tingkat.`,
-        incompleteDomains,
-      }, { status: 422 });
-    }
-  }
-
-  // Generate unique exam token
-  let examToken = generateExamToken();
-  let attempts = 0;
-  while (attempts < 5) {
-    const existing = await adminDb.collection('exam_schedules')
-      .where('examToken', '==', examToken)
-      .where('status', '==', 'active')
-      .get();
-    if (existing.empty) break;
-    examToken = generateExamToken();
-    attempts++;
-  }
-
-  // For manual exams: fetch the selected questions from DB and store them as customQuestions
-  let finalCustomQuestions: unknown[] = customQuestions;
-  if (isManual) {
-    const qDocs = await Promise.all(
-      (selectedQuestionIds as string[]).map(id => adminDb.collection('exam_questions').doc(id).get()),
-    );
-    finalCustomQuestions = qDocs
-      .filter(d => d.exists)
-      .map(d => {
-        const data = d.data()!;
-        return {
-          id: d.id,
-          stem: data.stem,
-          options: data.options,
-          correctAnswer: data.correctAnswer,
-          version: (data.version as number) ?? 1,
-          domainId: data.domainId,
-          domainName: data.domainName,
-          tierPath: data.tierPath,
-        };
+        const tpId = q.domainId as string;
+        const tierPath = LEGACY_TIER_MAP[q.tierPath as string] || q.tierPath;
+        if (!domainTierPaths[tpId]) domainTierPaths[tpId] = new Set();
+        domainTierPaths[tpId].add(tierPath);
+        if (!domainNameMap[tpId]) domainNameMap[tpId] = (q.domainName as string) || tpId;
       });
-    if (finalCustomQuestions.length === 0) {
-      return NextResponse.json({ error: 'Soal yang dipilih tidak ditemukan' }, { status: 400 });
+
+      const incompleteDomains = domainIds.filter(id => {
+        const paths = domainTierPaths[id];
+        return !paths || requiredPaths.some(p => !paths.has(p));
+      });
+
+      if (incompleteDomains.length > 0) {
+        const readableNames = incompleteDomains.map(id => domainNameMap[id] || id);
+        return NextResponse.json({
+          error: `Bank soal belum lengkap untuk: ${readableNames.join(', ')}. Pastikan setiap topik memiliki soal di semua tingkat.`,
+          incompleteDomains,
+        }, { status: 422 });
+      }
     }
+
+    // Manual exams must use every requested question, and every question must be
+    // active and visible to this teacher. Silently dropping IDs changes the exam.
+    let finalCustomQuestions: StoredExamQuestion[] = customQuestions;
+    if (isManual) {
+      const qDocs = await Promise.all(
+        selectedQuestionIds.map(id => adminDb.collection('exam_questions').doc(id).get()),
+      );
+      if (qDocs.some(doc => !doc.exists)) {
+        return NextResponse.json({ error: 'Ada soal yang tidak ditemukan atau tidak valid' }, { status: 422 });
+      }
+
+      if (qDocs.some(doc => !isExamQuestionAccessible(doc.data()!, teacher.uid, teacher.role === 'admin'))) {
+        return NextResponse.json({ error: 'Ada soal yang tidak dapat digunakan' }, { status: 403 });
+      }
+
+      const storedQuestions = qDocs.map(doc => toStoredExamQuestion(doc.id, doc.data()!));
+      if (storedQuestions.some(question => question === null)) {
+        return NextResponse.json({ error: 'Ada soal yang tidak ditemukan atau tidak valid' }, { status: 422 });
+      }
+      finalCustomQuestions = storedQuestions as StoredExamQuestion[];
+    }
+
+    const docRef = adminDb.collection('exam_schedules').doc();
+    const auditRef = adminDb.collection('audit_logs').doc();
+    const scheduleBase: Record<string, unknown> = {
+      teacherId: teacher.uid,
+      classId,
+      title,
+      module,
+      domainIds: (isCustom || isManual) ? [] : domainIds,
+      scheduledAt: scheduledAt ?? new Date(),
+      durationMinutes,
+      maxAttempts,
+      shuffleQuestions,
+      examType,
+      status: 'active',
+      createdAt: FieldValue.serverTimestamp(),
+    };
+    if (isCustom || isManual) scheduleBase.customQuestions = finalCustomQuestions;
+
+    let examToken = '';
+    let storedSchedule: Record<string, unknown> | null = null;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const candidate = generateExamToken();
+      const tokenRef = adminDb.collection('exam_schedule_tokens').doc(candidate);
+      const legacyTokenQuery = adminDb.collection('exam_schedules')
+        .where('examToken', '==', candidate)
+        .where('status', '==', 'active');
+      try {
+        const schedule = { ...scheduleBase, examToken: candidate };
+        await adminDb.runTransaction(async transaction => {
+          const [reservation, legacySchedule] = await Promise.all([
+            transaction.get(tokenRef),
+            transaction.get(legacyTokenQuery),
+          ]);
+          if (reservation.exists || !legacySchedule.empty) throw new ExamTokenCollisionError();
+
+          transaction.create(tokenRef, {
+            scheduleId: docRef.id,
+            teacherId: teacher.uid,
+            createdAt: FieldValue.serverTimestamp(),
+          });
+          transaction.set(docRef, schedule);
+          transaction.set(auditRef, {
+            actorId: teacher.uid,
+            actorRole: teacher.role,
+            action: 'create_exam_schedule',
+            targetId: docRef.id,
+            targetType: 'exam_schedule',
+            details: {
+              title, classId, examToken: candidate, examType,
+              questionCount: (isCustom || isManual) ? finalCustomQuestions.length : domainIds.length,
+            },
+            timestamp: FieldValue.serverTimestamp(),
+          });
+        });
+        examToken = candidate;
+        storedSchedule = schedule;
+        break;
+      } catch (error) {
+        if (!(error instanceof ExamTokenCollisionError)) throw error;
+      }
+    }
+
+    if (!storedSchedule) {
+      return NextResponse.json({ error: 'Gagal membuat token ujian unik. Silakan coba lagi.' }, { status: 503 });
+    }
+
+    return NextResponse.json({
+      schedule: {
+        id: docRef.id,
+        ...storedSchedule,
+        examToken,
+        scheduledAt: (storedSchedule.scheduledAt as Date).toISOString(),
+        createdAt: new Date().toISOString(),
+      },
+    }, { status: 201 });
+  } catch (error) {
+    console.error('Failed to create exam schedule:', error);
+    return NextResponse.json({ error: 'Gagal membuat ujian' }, { status: 500 });
   }
-
-  const docRef = adminDb.collection('exam_schedules').doc();
-  const schedule: Record<string, unknown> = {
-    teacherId: teacher.uid,
-    classId,
-    title,
-    module,
-    domainIds: (isCustom || isManual) ? [] : domainIds,
-    examToken,
-    scheduledAt: scheduledAt ? new Date(scheduledAt) : new Date(),
-    durationMinutes,
-    maxAttempts,
-    shuffleQuestions,
-    examType,
-    status: 'active',
-    createdAt: FieldValue.serverTimestamp(),
-  };
-  if (isCustom) schedule.customQuestions = finalCustomQuestions;
-  if (isManual) schedule.customQuestions = finalCustomQuestions;
-  await docRef.set(schedule);
-
-  await adminDb.collection('audit_logs').add({
-    actorId: teacher.uid, actorRole: 'teacher', action: 'create_exam_schedule',
-    targetId: docRef.id, targetType: 'exam_schedule',
-    details: { title, classId, examToken, examType, questionCount: (isCustom || isManual) ? finalCustomQuestions.length : (domainIds?.length ?? 0) }, timestamp: new Date(),
-  });
-
-  return NextResponse.json({ schedule: { id: docRef.id, ...schedule } }, { status: 201 });
 }

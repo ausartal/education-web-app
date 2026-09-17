@@ -122,16 +122,12 @@ const ExamResultsPage: FC = () => {
         {/* ── Certificate Banner ── */}
         {results.certificateGenerated && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="mb-6 flex items-center gap-3 rounded-lg bg-emerald-50 p-4 ring-1 ring-emerald-200">
-            <Award size={20} className="shrink-0 text-emerald-600" />
+            className="mb-6 flex items-center gap-3 rounded-lg bg-blue-50 p-4 ring-1 ring-blue-200">
+            <Award size={20} className="shrink-0 text-blue-600" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-emerald-800">Sertifikat diterbitkan</p>
-              <p className="text-xs text-emerald-600">Kamu memenuhi syarat untuk mendapatkan sertifikat kompetensi.</p>
+              <p className="text-sm font-semibold text-blue-800">Sertifikat dalam proses</p>
+              <p className="text-xs text-blue-600">Hasil ujian kamu sudah tercatat. Admin akan memverifikasi dan menerbitkan sertifikat.</p>
             </div>
-            <Link href="/exam/certificates"
-              className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-emerald-700">
-              Lihat
-            </Link>
           </motion.div>
         )}
 

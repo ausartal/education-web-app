@@ -3,7 +3,7 @@
 import { FC, ReactNode } from 'react';
 import {
   LayoutDashboard, Users, FileText, Settings,
-  GraduationCap, ClipboardList, BarChart3, BookOpen, Terminal, FlaskConical, Brain,
+  GraduationCap, ClipboardList, BarChart3, BookOpen, Terminal, FlaskConical, Brain, Award,
 } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
@@ -19,6 +19,7 @@ const adminLinks = [
   { href: '/admin/ujian', label: 'Ujian Sekolah', icon: FlaskConical },
   { href: '/admin/msat', label: 'AKURAT Exam', icon: Brain },
   { href: '/admin/exam-users', label: 'Peserta Ujian', icon: Users },
+  { href: '/admin/certificates', label: 'Sertifikat', icon: Award },
   { href: '/admin/content', label: 'Konten', icon: FileText },
   { href: '/admin/cli', label: 'CLI Terminal', icon: Terminal },
   { href: '/admin/config', label: 'Pengaturan', icon: Settings },

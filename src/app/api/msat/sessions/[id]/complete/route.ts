@@ -82,7 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       anomalyFlags,
     });
 
-    // Auto-generate certificate for all exam_users (no predikat restriction)
+    // Create certificate request (pending admin approval, not auto-issued)
     let certificateGenerated = false;
     const examUserDoc = await adminDb.collection('exam_users').doc(decoded.uid).get();
     if (examUserDoc.exists) {
@@ -116,6 +116,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           issuedAt: FieldValue.serverTimestamp(),
           certificateNo,
           pdfUrl: null,
+          status: 'pending_approval',
+          approvedAt: null,
+          sentAt: null,
         });
         certificateGenerated = true;
       }

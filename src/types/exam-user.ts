@@ -75,6 +75,8 @@ export interface ExamToken {
 }
 
 // ===== EXAM CERTIFICATE =====
+export type ExamCertificateStatus = 'pending_approval' | 'approved' | 'sent';
+
 export interface ExamCertificate {
   id: string;
   userId: string;
@@ -85,6 +87,9 @@ export interface ExamCertificate {
   issuedAt: Timestamp;
   certificateNo: string;  // "AKR-2026-00142"
   pdfUrl: string | null;
+  status: ExamCertificateStatus;
+  approvedAt: Timestamp | null;
+  sentAt: Timestamp | null;
 }
 
 // ===== REGISTRATION DATA =====

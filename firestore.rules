@@ -102,37 +102,53 @@ service cloud.firestore {
 
     // ── EXAM SCHEDULES ───────────────────────────────────────────────────────
     match /exam_schedules/{docId} {
-      allow read:   if isTeacherOrAdmin();
-      allow create: if isTeacherOrAdmin();
-      allow update: if isAdmin()
+      // customQuestions contains answer keys: only the owner/admin may read it.
+      // All writes go through authenticated server routes so ownership checks,
+      // validation, token reservation, and audit logging cannot be bypassed.
+      allow read: if isAdmin()
         || (isTeacherOrAdmin() && resource.data.teacherId == uid());
-      allow delete: if isAdmin()
-        || (isTeacherOrAdmin() && resource.data.teacherId == uid());
+      allow create, update, delete: if false;
+    }
+
+    // Server-only uniqueness reservation for six-character schedule tokens.
+    match /exam_schedule_tokens/{tokenId} {
+      allow read, write: if false;
     }
 
     // ── TP DEFINITIONS ───────────────────────────────────────────────────────
     match /tp_definitions/{docId} {
-      allow read: if isTeacherOrAdmin();
-      allow create: if isTeacherOrAdmin()
-        && request.resource.data.ownerId == uid();
+      allow read: if isAdmin()
+        || (isTeacherOrAdmin()
+            && (resource.data.scope == 'global' || resource.data.ownerId == uid()));
+      allow create: if isAdmin()
+        || (isAuth() && role() == 'teacher'
+            && request.resource.data.ownerId == uid()
+            && request.resource.data.scope == 'private');
       allow update: if isAdmin()
-        || (isTeacherOrAdmin() && resource.data.ownerId == uid()
+        || (isAuth() && role() == 'teacher' && resource.data.ownerId == uid()
             && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['scope', 'ownerId']));
       allow delete: if isAdmin()
-        || (isTeacherOrAdmin() && resource.data.ownerId == uid());
+        || (isAuth() && role() == 'teacher' && resource.data.ownerId == uid());
     }
 
     // ── EXAM QUESTIONS ───────────────────────────────────────────────────────
     match /exam_questions/{docId} {
-      allow read: if isTeacherOrAdmin();
-      allow create: if isTeacherOrAdmin()
-        && request.resource.data.ownerId == uid();
+      allow read: if isAdmin()
+        || (isTeacherOrAdmin()
+            && ((!resource.data.keys().hasAny(['visibility']))
+                || (resource.data.visibility == 'global' && resource.data.approvalStatus == 'approved')
+                || (resource.data.visibility == 'private' && resource.data.ownerId == uid())));
+      allow create: if isAdmin()
+        || (isAuth() && role() == 'teacher'
+            && request.resource.data.ownerId == uid()
+            && request.resource.data.visibility == 'private'
+            && !request.resource.data.keys().hasAny(['approvalStatus']));
       allow update: if isAdmin()
-        || (isTeacherOrAdmin()
-            && (resource.data.ownerId == uid() || resource.data.createdBy == uid()));
+        || (isAuth() && role() == 'teacher' && resource.data.ownerId == uid()
+            && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['visibility', 'approvalStatus', 'ownerId', 'createdBy']));
       allow delete: if isAdmin()
-        || (isTeacherOrAdmin()
-            && (resource.data.ownerId == uid() || resource.data.createdBy == uid()));
+        || (isAuth() && role() == 'teacher' && resource.data.ownerId == uid());
     }
 
     // ── EXAM SESSIONS ────────────────────────────────────────────────────────
@@ -219,7 +235,7 @@ service cloud.firestore {
     match /exam_certificates/{certId} {
       allow read:   if isOwner(resource.data.userId) || isAdmin();
       allow create: if false; // server-side only
-      allow update: if false;
+      allow update: if isAdmin(); // admin can approve/send certificates
       allow delete: if isAdmin();
     }
 

@@ -21,10 +21,13 @@ export async function GET(req: NextRequest) {
       .limit(50)
       .get();
 
-    const certificates = certsSnap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    // Only return approved or sent certificates to users
+    const certificates = certsSnap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(cert => {
+        const status = (cert as Record<string, unknown>).status;
+        return status === 'approved' || status === 'sent';
+      });
 
     return NextResponse.json({ certificates });
   } catch {

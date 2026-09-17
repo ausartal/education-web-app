@@ -8,7 +8,7 @@ import {
   ArrowLeft, Users, ClipboardList, Copy, Check, BookOpen, ClipboardCheck,
   PlusCircle, Trash2, Calendar, X, ExternalLink, Clock, ChevronRight,
   MessageCircle, Send, Loader2, AlertTriangle, Link2, Star,
-  PenLine, ListChecks, Filter, Shuffle, AlertCircle, ChevronDown,
+  PenLine, ListChecks, Filter, AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -184,14 +184,21 @@ const TeacherClassDetailPage: FC = () => {
     setLoadingAllQ(true);
     try {
       const t = await authToken();
-      const [tpRes, qRes] = await Promise.all([
+      const [tpRes, mineQRes, globalQRes] = await Promise.all([
         fetch('/api/tp-definitions', { headers: { Authorization: `Bearer ${t}` } }),
-        fetch('/api/exam-questions?module=stoikiometri', { headers: { Authorization: `Bearer ${t}` } }),
+        fetch('/api/exam-questions?module=stoikiometri&view=mine', { headers: { Authorization: `Bearer ${t}` } }),
+        fetch('/api/exam-questions?module=stoikiometri&view=global', { headers: { Authorization: `Bearer ${t}` } }),
       ]);
       if (tpRes.ok) setTpDefs(await tpRes.json().then((d: { tps: TPDef[] }) => d.tps));
-      if (qRes.ok) {
-        const qData = await qRes.json() as { questions: ExamQItem[] };
-        setAllExamQs((qData.questions ?? []).filter(q => q.status === 'active'));
+      if (mineQRes.ok && globalQRes.ok) {
+        const [mineData, globalData] = await Promise.all([
+          mineQRes.json() as Promise<{ questions: ExamQItem[] }>,
+          globalQRes.json() as Promise<{ questions: ExamQItem[] }>,
+        ]);
+        const accessibleQuestions = [...(mineData.questions ?? []), ...(globalData.questions ?? [])];
+        setAllExamQs(Array.from(new Map(
+          accessibleQuestions.filter(q => q.status === 'active').map(q => [q.id, q]),
+        ).values()));
       }
     } finally {
       setLoadingTPs(false);
@@ -215,7 +222,9 @@ const TeacherClassDetailPage: FC = () => {
   const canCreateExam = !!(examForm.title.trim() && (
     examSource === 'tp' ? examForm.domainIds.length > 0
     : examSource === 'manual' ? manualSelectedIds.length > 0
-    : customQs.length > 0 && customQs.every(q => q.stem.trim())
+    : customQs.length > 0 && customQs.every(q =>
+        q.stem.trim() && Object.values(q.options).every(option => option.trim()),
+      )
   ));
 
   const handleCreateExam = async () => {
@@ -248,6 +257,8 @@ const TeacherClassDetailPage: FC = () => {
       setShowCreateExam(false);
       resetExamForm();
       addToast('success', `Ujian "${examForm.title}" berhasil dibuat`);
+    } catch {
+      addToast('error', 'Tidak dapat terhubung ke server. Silakan coba lagi.');
     } finally {
       setSavingExam(false);
     }
@@ -804,6 +815,7 @@ const TeacherClassDetailPage: FC = () => {
                           <input
                             value={examForm.title}
                             onChange={e => setExamForm(f => ({ ...f, title: e.target.value }))}
+                            maxLength={120}
                             placeholder="contoh: Ujian Stoikiometri Bab 3"
                             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                           />
@@ -912,8 +924,9 @@ const TeacherClassDetailPage: FC = () => {
                                   const sel = manualSelectedIds.includes(q.id);
                                   const tp = tpDefs.find(t => t.id === q.domainId);
                                   return (
-                                    <button key={q.id} type="button" onClick={() => setManualSelectedIds(prev => prev.includes(q.id) ? prev.filter(x => x !== q.id) : [...prev, q.id])}
-                                      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-all ${sel ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                    <button key={q.id} type="button" disabled={!sel && manualSelectedIds.length >= 100}
+                                      onClick={() => setManualSelectedIds(prev => prev.includes(q.id) ? prev.filter(x => x !== q.id) : [...prev, q.id])}
+                                      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${sel ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
                                       <div className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-colors ${sel ? 'border-blue-500 bg-blue-500' : 'border-gray-300'}`}>
                                         {sel && <Check size={9} className="text-white" />}
                                       </div>
@@ -943,8 +956,9 @@ const TeacherClassDetailPage: FC = () => {
                           <div>
                             <div className="mb-2 flex items-center justify-between">
                               <label className="text-xs font-semibold text-gray-700">{customQs.length} Soal</label>
-                              <button type="button" onClick={() => setCustomQs(qs => [...qs, emptyCustomQ()])}
-                                className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                              <button type="button" disabled={customQs.length >= 100}
+                                onClick={() => setCustomQs(qs => [...qs, emptyCustomQ()])}
+                                className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40">
                                 <PlusCircle size={13} /> Tambah Soal
                               </button>
                             </div>
@@ -957,14 +971,14 @@ const TeacherClassDetailPage: FC = () => {
                                       <button type="button" onClick={() => setCustomQs(qs => qs.filter((_, i) => i !== idx))} className="rounded p-1 text-gray-400 hover:text-rose-500"><Trash2 size={12} /></button>
                                     )}
                                   </div>
-                                  <textarea value={cq.stem} onChange={e => setCustomQs(qs => qs.map((q, i) => i === idx ? { ...q, stem: e.target.value } : q))}
+                                  <textarea value={cq.stem} maxLength={10000} onChange={e => setCustomQs(qs => qs.map((q, i) => i === idx ? { ...q, stem: e.target.value } : q))}
                                     placeholder="Tulis pertanyaan di sini..." rows={2}
                                     className="mb-3 w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300" />
                                   <div className="mb-3 grid grid-cols-2 gap-2">
                                     {(['A', 'B', 'C', 'D'] as const).map(key => (
                                       <div key={key} className="flex items-center gap-1.5">
                                         <span className="w-4 text-xs font-bold text-gray-500">{key}.</span>
-                                        <input value={cq.options[key]} onChange={e => setCustomQs(qs => qs.map((q, i) => i === idx ? { ...q, options: { ...q.options, [key]: e.target.value } } : q))}
+                                        <input value={cq.options[key]} maxLength={5000} onChange={e => setCustomQs(qs => qs.map((q, i) => i === idx ? { ...q, options: { ...q.options, [key]: e.target.value } } : q))}
                                           placeholder={`Opsi ${key}`}
                                           className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-indigo-300" />
                                       </div>

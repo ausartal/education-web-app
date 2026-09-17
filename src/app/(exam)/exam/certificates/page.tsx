@@ -65,7 +65,7 @@ const ExamCertificatesPage: FC = () => {
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="font-display text-xl font-extrabold text-[#0E1E47]">Sertifikat</h1>
       <p className="mt-1 text-sm text-[#5B6475]">
-        Sertifikat diterbitkan otomatis setelah ujian selesai.
+        Sertifikat diterbitkan oleh admin setelah ujian selesai diverifikasi.
       </p>
 
       {certificates.length === 0 ? (
@@ -73,7 +73,7 @@ const ExamCertificatesPage: FC = () => {
           <Award size={28} className="mx-auto text-[#9B8FC7]" />
           <p className="mt-3 text-sm font-semibold text-[#5B6475]">Belum ada sertifikat</p>
           <p className="mt-1 text-xs text-[#9CA3AF]">
-            Selesaikan ujian untuk mendapatkan sertifikat kompetensi.
+            Sertifikat akan muncul setelah admin memverifikasi dan menyetujui hasil ujian kamu.
           </p>
           <Link href="/exam"
             className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#6320EE] hover:underline">
