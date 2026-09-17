@@ -75,10 +75,28 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    await adminDb.collection('exam_users').doc(decoded.uid).set({
+    const docRef = adminDb.collection('exam_users').doc(decoded.uid);
+    const existing = await docRef.get();
+
+    const base: Record<string, unknown> = {
       ...updates,
       updatedAt: new Date(),
-    }, { merge: true });
+    };
+
+    // If document doesn't exist yet, set required baseline fields
+    if (!existing.exists) {
+      base.uid = decoded.uid;
+      base.email = (decoded.email ?? '').toLowerCase();
+      base.verificationStatus = 'unverified';
+      base.verificationNotes = '';
+      base.verifiedAt = null;
+      base.tokenBalance = 0;
+      base.isActive = true;
+      base.createdAt = new Date();
+      base.lastLoginAt = new Date();
+    }
+
+    await docRef.set(base, { merge: true });
 
     return NextResponse.json({ success: true });
   } catch (err) {

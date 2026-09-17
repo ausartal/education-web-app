@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(Math.max(limitParam, 1), 100);
 
   try {
-    let query: FirebaseFirestore.Query = adminDb.collection('exam_users').orderBy('createdAt', 'desc');
+    let query: FirebaseFirestore.Query = adminDb.collection('exam_users');
 
     if (status && ['unverified', 'pending', 'verified', 'rejected'].includes(status)) {
       query = query.where('verificationStatus', '==', status);
@@ -31,6 +31,13 @@ export async function GET(req: NextRequest) {
       id: doc.id,
       ...doc.data(),
     }));
+
+    // Sort in memory to handle documents without createdAt
+    users.sort((a, b) => {
+      const aTime = (a.createdAt as { _seconds?: number })?._seconds ?? 0;
+      const bTime = (b.createdAt as { _seconds?: number })?._seconds ?? 0;
+      return bTime - aTime;
+    });
 
     return NextResponse.json({ users, total: users.length });
   } catch (err) {

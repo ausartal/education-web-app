@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useRef } from 'react';
 import {
   User, Mail, Phone, MapPin, Building2, Calendar,
   AlertCircle, CheckCircle2, Loader2, Camera, Save,
@@ -57,8 +57,11 @@ const ExamProfilePage: FC = () => {
   const [photoError, setPhotoError] = useState('');
   const [photoSuccess, setPhotoSuccess] = useState('');
 
+  // Only populate form from examUser on first load, not on every change
+  const formInitialized = useRef(false);
   useEffect(() => {
-    if (examUser) {
+    if (examUser && !formInitialized.current) {
+      formInitialized.current = true;
       setForm({
         displayName: examUser.displayName ?? '',
         phoneNumber: examUser.phoneNumber ?? '',
@@ -71,8 +74,12 @@ const ExamProfilePage: FC = () => {
         address: examUser.address ?? '',
       });
       setPhotoPreview(examUser.photoURL ?? null);
-      setLoading(false);
     }
+    if (examUser) {
+      // Always update photo preview from latest profile
+      setPhotoPreview(examUser.photoURL ?? null);
+    }
+    setLoading(false);
   }, [examUser]);
 
   const set = (key: keyof ProfileForm, val: string) => {

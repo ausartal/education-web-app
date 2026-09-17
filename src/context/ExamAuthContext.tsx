@@ -37,9 +37,12 @@ export const ExamAuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const fetchProfile = useCallback(async (firebaseUser: User) => {
     try {
       const profile = await getExamUserProfile(firebaseUser.uid);
-      setExamUser(profile);
+      if (profile) {
+        setExamUser(profile);
+      }
+      // If profile is null (document doesn't exist yet), keep previous state
     } catch {
-      setExamUser(null);
+      // On error, keep previous state — don't wipe existing data
     }
   }, []);
 
