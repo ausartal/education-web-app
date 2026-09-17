@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useState, useCallback } from 'react';
 import {
-  BookOpen, Search, Loader2, ChevronDown, Plus, Trash2,
+  BookOpen, Search, Loader2, ChevronDown, Plus, Trash2, Edit3,
   ArrowLeft, X, Check, AlertCircle, Save,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -97,8 +97,9 @@ const MsatQuestionsPage: FC = () => {
   const [filterStage, setFilterStage] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Create modal state
-  const [showCreate, setShowCreate] = useState(false);
+  // Create/Edit modal state
+  const [showModal, setShowModal] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<QuestionForm>({ ...emptyForm });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -121,7 +122,36 @@ const MsatQuestionsPage: FC = () => {
 
   useEffect(() => { fetchQuestions(); }, [fetchQuestions]);
 
-  const handleCreate = async () => {
+  const openCreate = () => {
+    setEditId(null);
+    setForm({ ...emptyForm });
+    setFormError('');
+    setFormSuccess('');
+    setShowModal(true);
+  };
+
+  const openEdit = (q: MSATQuestion) => {
+    setEditId(q.id);
+    setForm({
+      module: q.module || 'stoikiometri',
+      topic: q.topic || '',
+      stage: q.stage || 1,
+      difficulty: q.difficulty || 'sedang',
+      categoryLabel: q.categoryLabel || 'Medium',
+      cognitiveDomain: q.cognitiveDomain || 'knowing',
+      cognitiveLevel: q.cognitiveLevel || 'L1',
+      stem: q.stem || '',
+      options: { A: q.options?.A || '', B: q.options?.B || '', C: q.options?.C || '', D: q.options?.D || '', E: q.options?.E || '' },
+      correctAnswer: q.correctAnswer || 'A',
+      subElement: q.subElement || '',
+      competency: q.competency || '',
+    });
+    setFormError('');
+    setFormSuccess('');
+    setShowModal(true);
+  };
+
+  const handleSave = async () => {
     setFormError('');
     setFormSuccess('');
 
@@ -135,16 +165,20 @@ const MsatQuestionsPage: FC = () => {
     setSaving(true);
     try {
       const idToken = await user!.getIdToken();
-      const res = await fetch('/api/admin/msat/questions', {
-        method: 'POST',
+      const isEdit = !!editId;
+      const url = isEdit ? `/api/admin/msat/questions/${editId}` : '/api/admin/msat/questions';
+      const method = isEdit ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify(form),
       });
       if (res.ok) {
-        setFormSuccess('Soal berhasil ditambahkan');
-        setForm({ ...emptyForm });
+        setFormSuccess(isEdit ? 'Soal berhasil diperbarui' : 'Soal berhasil ditambahkan');
+        if (!isEdit) setForm({ ...emptyForm });
         await fetchQuestions();
-        setTimeout(() => { setShowCreate(false); setFormSuccess(''); }, 1200);
+        setTimeout(() => { setShowModal(false); setFormSuccess(''); setEditId(null); }, 1200);
       } else {
         const data = await res.json();
         setFormError(data.error || 'Gagal menyimpan');
@@ -204,7 +238,7 @@ const MsatQuestionsPage: FC = () => {
             <p className="text-xs text-stone-400">{questions.length} soal · {filtered.length} ditampilkan</p>
           </div>
         </div>
-        <button onClick={() => { setShowCreate(true); setForm({ ...emptyForm }); setFormError(''); setFormSuccess(''); }}
+        <button onClick={openCreate}
           className="flex items-center gap-1.5 rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-violet-700">
           <Plus size={14} /> Tambah Soal
         </button>
@@ -278,6 +312,10 @@ const MsatQuestionsPage: FC = () => {
                         {q.cognitiveLevel && <span>· {q.cognitiveLevel}</span>}
                       </div>
                       <div className="flex items-center gap-1">
+                        <button onClick={(e) => { e.stopPropagation(); openEdit(q); }}
+                          className="rounded-lg p-1 text-stone-400 hover:bg-blue-50 hover:text-blue-500">
+                          <Edit3 size={12} />
+                        </button>
                         <button onClick={(e) => { e.stopPropagation(); handleToggleStatus(q.id, q.status); }}
                           className="rounded-lg px-2 py-1 text-[10px] font-bold text-stone-500 hover:bg-stone-100">
                           {q.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
@@ -296,13 +334,13 @@ const MsatQuestionsPage: FC = () => {
         )}
       </div>
 
-      {/* Create Modal */}
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-8" onClick={() => setShowCreate(false)}>
+      {/* Create/Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-8" onClick={() => { setShowModal(false); setEditId(null); }}>
           <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
-              <h3 className="font-display text-lg font-extrabold text-stone-800">Tambah Soal MSAT</h3>
-              <button onClick={() => setShowCreate(false)} className="rounded-lg p-1 text-stone-400 hover:bg-stone-100"><X size={18} /></button>
+              <h3 className="font-display text-lg font-extrabold text-stone-800">{editId ? 'Edit Soal MSAT' : 'Tambah Soal MSAT'}</h3>
+              <button onClick={() => { setShowModal(false); setEditId(null); }} className="rounded-lg p-1 text-stone-400 hover:bg-stone-100"><X size={18} /></button>
             </div>
 
             <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-4">
@@ -427,12 +465,12 @@ const MsatQuestionsPage: FC = () => {
             </div>
 
             <div className="flex items-center justify-end gap-3 border-t border-stone-100 px-6 py-4">
-              <button onClick={() => setShowCreate(false)}
+              <button onClick={() => { setShowModal(false); setEditId(null); }}
                 className="rounded-lg border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-600 hover:bg-stone-50">Batal</button>
-              <button onClick={handleCreate} disabled={saving}
+              <button onClick={handleSave} disabled={saving}
                 className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-5 py-2 text-xs font-bold text-white transition hover:bg-violet-700 disabled:opacity-40">
                 {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
-                {saving ? 'Menyimpan...' : 'Simpan Soal'}
+                {saving ? 'Menyimpan...' : editId ? 'Simpan Perubahan' : 'Simpan Soal'}
               </button>
             </div>
           </div>
