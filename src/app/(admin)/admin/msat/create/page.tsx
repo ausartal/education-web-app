@@ -18,6 +18,8 @@ interface Question {
   stage: number;
   tierPath: string;
   categoryLabel: string;
+  topic?: string;
+  module?: string;
   options: Record<string, string>;
   correctAnswer: string;
 }
