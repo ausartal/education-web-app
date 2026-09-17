@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
     const snap = await query.limit(limit).get();
 
-    const users = snap.docs.map(doc => ({
+    const users: Record<string, unknown>[] = snap.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     }));
