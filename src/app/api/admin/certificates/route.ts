@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
     const snap = await query.limit(limit).get();
 
-    const certificates = await Promise.all(
+    const certificates: Record<string, unknown>[] = await Promise.all(
       snap.docs.map(async doc => {
         const data = doc.data();
         // Fetch user info
