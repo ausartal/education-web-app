@@ -71,6 +71,7 @@ const MsatCreatePage: FC = () => {
   const [step, setStep] = useState<'config' | 'questions' | 'review'>('config');
   const [activeBranch, setActiveBranch] = useState<StageBranch>('stage1_medium');
   const [activeDomain, setActiveDomain] = useState<string>('knowing');
+  const [filterTopic, setFilterTopic] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -96,15 +97,19 @@ const MsatCreatePage: FC = () => {
     init();
   }, [user]);
 
-  // Filter questions for current branch + domain
+  // Get unique topics from all questions
+  const availableTopics = [...new Set(allQuestions.map(q => q.topic).filter(Boolean))].sort();
+
+  // Filter questions for current branch + domain + topic
   const getFilteredQuestions = useCallback((branch: StageBranch, domain: string) => {
     const config = BRANCH_CONFIG[branch];
     return allQuestions.filter(q =>
       q.cognitiveDomain === domain &&
       config.categoryLabels.includes(q.categoryLabel) &&
-      q.stage === config.stage
+      q.stage === config.stage &&
+      (!filterTopic || q.topic === filterTopic)
     );
-  }, [allQuestions]);
+  }, [allQuestions, filterTopic]);
 
   const toggleQuestion = (branch: StageBranch, domain: string, questionId: string) => {
     setSelectedQuestions(prev => {
@@ -253,6 +258,13 @@ const MsatCreatePage: FC = () => {
                     <label className="mb-1.5 block text-xs font-semibold text-stone-500">Modul</label>
                     <select value={module} onChange={e => setModule(e.target.value)} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none">
                       <option value="stoikiometri">Stoikiometri</option>
+                      <option value="termokimia">Termokimia</option>
+                      <option value="larutan">Larutan</option>
+                      <option value="kesetimbangan">Kesetimbangan</option>
+                      <option value="asam_basa">Asam Basa</option>
+                      <option value="redoks">Redoks</option>
+                      <option value="elektrokimia">Elektrokimia</option>
+                      <option value="kimia_organik">Kimia Organik</option>
                     </select>
                   </div>
                   <div>
@@ -312,8 +324,18 @@ const MsatCreatePage: FC = () => {
         {/* ── STEP 2: QUESTIONS ── */}
         {step === 'questions' && (
           <motion.div key="questions" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-4">
-            {/* Auto-fill buttons */}
-            <div className="flex items-center gap-2">
+            {/* Topic filter + Auto-fill buttons */}
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={filterTopic}
+                onChange={e => setFilterTopic(e.target.value)}
+                className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-600 outline-none focus:border-violet-300"
+              >
+                <option value="">Semua Topik</option>
+                {availableTopics.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
               <button
                 onClick={autoFillAll}
                 className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 transition-colors hover:bg-blue-100"
@@ -379,6 +401,7 @@ const MsatCreatePage: FC = () => {
               <div className="border-b border-stone-100 px-5 py-3">
                 <p className="text-xs font-semibold text-stone-600">
                   Pilih 4 soal {DOMAIN_LABELS[activeDomain]} untuk {BRANCH_CONFIG[activeBranch].label}
+                  {filterTopic && <span className="ml-1 text-violet-600">({filterTopic})</span>}
                 </p>
                 <p className="mt-0.5 text-[10px] text-stone-400">
                   {getFilteredQuestions(activeBranch, activeDomain).length} soal tersedia
@@ -399,6 +422,7 @@ const MsatCreatePage: FC = () => {
                       <div className="min-w-0 flex-1">
                         <p className="line-clamp-2 text-[13px] text-stone-700">{q.stem}</p>
                         <div className="mt-1 flex items-center gap-1.5">
+                          {q.topic && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">{q.topic}</span>}
                           <span className="rounded bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-violet-600">{q.categoryLabel}</span>
                           <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-400">{q.cognitiveDomain}</span>
                         </div>

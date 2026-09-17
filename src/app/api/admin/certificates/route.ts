@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyAdmin } from '@/lib/auth-helpers';
+import { generateCertificateNo } from '@/lib/exam-validation';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
@@ -128,4 +129,120 @@ export async function PATCH(req: NextRequest) {
     console.error('Admin certificate action error:', err);
     return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });
   }
+}
+
+/**
+ * POST /api/admin/certificates — generate certificates for completed sessions without one
+ * Body: { sessionId?: string } — if provided, generate for that session only
+ *        if not provided, generate for all completed sessions without certificates
+ */
+export async function POST(req: NextRequest) {
+  const admin = await verifyAdmin(req);
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { /* empty body is ok */ }
+
+  const { sessionId } = body as { sessionId?: string };
+
+  try {
+    const generated: string[] = [];
+
+    if (sessionId) {
+      // Generate for a specific session
+      const sessionDoc = await adminDb.collection('msat_sessions').doc(sessionId).get();
+      if (!sessionDoc.exists) {
+        return NextResponse.json({ error: 'Sesi tidak ditemukan' }, { status: 404 });
+      }
+      const session = sessionDoc.data()!;
+
+      // Check if certificate already exists
+      const existingCert = await adminDb.collection('exam_certificates')
+        .where('sessionId', '==', sessionId).limit(1).get();
+      if (!existingCert.empty) {
+        return NextResponse.json({ error: 'Sertifikat sudah ada untuk sesi ini' }, { status: 409 });
+      }
+
+      const certId = await createCertificate(sessionDoc.id, session);
+      if (certId) generated.push(certId);
+    } else {
+      // Generate for all completed sessions without certificates
+      const completedSnap = await adminDb.collection('msat_sessions')
+        .where('status', '==', 'completed')
+        .limit(100)
+        .get();
+
+      for (const doc of completedSnap.docs) {
+        const session = doc.data();
+
+        // Check if certificate already exists
+        const existingCert = await adminDb.collection('exam_certificates')
+          .where('sessionId', '==', doc.id).limit(1).get();
+        if (!existingCert.empty) continue;
+
+        const certId = await createCertificate(doc.id, session);
+        if (certId) generated.push(certId);
+      }
+    }
+
+    return NextResponse.json({ success: true, generated: generated.length, ids: generated });
+  } catch (err) {
+    console.error('Admin certificate generation error:', err);
+    return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });
+  }
+}
+
+async function createCertificate(sessionId: string, session: FirebaseFirestore.DocumentData): Promise<string | null> {
+  const userId = session.studentId;
+  if (!userId) return null;
+
+  // Check if user is an exam_user
+  const examUserDoc = await adminDb.collection('exam_users').doc(userId).get();
+  if (!examUserDoc.exists) return null;
+
+  // Get exam title
+  let examTitle = 'Ujian Kimia';
+  if (session.examId) {
+    const examDoc = await adminDb.collection('msat_access_code').doc(session.examId).get();
+    if (examDoc.exists) examTitle = examDoc.data()?.title ?? examTitle;
+  }
+
+  // Calculate score and predikat
+  const stageResponses = session.stageResponses as Array<{ stageNumber: number; totalCorrect: number; passed: boolean }> | undefined;
+  const finalScore = session.finalScore ?? (stageResponses
+    ? Math.round(stageResponses.reduce((sum, sr) => sum + sr.totalCorrect, 0) / Math.max(stageResponses.length, 1) / 12 * 100)
+    : 0);
+  const predikat = session.predikat ?? getPredikat(finalScore);
+
+  // Generate certificate number
+  const year = new Date().getFullYear();
+  const countSnap = await adminDb.collection('exam_certificates')
+    .where('issuedAt', '>=', new Date(`${year}-01-01`))
+    .get();
+  const sequence = countSnap.size + 1;
+  const certificateNo = generateCertificateNo(sequence, year);
+
+  const certRef = await adminDb.collection('exam_certificates').add({
+    userId,
+    sessionId,
+    examTitle,
+    score: finalScore,
+    predikat,
+    issuedAt: FieldValue.serverTimestamp(),
+    certificateNo,
+    pdfUrl: null,
+    status: 'pending_approval',
+    approvedAt: null,
+    sentAt: null,
+  });
+
+  return certRef.id;
+}
+
+function getPredikat(score: number): string {
+  if (score >= 90) return 'Istimewa';
+  if (score >= 80) return 'Unggul';
+  if (score >= 70) return 'Madya';
+  if (score >= 60) return 'Semenjana';
+  return 'Terbatas';
 }

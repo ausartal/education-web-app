@@ -53,6 +53,8 @@ const AdminCertificatesPage: FC = () => {
   const [search, setSearch] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [detailCert, setDetailCert] = useState<Certificate | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [generateResult, setGenerateResult] = useState<string>('');
 
   const fetchCertificates = useCallback(async () => {
     if (!user) return;
@@ -91,6 +93,29 @@ const AdminCertificatesPage: FC = () => {
     setActionLoading(null);
   };
 
+  const handleGenerateAll = async () => {
+    if (!user) return;
+    setGenerating(true);
+    setGenerateResult('');
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/admin/certificates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({}),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGenerateResult(`${data.generated} sertifikat berhasil dibuat`);
+        await fetchCertificates();
+      } else {
+        const data = await res.json();
+        setGenerateResult(data.error || 'Gagal generate');
+      }
+    } catch { setGenerateResult('Terjadi kesalahan'); }
+    setGenerating(false);
+  };
+
   const filtered = certificates.filter((c) => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -112,6 +137,11 @@ const AdminCertificatesPage: FC = () => {
           <p className="mt-0.5 text-xs text-stone-400">Kelola penerbitan dan pengiriman sertifikat peserta ujian</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={handleGenerateAll} disabled={generating}
+            className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-violet-700 disabled:opacity-40">
+            {generating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
+            {generating ? 'Generate...' : 'Generate Semua'}
+          </button>
           {pendingCount > 0 && (
             <span className="rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-700">
               {pendingCount} menunggu
@@ -122,6 +152,13 @@ const AdminCertificatesPage: FC = () => {
           </span>
         </div>
       </div>
+
+      {/* Generate result */}
+      {generateResult && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2.5 text-xs text-emerald-700 ring-1 ring-emerald-200">
+          <CheckCircle2 size={13} /> {generateResult}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
