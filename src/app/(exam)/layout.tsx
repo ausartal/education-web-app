@@ -91,9 +91,13 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
                   {examUser?.verificationStatus === 'verified' ? 'Terverifikasi' : 'Belum verifikasi'}
                 </p>
               </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F0EDFF] text-xs font-bold text-[#6320EE]">
-                {examUser?.displayName?.charAt(0).toUpperCase() ?? <User size={14} />}
-              </div>
+              {examUser?.photoURL ? (
+                <img src={examUser.photoURL} alt="" className="h-8 w-8 rounded-full object-cover ring-1 ring-[#DCE5F2]" />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F0EDFF] text-xs font-bold text-[#6320EE]">
+                  {examUser?.displayName?.charAt(0).toUpperCase() ?? <User size={14} />}
+                </div>
+              )}
             </Link>
           )}
 

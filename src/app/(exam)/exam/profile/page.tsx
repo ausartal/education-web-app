@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   User, Mail, Phone, MapPin, Building2, Calendar,
   AlertCircle, CheckCircle2, Loader2, Camera, Save,
@@ -34,6 +35,7 @@ interface ProfileForm {
 }
 
 const ExamProfilePage: FC = () => {
+  const router = useRouter();
   const { examUser, refreshProfile } = useExamAuth();
   const [form, setForm] = useState<ProfileForm>({
     displayName: '',
@@ -49,7 +51,7 @@ const ExamProfilePage: FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [saveSuccess, setSaveSuccess] = useState('');
+  const [showSavedToast, setShowSavedToast] = useState(false);
 
   // Photo-specific state
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -85,12 +87,10 @@ const ExamProfilePage: FC = () => {
   const set = (key: keyof ProfileForm, val: string) => {
     setForm((prev) => ({ ...prev, [key]: val }));
     setSaveError('');
-    setSaveSuccess('');
   };
 
   const handleSave = async () => {
     setSaveError('');
-    setSaveSuccess('');
     setSaving(true);
     try {
       const user = (await import('@/lib/firebase')).auth.currentUser;
@@ -106,7 +106,11 @@ const ExamProfilePage: FC = () => {
         throw new Error(data.error || 'Gagal menyimpan');
       }
       await refreshProfile();
-      setSaveSuccess('Profil berhasil disimpan.');
+      // Show success toast and redirect to dashboard
+      setShowSavedToast(true);
+      setTimeout(() => {
+        router.push('/exam');
+      }, 1200);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
     } finally {
@@ -376,11 +380,6 @@ const ExamProfilePage: FC = () => {
               <AlertCircle size={14} /> {saveError}
             </div>
           )}
-          {saveSuccess && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-emerald-100">
-              <CheckCircle2 size={14} /> {saveSuccess}
-            </div>
-          )}
           <div className="flex items-center justify-between">
             <p className="text-xs text-[#9CA3AF]">
               Semua field wajib diisi untuk verifikasi.
@@ -392,6 +391,21 @@ const ExamProfilePage: FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Success toast popup */}
+        {showSavedToast && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+            <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-6 shadow-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                <CheckCircle2 size={24} className="text-emerald-600" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-[#0E1E47]">Profil Berhasil Disimpan</p>
+                <p className="mt-1 text-xs text-[#5B6475]">Admin akan memverifikasi identitas kamu.</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

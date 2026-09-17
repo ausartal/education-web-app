@@ -68,6 +68,15 @@ export const ExamAuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return unsubscribe;
   }, [fetchProfile]);
 
+  // Poll profile every 30s for verification status updates
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      fetchProfile(user);
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [user, fetchProfile]);
+
   const value = useMemo(
     () => ({ user, examUser, loading, refreshProfile }),
     [user, examUser, loading, refreshProfile],
