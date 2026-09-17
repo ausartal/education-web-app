@@ -39,8 +39,13 @@ const RegisterPage: FC = () => {
       await signUp(email, password, fullName, role);
       router.push(role === 'teacher' ? '/teacher' : '/onboarding');
     } catch (err) {
-      const message = getAuthErrorMessage(err);
-      if (message) setError(message);
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('sudah terdaftar di AKURAT')) {
+        setError(msg);
+      } else {
+        const message = getAuthErrorMessage(err);
+        if (message) setError(message);
+      }
     } finally {
       setLoading(false);
     }

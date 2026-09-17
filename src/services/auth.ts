@@ -26,9 +26,39 @@ export async function signUp(
   displayName: string,
   role: UserRole = 'student'
 ): Promise<void> {
-  const { user } = await createUserWithEmailAndPassword(auth, email, password);
-  await updateProfile(user, { displayName });
-  await createUserProfile(user.uid, {
+  let user;
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    user = result.user;
+    await updateProfile(user, { displayName });
+  } catch (createErr: unknown) {
+    const code = (createErr as { code?: string }).code ?? '';
+    if (code === 'auth/email-already-in-use') {
+      // Email already exists (e.g. exam account). Try signing in with same password.
+      try {
+        const { user: existingUser } = await signInWithEmailAndPassword(auth, email, password);
+        user = existingUser;
+      } catch {
+        // Password doesn't match the existing account
+        const err = new Error('Email ini sudah terdaftar di AKURAT. Gunakan kata sandi yang sama, atau masuk terlebih dahulu.');
+        (err as { code?: string }).code = 'auth/email-already-in-use';
+        throw err;
+      }
+      // Check if school profile already exists
+      const existingProfile = await getUserProfile(user!.uid);
+      if (existingProfile) {
+        const err = new Error('Email sudah terdaftar. Silakan login.');
+        (err as { code?: string }).code = 'auth/email-already-in-use';
+        throw err;
+      }
+      if (user!.displayName !== displayName) {
+        await updateProfile(user!, { displayName });
+      }
+    } else {
+      throw createErr;
+    }
+  }
+  await createUserProfile(user!.uid, {
     email,
     displayName,
     photoURL: null,

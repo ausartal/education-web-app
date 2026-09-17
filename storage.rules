@@ -23,6 +23,14 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
+    // ── Exam user photos (for certificates) ──────────────────────────────
+    match /exam_photos/{userId} {
+      allow read: if true;
+      allow write: if isAuth() && uid() == userId
+        && request.resource.size < 2 * 1024 * 1024  // max 2MB
+        && request.resource.contentType.matches('image/.*');
+    }
+
     // ── Default deny all other paths ──────────────────────────────────────
     match /{allPaths=**} {
       allow read, write: if false;

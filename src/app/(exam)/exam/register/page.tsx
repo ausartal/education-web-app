@@ -116,21 +116,28 @@ const ExamRegisterPage: FC = () => {
       } catch (createErr: unknown) {
         const code = (createErr as { code?: string }).code ?? '';
         if (code === 'auth/email-already-in-use') {
-          // Email already exists in Firebase Auth (school account).
-          // Sign in with the provided password to link the exam profile.
-          const { user: existingUser } = await signInWithEmailAndPassword(auth, form.email, form.password);
-          user = existingUser;
+          // Email already exists in Firebase Auth (e.g. school account).
+          // Try signing in — password must match the existing Auth account.
+          try {
+            const { user: existingUser } = await signInWithEmailAndPassword(auth, form.email, form.password);
+            user = existingUser;
+          } catch {
+            // Wrong password — can't sign in
+            setError('Email ini sudah terdaftar di AKURAT. Gunakan kata sandi yang sama, atau masuk terlebih dahulu.');
+            setLoading(false);
+            return;
+          }
 
           // Check if exam profile already exists
-          const existingProfile = await getExamUserProfile(user.uid);
+          const existingProfile = await getExamUserProfile(user!.uid);
           if (existingProfile) {
             setError('Akun AKURAT Exam sudah terdaftar untuk email ini. Silakan masuk.');
             setLoading(false);
             return;
           }
           // Update display name if different
-          if (user.displayName !== sanitizeInput(form.displayName)) {
-            await updateProfile(user, { displayName: sanitizeInput(form.displayName) });
+          if (user!.displayName !== sanitizeInput(form.displayName)) {
+            await updateProfile(user!, { displayName: sanitizeInput(form.displayName) });
           }
         } else {
           throw createErr;
