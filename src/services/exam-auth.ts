@@ -6,6 +6,8 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
   setPersistence,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -73,6 +75,50 @@ export async function examSignIn(
   );
   await signInWithEmailAndPassword(auth, email, password);
   await updateExamLastLogin();
+}
+
+export interface ExamGoogleSignInResult {
+  needsProfileCompletion: boolean;
+}
+
+/**
+ * Sign in to AKURAT Exam with Google. The server creates the separate Exam
+ * profile for first-time users and assigns the exam_user claim.
+ */
+export async function examSignInWithGoogle(
+  rememberMe = true,
+): Promise<ExamGoogleSignInResult> {
+  await setPersistence(
+    auth,
+    rememberMe ? browserLocalPersistence : browserSessionPersistence,
+  );
+
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const { user } = await signInWithPopup(auth, provider);
+
+  try {
+    const token = await user.getIdToken();
+    const response = await fetch('/api/exam/auth/google', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const result = (await response.json()) as {
+      error?: string;
+      needsProfileCompletion?: boolean;
+    };
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Gagal masuk dengan Google');
+    }
+
+    // Refresh so subsequent Exam API calls immediately receive exam_user.
+    await user.getIdToken(true);
+    return { needsProfileCompletion: result.needsProfileCompletion === true };
+  } catch (error) {
+    await firebaseSignOut(auth);
+    throw error;
+  }
 }
 
 /**
