@@ -193,7 +193,9 @@ service cloud.firestore {
     // ── ANALYTICS ────────────────────────────────────────────────────────────
     match /analytics_events/{docId} {
       allow read:   if isAdmin();
-      allow create: if isAuth();
+      // Analytics is security-sensitive: accepting arbitrary client writes would
+      // allow identity/timestamp spoofing and corrupt admin activity metrics.
+      allow create: if false; // server-side only via Admin SDK
       allow update: if false;
       allow delete: if isAdmin();
     }

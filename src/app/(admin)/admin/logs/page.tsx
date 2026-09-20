@@ -3,8 +3,10 @@
 import { FC, useEffect, useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ClipboardList, RefreshCw, ChevronDown, Search, Pause, Play, X } from 'lucide-react';
+import { collection, limit as firestoreLimit, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { AuditLog } from '@/types/firestore';
+import { db } from '@/lib/firebase';
 
 const actionColors: Record<string, string> = {
   create_user: 'bg-emerald-50 text-emerald-700',
@@ -60,6 +62,7 @@ const AdminLogs: FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   const fetchLogs = useCallback(async (fetchLimit: number, silent = false) => {
     if (!user) return;
@@ -86,10 +89,38 @@ const AdminLogs: FC = () => {
   }, [fetchLogs, limit]);
 
   useEffect(() => {
-    if (!autoRefresh) return;
-    const timer = window.setInterval(() => fetchLogs(limit, true), 10_000);
-    return () => window.clearInterval(timer);
-  }, [autoRefresh, fetchLogs, limit]);
+    if (!autoRefresh || !user) {
+      setRealtimeConnected(false);
+      return;
+    }
+
+    let fallbackTimer: number | undefined;
+    const auditQuery = query(
+      collection(db, 'audit_logs'),
+      orderBy('timestamp', 'desc'),
+      firestoreLimit(Math.min(limit, 200)),
+    );
+    const unsubscribe = onSnapshot(
+      auditQuery,
+      snapshot => {
+        setLogs(snapshot.docs.map(document => ({ id: document.id, ...document.data() } as AuditLog)));
+        setHasMore(snapshot.size === Math.min(limit, 200));
+        setLastUpdated(new Date());
+        setRealtimeConnected(true);
+        setLoading(false);
+      },
+      () => {
+        setRealtimeConnected(false);
+        fetchLogs(limit, true);
+        fallbackTimer = window.setInterval(() => fetchLogs(limit, true), 15_000);
+      },
+    );
+
+    return () => {
+      unsubscribe();
+      if (fallbackTimer) window.clearInterval(fallbackTimer);
+    };
+  }, [autoRefresh, fetchLogs, limit, user]);
 
   const actionOptions = useMemo(() => Array.from(new Set(logs.map(log => log.action))).sort(), [logs]);
   const filteredLogs = useMemo(() => logs.filter(log => {
@@ -120,7 +151,7 @@ const AdminLogs: FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setAutoRefresh(value => !value)} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold ${autoRefresh ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600'}`}>{autoRefresh ? <Pause size={13} /> : <Play size={13} />}{autoRefresh ? 'Auto-refresh aktif' : 'Auto-refresh dijeda'}</button>
+          <button type="button" onClick={() => setAutoRefresh(value => !value)} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold ${autoRefresh ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600'}`}>{autoRefresh ? <Pause size={13} /> : <Play size={13} />}{autoRefresh ? (realtimeConnected ? 'Realtime terhubung' : 'Menghubungkan...') : 'Realtime dijeda'}</button>
           <button onClick={() => fetchLogs(limit)} disabled={loading} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-50"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />Perbarui</button>
         </div>
       </div>

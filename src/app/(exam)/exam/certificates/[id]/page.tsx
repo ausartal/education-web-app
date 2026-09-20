@@ -21,10 +21,10 @@ interface CertificateDetail {
 
 interface SessionInfo {
   conclusions: {
-    knowing: { score: number; level: string };
-    applying: { score: number; level: string };
-    reasoning: { score: number; level: string };
-    overall: { description: string };
+    knowing: { score: number; level: string; description?: string };
+    applying: { score: number; level: string; description?: string };
+    reasoning: { score: number; level: string; description?: string };
+    overall: { description: string; predikat?: string };
   } | null;
   peringkat: number | null;
 }
@@ -45,6 +45,24 @@ function formatDate(ts: { _seconds: number } | null): string {
 
 const PERINGKAT_ROMAN: Record<number, string> = {
   1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V',
+};
+
+const DOMAIN_FALLBACKS: Record<string, Record<string, string>> = {
+  knowing: {
+    Tinggi: 'Menunjukkan penguasaan yang kuat dan konsisten terhadap fakta, istilah, prinsip, serta hubungan antarkonsep. Peserta mampu menjelaskan landasan konsep secara akurat sebagai dasar penyelesaian masalah.',
+    Sedang: 'Memahami konsep dan prinsip utama dengan cukup baik, namun konsistensi masih perlu diperkuat pada konsep yang lebih kompleks atau membutuhkan keterhubungan beberapa gagasan.',
+    Rendah: 'Penguasaan fakta dan konsep dasar masih terbatas. Penguatan terstruktur diperlukan sebelum peserta melanjutkan ke penerapan dan analisis yang lebih kompleks.',
+  },
+  applying: {
+    Tinggi: 'Mampu memilih serta menerapkan rumus, hukum, dan prosedur yang relevan secara tepat pada beragam konteks, termasuk variasi soal yang tidak sepenuhnya rutin.',
+    Sedang: 'Mampu menerapkan konsep pada situasi prosedural yang familiar, tetapi masih memerlukan latihan untuk menentukan strategi pada variasi konteks yang baru.',
+    Rendah: 'Penerapan konsep dan prosedur belum konsisten. Peserta perlu memperkuat pemilihan rumus, urutan penyelesaian, dan pemeriksaan kembali hasil.',
+  },
+  reasoning: {
+    Tinggi: 'Mampu menafsirkan informasi, menghubungkan beberapa konsep, mengevaluasi bukti, dan membangun penyelesaian logis untuk masalah kontekstual maupun non-rutin.',
+    Sedang: 'Mulai mampu menalar hubungan sebab-akibat dan membaca pola, tetapi analisis pada persoalan terintegrasi masih membutuhkan penguatan.',
+    Rendah: 'Penalaran ilmiah masih berfokus pada informasi langsung. Latihan analisis data, argumentasi berbasis bukti, dan integrasi konsep perlu diprioritaskan.',
+  },
 };
 
 const CertificateDetailPage: FC = () => {
@@ -109,6 +127,15 @@ const CertificateDetailPage: FC = () => {
   const reasoning = session?.conclusions?.reasoning?.score ?? 0;
   const description = session?.conclusions?.overall?.description ??
     'Sertifikat ini diterbitkan oleh AKURAT sebagai bukti kompetensi kimia berdasarkan asesmen adaptif multistage.';
+  const domainResults = [
+    { key: 'knowing', label: 'Knowing', subtitle: 'Penguasaan Konsep', score: knowing, result: session?.conclusions?.knowing },
+    { key: 'applying', label: 'Applying', subtitle: 'Penerapan Konsep', score: applying, result: session?.conclusions?.applying },
+    { key: 'reasoning', label: 'Reasoning', subtitle: 'Penalaran Ilmiah', score: reasoning, result: session?.conclusions?.reasoning },
+  ].map(item => ({
+    ...item,
+    level: item.result?.level ?? (item.score >= 75 ? 'Tinggi' : item.score >= 50 ? 'Sedang' : 'Rendah'),
+    narrative: item.result?.description ?? DOMAIN_FALLBACKS[item.key][item.result?.level ?? (item.score >= 75 ? 'Tinggi' : item.score >= 50 ? 'Sedang' : 'Rendah')],
+  }));
 
   return (
     <>
@@ -116,8 +143,10 @@ const CertificateDetailPage: FC = () => {
       <style jsx global>{`
         @media print {
           body * { visibility: hidden; }
-          .cert-page, .cert-page * { visibility: visible; }
-          .cert-page { position: absolute; left: 0; top: 0; }
+          .cert-pages, .cert-pages * { visibility: visible; }
+          .cert-pages { position: absolute; inset: 0; padding: 0 !important; }
+          .cert-sheet { width: 297mm !important; height: 210mm !important; box-shadow: none !important; break-after: page; page-break-after: always; }
+          .cert-sheet:last-child { break-after: auto; page-break-after: auto; }
           .no-print { display: none !important; }
           @page { size: A4 landscape; margin: 0; }
         }
@@ -137,8 +166,8 @@ const CertificateDetailPage: FC = () => {
       </div>
 
       {/* Certificate — landscape A4 */}
-      <div className="cert-page mx-auto max-w-5xl px-4 pb-12">
-        <div className="relative overflow-hidden bg-white shadow-lg" style={{ aspectRatio: '297/210' }}>
+      <div className="cert-pages mx-auto max-w-5xl space-y-6 px-4 pb-12">
+        <div className="cert-sheet relative overflow-hidden bg-white shadow-lg" style={{ aspectRatio: '297/210' }}>
 
           {/* Borders */}
           <div className="pointer-events-none absolute" style={{ inset: '8mm', border: '1.5px solid #C4B5FD' }} />
@@ -262,6 +291,75 @@ const CertificateDetailPage: FC = () => {
                 <p className="mt-0.5 text-[7px] text-[#D1D5DB]">akurat-76834.web.app</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Page 2 — competency analysis */}
+        <div className="cert-sheet relative overflow-hidden bg-white shadow-lg" style={{ aspectRatio: '297/210' }}>
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#6320EE] via-[#8B5CF6] to-[#F59E0B]" />
+          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#6320EE]/[0.035]" />
+          <div className="absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-[#F59E0B]/[0.04]" />
+
+          <div className="absolute flex flex-col" style={{ inset: '13mm 16mm 11mm' }}>
+            <header className="flex items-start justify-between border-b border-[#E5E7EB] pb-3">
+              <div className="flex items-center gap-3">
+                <Image src="/icons/Akurat_Logo.svg" alt="AKURAT" width={36} height={36} />
+                <div>
+                  <p className="text-[8px] font-bold uppercase tracking-[0.22em] text-[#6320EE]">AKURAT Exam</p>
+                  <h2 className="font-display text-xl font-extrabold text-[#141B34]">Laporan Analisis Kompetensi</h2>
+                  <p className="mt-0.5 text-[9px] text-[#6B7280]">Interpretasi hasil Multistage Adaptive Scored Testing</p>
+                </div>
+              </div>
+              <div className="text-right text-[8px] leading-relaxed text-[#6B7280]">
+                <p className="font-mono font-semibold text-[#374151]">{cert.certificateNo}</p>
+                <p>{formatDate(cert.issuedAt)}</p>
+                <p>Halaman 2 dari 2</p>
+              </div>
+            </header>
+
+            <div className="mt-3 grid grid-cols-[1.45fr_0.55fr] gap-3">
+              <section className="rounded-lg border border-[#E9E2FF] bg-[#FAF9FF] px-4 py-3">
+                <p className="text-[7px] font-bold uppercase tracking-[0.18em] text-[#7C3AED]">Simpulan keseluruhan</p>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <h3 className="font-display text-lg font-extrabold text-[#1F2937]">{cert.predikat}</h3>
+                  <span className="text-[9px] font-semibold text-[#7C3AED]">Peringkat {PERINGKAT_ROMAN[peringkat] ?? peringkat}</span>
+                </div>
+                <p className="mt-1.5 text-[9px] leading-[1.55] text-[#4B5563]">{description}</p>
+              </section>
+              <section className="flex items-center justify-around rounded-lg bg-[#141B34] px-4 py-3 text-white">
+                <div className="text-center"><p className="text-[7px] font-bold uppercase tracking-[0.14em] text-white/50">Skor akhir</p><p className="font-display text-3xl font-black">{cert.score}</p></div>
+                <div className="h-9 w-px bg-white/15" />
+                <div className="min-w-0 text-center"><p className="text-[7px] font-bold uppercase tracking-[0.14em] text-white/50">Peserta</p><p className="mt-1 max-w-[120px] truncate text-[11px] font-bold">{profile?.displayName ?? '-'}</p><p className="mt-0.5 max-w-[120px] truncate text-[7px] text-white/50">{profile?.institution ?? '-'}</p></div>
+              </section>
+            </div>
+
+            <section className="mt-3 grid flex-1 grid-cols-3 gap-3">
+              {domainResults.map((domain, index) => (
+                <article key={domain.key} className="flex flex-col rounded-lg border border-[#E5E7EB] bg-white p-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[7px] font-bold uppercase tracking-[0.16em] text-[#9CA3AF]">Domain {index + 1}</span>
+                      <h3 className="mt-0.5 text-[12px] font-extrabold text-[#1F2937]">{domain.label}</h3>
+                      <p className="text-[8px] text-[#6B7280]">{domain.subtitle}</p>
+                    </div>
+                    <div className="text-right"><p className="font-display text-2xl font-black leading-none text-[#6320EE]">{domain.score}%</p><p className="mt-1 text-[8px] font-bold text-[#4B5563]">{domain.level}</p></div>
+                  </div>
+                  <div className="my-2.5 h-1 overflow-hidden rounded-full bg-[#F1F5F9]"><div className="h-full rounded-full bg-gradient-to-r from-[#6320EE] to-[#9F67FF]" style={{ width: `${Math.max(2, Math.min(100, domain.score))}%` }} /></div>
+                  <p className="text-[8.5px] leading-[1.55] text-[#4B5563]">{domain.narrative}</p>
+                  <div className="mt-auto border-t border-[#F1F5F9] pt-2">
+                    <p className="text-[7px] font-bold uppercase tracking-[0.12em] text-[#9CA3AF]">Fokus pengembangan</p>
+                    <p className="mt-1 text-[8px] leading-[1.45] text-[#6B7280]">
+                      {domain.level === 'Tinggi' ? 'Pertahankan konsistensi melalui soal lintas konsep dan konteks baru.' : domain.level === 'Sedang' ? 'Perkuat konsistensi melalui latihan bertahap dan evaluasi kesalahan.' : 'Prioritaskan penguatan konsep dasar dengan latihan terarah dan umpan balik.'}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </section>
+
+            <footer className="mt-3 flex items-center justify-between border-t border-[#E5E7EB] pt-2 text-[7px] text-[#9CA3AF]">
+              <p className="max-w-[650px] leading-relaxed">Laporan ini merupakan interpretasi diagnostik berdasarkan respons peserta pada asesmen adaptif. Hasil digunakan untuk memetakan kekuatan dan area pengembangan, bukan sebagai satu-satunya dasar pengambilan keputusan akademik.</p>
+              <p className="ml-6 shrink-0 font-mono">{examCode || cert.certificateNo}</p>
+            </footer>
           </div>
         </div>
       </div>
