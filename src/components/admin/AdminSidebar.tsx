@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { signOut } from '@/services/auth';
+import { getActiveNavigationPath, navigationPath } from '@/lib/admin-navigation';
 
 interface NavChild {
   href: string;
@@ -50,8 +51,17 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({
   const [search, setSearch] = useState('');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
-  const isActive = (href: string) =>
-    href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
+  const navigationHrefs = useMemo(() => sections.flatMap(section =>
+    section.items.flatMap(item => [
+      ...(item.href ? [item.href] : []),
+      ...(item.children?.map(child => child.href) ?? []),
+    ])
+  ), [sections]);
+  const activeNavigationPath = useMemo(
+    () => getActiveNavigationPath(pathname, navigationHrefs),
+    [navigationHrefs, pathname],
+  );
+  const isActive = (href: string) => navigationPath(href) === activeNavigationPath;
 
   const childMatches = useCallback((href: string) => {
     const [path, query] = href.split('?');
