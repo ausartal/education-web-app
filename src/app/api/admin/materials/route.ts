@@ -11,9 +11,13 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status');
+  const subjectId = searchParams.get('subjectId');
+  const topicId = searchParams.get('topicId');
 
   let query: FirebaseFirestore.Query = adminDb.collection('materials');
   if (status) query = query.where('status', '==', status);
+  if (subjectId) query = query.where('taxonomy.subject.id', '==', subjectId);
+  if (topicId) query = query.where('taxonomy.topic.id', '==', topicId);
 
   const snap = await query.orderBy('order', 'asc').get();
   const materials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -25,7 +29,7 @@ export async function POST(req: NextRequest) {
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
-  const { title, description, topic, subtopic, content, estimatedTime, status = 'draft', order = 0, learningObjectives = [], prerequisites = [] } = body;
+  const { title, description, topic, subtopic, taxonomy, content, estimatedTime, status = 'draft', order = 0, learningObjectives = [], prerequisites = [] } = body;
 
   if (!title || !topic) {
     return NextResponse.json({ error: 'title and topic are required' }, { status: 400 });
@@ -34,7 +38,7 @@ export async function POST(req: NextRequest) {
   const docRef = adminDb.collection('materials').doc();
   const material = {
     title, description: description || '',
-    topic, subtopic: subtopic || '',
+    topic, subtopic: subtopic || '', taxonomy: taxonomy || null,
     content: content || '',
     estimatedTime: estimatedTime || 30,
     status, order,

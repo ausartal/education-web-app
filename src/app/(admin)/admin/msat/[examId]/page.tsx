@@ -4,8 +4,8 @@ import { FC, useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Loader2, Copy, Check, Brain, Clock, Users, Target,
-  Play, Square, RefreshCw, BarChart3, Coffee, SkipForward, UserCheck,
+  ArrowLeft, Loader2, Copy, Check, Clock, Users, Target,
+  Play, Square, RefreshCw, Coffee, SkipForward, UserCheck,
   AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -137,16 +137,13 @@ const MsatExamDetailPage: FC = () => {
   const onBreakSessions = sessions.filter(s => s.status === 'on_break');
   const inProgressSessions = sessions.filter(s => s.status === 'in_progress');
   const waitingSessions = sessions.filter(s => s.status === 'waiting');
-  const avgScore = completedSessions.length > 0
-    ? Math.round(completedSessions.reduce((sum, s) => sum + (s.finalScore ?? 0), 0) / completedSessions.length)
-    : 0;
 
   return (
     <div className="space-y-5">
       {/* Confirm Dialog */}
       <AnimatePresence>
         {confirmAction && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm" onClick={() => setConfirmAction(null)}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/50 backdrop-blur-sm" onClick={() => setConfirmAction(null)}>
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} onClick={e => e.stopPropagation()} className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50"><AlertCircle size={20} className="text-amber-500" /></div>

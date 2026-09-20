@@ -4,8 +4,8 @@ import { FC, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Loader2, BarChart3, Trophy, Users, Target,
-  ChevronDown, ChevronRight, Brain, BookOpen, Lightbulb,
-  TrendingUp, Award, CheckCircle2, XCircle, Download,
+  ChevronDown, Brain, BookOpen, Lightbulb,
+  CheckCircle2, XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';

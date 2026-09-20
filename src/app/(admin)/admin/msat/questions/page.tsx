@@ -7,6 +7,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
+import { TaxonomyPicker } from '@/components/admin/TaxonomyPicker';
+import { ContentTaxonomy } from '@/types/taxonomy';
 
 interface MSATQuestion {
   id: string;
@@ -24,6 +27,7 @@ interface MSATQuestion {
   subElement: string;
   competency: string;
   status: string;
+  taxonomy?: ContentTaxonomy;
 }
 
 const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -53,6 +57,7 @@ interface QuestionForm {
   correctAnswer: string;
   subElement: string;
   competency: string;
+  taxonomy: ContentTaxonomy;
 }
 
 // Stage-locked difficulty/categoryLabel options (matches existing question bank)
@@ -85,9 +90,11 @@ const emptyForm: QuestionForm = {
   correctAnswer: 'A',
   subElement: '',
   competency: '',
+  taxonomy: {},
 };
 
 const MsatQuestionsPage: FC = () => {
+  const confirmAction = useAdminConfirm();
   const { user } = useAuth();
   const [questions, setQuestions] = useState<MSATQuestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,6 +152,7 @@ const MsatQuestionsPage: FC = () => {
       correctAnswer: q.correctAnswer || 'A',
       subElement: q.subElement || '',
       competency: q.competency || '',
+      taxonomy: q.taxonomy ?? {},
     });
     setFormError('');
     setFormSuccess('');
@@ -202,7 +210,7 @@ const MsatQuestionsPage: FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!user || !confirm('Hapus soal ini?')) return;
+    if (!user || !(await confirmAction({ title: 'Hapus soal MSAT?', description: 'Soal akan dihapus permanen dari bank soal MSAT.', confirmLabel: 'Hapus soal', tone: 'danger' }))) return;
     try {
       const idToken = await user.getIdToken();
       await fetch(`/api/admin/msat/questions/${id}`, {
@@ -356,6 +364,7 @@ const MsatQuestionsPage: FC = () => {
               )}
 
               {/* Metadata */}
+              <TaxonomyPicker value={form.taxonomy} requiredThrough="topic" onChange={taxonomy => setForm(previous => ({ ...previous, taxonomy, module: taxonomy.topic?.id ?? taxonomy.subject?.id ?? previous.module, topic: taxonomy.topic?.name ?? previous.topic }))} />
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Modul</label>

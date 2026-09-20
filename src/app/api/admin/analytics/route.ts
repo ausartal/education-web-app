@@ -5,7 +5,7 @@ import { verifyAdmin } from '@/lib/auth-helpers';
 export const dynamic = 'force-dynamic';
 
 // ── In-memory cache with TTL ─────────────────────────────────────────
-let analyticsCache: { data: unknown; timestamp: number } | null = null;
+const analyticsCache = new Map<number, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function tsToDate(ts: Record<string, number> | null | undefined): Date | null {
@@ -18,13 +18,15 @@ export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  // Return cached response if still fresh
-  if (analyticsCache && Date.now() - analyticsCache.timestamp < CACHE_TTL) {
-    return NextResponse.json(analyticsCache.data);
+  const requestedDays = Number(new URL(req.url).searchParams.get('days') ?? 7);
+  const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 7;
+  const cached = analyticsCache.get(days);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return NextResponse.json(cached.data);
   }
 
   const now = new Date();
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
   const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
@@ -63,7 +65,7 @@ export async function GET(req: NextRequest) {
 
   // ── 7-day keys ────────────────────────────────────────────────────────────
   const dayKeys: string[] = [];
-  for (let i = 6; i >= 0; i--) {
+  for (let i = days - 1; i >= 0; i--) {
     const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
     dayKeys.push(d.toISOString().split('T')[0]);
   }
@@ -75,7 +77,7 @@ export async function GET(req: NextRequest) {
   usersSnap.docs.forEach((d) => {
     const date = tsToDate(d.data().createdAt as Record<string, number>);
     if (!date) return;
-    if (date >= sevenDaysAgo) {
+    if (date >= periodStart) {
       const key = date.toISOString().split('T')[0];
       if (key in regByDay) regByDay[key]++;
     }
@@ -89,7 +91,7 @@ export async function GET(req: NextRequest) {
   examsSnap.docs.forEach((d) => {
     const date = tsToDate(d.data().startedAt as Record<string, number>);
     if (!date) return;
-    if (date >= sevenDaysAgo) {
+    if (date >= periodStart) {
       const key = date.toISOString().split('T')[0];
       if (key in examsByDay) examsByDay[key]++;
     }
@@ -101,7 +103,7 @@ export async function GET(req: NextRequest) {
   const auditByDay = { ...zero };
   logsSnap.docs.forEach((d) => {
     const date = tsToDate(d.data().timestamp as Record<string, number>);
-    if (date && date >= sevenDaysAgo) {
+    if (date && date >= periodStart) {
       const key = date.toISOString().split('T')[0];
       if (key in auditByDay) auditByDay[key]++;
     }
@@ -226,7 +228,7 @@ export async function GET(req: NextRequest) {
   };
 
   // Store in cache
-  analyticsCache = { data: result, timestamp: Date.now() };
+  analyticsCache.set(days, { data: result, timestamp: Date.now() });
 
   return NextResponse.json(result);
 }

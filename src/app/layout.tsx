@@ -30,6 +30,7 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://akurat-76834.web.app'),
   title: 'AKURAT — Adaptive Chemistry Learning',
   description:
     'An adaptive chemistry learning and assessment platform for students and teachers.',

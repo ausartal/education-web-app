@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   try {
     let query: FirebaseFirestore.Query = adminDb.collection('exam_certificates');
 
-    if (status && ['pending_approval', 'approved', 'sent'].includes(status)) {
+    if (status && ['pending_approval', 'approved', 'sent', 'revoked'].includes(status)) {
       query = query.where('status', '==', status);
     }
 
@@ -83,7 +83,12 @@ export async function PATCH(req: NextRequest) {
 
     const certData = certSnap.data()!;
 
+    if (certData.status === 'revoked' && action !== 'restore') {
+      return NextResponse.json({ error: 'Sertifikat telah dicabut.' }, { status: 409 });
+    }
+
     if (action === 'approve') {
+      if (certData.status !== 'pending_approval') return NextResponse.json({ error: 'Hanya sertifikat yang menunggu persetujuan yang dapat disetujui.' }, { status: 409 });
       await certRef.update({
         status: 'approved',
         approvedAt: FieldValue.serverTimestamp(),
@@ -104,6 +109,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (action === 'send') {
+      if (certData.status !== 'approved') return NextResponse.json({ error: 'Hanya sertifikat yang disetujui yang dapat dikirim.' }, { status: 409 });
       // Mark as sent — actual email sending can be added later
       await certRef.update({
         status: 'sent',
@@ -122,6 +128,18 @@ export async function PATCH(req: NextRequest) {
       });
 
       return NextResponse.json({ success: true, status: 'sent' });
+    }
+
+    if (action === 'revoke') {
+      await certRef.update({ status: 'revoked', revokedAt: FieldValue.serverTimestamp(), revokedBy: admin.uid });
+      await adminDb.collection('audit_logs').add({ actorId: admin.uid, actorRole: 'admin', action: 'revoke_certificate', targetId: certificateId, targetType: 'exam_certificate', details: { userId: certData.userId, previousStatus: certData.status }, timestamp: FieldValue.serverTimestamp() });
+      return NextResponse.json({ success: true, status: 'revoked' });
+    }
+
+    if (action === 'restore') {
+      await certRef.update({ status: 'approved', revokedAt: null, revokedBy: null, approvedAt: FieldValue.serverTimestamp() });
+      await adminDb.collection('audit_logs').add({ actorId: admin.uid, actorRole: 'admin', action: 'restore_certificate', targetId: certificateId, targetType: 'exam_certificate', details: { userId: certData.userId }, timestamp: FieldValue.serverTimestamp() });
+      return NextResponse.json({ success: true, status: 'approved' });
     }
 
     return NextResponse.json({ error: 'Action tidak valid' }, { status: 400 });

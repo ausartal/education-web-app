@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion } from 'framer-motion';
 import {
@@ -44,16 +44,16 @@ const BarChart: FC<ChartProps> = ({ data, title, color, height = 96 }) => {
   const max = Math.max(...vals, 1);
   return (
     <div>
-      <p className="mb-3 text-xs font-bold text-gray-700">{title}</p>
+      <p className="mb-3 text-xs font-bold text-stone-700">{title}</p>
       <div className="flex items-end gap-1.5" style={{ height }}>
         {vals.map((v, i) => (
           <div key={keys[i]} className="flex flex-1 flex-col items-center gap-1">
-            {v > 0 && <span className="text-[9px] font-semibold text-gray-500">{v}</span>}
+            {v > 0 && <span className="text-[9px] font-semibold text-stone-500">{v}</span>}
             <div className="w-full rounded-t-md" style={{
               height: `${Math.max((v / max) * (height - 28), v > 0 ? 8 : 2)}px`,
               background: color,
             }} />
-            <span className="text-[9px] text-gray-400 truncate w-full text-center">{fmtDay(keys[i])}</span>
+            <span className="text-[9px] text-stone-400 truncate w-full text-center">{fmtDay(keys[i])}</span>
           </div>
         ))}
       </div>
@@ -75,12 +75,12 @@ const HBar: FC<HBarProps> = ({ label, value, total, color, sub }) => {
     <div>
       <div className="mb-1 flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-gray-700">{label}</span>
-          {sub && <span className="ml-2 text-[10px] text-gray-400">{sub}</span>}
+          <span className="text-xs font-semibold text-stone-700">{label}</span>
+          {sub && <span className="ml-2 text-[10px] text-stone-400">{sub}</span>}
         </div>
-        <span className="text-xs font-bold text-gray-900">{value} <span className="font-normal text-gray-400">({pct}%)</span></span>
+        <span className="text-xs font-bold text-stone-900">{value} <span className="font-normal text-stone-400">({pct}%)</span></span>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
+      <div className="h-2.5 overflow-hidden rounded-full bg-stone-100">
         <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, delay: 0.1 }}
           className="h-full rounded-full" style={{ background: color }} />
       </div>
@@ -90,8 +90,9 @@ const HBar: FC<HBarProps> = ({ label, value, total, color, sub }) => {
 
 const AdminAnalytics: FC = () => {
   const { user } = useAuth();
+  const [days, setDays] = useState<7 | 30 | 90>(30);
   // Same key as admin/page.tsx — data served from cache when navigating between pages
-  const { data, isLoading: loading, mutate } = useAuthSWR<AnalyticsData>('/api/admin/analytics', {
+  const { data, isLoading: loading, mutate } = useAuthSWR<AnalyticsData>('/api/admin/analytics?days=' + days, {
     dedupingInterval: 60_000,
   });
 
@@ -114,7 +115,7 @@ const AdminAnalytics: FC = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-600 border-t-transparent" />
       </div>
     );
   }
@@ -128,32 +129,39 @@ const AdminAnalytics: FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
-            <BarChart3 size={20} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 text-white">
+            <BarChart3 size={18} />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">Analitik Platform</h1>
-            <p className="text-sm text-gray-500">Statistik dan tren 7 hari terakhir</p>
+            <h1 className="font-display text-2xl font-extrabold text-stone-900">Analitik Platform</h1>
+            <p className="text-sm text-stone-500">Statistik dan tren {days} hari terakhir</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex rounded-lg border border-slate-200 bg-white p-1" aria-label="Pilih periode analitik">
+            {([7, 30, 90] as const).map(option => (
+              <button key={option} type="button" onClick={() => setDays(option)} className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${days === option ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}>
+                {option} hari
+              </button>
+            ))}
+          </div>
           <div className="flex gap-1.5">
             {(['users', 'question_bank', 'exam_sessions'] as const).map(col => (
               <div key={col} className="relative group">
-                <button className="flex items-center gap-1 rounded-xl bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
+                <button className="flex items-center gap-1 rounded-xl bg-white px-3 py-2 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-50">
                   <Download size={13} /> {col === 'users' ? 'Pengguna' : col === 'question_bank' ? 'Soal' : 'Ujian'}
                 </button>
                 <div className="absolute right-0 top-full z-10 mt-1 hidden min-w-[120px] flex-col gap-1 rounded-xl bg-white p-1.5 shadow-lg group-hover:flex">
                   <button onClick={() => handleExport(col, 'csv')}
-                    className="rounded-lg px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50">CSV</button>
+                    className="rounded-lg px-3 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-50">CSV</button>
                   <button onClick={() => handleExport(col, 'json')}
-                    className="rounded-lg px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50">JSON</button>
+                    className="rounded-lg px-3 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-50">JSON</button>
                 </div>
               </div>
             ))}
           </div>
           <button onClick={() => mutate()}
-            className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+            className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-medium text-stone-700 shadow-sm hover:bg-stone-50">
             <RefreshCw size={13} /> Refresh
           </button>
         </div>
@@ -162,20 +170,20 @@ const AdminAnalytics: FC = () => {
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {[
-          { icon: Users, label: 'Total Pengguna', value: data.totals.users, sub: `${data.totals.activeUsers} aktif`, color: 'text-primary', bg: 'bg-blue-50' },
+          { icon: Users, label: 'Total Pengguna', value: data.totals.users, sub: `${data.totals.activeUsers} aktif`, color: 'text-blue-600', bg: 'bg-blue-50' },
           { icon: ClipboardList, label: 'Total Ujian', value: data.totals.exams, sub: `${data.totals.completedExams} selesai`, color: 'text-violet-600', bg: 'bg-violet-50' },
           { icon: Target, label: 'Akurasi Rata2', value: `${data.avgAccuracy}%`, sub: 'ujian selesai', color: 'text-emerald-600', bg: 'bg-emerald-50' },
         ].map((k, i) => {
           const Icon = k.icon;
           return (
             <motion.div key={k.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-              className="rounded-2xl bg-white p-4 shadow-sm">
+              className="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
               <div className={`mb-2 inline-flex rounded-xl p-2 ${k.bg}`}>
                 <Icon size={16} className={k.color} />
               </div>
-              <p className="font-display text-xl font-black text-gray-900">{k.value}</p>
-              <p className="text-[11px] font-semibold text-gray-700">{k.label}</p>
-              <p className="text-[10px] text-gray-400">{k.sub}</p>
+              <p className="font-display text-xl font-black text-stone-900">{k.value}</p>
+              <p className="text-[11px] font-semibold text-stone-700">{k.label}</p>
+              <p className="text-[10px] text-stone-400">{k.sub}</p>
             </motion.div>
           );
         })}
@@ -184,15 +192,15 @@ const AdminAnalytics: FC = () => {
       {/* Charts Row 1 */}
       <div className="grid gap-4 lg:grid-cols-3">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
+          className="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
           <BarChart data={data.userRegistrationsByDay} title="Pengguna Baru per Hari" color="linear-gradient(to top, #1A73E8, #60A5FA)" height={120} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
+          className="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
           <BarChart data={data.examsByDay} title="Ujian per Hari" color="linear-gradient(to top, #7C3AED, #C4B5FD)" height={120} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
+          className="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
           <BarChart data={data.auditActivityByDay} title="Aktivitas Admin per Hari" color="linear-gradient(to top, #D97706, #FCD34D)" height={120} />
         </motion.div>
       </div>
@@ -201,8 +209,8 @@ const AdminAnalytics: FC = () => {
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Role Distribution */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <p className="mb-4 text-sm font-bold text-gray-900">Distribusi Role Pengguna</p>
+          className="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
+          <p className="mb-4 text-sm font-bold text-stone-900">Distribusi Role Pengguna</p>
           <div className="space-y-4">
             <HBar label="Siswa" value={data.roleDistribution.student} total={data.totals.users}
               color="linear-gradient(to right, #1A73E8, #4FC3F7)" sub={`dari ${data.totals.users}`} />
@@ -211,7 +219,7 @@ const AdminAnalytics: FC = () => {
             <HBar label="Admin" value={data.roleDistribution.admin} total={data.totals.users}
               color="linear-gradient(to right, #7C3AED, #A78BFA)" />
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-gray-100 pt-4">
+          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-stone-100 pt-4">
             {[
               { label: 'Siswa', val: data.roleDistribution.student, color: 'bg-blue-500' },
               { label: 'Guru', val: data.roleDistribution.teacher, color: 'bg-emerald-500' },
@@ -219,8 +227,8 @@ const AdminAnalytics: FC = () => {
             ].map(r => (
               <div key={r.label} className="text-center">
                 <div className={`mx-auto mb-1 h-2 w-8 rounded-full ${r.color}`} />
-                <p className="text-xs font-bold text-gray-900">{r.val}</p>
-                <p className="text-[10px] text-gray-400">{r.label}</p>
+                <p className="text-xs font-bold text-stone-900">{r.val}</p>
+                <p className="text-[10px] text-stone-400">{r.label}</p>
               </div>
             ))}
           </div>
@@ -228,8 +236,8 @@ const AdminAnalytics: FC = () => {
 
         {/* Question Difficulty */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <p className="mb-4 text-sm font-bold text-gray-900">Distribusi Soal</p>
+          className="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
+          <p className="mb-4 text-sm font-bold text-stone-900">Distribusi Soal</p>
           <div className="space-y-4">
             <HBar label="Mudah" value={data.questionsByDifficulty.easy} total={data.totals.questions}
               color="#10B981" sub="easy" />
@@ -238,22 +246,22 @@ const AdminAnalytics: FC = () => {
             <HBar label="Sulit" value={data.questionsByDifficulty.hard} total={data.totals.questions}
               color="#EF4444" sub="hard" />
           </div>
-          <div className="mt-4 flex gap-3 border-t border-gray-100 pt-4">
+          <div className="mt-4 flex gap-3 border-t border-stone-100 pt-4">
             <div className="flex-1 rounded-xl bg-emerald-50 p-3 text-center">
               <p className="font-display text-lg font-black text-emerald-700">{data.questionsByStatus.active}</p>
-              <p className="text-[10px] text-gray-500">Aktif</p>
+              <p className="text-[10px] text-stone-500">Aktif</p>
             </div>
-            <div className="flex-1 rounded-xl bg-gray-50 p-3 text-center">
-              <p className="font-display text-lg font-black text-gray-500">{data.questionsByStatus.inactive}</p>
-              <p className="text-[10px] text-gray-500">Nonaktif</p>
+            <div className="flex-1 rounded-xl bg-stone-50 p-3 text-center">
+              <p className="font-display text-lg font-black text-stone-500">{data.questionsByStatus.inactive}</p>
+              <p className="text-[10px] text-stone-500">Nonaktif</p>
             </div>
           </div>
         </motion.div>
 
         {/* Exam Status */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-          className="rounded-3xl bg-white p-5 shadow-sm">
-          <p className="mb-4 text-sm font-bold text-gray-900">Status Ujian</p>
+          className="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
+          <p className="mb-4 text-sm font-bold text-stone-900">Status Ujian</p>
           <div className="space-y-4">
             <HBar label="Selesai" value={data.examStatusDistribution.completed ?? 0} total={examTotal}
               color="#10B981" />
@@ -264,9 +272,9 @@ const AdminAnalytics: FC = () => {
             <HBar label="Ditandai" value={data.examStatusDistribution.flagged ?? 0} total={examTotal}
               color="#EF4444" />
           </div>
-          <div className="mt-4 rounded-xl bg-gray-50 p-3 text-center border-t border-gray-100 pt-4">
-            <p className="font-display text-xl font-black text-gray-900">{examTotal}</p>
-            <p className="text-xs text-gray-500">Total Sesi Ujian</p>
+          <div className="mt-4 rounded-xl bg-stone-50 p-3 text-center border-t border-stone-100 pt-4">
+            <p className="font-display text-xl font-black text-stone-900">{examTotal}</p>
+            <p className="text-xs text-stone-500">Total Sesi Ujian</p>
           </div>
         </motion.div>
       </div>

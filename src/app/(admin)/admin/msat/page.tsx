@@ -4,7 +4,7 @@ import { FC, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Brain, BookOpen, FileCheck, BarChart3, Plus, RefreshCw, Loader2,
-  ChevronRight, Target, Layers, ClipboardList, GraduationCap, Sparkles,
+  ChevronRight, Target, GraduationCap,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -17,6 +17,8 @@ interface MSATStats {
   categoryLabelCount: Record<string, number>;
   domainCount: Record<string, number>;
   stageCount: Record<number, number>;
+  liveParticipants: number;
+  flaggedSessions: number;
 }
 
 interface MSATExam {
@@ -31,6 +33,7 @@ interface MSATExam {
   currentUses: number;
   maxUses: number;
   createdAt: { _seconds: number } | null;
+  sessionSummary: { total: number; waiting: number; inProgress: number; onBreak: number; completed: number; flagged: number };
 }
 
 interface MSATQuestion {
@@ -78,6 +81,8 @@ const MsatPage: FC = () => {
   const [data, setData] = useState<MSATData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchData = useCallback(async (silent = false) => {
     if (!user) return;
@@ -87,13 +92,21 @@ const MsatPage: FC = () => {
       const res = await fetch('/api/admin/msat', {
         headers: { Authorization: `Bearer ${idToken}` },
       });
-      if (res.ok) setData(await res.json());
+      if (res.ok) {
+        setData(await res.json());
+        setLastUpdated(new Date());
+      }
     } catch { /* ignore */ }
     setLoading(false);
     setRefreshing(false);
   }, [user]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const timer = window.setInterval(() => fetchData(true), 15000);
+    return () => window.clearInterval(timer);
+  }, [autoRefresh, fetchData]);
 
   if (loading) {
     return (
@@ -110,18 +123,28 @@ const MsatPage: FC = () => {
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-xl font-extrabold text-stone-800">Ujian MSAT</h1>
-          <p className="mt-0.5 text-xs text-stone-400">Multistage Adaptive Scored Testing</p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+            <Brain size={18} />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-extrabold text-stone-800">AKURAT Exam</h1>
+            <p className="text-sm text-stone-400">Multistage Adaptive Scored Testing</p>
+          </div>
         </div>
-        <button
-          onClick={() => fetchData()}
-          disabled={refreshing}
-          className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-stone-500 ring-1 ring-stone-200 transition-colors hover:bg-stone-50 disabled:opacity-50"
-        >
-          <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setAutoRefresh(value => !value)} className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${autoRefresh ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-stone-200 bg-white text-stone-500'}`}>
+            {autoRefresh ? 'Live · 15 dtk' : 'Live dijeda'}
+          </button>
+          <button
+            onClick={() => fetchData()}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-stone-500 shadow-sm border border-stone-200 transition-colors hover:bg-stone-50 disabled:opacity-50"
+          >
+            <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
+            {lastUpdated ? lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {/* Quick Access — Prominent top section */}
@@ -159,8 +182,8 @@ const MsatPage: FC = () => {
         {[
           { label: 'Total Ujian', value: stats?.totalExams ?? 0, icon: FileCheck, color: 'text-violet-600', bg: 'bg-violet-50' },
           { label: 'Ujian Aktif', value: stats?.activeExams ?? 0, icon: Target, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Bank Soal', value: stats?.totalQuestions ?? 0, icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Domain Kognitif', value: Object.keys(stats?.domainCount ?? {}).length, icon: Layers, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'Peserta Live', value: stats?.liveParticipants ?? 0, icon: GraduationCap, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Perlu Ditinjau', value: stats?.flaggedSessions ?? 0, icon: Target, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map((s, i) => {
           const Icon = s.icon;
           return (
@@ -266,7 +289,7 @@ const MsatPage: FC = () => {
           </div>
         ) : (
           <div className="divide-y divide-stone-50">
-            {exams.map((exam) => (
+            {[...exams].sort((a, b) => (b.sessionSummary?.flagged ?? 0) - (a.sessionSummary?.flagged ?? 0) || (b.sessionSummary?.inProgress ?? 0) - (a.sessionSummary?.inProgress ?? 0)).map((exam) => (
               <Link
                 key={exam.id}
                 href={`/admin/msat/${exam.id}`}
@@ -284,6 +307,9 @@ const MsatPage: FC = () => {
                     <span>{exam.totalStages} stage</span>
                     <span>·</span>
                     <span>{exam.currentUses} peserta</span>
+                    {(exam.sessionSummary?.inProgress ?? 0) > 0 && <span className="font-semibold text-blue-600">{exam.sessionSummary.inProgress} mengerjakan</span>}
+                    {(exam.sessionSummary?.waiting ?? 0) > 0 && <span>{exam.sessionSummary.waiting} menunggu</span>}
+                    {(exam.sessionSummary?.flagged ?? 0) > 0 && <span className="font-semibold text-rose-600">{exam.sessionSummary.flagged} anomali</span>}
                   </p>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${

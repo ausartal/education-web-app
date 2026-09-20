@@ -22,9 +22,10 @@ export async function GET(req: NextRequest) {
 
   try {
     // Fetch all collections in parallel
-    const [questionsSnap, accessCodesSnap] = await Promise.all([
+    const [questionsSnap, accessCodesSnap, sessionsSnap] = await Promise.all([
       adminDb.collection('msat_question').get(),
       adminDb.collection('msat_access_code').get(),
+      adminDb.collection('msat_sessions').get(),
     ]);
 
     // Process questions
@@ -51,11 +52,33 @@ export async function GET(req: NextRequest) {
     let activeExams = 0;
     let totalExams = 0;
 
+    const sessionsByExam = new Map<string, { total: number; waiting: number; inProgress: number; onBreak: number; completed: number; flagged: number }>();
+    sessionsSnap.forEach(doc => {
+      const session = doc.data();
+      const examId = String(session.examId ?? '');
+      if (!examId) return;
+      const summary = sessionsByExam.get(examId) ?? { total: 0, waiting: 0, inProgress: 0, onBreak: 0, completed: 0, flagged: 0 };
+      summary.total++;
+      if (session.status === 'waiting') summary.waiting++;
+      if (session.status === 'in_progress') summary.inProgress++;
+      if (session.status === 'on_break') summary.onBreak++;
+      if (session.status === 'completed') summary.completed++;
+      if (session.status === 'flagged' || (Array.isArray(session.anomalyFlags) && session.anomalyFlags.length > 0)) summary.flagged++;
+      sessionsByExam.set(examId, summary);
+    });
+
+    let liveParticipants = 0;
+    let flaggedSessions = 0;
+    sessionsByExam.forEach(summary => {
+      liveParticipants += summary.waiting + summary.inProgress + summary.onBreak;
+      flaggedSessions += summary.flagged;
+    });
+
     accessCodesSnap.forEach(doc => {
       const d = doc.data();
       totalExams++;
       if (d.status === 'active') activeExams++;
-      exams.push({ id: doc.id, ...d });
+      exams.push({ id: doc.id, ...d, sessionSummary: sessionsByExam.get(doc.id) ?? { total: 0, waiting: 0, inProgress: 0, onBreak: 0, completed: 0, flagged: 0 } });
     });
 
     return NextResponse.json({
@@ -63,6 +86,8 @@ export async function GET(req: NextRequest) {
         totalQuestions,
         totalExams,
         activeExams,
+        liveParticipants,
+        flaggedSessions,
         difficultyCount,
         categoryLabelCount,
         domainCount,

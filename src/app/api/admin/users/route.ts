@@ -115,6 +115,9 @@ export async function POST(req: NextRequest) {
     if (!email || !password || !displayName) {
       return NextResponse.json({ error: 'email, password, displayName wajib diisi' }, { status: 400 });
     }
+    if (!['student', 'teacher', 'admin'].includes(role)) {
+      return NextResponse.json({ error: 'Role tidak valid.' }, { status: 400 });
+    }
 
     const userRecord = await adminAuth.createUser({ email, password, displayName });
     const now = new Date();

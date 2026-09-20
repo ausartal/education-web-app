@@ -4,11 +4,13 @@ import { FC, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Loader2, Copy, Check, RefreshCw, ChevronRight, ChevronDown,
-  BookOpen, Brain, Plus, Trash2, AlertCircle, Sparkles,
+  ArrowLeft, Loader2, Copy, Check, RefreshCw, ChevronRight,
+  AlertCircle, Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { TaxonomyPicker } from '@/components/admin/TaxonomyPicker';
+import { ContentTaxonomy } from '@/types/taxonomy';
 
 interface Question {
   id: string;
@@ -22,6 +24,7 @@ interface Question {
   module?: string;
   options: Record<string, string>;
   correctAnswer: string;
+  taxonomy?: ContentTaxonomy;
 }
 
 type StageBranch = 'stage1_medium' | 'stage2_tinggi' | 'stage2_rendah' | 'stage3_lebih_tinggi' | 'stage3_medium_tinggi' | 'stage3_sangat_rendah' | 'stage3_medium_rendah';
@@ -52,6 +55,7 @@ const MsatCreatePage: FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [module, setModule] = useState('stoikiometri');
+  const [taxonomy, setTaxonomy] = useState<ContentTaxonomy>({});
   const [code, setCode] = useState(generateCode());
   const [durationPerStage, setDurationPerStage] = useState(30);
   const [breakDuration, setBreakDuration] = useState(10);
@@ -74,7 +78,7 @@ const MsatCreatePage: FC = () => {
   const [activeBranch, setActiveBranch] = useState<StageBranch>('stage1_medium');
   const [activeDomain, setActiveDomain] = useState<string>('knowing');
   const [filterTopic, setFilterTopic] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
@@ -109,9 +113,11 @@ const MsatCreatePage: FC = () => {
       q.cognitiveDomain === domain &&
       config.categoryLabels.includes(q.categoryLabel) &&
       q.stage === config.stage &&
+      (!taxonomy.subject?.id || q.taxonomy?.subject?.id === taxonomy.subject.id) &&
+      (!taxonomy.topic?.id || q.taxonomy?.topic?.id === taxonomy.topic.id) &&
       (!filterTopic || q.topic === filterTopic)
     );
-  }, [allQuestions, filterTopic]);
+  }, [allQuestions, filterTopic, taxonomy.subject?.id, taxonomy.topic?.id]);
 
   const toggleQuestion = (branch: StageBranch, domain: string, questionId: string) => {
     setSelectedQuestions(prev => {
@@ -175,6 +181,7 @@ const MsatCreatePage: FC = () => {
           title: title.trim(),
           description: description.trim(),
           module,
+          taxonomy,
           code,
           durationPerStage,
           breakDuration,
@@ -255,20 +262,8 @@ const MsatCreatePage: FC = () => {
                   <label className="mb-1.5 block text-xs font-semibold text-stone-500">Deskripsi</label>
                   <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-stone-500">Modul</label>
-                    <select value={module} onChange={e => setModule(e.target.value)} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none">
-                      <option value="stoikiometri">Stoikiometri</option>
-                      <option value="termokimia">Termokimia</option>
-                      <option value="larutan">Larutan</option>
-                      <option value="kesetimbangan">Kesetimbangan</option>
-                      <option value="asam_basa">Asam Basa</option>
-                      <option value="redoks">Redoks</option>
-                      <option value="elektrokimia">Elektrokimia</option>
-                      <option value="kimia_organik">Kimia Organik</option>
-                    </select>
-                  </div>
+                <TaxonomyPicker value={taxonomy} requiredThrough="topic" onChange={next => { setTaxonomy(next); setModule(next.topic?.id ?? next.subject?.id ?? ''); }} />
+                <div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-stone-500">Kode Akses</label>
                     <div className="flex gap-2">
@@ -278,7 +273,7 @@ const MsatCreatePage: FC = () => {
                         {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                       </button>
                     </div>
-                  </div>
+                </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>

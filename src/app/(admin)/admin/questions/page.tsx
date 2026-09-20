@@ -11,6 +11,9 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/useToast';
 import { Difficulty, QuestionStatus, AnswerKey } from '@/types/firestore';
+import { ContentTaxonomy } from '@/types/taxonomy';
+import { TaxonomyPicker } from '@/components/admin/TaxonomyPicker';
+import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
@@ -18,6 +21,7 @@ interface Question {
   id: string;
   topic: string;
   subtopic: string;
+  taxonomy?: ContentTaxonomy;
   difficulty: Difficulty;
   stem: string;
   options: Record<AnswerKey, string>;
@@ -47,6 +51,7 @@ const ANSWER_KEYS: AnswerKey[] = ['A', 'B', 'C', 'D', 'E'];
 const emptyForm = {
   topic: 'stoikiometri',
   subtopic: '',
+  taxonomy: {} as ContentTaxonomy,
   difficulty: 'moderate' as Difficulty,
   stem: '',
   options: { A: '', B: '', C: '', D: '', E: '' } as Record<AnswerKey, string>,
@@ -58,7 +63,7 @@ const emptyForm = {
 const Skeleton: FC = () => (
   <tr>
     {Array.from({ length: 7 }).map((_, i) => (
-      <td key={i} className="px-4 py-3"><div className="h-4 animate-pulse rounded bg-gray-100" /></td>
+      <td key={i} className="px-4 py-3"><div className="h-4 animate-pulse rounded bg-stone-100" /></td>
     ))}
   </tr>
 );
@@ -66,6 +71,7 @@ const Skeleton: FC = () => (
 const AdminQuestions: FC = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
+  const confirmAction = useAdminConfirm();
 
   const [search, setSearch] = useState('');
   const [filterDiff, setFilterDiff] = useState<Difficulty | 'all'>('all');
@@ -99,7 +105,7 @@ const AdminQuestions: FC = () => {
   const openEdit = (q: Question) => {
     setEditTarget(q);
     setForm({
-      topic: q.topic, subtopic: q.subtopic, difficulty: q.difficulty,
+      topic: q.topic, subtopic: q.subtopic, taxonomy: q.taxonomy ?? {}, difficulty: q.difficulty,
       stem: q.stem, options: { ...q.options }, correctAnswer: q.correctAnswer,
       explanation: q.explanation, baseTime: q.baseTime,
     });
@@ -146,7 +152,7 @@ const AdminQuestions: FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Hapus soal ini secara permanen?')) return;
+    if (!(await confirmAction({ title: 'Hapus soal?', description: 'Soal akan dihapus permanen dan tidak lagi tersedia pada bank soal.', confirmLabel: 'Hapus soal', tone: 'danger' }))) return;
     try {
       const token = await getToken();
       const res = await fetch(`/api/admin/questions/${id}`, {
@@ -178,16 +184,16 @@ const AdminQuestions: FC = () => {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
-            <BookOpen size={20} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+            <BookOpen size={18} />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">Bank Soal</h1>
-            <p className="text-sm text-gray-500">{stats.total} soal tersedia</p>
+            <h1 className="font-display text-2xl font-extrabold text-stone-900">Bank Soal</h1>
+            <p className="text-sm text-stone-500">{stats.total} soal tersedia</p>
           </div>
         </div>
         <button onClick={openCreate}
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90">
+          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90">
           <Plus size={15} /> Tambah Soal
         </button>
       </div>
@@ -196,15 +202,15 @@ const AdminQuestions: FC = () => {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
         className="grid grid-cols-5 gap-3">
         {[
-          { label: 'Total', value: stats.total, color: 'text-gray-900' },
+          { label: 'Total', value: stats.total, color: 'text-stone-900' },
           { label: 'Aktif', value: stats.active, color: 'text-emerald-600' },
           { label: 'Mudah', value: stats.easy, color: 'text-emerald-600' },
           { label: 'Sedang', value: stats.moderate, color: 'text-amber-600' },
           { label: 'Sulit', value: stats.hard, color: 'text-rose-600' },
         ].map(s => (
-          <div key={s.label} className="rounded-2xl bg-white p-4 shadow-sm text-center">
+          <div key={s.label} className="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm text-center">
             <p className={`font-display text-2xl font-extrabold ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-gray-500">{s.label}</p>
+            <p className="text-xs text-stone-500">{s.label}</p>
           </div>
         ))}
       </motion.div>
@@ -212,16 +218,16 @@ const AdminQuestions: FC = () => {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Cari teks soal atau topik..."
-            className="w-full rounded-xl bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-primary/20" />
+            className="w-full rounded-xl bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-violet-500/20" />
         </div>
         <div className="flex items-center gap-1.5">
-          <Filter size={14} className="text-gray-400" />
+          <Filter size={14} className="text-stone-400" />
           {(['all', 'easy', 'moderate', 'hard'] as const).map(d => (
             <button key={d} onClick={() => setFilterDiff(d)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filterDiff === d ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filterDiff === d ? 'bg-violet-600 text-white' : 'bg-white text-stone-600 hover:bg-stone-100'}`}>
               {d === 'all' ? 'Semua' : difficultyLabel[d]}
             </button>
           ))}
@@ -229,7 +235,7 @@ const AdminQuestions: FC = () => {
         <div className="flex gap-1.5">
           {(['all', 'active', 'inactive'] as const).map(s => (
             <button key={s} onClick={() => setFilterStatus(s)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filterStatus === s ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filterStatus === s ? 'bg-violet-600 text-white' : 'bg-white text-stone-600 hover:bg-stone-100'}`}>
               {s === 'all' ? 'Semua Status' : s === 'active' ? 'Aktif' : 'Nonaktif'}
             </button>
           ))}
@@ -238,10 +244,10 @@ const AdminQuestions: FC = () => {
 
       {/* Table */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="overflow-x-auto rounded-3xl bg-white shadow-sm">
+        className="overflow-x-auto rounded-2xl border border-stone-100 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-gray-100 text-xs text-gray-500">
+            <tr className="border-b border-stone-100 text-xs text-stone-500">
               <th className="px-4 py-4 font-medium">Stem</th>
               <th className="px-4 py-4 font-medium">Topik</th>
               <th className="px-4 py-4 font-medium">Tingkat</th>
@@ -251,21 +257,21 @@ const AdminQuestions: FC = () => {
               <th className="px-4 py-4 font-medium">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-stone-50">
             {loading
               ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} />)
               : filtered.map((q, i) => (
                   <>
                     <motion.tr key={q.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer hover:bg-stone-50"
                       onClick={() => setExpandedId(expandedId === q.id ? null : q.id)}>
                       <td className="max-w-xs px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <ChevronDown size={12} className={`shrink-0 text-gray-400 transition-transform ${expandedId === q.id ? 'rotate-180' : ''}`} />
-                          <div className="truncate text-xs text-gray-800"><QuestionRenderer content={q.stem} /></div>
+                          <ChevronDown size={12} className={`shrink-0 text-stone-400 transition-transform ${expandedId === q.id ? 'rotate-180' : ''}`} />
+                          <div className="truncate text-xs text-stone-800"><QuestionRenderer content={q.stem} /></div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500">{q.topic}</td>
+                      <td className="px-4 py-3 text-xs text-stone-500">{q.topic}</td>
                       <td className="px-4 py-3">
                         <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${difficultyColors[q.difficulty]}`}>
                           {difficultyLabel[q.difficulty]}
@@ -273,37 +279,37 @@ const AdminQuestions: FC = () => {
                       </td>
                       <td className="px-4 py-3">
                         <button onClick={e => { e.stopPropagation(); handleToggleStatus(q); }}
-                          className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors ${q.status === 'active' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                          className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors ${q.status === 'active' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}>
                           {q.status === 'active' ? <ToggleRight size={12} /> : <ToggleLeft size={12} />}
                           {q.status === 'active' ? 'Aktif' : 'Nonaktif'}
                         </button>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-600">{q.usageCount}×</td>
-                      <td className="px-4 py-3 text-xs font-semibold text-gray-700">
+                      <td className="px-4 py-3 text-xs text-stone-600">{q.usageCount}×</td>
+                      <td className="px-4 py-3 text-xs font-semibold text-stone-700">
                         {q.avgCorrectRate > 0 ? `${Math.round(q.avgCorrectRate * 100)}%` : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-1" onClick={e => e.stopPropagation()}>
                           <button onClick={() => openEdit(q)}
-                            className="rounded-lg p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                            className="rounded-lg p-1.5 text-stone-400 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                             <Pencil size={13} />
                           </button>
                           <button onClick={() => handleDelete(q.id)}
-                            className="rounded-lg p-1.5 text-gray-400 hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                            className="rounded-lg p-1.5 text-stone-400 hover:bg-rose-50 hover:text-rose-600 transition-colors">
                             <Trash2 size={13} />
                           </button>
                         </div>
                       </td>
                     </motion.tr>
                     {expandedId === q.id && (
-                      <tr key={`${q.id}-exp`} className="bg-gray-50">
+                      <tr key={`${q.id}-exp`} className="bg-stone-50">
                         <td colSpan={7} className="px-8 py-4">
                           <div className="space-y-3">
-                            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Soal Lengkap</p>
-                            <QuestionRenderer content={q.stem} className="text-sm text-gray-800" />
+                            <p className="text-xs font-bold text-stone-600 uppercase tracking-wide">Soal Lengkap</p>
+                            <QuestionRenderer content={q.stem} className="text-sm text-stone-800" />
                             <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
                               {ANSWER_KEYS.filter(k => q.options?.[k]).map(k => (
-                                <div key={k} className={`rounded-xl px-3 py-2 text-xs ${k === q.correctAnswer ? 'bg-emerald-100 text-emerald-800 font-bold' : 'bg-white text-gray-700'}`}>
+                                <div key={k} className={`rounded-xl px-3 py-2 text-xs ${k === q.correctAnswer ? 'bg-emerald-100 text-emerald-800 font-bold' : 'bg-white text-stone-700'}`}>
                                   <span className="font-bold">{k}.</span> <QuestionRenderer content={q.options[k]} />
                                 </div>
                               ))}
@@ -322,7 +328,7 @@ const AdminQuestions: FC = () => {
           </tbody>
         </table>
         {!loading && filtered.length === 0 && (
-          <div className="py-16 text-center text-gray-400">
+          <div className="py-16 text-center text-stone-400">
             <BookOpen size={32} className="mx-auto mb-3 opacity-40" />
             <p className="text-sm">{search ? 'Tidak ada soal yang cocok' : 'Belum ada soal'}</p>
           </div>
@@ -340,64 +346,61 @@ const AdminQuestions: FC = () => {
               className="my-8 w-full max-w-2xl rounded-3xl bg-white p-6 shadow-xl"
               onClick={e => e.stopPropagation()}>
               <div className="mb-5 flex items-center justify-between">
-                <h2 className="font-display text-lg font-extrabold text-gray-900">
+                <h2 className="font-display text-lg font-extrabold text-stone-900">
                   {editTarget ? 'Edit Soal' : 'Tambah Soal Baru'}
                 </h2>
-                <button onClick={() => setShowModal(false)} className="rounded-xl p-2 text-gray-400 hover:bg-gray-100">
+                <button onClick={() => setShowModal(false)} className="rounded-xl p-2 text-stone-400 hover:bg-stone-100">
                   <X size={16} />
                 </button>
               </div>
 
               <form onSubmit={handleSave} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">Topik</label>
-                    <input value={form.topic} onChange={e => setForm(p => ({ ...p, topic: e.target.value }))} required
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">Sub-topik</label>
-                    <input value={form.subtopic} onChange={e => setForm(p => ({ ...p, subtopic: e.target.value }))}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
-                  </div>
-                </div>
+                <TaxonomyPicker
+                  value={form.taxonomy}
+                  onChange={taxonomy => setForm(previous => ({
+                    ...previous,
+                    taxonomy,
+                    topic: taxonomy.topic?.name ?? previous.topic,
+                    subtopic: taxonomy.subtopic?.name ?? '',
+                  }))}
+                />
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">Tingkat Kesulitan</label>
+                    <label className="mb-1 block text-xs font-semibold text-stone-700">Tingkat Kesulitan</label>
                     <select value={form.difficulty} onChange={e => setForm(p => ({ ...p, difficulty: e.target.value as Difficulty }))}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary">
+                      className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-violet-500">
                       <option value="easy">Mudah</option>
                       <option value="moderate">Sedang</option>
                       <option value="hard">Sulit</option>
                     </select>
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">Waktu Dasar (detik)</label>
+                    <label className="mb-1 block text-xs font-semibold text-stone-700">Waktu Dasar (detik)</label>
                     <input type="number" value={form.baseTime} onChange={e => setForm(p => ({ ...p, baseTime: Number(e.target.value) }))} min={10} max={300}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                      className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-gray-700">Teks Soal *</label>
+                  <label className="mb-1 block text-xs font-semibold text-stone-700">Teks Soal *</label>
                   <textarea value={form.stem} onChange={e => setForm(p => ({ ...p, stem: e.target.value }))} required rows={3}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none" />
+                    className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 resize-none" />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-gray-700">Pilihan Jawaban</label>
+                  <label className="mb-1 block text-xs font-semibold text-stone-700">Pilihan Jawaban</label>
                   <div className="space-y-2">
                     {ANSWER_KEYS.map(k => (
                       <div key={k} className="flex items-center gap-2">
-                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${form.correctAnswer === k ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${form.correctAnswer === k ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-600'}`}>
                           {k}
                         </span>
                         <input value={form.options[k]} onChange={e => setForm(p => ({ ...p, options: { ...p.options, [k]: e.target.value } }))}
                           placeholder={`Pilihan ${k}`}
-                          className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                          className="flex-1 rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20" />
                         <button type="button" onClick={() => setForm(p => ({ ...p, correctAnswer: k }))}
-                          className={`rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors ${form.correctAnswer === k ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500 hover:bg-emerald-50 hover:text-emerald-700'}`}>
+                          className={`rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors ${form.correctAnswer === k ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500 hover:bg-emerald-50 hover:text-emerald-700'}`}>
                           Benar
                         </button>
                       </div>
@@ -406,18 +409,18 @@ const AdminQuestions: FC = () => {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-gray-700">Penjelasan</label>
+                  <label className="mb-1 block text-xs font-semibold text-stone-700">Penjelasan</label>
                   <textarea value={form.explanation} onChange={e => setForm(p => ({ ...p, explanation: e.target.value }))} rows={2}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none" />
+                    className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 resize-none" />
                 </div>
 
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowModal(false)}
-                    className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                    className="flex-1 rounded-xl border border-stone-200 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50">
                     Batal
                   </button>
                   <button type="submit" disabled={saving}
-                    className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50">
+                    className="flex-1 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50">
                     {saving ? 'Menyimpan...' : editTarget ? 'Simpan Perubahan' : 'Tambah Soal'}
                   </button>
                 </div>

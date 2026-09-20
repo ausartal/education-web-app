@@ -18,7 +18,7 @@ export async function PATCH(
   if (!snap.exists) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const allowed = ['title', 'description', 'topic', 'subtopic', 'content',
-    'estimatedTime', 'status', 'order', 'learningObjectives', 'prerequisites'];
+    'estimatedTime', 'status', 'order', 'learningObjectives', 'prerequisites', 'taxonomy'];
   const update: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
   for (const key of allowed) {
     if (key in body) update[key] = body[key];

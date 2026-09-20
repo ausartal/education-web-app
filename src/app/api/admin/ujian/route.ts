@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyAdmin } from '@/lib/auth-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
+import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -143,15 +144,28 @@ export async function POST(req: NextRequest) {
   const allowed = ['classes', 'exam_schedules', 'exam_questions'];
   if (!allowed.includes(collection)) return NextResponse.json({ error: 'Invalid collection' }, { status: 400 });
 
+  if (collection === 'classes' && (!data?.name || !data?.teacherId)) {
+    return NextResponse.json({ error: 'Nama kelas dan guru wajib diisi.' }, { status: 400 });
+  }
+  const payload = collection === 'classes' ? {
+    name: data.name,
+    teacherId: data.teacherId,
+    subject: data.taxonomy?.subject?.name ?? data.subject ?? '',
+    taxonomy: data.taxonomy ?? null,
+    status: data.status === 'archived' ? 'archived' : 'active',
+    studentIds: [],
+    joinCode: randomBytes(4).toString('hex').slice(0, 6).toUpperCase(),
+  } : data;
+
   const docRef = await adminDb.collection(collection).add({
-    ...data,
+    ...payload,
     createdAt: FieldValue.serverTimestamp(),
     createdBy: admin.uid,
   });
 
   await adminDb.collection('audit_logs').add({
     actorId: admin.uid, actorRole: 'admin', action: `create_${collection}`,
-    targetId: docRef.id, targetType: collection, details: data, timestamp: new Date(),
+    targetId: docRef.id, targetType: collection, details: payload, timestamp: new Date(),
   });
 
   // Invalidate cache

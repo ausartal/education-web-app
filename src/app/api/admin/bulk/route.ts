@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminAuth, adminDb, setUserRoleClaim } from '@/lib/firebase-admin';
 import { verifyAdmin } from '@/lib/auth-helpers';
 import { UserRole } from '@/types/firestore';
 
@@ -17,6 +17,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No users selected' }, { status: 400 });
   }
 
+  if (uids.includes(admin.uid) && ['deactivate', 'delete'].includes(action ?? '')) {
+    return NextResponse.json({ error: 'Aksi massal tidak boleh menonaktifkan atau menghapus akun Anda sendiri.' }, { status: 400 });
+  }
+  const targetDocs = await Promise.all(uids.map(uid => adminDb.collection('users').doc(uid).get()));
+  const containsAdmin = targetDocs.some(document => document.data()?.role === 'admin');
+  if (containsAdmin && ['deactivate', 'delete', 'set_role'].includes(action ?? '')) {
+    return NextResponse.json({ error: 'Perubahan akses administrator harus dilakukan satu per satu agar dapat diverifikasi.' }, { status: 400 });
+  }
+
   const usersBatch = adminDb.batch();
   const logsBatch = adminDb.batch();
   const ts = new Date();
@@ -32,6 +41,7 @@ export async function POST(req: NextRequest) {
     }
     await usersBatch.commit();
     await logsBatch.commit();
+    await Promise.all(uids.map(uid => adminAuth.updateUser(uid, { disabled: !isActive })));
   } else if (action === 'delete') {
     for (const uid of uids) {
       try { await adminAuth.deleteUser(uid); } catch { /* already deleted */ }
@@ -54,6 +64,7 @@ export async function POST(req: NextRequest) {
     }
     await usersBatch.commit();
     await logsBatch.commit();
+    await Promise.all(uids.map(uid => setUserRoleClaim(uid, role)));
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }

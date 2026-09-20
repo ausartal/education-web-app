@@ -75,7 +75,7 @@ export interface ExamToken {
 }
 
 // ===== EXAM CERTIFICATE =====
-export type ExamCertificateStatus = 'pending_approval' | 'approved' | 'sent';
+export type ExamCertificateStatus = 'pending_approval' | 'approved' | 'sent' | 'revoked';
 
 export interface ExamCertificate {
   id: string;
@@ -90,6 +90,8 @@ export interface ExamCertificate {
   status: ExamCertificateStatus;
   approvedAt: Timestamp | null;
   sentAt: Timestamp | null;
+  revokedAt?: Timestamp | null;
+  revokedBy?: string | null;
 }
 
 // ===== REGISTRATION DATA =====

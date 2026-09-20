@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   const {
     module, topic, stage, difficulty, tierPath, categoryLabel,
     cognitiveDomain, cognitiveLevel, stem, options, correctAnswer,
-    subElement, competency,
+    subElement, competency, taxonomy,
   } = body as Record<string, unknown>;
 
   // Validation
@@ -108,6 +108,7 @@ export async function POST(req: NextRequest) {
     const docRef = await adminDb.collection('msat_question').add({
       module: (module as string).trim(),
       topic: (topic as string).trim(),
+      taxonomy: taxonomy ?? null,
       stage,
       difficulty,
       tierPath: computedTierPath,

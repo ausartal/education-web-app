@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { title, description, module, code, durationPerStage, breakDuration, waitingRoom, stageQuestions } = body;
+  const { title, description, module, taxonomy, code, durationPerStage, breakDuration, waitingRoom, stageQuestions } = body;
 
   if (!title || !code) {
     return NextResponse.json({ error: 'Judul dan kode diperlukan' }, { status: 400 });
@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
       description: description ?? '',
       code: code.toUpperCase(),
       module: module ?? 'stoikiometri',
+      taxonomy: taxonomy ?? null,
       totalStages: 3,
       questionsPerStage: 12,
       passingThreshold: 8,

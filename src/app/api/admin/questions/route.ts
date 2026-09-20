@@ -12,10 +12,14 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const difficulty = searchParams.get('difficulty');
   const status = searchParams.get('status');
+  const subjectId = searchParams.get('subjectId');
+  const topicId = searchParams.get('topicId');
 
   let query: FirebaseFirestore.Query = adminDb.collection('question_bank');
   if (difficulty) query = query.where('difficulty', '==', difficulty);
   if (status) query = query.where('status', '==', status);
+  if (subjectId) query = query.where('taxonomy.subject.id', '==', subjectId);
+  if (topicId) query = query.where('taxonomy.topic.id', '==', topicId);
 
   const snap = await query.orderBy('createdAt', 'desc').get();
   const questions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -28,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
-  const { topic, subtopic, difficulty, stem, options, correctAnswer, explanation, baseTime } = body as Record<string, unknown>;
+  const { topic, subtopic, taxonomy, difficulty, stem, options, correctAnswer, explanation, baseTime } = body as Record<string, unknown>;
 
   if (!topic || !difficulty || !stem || !correctAnswer) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -36,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const docRef = adminDb.collection('question_bank').doc();
   const question = {
-    topic, subtopic: subtopic || '',
+    topic, subtopic: subtopic || '', taxonomy: taxonomy || null,
     difficulty, stem,
     options: options || {},
     correctAnswer,

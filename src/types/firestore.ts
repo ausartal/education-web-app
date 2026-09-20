@@ -1,5 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 import { MSATDifficulty } from './msat';
+import type { ContentTaxonomy } from './taxonomy';
 export type { MSATDifficulty } from './msat';
 
 // ===== USERS =====
@@ -43,6 +44,7 @@ export interface Material {
   estimatedTime: number;
   prerequisites: string[];
   learningObjectives: string[];
+  taxonomy?: ContentTaxonomy;
   createdBy: string;
   status: MaterialStatus;
   createdAt: Timestamp;
@@ -58,6 +60,7 @@ export interface Question {
   id: string;
   topic: string;
   subtopic: string;
+  taxonomy?: ContentTaxonomy;
   difficulty: Difficulty;
   stem: string;
   options: Record<AnswerKey, string>;
@@ -151,9 +154,7 @@ export interface Message {
 }
 
 // ===== APP CONFIG =====
-export interface AppConfig {
-  // Add config fields here as needed
-}
+export type AppConfig = Record<string, unknown>;
 
 // ===== AUDIT LOGS =====
 export type AuditAction =
@@ -164,6 +165,7 @@ export type AuditAction =
   | 'update_config' | 'delete_exam'
   | 'create_class' | 'update_class' | 'delete_class'
   | 'create_exam_schedule' | 'update_exam_schedule' | 'delete_exam_schedule'
+  | 'create_taxonomy' | 'update_taxonomy' | 'archive_taxonomy'
   | 'join_class' | 'start_exam' | 'complete_exam';
 
 export interface AuditLog {
@@ -172,7 +174,7 @@ export interface AuditLog {
   actorRole: UserRole;
   action: AuditAction;
   targetId: string;
-  targetType: 'user' | 'material' | 'question' | 'config' | 'exam' | 'class' | 'exam_schedule' | 'exam_session';
+  targetType: 'user' | 'material' | 'question' | 'config' | 'exam' | 'class' | 'exam_schedule' | 'exam_session' | 'taxonomy';
   details: Record<string, unknown>;
   timestamp: Timestamp;
 }
@@ -185,6 +187,7 @@ export interface Class {
   teacherId: string;
   name: string;
   subject: string;
+  taxonomy?: ContentTaxonomy;
   joinCode: string; // 6-char uppercase alphanumeric
   studentIds: string[];
   status: ClassStatus;

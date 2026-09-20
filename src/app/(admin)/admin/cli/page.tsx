@@ -29,13 +29,13 @@ const HELP_TEXT = `
     activate <uid>          Aktifkan pengguna
     deactivate <uid>        Nonaktifkan pengguna
     set-role <uid> <role>   Ubah role pengguna
-    delete <uid>            Hapus pengguna (PERMANENT)
+    delete <uid> --confirm  Hapus pengguna (PERMANENT)
 
   SOAL
     questions [--difficulty=<d>]  Daftar soal (d: easy|moderate|hard)
     q-activate <id>         Aktifkan soal
     q-deactivate <id>       Nonaktifkan soal
-    q-delete <id>           Hapus soal (PERMANENT)
+    q-delete <id> --confirm Hapus soal (PERMANENT)
 
   AUDIT
     logs [--limit=<n>]      Tampilkan audit log (default: 20)
@@ -74,6 +74,13 @@ const AdminCLI: FC = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [output]);
 
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem('akurat-admin-cli-history');
+      if (saved) setHistoryList(JSON.parse(saved));
+    } catch { /* local storage is optional */ }
+  }, []);
+
   const getToken = useCallback(async () => {
     if (!user) throw new Error('Not authenticated');
     return user.getIdToken();
@@ -94,7 +101,11 @@ const AdminCLI: FC = () => {
     const trimmed = raw.trim();
     if (!trimmed) return;
 
-    setHistoryList(prev => [trimmed, ...prev.slice(0, 49)]);
+    setHistoryList(prev => {
+      const next = [trimmed, ...prev.filter(item => item !== trimmed).slice(0, 49)];
+      try { window.localStorage.setItem('akurat-admin-cli-history', JSON.stringify(next)); } catch { /* optional */ }
+      return next;
+    });
     setHistIdx(-1);
 
     addLines([{ type: 'input', content: `admin@akurat:~$ ${trimmed}` }]);
@@ -110,28 +121,21 @@ const AdminCLI: FC = () => {
 
     setBusy(true);
     try {
-      if (cmd === 'clear') {
-        setOutput([]);
-        return;
-      }
-
+      if (cmd === 'clear') { setOutput([]); return; }
       if (cmd === 'history') {
         addLines(historyList.map((h, i) => ({ type: 'output' as const, content: `  ${String(i + 1).padStart(3)}  ${h}` })));
         return;
       }
-
       if (cmd === 'help') {
         addLines(HELP_TEXT.split('\n').map(l => ({ type: 'info' as const, content: l })));
         return;
       }
-
       if (cmd === 'ping') {
         const t = Date.now();
         await apiFetch('/api/admin/stats');
         addLines([{ type: 'success', content: `  PONG! Latensi: ${Date.now() - t}ms` }]);
         return;
       }
-
       if (cmd === 'whoami') {
         addLines([
           { type: 'output', content: `  UID      : ${profile?.uid ?? '—'}` },
@@ -142,7 +146,6 @@ const AdminCLI: FC = () => {
         ]);
         return;
       }
-
       if (cmd === 'stats') {
         const d = await apiFetch('/api/admin/stats');
         addLines([
@@ -158,7 +161,6 @@ const AdminCLI: FC = () => {
         ]);
         return;
       }
-
       if (cmd === 'users') {
         const role = flag('role');
         const d = await apiFetch('/api/admin/users');
@@ -171,7 +173,6 @@ const AdminCLI: FC = () => {
         ]);
         return;
       }
-
       if (cmd === 'user') {
         if (!args[0]) { addLines([{ type: 'error', content: '  Error: Harap sertakan UID' }]); return; }
         const d = await apiFetch('/api/admin/users');
@@ -188,7 +189,6 @@ const AdminCLI: FC = () => {
         ]);
         return;
       }
-
       if (cmd === 'create-user') {
         if (args.length < 3) { addLines([{ type: 'error', content: '  Penggunaan: create-user <email> <nama> <role>' }]); return; }
         const [email, displayName, role] = args;
@@ -209,7 +209,6 @@ const AdminCLI: FC = () => {
         ]);
         return;
       }
-
       if (cmd === 'activate' || cmd === 'deactivate') {
         if (!args[0]) { addLines([{ type: 'error', content: `  Error: Harap sertakan UID` }]); return; }
         await apiFetch(`/api/admin/users/${args[0]}`, {
@@ -218,7 +217,6 @@ const AdminCLI: FC = () => {
         addLines([{ type: 'success', content: `  ✓ Pengguna ${args[0].slice(0, 12)}... telah di-${cmd === 'activate' ? 'aktifkan' : 'nonaktifkan'}` }]);
         return;
       }
-
       if (cmd === 'set-role') {
         if (args.length < 2) { addLines([{ type: 'error', content: '  Penggunaan: set-role <uid> <role>' }]); return; }
         const [uid, role] = args;
@@ -231,15 +229,14 @@ const AdminCLI: FC = () => {
         addLines([{ type: 'success', content: `  ✓ Role pengguna ${uid.slice(0, 12)}... diubah menjadi ${role}` }]);
         return;
       }
-
       if (cmd === 'delete') {
         if (!args[0]) { addLines([{ type: 'error', content: `  Error: Harap sertakan UID` }]); return; }
+        if (!args.includes('--confirm')) { addLines([{ type: 'error', content: '  Aksi permanen dibatalkan. Ulangi dengan: delete <uid> --confirm' }]); return; }
         addLines([{ type: 'info', content: `  Menghapus pengguna ${args[0]}...` }]);
         await apiFetch(`/api/admin/users/${args[0]}`, { method: 'DELETE' });
         addLines([{ type: 'success', content: `  ✓ Pengguna ${args[0].slice(0, 12)}... dihapus` }]);
         return;
       }
-
       if (cmd === 'questions') {
         const difficulty = flag('difficulty');
         let url = '/api/admin/questions';
@@ -253,7 +250,6 @@ const AdminCLI: FC = () => {
         ]);
         return;
       }
-
       if (cmd === 'q-activate' || cmd === 'q-deactivate') {
         if (!args[0]) { addLines([{ type: 'error', content: `  Error: Harap sertakan ID soal` }]); return; }
         await apiFetch(`/api/admin/questions/${args[0]}`, {
@@ -262,14 +258,13 @@ const AdminCLI: FC = () => {
         addLines([{ type: 'success', content: `  ✓ Soal ${args[0].slice(0, 12)}... diubah menjadi ${cmd === 'q-activate' ? 'active' : 'inactive'}` }]);
         return;
       }
-
       if (cmd === 'q-delete') {
         if (!args[0]) { addLines([{ type: 'error', content: `  Error: Harap sertakan ID soal` }]); return; }
+        if (!args.includes('--confirm')) { addLines([{ type: 'error', content: '  Aksi permanen dibatalkan. Ulangi dengan: q-delete <id> --confirm' }]); return; }
         await apiFetch(`/api/admin/questions/${args[0]}`, { method: 'DELETE' });
         addLines([{ type: 'success', content: `  ✓ Soal ${args[0].slice(0, 12)}... dihapus` }]);
         return;
       }
-
       if (cmd === 'logs') {
         const limit = flag('limit') ?? '20';
         const d = await apiFetch(`/api/admin/audit?limit=${limit}`);
@@ -285,7 +280,6 @@ const AdminCLI: FC = () => {
         ]);
         return;
       }
-
       if (cmd === 'export') {
         const colMap: Record<string, string> = { users: 'users', questions: 'question_bank', exams: 'exam_sessions' };
         const colKey = args[0];
@@ -340,45 +334,44 @@ const AdminCLI: FC = () => {
 
   const lineColor: Record<OutputLine['type'], string> = {
     input: 'text-green-400',
-    output: 'text-gray-400',
+    output: 'text-stone-400',
     error: 'text-red-400',
     success: 'text-emerald-400',
     info: 'text-cyan-400',
-    table: 'text-gray-400',
+    table: 'text-stone-400',
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-extrabold text-gray-900">Admin CLI Terminal</h1>
-          <p className="text-sm text-gray-500">Antarmuka baris perintah untuk manajemen platform</p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-stone-700 to-stone-800 text-white">
+            <Terminal size={18} />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-extrabold text-stone-800">CLI Terminal</h1>
+            <p className="text-sm text-stone-400">Antarmuka baris perintah untuk manajemen platform</p>
+          </div>
         </div>
-        <button
-          onClick={() => setOutput([])}
-          className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500"
-        >
-          <Trash2 size={13} /> Bersihkan Layar
+        <button onClick={() => setOutput([])}
+          className="flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-xs font-semibold text-stone-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500">
+          <Trash2 size={13} /> Bersihkan
         </button>
       </div>
 
       {/* Terminal window */}
-      <div className="overflow-hidden rounded-2xl border border-gray-800 shadow-2xl">
-        {/* Title bar */}
-        <div className="flex items-center gap-3 border-b border-gray-800 bg-gray-900 px-4 py-2.5">
-          <Terminal size={13} className="text-gray-500" />
-          <span className="flex-1 text-center font-mono text-xs text-gray-500">
+      <div className="overflow-hidden rounded-2xl border border-stone-800 shadow-lg">
+        <div className="flex items-center gap-3 border-b border-stone-800 bg-stone-900 px-4 py-2.5">
+          <Terminal size={13} className="text-stone-500" />
+          <span className="flex-1 text-center font-mono text-xs text-stone-500">
             admin@akurat — bash
           </span>
-          <span className="font-mono text-[10px] text-gray-600">{profile?.email ?? ''}</span>
+          <span className="font-mono text-[10px] text-stone-600">{profile?.email ?? ''}</span>
         </div>
 
-        {/* Output area */}
-        <div
-          onClick={() => inputRef.current?.focus()}
-          className="min-h-[500px] max-h-[600px] cursor-text overflow-y-auto bg-gray-950 px-5 py-4 font-mono text-sm"
-        >
+        <div onClick={() => inputRef.current?.focus()}
+          className="min-h-[500px] max-h-[600px] cursor-text overflow-y-auto bg-stone-950 px-5 py-4 font-mono text-sm">
           {output.map((line, i) => {
             if (line.type === 'table' && line.headers && line.rows) {
               const widths = line.headers.map((h, ci) => {
@@ -390,11 +383,11 @@ const AdminCLI: FC = () => {
                   <div className="whitespace-pre text-cyan-500 opacity-70">
                     {'  ' + line.headers.map((h, ci) => h.padEnd(widths[ci])).join('   ')}
                   </div>
-                  <div className="whitespace-pre text-gray-700">
+                  <div className="whitespace-pre text-stone-700">
                     {'  ' + widths.map(w => '─'.repeat(w)).join('   ')}
                   </div>
                   {line.rows.map((row, ri) => (
-                    <div key={ri} className={`whitespace-pre ${ri % 2 === 0 ? 'text-gray-300' : 'text-gray-400'}`}>
+                    <div key={ri} className={`whitespace-pre ${ri % 2 === 0 ? 'text-stone-300' : 'text-stone-400'}`}>
                       {'  ' + row.map((cell, ci) => (cell ?? '').padEnd(widths[ci])).join('   ')}
                     </div>
                   ))}
@@ -408,48 +401,37 @@ const AdminCLI: FC = () => {
             );
           })}
 
-          {/* Input row */}
           <div className="mt-1 flex items-center gap-2.5">
             <span className="select-none text-green-500">admin@akurat:~$</span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKey}
-              disabled={busy}
-              autoComplete="off"
-              spellCheck={false}
-              autoFocus
+            <input ref={inputRef} type="text" value={input}
+              onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
+              disabled={busy} autoComplete="off" spellCheck={false} autoFocus
               className="flex-1 bg-transparent text-green-300 outline-none caret-green-400 disabled:opacity-40"
-              placeholder={busy ? 'Memproses...' : ''}
-            />
-            {busy && (
-              <span className="h-3 w-3 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
-            )}
+              placeholder={busy ? 'Memproses...' : ''} />
+            {busy && <span className="h-3 w-3 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />}
           </div>
           <div ref={bottomRef} />
         </div>
       </div>
 
       {/* Keyboard shortcuts */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-gray-100 bg-gray-50 px-5 py-3">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Pintasan</p>
-        <span className="text-xs text-gray-500">
-          <kbd className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">Enter</kbd>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-stone-100 bg-stone-50 px-5 py-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-300">Pintasan</p>
+        <span className="text-xs text-stone-500">
+          <kbd className="rounded border border-stone-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">Enter</kbd>
           {' '}Jalankan
         </span>
-        <span className="text-xs text-gray-500">
-          <kbd className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">↑</kbd>
-          {' '}<kbd className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">↓</kbd>
+        <span className="text-xs text-stone-500">
+          <kbd className="rounded border border-stone-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">↑</kbd>
+          {' '}<kbd className="rounded border border-stone-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">↓</kbd>
           {' '}Riwayat
         </span>
-        <span className="text-xs text-gray-500">
-          <kbd className="rounded border border-gray-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">Tab</kbd>
+        <span className="text-xs text-stone-500">
+          <kbd className="rounded border border-stone-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">Tab</kbd>
           {' '}Autocomplete
         </span>
-        <span className="text-xs text-gray-500">
-          Ketik <code className="rounded border border-gray-100 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm text-cyan-600">help</code> untuk semua perintah
+        <span className="text-xs text-stone-500">
+          Ketik <code className="rounded border border-stone-100 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm text-cyan-600">help</code> untuk semua perintah
         </span>
       </div>
     </div>

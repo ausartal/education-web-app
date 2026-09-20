@@ -24,11 +24,16 @@ export async function GET(
     }
 
     const certData = certDoc.data()!;
+    const viewerDoc = await adminDb.collection('users').doc(decoded.uid).get();
+    const isAdmin = viewerDoc.exists && viewerDoc.data()?.role === 'admin';
+
+    if (certData.status === 'revoked' && !isAdmin) {
+      return NextResponse.json({ error: 'Sertifikat ini telah dicabut' }, { status: 410 });
+    }
 
     // Only owner or admin can view
     if (certData.userId !== decoded.uid) {
-      const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
-      if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+      if (!isAdmin) {
         return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
       }
     }

@@ -9,6 +9,9 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/useToast';
 import { MaterialStatus } from '@/types/firestore';
+import { ContentTaxonomy } from '@/types/taxonomy';
+import { TaxonomyPicker } from '@/components/admin/TaxonomyPicker';
+import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
 
 interface Material {
   id: string;
@@ -16,6 +19,7 @@ interface Material {
   description: string;
   topic: string;
   subtopic: string;
+  taxonomy?: ContentTaxonomy;
   content: string;
   estimatedTime: number;
   status: MaterialStatus;
@@ -32,6 +36,7 @@ const emptyForm = {
   description: '',
   topic: 'stoikiometri',
   subtopic: '',
+  taxonomy: {} as ContentTaxonomy,
   content: '',
   estimatedTime: 30,
   order: 0,
@@ -43,7 +48,7 @@ const emptyForm = {
 const Skeleton: FC = () => (
   <tr>
     {Array.from({ length: 6 }).map((_, i) => (
-      <td key={i} className="px-4 py-3"><div className="h-4 animate-pulse rounded bg-gray-100" /></td>
+      <td key={i} className="px-4 py-3"><div className="h-4 animate-pulse rounded bg-stone-100" /></td>
     ))}
   </tr>
 );
@@ -56,6 +61,7 @@ function fmtDate(ts?: { seconds?: number }) {
 const AdminContent: FC = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
+  const confirmAction = useAdminConfirm();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -100,7 +106,7 @@ const AdminContent: FC = () => {
     setEditTarget(m);
     setForm({
       title: m.title, description: m.description || '', topic: m.topic,
-      subtopic: m.subtopic || '', content: m.content || '',
+      subtopic: m.subtopic || '', taxonomy: m.taxonomy ?? {}, content: m.content || '',
       estimatedTime: m.estimatedTime || 30, order: m.order || 0,
       status: m.status,
       learningObjectives: m.learningObjectives?.length ? m.learningObjectives : [''],
@@ -149,7 +155,7 @@ const AdminContent: FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Hapus materi ini secara permanen? Data progress pengguna tidak akan terpengaruh.')) return;
+    if (!(await confirmAction({ title: 'Hapus materi?', description: 'Materi akan dihapus permanen. Data progres pengguna tidak ikut dihapus.', confirmLabel: 'Hapus materi', tone: 'danger' }))) return;
     try {
       const token = await getToken();
       const res = await fetch(`/api/admin/materials/${id}`, {
@@ -186,16 +192,16 @@ const AdminContent: FC = () => {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white">
             <FileText size={20} />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">Manajemen Konten</h1>
-            <p className="text-sm text-gray-500">{stats.total} materi · {stats.published} published</p>
+            <h1 className="font-display text-2xl font-extrabold text-stone-900">Manajemen Konten</h1>
+            <p className="text-sm text-stone-500">{stats.total} materi · {stats.published} published</p>
           </div>
         </div>
         <button onClick={openCreate}
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90">
+          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90">
           <Plus size={15} /> Tambah Materi
         </button>
       </div>
@@ -203,13 +209,13 @@ const AdminContent: FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total Materi', value: stats.total, color: 'text-gray-900' },
+          { label: 'Total Materi', value: stats.total, color: 'text-stone-900' },
           { label: 'Published', value: stats.published, color: 'text-emerald-600', icon: CheckCircle },
           { label: 'Draft', value: stats.draft, color: 'text-amber-600', icon: Clock },
         ].map(s => (
-          <div key={s.label} className="rounded-2xl bg-white p-4 shadow-sm text-center">
+          <div key={s.label} className="border border-stone-100 rounded-2xl bg-white p-4 shadow-sm text-center">
             <p className={`font-display text-2xl font-extrabold ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-gray-500">{s.label}</p>
+            <p className="text-xs text-stone-500">{s.label}</p>
           </div>
         ))}
       </div>
@@ -217,15 +223,15 @@ const AdminContent: FC = () => {
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Cari judul atau topik..."
-            className="w-full rounded-xl bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-primary/20" />
+            className="w-full rounded-xl bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-violet-500/20" />
         </div>
         <div className="flex gap-1.5">
           {(['all', 'published', 'draft'] as const).map(s => (
             <button key={s} onClick={() => setFilterStatus(s)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filterStatus === s ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filterStatus === s ? 'bg-violet-600 text-white' : 'bg-white text-stone-600 hover:bg-stone-100'}`}>
               {s === 'all' ? 'Semua' : s === 'published' ? 'Published' : 'Draft'}
             </button>
           ))}
@@ -233,10 +239,10 @@ const AdminContent: FC = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-3xl bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-2xl bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-gray-100 text-xs text-gray-500">
+            <tr className="border-b border-stone-100 text-xs text-stone-500">
               <th className="px-4 py-4 font-medium">
                 <div className="flex items-center gap-1">Judul <ArrowUpDown size={10} /></div>
               </th>
@@ -248,24 +254,24 @@ const AdminContent: FC = () => {
               <th className="px-4 py-4 font-medium">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-stone-50">
             {loading
               ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} />)
               : filtered.map((m, i) => (
                   <>
                     <motion.tr key={m.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer hover:bg-stone-50"
                       onClick={() => setExpandedId(expandedId === m.id ? null : m.id)}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <ChevronDown size={12} className={`shrink-0 text-gray-400 transition-transform ${expandedId === m.id ? 'rotate-180' : ''}`} />
+                          <ChevronDown size={12} className={`shrink-0 text-stone-400 transition-transform ${expandedId === m.id ? 'rotate-180' : ''}`} />
                           <div>
-                            <p className="font-semibold text-gray-900">{m.title}</p>
-                            <p className="text-xs text-gray-400 line-clamp-1">{m.description}</p>
+                            <p className="font-semibold text-stone-900">{m.title}</p>
+                            <p className="text-xs text-stone-400 line-clamp-1">{m.description}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500">{m.topic}{m.subtopic && ` · ${m.subtopic}`}</td>
+                      <td className="px-4 py-3 text-xs text-stone-500">{m.topic}{m.subtopic && ` · ${m.subtopic}`}</td>
                       <td className="px-4 py-3">
                         <button onClick={e => { e.stopPropagation(); handleToggleStatus(m); }}
                           className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors ${
@@ -277,45 +283,45 @@ const AdminContent: FC = () => {
                           {m.status === 'published' ? 'Published' : 'Draft'}
                         </button>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500">{m.estimatedTime} mnt</td>
-                      <td className="px-4 py-3 text-xs text-gray-500">#{m.order}</td>
-                      <td className="px-4 py-3 text-xs text-gray-400">{fmtDate(m.updatedAt)}</td>
+                      <td className="px-4 py-3 text-xs text-stone-500">{m.estimatedTime} mnt</td>
+                      <td className="px-4 py-3 text-xs text-stone-500">#{m.order}</td>
+                      <td className="px-4 py-3 text-xs text-stone-400">{fmtDate(m.updatedAt)}</td>
                       <td className="px-4 py-3">
                         <div className="flex gap-1" onClick={e => e.stopPropagation()}>
                           <button onClick={() => setPreviewId(m.id)}
-                            className="rounded-lg p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Preview">
+                            className="rounded-lg p-1.5 text-stone-400 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Preview">
                             <Eye size={13} />
                           </button>
                           <button onClick={() => openEdit(m)}
-                            className="rounded-lg p-1.5 text-gray-400 hover:bg-violet-50 hover:text-violet-600 transition-colors">
+                            className="rounded-lg p-1.5 text-stone-400 hover:bg-violet-50 hover:text-violet-600 transition-colors">
                             <Pencil size={13} />
                           </button>
                           <button onClick={() => handleDelete(m.id)}
-                            className="rounded-lg p-1.5 text-gray-400 hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                            className="rounded-lg p-1.5 text-stone-400 hover:bg-rose-50 hover:text-rose-600 transition-colors">
                             <Trash2 size={13} />
                           </button>
                         </div>
                       </td>
                     </motion.tr>
                     {expandedId === m.id && (
-                      <tr key={`${m.id}-exp`} className="bg-gray-50">
+                      <tr key={`${m.id}-exp`} className="bg-stone-50">
                         <td colSpan={7} className="px-8 py-4">
                           <div className="grid grid-cols-2 gap-6">
                             <div>
-                              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Tujuan Belajar</p>
+                              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-stone-400">Tujuan Belajar</p>
                               {m.learningObjectives?.length ? (
                                 <ul className="space-y-1">
                                   {m.learningObjectives.map((obj, i) => (
-                                    <li key={i} className="flex items-start gap-1.5 text-xs text-gray-700">
+                                    <li key={i} className="flex items-start gap-1.5 text-xs text-stone-700">
                                       <CheckCircle size={11} className="mt-0.5 shrink-0 text-emerald-500" /> {obj}
                                     </li>
                                   ))}
                                 </ul>
-                              ) : <p className="text-xs text-gray-400">—</p>}
+                              ) : <p className="text-xs text-stone-400">—</p>}
                             </div>
                             <div>
-                              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Konten (preview)</p>
-                              <p className="line-clamp-3 text-xs text-gray-600">{m.content || '—'}</p>
+                              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-stone-400">Konten (preview)</p>
+                              <p className="line-clamp-3 text-xs text-stone-600">{m.content || '—'}</p>
                             </div>
                           </div>
                         </td>
@@ -327,9 +333,9 @@ const AdminContent: FC = () => {
         </table>
         {!loading && filtered.length === 0 && (
           <div className="py-16 text-center">
-            <FileText size={32} className="mx-auto mb-3 text-gray-200" />
-            <p className="text-sm text-gray-400">{search ? 'Tidak ada materi yang cocok' : 'Belum ada materi'}</p>
-            <button onClick={openCreate} className="mt-3 text-xs font-semibold text-primary hover:underline">+ Tambah materi pertama</button>
+            <FileText size={32} className="mx-auto mb-3 text-stone-200" />
+            <p className="text-sm text-stone-400">{search ? 'Tidak ada materi yang cocok' : 'Belum ada materi'}</p>
+            <button onClick={openCreate} className="mt-3 text-xs font-semibold text-violet-600 hover:underline">+ Tambah materi pertama</button>
           </div>
         )}
       </div>
@@ -345,63 +351,60 @@ const AdminContent: FC = () => {
               className="my-8 w-full max-w-2xl rounded-3xl bg-white p-6 shadow-xl"
               onClick={e => e.stopPropagation()}>
               <div className="mb-5 flex items-center justify-between">
-                <h2 className="font-display text-lg font-extrabold text-gray-900">
+                <h2 className="font-display text-lg font-extrabold text-stone-900">
                   {editTarget ? 'Edit Materi' : 'Tambah Materi Baru'}
                 </h2>
-                <button onClick={() => setShowModal(false)} className="rounded-xl p-2 text-gray-400 hover:bg-gray-100">
+                <button onClick={() => setShowModal(false)} className="rounded-xl p-2 text-stone-400 hover:bg-stone-100">
                   <X size={16} />
                 </button>
               </div>
 
               <form onSubmit={handleSave} className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-gray-700">Judul *</label>
+                  <label className="mb-1 block text-xs font-semibold text-stone-700">Judul *</label>
                   <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required
                     placeholder="Judul materi"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                    className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">Topik *</label>
-                    <input value={form.topic} onChange={e => setForm(p => ({ ...p, topic: e.target.value }))} required
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">Sub-topik</label>
-                    <input value={form.subtopic} onChange={e => setForm(p => ({ ...p, subtopic: e.target.value }))}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
-                  </div>
-                </div>
+                <TaxonomyPicker
+                  value={form.taxonomy}
+                  onChange={taxonomy => setForm(previous => ({
+                    ...previous,
+                    taxonomy,
+                    topic: taxonomy.topic?.name ?? previous.topic,
+                    subtopic: taxonomy.subtopic?.name ?? '',
+                  }))}
+                />
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-gray-700">Deskripsi</label>
+                  <label className="mb-1 block text-xs font-semibold text-stone-700">Deskripsi</label>
                   <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2}
-                    className="w-full resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                    className="w-full resize-none rounded-xl border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20" />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-gray-700">Konten (Markdown)</label>
+                  <label className="mb-1 block text-xs font-semibold text-stone-700">Konten (Markdown)</label>
                   <textarea value={form.content} onChange={e => setForm(p => ({ ...p, content: e.target.value }))} rows={6}
                     placeholder="Tulis konten materi dalam format Markdown..."
-                    className="w-full resize-none rounded-xl border border-gray-200 px-3 py-2.5 font-mono text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                    className="w-full resize-none rounded-xl border border-stone-200 px-3 py-2.5 font-mono text-xs outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20" />
                 </div>
 
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <label className="text-xs font-semibold text-gray-700">Tujuan Belajar</label>
+                    <label className="text-xs font-semibold text-stone-700">Tujuan Belajar</label>
                     <button type="button" onClick={addObjective}
-                      className="text-[10px] font-semibold text-primary hover:underline">+ Tambah</button>
+                      className="text-[10px] font-semibold text-violet-600 hover:underline">+ Tambah</button>
                   </div>
                   <div className="space-y-2">
                     {form.learningObjectives.map((obj, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <input value={obj} onChange={e => updateObjective(i, e.target.value)}
                           placeholder={`Tujuan ${i + 1}`}
-                          className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                          className="flex-1 rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20" />
                         {form.learningObjectives.length > 1 && (
                           <button type="button" onClick={() => removeObjective(i)}
-                            className="rounded-lg p-1 text-gray-400 hover:text-rose-500">
+                            className="rounded-lg p-1 text-stone-400 hover:text-rose-500">
                             <X size={14} />
                           </button>
                         )}
@@ -412,21 +415,21 @@ const AdminContent: FC = () => {
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">Estimasi Waktu (menit)</label>
+                    <label className="mb-1 block text-xs font-semibold text-stone-700">Estimasi Waktu (menit)</label>
                     <input type="number" value={form.estimatedTime} min={1}
                       onChange={e => setForm(p => ({ ...p, estimatedTime: Number(e.target.value) }))}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                      className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20" />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">Urutan</label>
+                    <label className="mb-1 block text-xs font-semibold text-stone-700">Urutan</label>
                     <input type="number" value={form.order} min={0}
                       onChange={e => setForm(p => ({ ...p, order: Number(e.target.value) }))}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                      className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20" />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">Status</label>
+                    <label className="mb-1 block text-xs font-semibold text-stone-700">Status</label>
                     <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value as MaterialStatus }))}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary">
+                      className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400">
                       <option value="draft">Draft</option>
                       <option value="published">Published</option>
                     </select>
@@ -435,11 +438,11 @@ const AdminContent: FC = () => {
 
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowModal(false)}
-                    className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                    className="flex-1 rounded-xl border border-stone-200 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50">
                     Batal
                   </button>
                   <button type="submit" disabled={saving}
-                    className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+                    className="flex-1 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
                     {saving ? 'Menyimpan...' : editTarget ? 'Simpan Perubahan' : 'Tambah Materi'}
                   </button>
                 </div>
@@ -461,10 +464,10 @@ const AdminContent: FC = () => {
               onClick={e => e.stopPropagation()}>
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h2 className="font-display text-lg font-extrabold text-gray-900">{previewMaterial.title}</h2>
-                  <p className="text-xs text-gray-500">{previewMaterial.topic} · {previewMaterial.estimatedTime} menit</p>
+                  <h2 className="font-display text-lg font-extrabold text-stone-900">{previewMaterial.title}</h2>
+                  <p className="text-xs text-stone-500">{previewMaterial.topic} · {previewMaterial.estimatedTime} menit</p>
                 </div>
-                <button onClick={() => setPreviewId(null)} className="rounded-xl p-2 text-gray-400 hover:bg-gray-100">
+                <button onClick={() => setPreviewId(null)} className="rounded-xl p-2 text-stone-400 hover:bg-stone-100">
                   <X size={16} />
                 </button>
               </div>
@@ -473,23 +476,23 @@ const AdminContent: FC = () => {
               )}
               {previewMaterial.learningObjectives?.length > 0 && (
                 <div className="mb-4">
-                  <p className="mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Tujuan Belajar</p>
+                  <p className="mb-2 text-xs font-bold text-stone-500 uppercase tracking-wide">Tujuan Belajar</p>
                   <ul className="space-y-1">
                     {previewMaterial.learningObjectives.map((obj, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                      <li key={i} className="flex items-start gap-2 text-sm text-stone-700">
                         <CheckCircle size={13} className="mt-0.5 shrink-0 text-emerald-500" /> {obj}
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
-              <div className="rounded-xl bg-gray-50 p-4">
-                <p className="mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Konten</p>
-                <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700">{previewMaterial.content || 'Konten belum diisi.'}</pre>
+              <div className="rounded-xl bg-stone-50 p-4">
+                <p className="mb-2 text-xs font-bold text-stone-500 uppercase tracking-wide">Konten</p>
+                <pre className="whitespace-pre-wrap font-sans text-sm text-stone-700">{previewMaterial.content || 'Konten belum diisi.'}</pre>
               </div>
               <div className="mt-4 flex justify-end gap-2">
                 <button onClick={() => { setPreviewId(null); openEdit(previewMaterial); }}
-                  className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
                   <Pencil size={13} /> Edit Materi
                 </button>
               </div>

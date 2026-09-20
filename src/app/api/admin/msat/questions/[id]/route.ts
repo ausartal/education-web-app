@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const allowedFields = [
       'module', 'topic', 'stage', 'difficulty', 'tierPath', 'categoryLabel',
       'cognitiveDomain', 'cognitiveLevel', 'stem', 'options', 'correctAnswer',
-      'subElement', 'competency', 'status', 'stageWeight',
+      'subElement', 'competency', 'status', 'stageWeight', 'taxonomy',
     ];
 
     const updates: Record<string, unknown> = {};
