@@ -1,0 +1,134 @@
+'use client';
+
+import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Calculator, Grid3X3, X, Delete, RotateCcw } from 'lucide-react';
+import { calculateScientificExpression } from '@/lib/scientific-calculator';
+
+type Tool = 'calculator' | 'periodic' | null;
+type ElementTuple = readonly [string, string, string];
+type SelectedElement = { element: ElementTuple; number: number };
+
+const ELEMENTS = [
+  ['H','Hydrogen','1.008'],['He','Helium','4.003'],['Li','Lithium','6.94'],['Be','Beryllium','9.012'],['B','Boron','10.81'],['C','Carbon','12.011'],['N','Nitrogen','14.007'],['O','Oxygen','15.999'],['F','Fluorine','18.998'],['Ne','Neon','20.180'],
+  ['Na','Sodium','22.990'],['Mg','Magnesium','24.305'],['Al','Aluminium','26.982'],['Si','Silicon','28.085'],['P','Phosphorus','30.974'],['S','Sulfur','32.06'],['Cl','Chlorine','35.45'],['Ar','Argon','39.948'],['K','Potassium','39.098'],['Ca','Calcium','40.078'],
+  ['Sc','Scandium','44.956'],['Ti','Titanium','47.867'],['V','Vanadium','50.942'],['Cr','Chromium','51.996'],['Mn','Manganese','54.938'],['Fe','Iron','55.845'],['Co','Cobalt','58.933'],['Ni','Nickel','58.693'],['Cu','Copper','63.546'],['Zn','Zinc','65.38'],
+  ['Ga','Gallium','69.723'],['Ge','Germanium','72.630'],['As','Arsenic','74.922'],['Se','Selenium','78.971'],['Br','Bromine','79.904'],['Kr','Krypton','83.798'],['Rb','Rubidium','85.468'],['Sr','Strontium','87.62'],['Y','Yttrium','88.906'],['Zr','Zirconium','91.224'],
+  ['Nb','Niobium','92.906'],['Mo','Molybdenum','95.95'],['Tc','Technetium','[98]'],['Ru','Ruthenium','101.07'],['Rh','Rhodium','102.91'],['Pd','Palladium','106.42'],['Ag','Silver','107.87'],['Cd','Cadmium','112.41'],['In','Indium','114.82'],['Sn','Tin','118.71'],
+  ['Sb','Antimony','121.76'],['Te','Tellurium','127.60'],['I','Iodine','126.90'],['Xe','Xenon','131.29'],['Cs','Caesium','132.91'],['Ba','Barium','137.33'],['La','Lanthanum','138.91'],['Ce','Cerium','140.12'],['Pr','Praseodymium','140.91'],['Nd','Neodymium','144.24'],
+  ['Pm','Promethium','[145]'],['Sm','Samarium','150.36'],['Eu','Europium','151.96'],['Gd','Gadolinium','157.25'],['Tb','Terbium','158.93'],['Dy','Dysprosium','162.50'],['Ho','Holmium','164.93'],['Er','Erbium','167.26'],['Tm','Thulium','168.93'],['Yb','Ytterbium','173.05'],
+  ['Lu','Lutetium','174.97'],['Hf','Hafnium','178.49'],['Ta','Tantalum','180.95'],['W','Tungsten','183.84'],['Re','Rhenium','186.21'],['Os','Osmium','190.23'],['Ir','Iridium','192.22'],['Pt','Platinum','195.08'],['Au','Gold','196.97'],['Hg','Mercury','200.59'],
+  ['Tl','Thallium','204.38'],['Pb','Lead','207.2'],['Bi','Bismuth','208.98'],['Po','Polonium','[209]'],['At','Astatine','[210]'],['Rn','Radon','[222]'],['Fr','Francium','[223]'],['Ra','Radium','[226]'],['Ac','Actinium','[227]'],['Th','Thorium','232.04'],
+  ['Pa','Protactinium','231.04'],['U','Uranium','238.03'],['Np','Neptunium','[237]'],['Pu','Plutonium','[244]'],['Am','Americium','[243]'],['Cm','Curium','[247]'],['Bk','Berkelium','[247]'],['Cf','Californium','[251]'],['Es','Einsteinium','[252]'],['Fm','Fermium','[257]'],
+  ['Md','Mendelevium','[258]'],['No','Nobelium','[259]'],['Lr','Lawrencium','[266]'],['Rf','Rutherfordium','[267]'],['Db','Dubnium','[268]'],['Sg','Seaborgium','[269]'],['Bh','Bohrium','[270]'],['Hs','Hassium','[277]'],['Mt','Meitnerium','[278]'],['Ds','Darmstadtium','[281]'],
+  ['Rg','Roentgenium','[282]'],['Cn','Copernicium','[285]'],['Nh','Nihonium','[286]'],['Fl','Flerovium','[289]'],['Mc','Moscovium','[290]'],['Lv','Livermorium','[293]'],['Ts','Tennessine','[294]'],['Og','Oganesson','[294]'],
+] as const;
+
+const PERIODS = [
+  ['H',...Array(16).fill(null),'He'],
+  ['Li','Be',...Array(10).fill(null),'B','C','N','O','F','Ne'],
+  ['Na','Mg',...Array(10).fill(null),'Al','Si','P','S','Cl','Ar'],
+  ['K','Ca','Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr'],
+  ['Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe'],
+  ['Cs','Ba','La–Lu','Hf','Ta','W','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn'],
+  ['Fr','Ra','Ac–Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn','Nh','Fl','Mc','Lv','Ts','Og'],
+] as const;
+
+const LANTHANIDES = ELEMENTS.slice(56, 71);
+const ACTINIDES = ELEMENTS.slice(88, 103);
+const bySymbol = new Map(ELEMENTS.map((element, index) => [element[0], { element, number: index + 1 }]));
+
+function elementTone(number: number) {
+  if ([2,10,18,36,54,86,118].includes(number)) return 'border-indigo-200 bg-indigo-50 text-indigo-800';
+  if ([9,17,35,53,85,117].includes(number)) return 'border-cyan-200 bg-cyan-50 text-cyan-800';
+  if ((number >= 57 && number <= 71) || (number >= 89 && number <= 103)) return 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800';
+  if ([1,6,7,8,15,16,34].includes(number)) return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+  return 'border-slate-200 bg-white text-slate-700';
+}
+
+function ScientificCalculator() {
+  const [expression, setExpression] = useState('');
+  const [result, setResult] = useState('0');
+  const append = (value: string) => setExpression((current) => current + value);
+  const solve = () => {
+    try { setResult(String(calculateScientificExpression(expression))); }
+    catch { setResult('Ekspresi tidak valid'); }
+  };
+  const keys = ['sin(', 'cos(', 'tan(', 'sqrt(', 'log(', 'ln(', 'π', 'e', '(', ')', '^', '÷', '7','8','9','×','4','5','6','-','1','2','3','+','0','.'];
+
+  return (
+    <div className="p-4">
+      <div className="mb-3 rounded-xl bg-slate-950 px-4 py-3 text-right text-white">
+        <div className="h-5 truncate text-xs text-slate-400">{expression || 'Masukkan perhitungan'}</div>
+        <div className="mt-1 min-h-7 truncate text-xl font-bold tabular-nums">{result}</div>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        <button onClick={() => { setExpression(''); setResult('0'); }} className="col-span-2 flex h-10 items-center justify-center gap-1 rounded-lg bg-rose-50 text-xs font-bold text-rose-600"><RotateCcw size={14}/> Bersihkan</button>
+        <button onClick={() => setExpression((value) => value.slice(0, -1))} className="flex h-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600" aria-label="Hapus karakter"><Delete size={16}/></button>
+        <button onClick={solve} className="flex h-10 items-center justify-center rounded-lg bg-violet-600 font-bold text-white">=</button>
+        {keys.map((key) => (
+          <button key={key} onClick={() => append(key)} className={`h-10 rounded-lg text-xs font-semibold transition active:scale-95 ${/\d|\./.test(key) ? 'bg-white text-slate-800 ring-1 ring-slate-200' : 'bg-violet-50 text-violet-700'}`}>
+            {key.replace('sqrt', '√')}
+          </button>
+        ))}
+        <button onClick={solve} className="col-span-2 h-10 rounded-lg bg-violet-600 text-sm font-bold text-white">Hitung</button>
+      </div>
+      <p className="mt-3 text-[10px] leading-relaxed text-slate-400">Fungsi trigonometri menggunakan satuan derajat.</p>
+    </div>
+  );
+}
+
+function PeriodicTable() {
+  const [selected, setSelected] = useState<SelectedElement>(bySymbol.get('H')!);
+  const renderElement = (symbol: string, number: number, name: string, mass: string) => (
+    <button key={symbol} onClick={() => setSelected({ element: [symbol, name, mass], number })} className={`h-12 min-w-11 rounded-md border p-1 text-left transition hover:-translate-y-0.5 hover:shadow-md ${elementTone(number)} ${selected.number === number ? 'ring-2 ring-violet-500 ring-offset-1' : ''}`}>
+      <span className="block text-[8px] leading-none opacity-60">{number}</span><span className="block text-sm font-extrabold leading-4">{symbol}</span>
+    </button>
+  );
+
+  return (
+    <div className="p-4">
+      <div className="mb-3 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
+        <div><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Unsur terpilih</span><p className="font-bold text-slate-800">{selected.number}. {selected.element[1]} ({selected.element[0]})</p></div>
+        <div className="text-right"><span className="text-[10px] text-slate-400">Massa atom</span><p className="font-bold tabular-nums text-violet-700">{selected.element[2]}</p></div>
+      </div>
+      <div className="overflow-x-auto pb-2">
+        <div className="min-w-[850px] space-y-1.5">
+          {PERIODS.map((period, row) => <div key={row} className="grid grid-cols-18 gap-1.5">{period.map((symbol, column) => {
+            if (!symbol) return <span key={column}/>;
+            if (symbol.includes('–')) return <span key={symbol} className="flex h-12 items-center justify-center rounded-md border border-dashed border-violet-200 bg-violet-50 text-[9px] font-bold text-violet-500">{symbol}</span>;
+            const item = bySymbol.get(symbol)!;
+            return renderElement(symbol, item.number, item.element[1], item.element[2]);
+          })}</div>)}
+          <div className="h-1" />
+          {[LANTHANIDES, ACTINIDES].map((series, row) => <div key={row} className="grid grid-cols-18 gap-1.5"><span className="col-span-2 flex items-center justify-end pr-2 text-[9px] font-bold text-slate-400">{row === 0 ? 'Lantanida' : 'Aktinida'}</span>{series.map((element) => { const item = bySymbol.get(element[0])!; return renderElement(element[0], item.number, element[1], element[2]); })}</div>)}
+        </div>
+      </div>
+      <p className="mt-2 text-[10px] text-slate-400 sm:hidden">Geser tabel ke samping untuk melihat seluruh unsur.</p>
+    </div>
+  );
+}
+
+export function ExamUtilityTools() {
+  const [activeTool, setActiveTool] = useState<Tool>(null);
+  const toggle = (tool: Exclude<Tool, null>) => setActiveTool((current) => current === tool ? null : tool);
+  return (
+    <>
+      <div className="fixed bottom-4 right-4 z-40 flex flex-col gap-2 sm:bottom-6 sm:right-6">
+        <button onClick={() => toggle('calculator')} aria-label="Buka kalkulator saintifik" aria-pressed={activeTool === 'calculator'} className={`flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition hover:-translate-y-0.5 ${activeTool === 'calculator' ? 'bg-violet-600 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200'}`}><Calculator size={19}/></button>
+        <button onClick={() => toggle('periodic')} aria-label="Buka tabel periodik" aria-pressed={activeTool === 'periodic'} className={`flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition hover:-translate-y-0.5 ${activeTool === 'periodic' ? 'bg-violet-600 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200'}`}><Grid3X3 size={19}/></button>
+      </div>
+      <AnimatePresence>
+        {activeTool && (
+          <motion.section initial={{ opacity: 0, y: 18, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: 0.98 }} transition={{ duration: 0.16 }} className={`fixed inset-x-3 bottom-3 z-50 max-h-[78vh] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 sm:bottom-6 sm:left-auto sm:right-20 ${activeTool === 'calculator' ? 'sm:w-[350px]' : 'sm:w-[min(900px,calc(100vw-7rem))]'}`}>
+            <header className="flex h-12 items-center justify-between border-b border-slate-100 px-4">
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-800">{activeTool === 'calculator' ? <Calculator size={16}/> : <Grid3X3 size={16}/>} {activeTool === 'calculator' ? 'Kalkulator Saintifik' : 'Tabel Periodik'}</div>
+              <button onClick={() => setActiveTool(null)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Perkecil alat"><X size={17}/></button>
+            </header>
+            <div className="max-h-[calc(78vh-3rem)] overflow-y-auto">{activeTool === 'calculator' ? <ScientificCalculator/> : <PeriodicTable/>}</div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

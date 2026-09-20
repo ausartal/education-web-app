@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Wifi, WifiOff, ChevronLeft, ChevronRight, AlertTriangle, X, Loader2, Send, Shield, Maximize } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
+import { ExamUtilityTools } from '@/components/exam/ExamUtilityTools';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
@@ -372,6 +373,7 @@ const ExamSessionPage: FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F8F7FF]">
+      <ExamUtilityTools />
       {/* Fullscreen Gate */}
       <AnimatePresence>
         {showFullscreen && (

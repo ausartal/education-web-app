@@ -60,7 +60,7 @@ export const LandingNavbar: FC = () => {
         {/* Desktop CTAs */}
         <div className="hidden items-center gap-3 lg:flex">
           <Link
-            href="/exam"
+            href="/exam/login"
             className="flex items-center gap-2 rounded-full border border-[#D8C8FB] bg-[#F4EFFF] px-4 py-2.5 text-sm font-semibold text-[#6320EE] transition-colors hover:bg-[#EADFFF]"
           >
             <Image src="/icons/hero-ujian.svg" alt="" width={16} height={16} />
@@ -120,7 +120,7 @@ export const LandingNavbar: FC = () => {
               Get started
             </Link>
             <Link
-              href="/exam"
+              href="/exam/login"
               className="col-span-2 rounded-xl border border-[#D8C8FB] bg-[#F4EFFF] py-2.5 text-center text-sm font-semibold text-[#6320EE]"
             >
               Exam

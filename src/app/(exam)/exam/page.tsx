@@ -9,6 +9,7 @@ import {
   Award, User, Shield,
 } from 'lucide-react';
 import { useExamAuth } from '@/context/ExamAuthContext';
+import { ExamAuthGuard } from '@/components/exam/ExamAuthGuard';
 
 type Step = 'dashboard' | 'confirm' | 'waiting';
 
@@ -40,7 +41,7 @@ const PREDIKAT_STYLES: Record<string, string> = {
   Terbatas: 'text-rose-700 bg-rose-50 ring-rose-200',
 };
 
-const ExamDashboard: FC = () => {
+const ExamDashboardContent: FC = () => {
   const router = useRouter();
   const { user, examUser, loading: authLoading } = useExamAuth();
 
@@ -490,5 +491,11 @@ const ExamDashboard: FC = () => {
     </div>
   );
 };
+
+const ExamDashboard: FC = () => (
+  <ExamAuthGuard>
+    <ExamDashboardContent />
+  </ExamAuthGuard>
+);
 
 export default ExamDashboard;
