@@ -7,7 +7,6 @@ import { calculateScientificExpression } from '@/lib/scientific-calculator';
 
 type Tool = 'calculator' | 'periodic' | null;
 type ElementTuple = readonly [string, string, string];
-type SelectedElement = { element: ElementTuple; number: number };
 
 const ELEMENTS = [
   ['H','Hydrogen','1.008'],['He','Helium','4.003'],['Li','Lithium','6.94'],['Be','Beryllium','9.012'],['B','Boron','10.81'],['C','Carbon','12.011'],['N','Nitrogen','14.007'],['O','Oxygen','15.999'],['F','Fluorine','18.998'],['Ne','Neon','20.180'],
@@ -24,7 +23,9 @@ const ELEMENTS = [
   ['Rg','Roentgenium','[282]'],['Cn','Copernicium','[285]'],['Nh','Nihonium','[286]'],['Fl','Flerovium','[289]'],['Mc','Moscovium','[290]'],['Lv','Livermorium','[293]'],['Ts','Tennessine','[294]'],['Og','Oganesson','[294]'],
 ] as const;
 
-const bySymbol = new Map<string, SelectedElement>(ELEMENTS.map((element, index) => [element[0], { element, number: index + 1 }]));
+const bySymbol = new Map<string, { element: ElementTuple; number: number }>(
+  ELEMENTS.map((element, index) => [element[0], { element, number: index + 1 }]),
+);
 
 const PERIODIC_ROWS: Array<Array<string | null>> = [
   ['H', ...Array(16).fill(null), 'He'],
@@ -35,14 +36,6 @@ const PERIODIC_ROWS: Array<Array<string | null>> = [
   ['Cs','Ba','57–71','Hf','Ta','W','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn'],
   ['Fr','Ra','89–103','Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn','Nh','Fl','Mc','Lv','Ts','Og'],
 ];
-
-function elementTone(number: number) {
-  if ([2,10,18,36,54,86,118].includes(number)) return 'border-indigo-200 bg-indigo-50 text-indigo-800';
-  if ([9,17,35,53,85,117].includes(number)) return 'border-cyan-200 bg-cyan-50 text-cyan-800';
-  if ((number >= 57 && number <= 71) || (number >= 89 && number <= 103)) return 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800';
-  if ([1,6,7,8,15,16,34].includes(number)) return 'border-emerald-200 bg-emerald-50 text-emerald-800';
-  return 'border-slate-200 bg-white text-slate-700';
-}
 
 function ScientificCalculator() {
   const [expression, setExpression] = useState('');
@@ -93,40 +86,49 @@ function ScientificCalculator() {
 }
 
 function PeriodicTable() {
-  const [selected, setSelected] = useState<SelectedElement>(bySymbol.get('H')!);
-  const renderElement = (symbol: string, number: number, name: string, mass: string) => (
-    <button key={symbol} onClick={() => setSelected({ element: [symbol, name, mass], number })} className={`h-11 rounded border px-0.5 text-center transition hover:-translate-y-0.5 hover:shadow-sm ${elementTone(number)} ${selected.number === number ? 'ring-2 ring-violet-500 ring-offset-1' : ''}`} title={`${number}. ${name}`}>
-      <span className="block text-[7px] leading-none opacity-60">{number}</span><span className="block text-xs font-extrabold leading-4">{symbol}</span>
-    </button>
-  );
+  const renderElement = (symbol: string) => {
+    const item = bySymbol.get(symbol)!;
+    return (
+      <div
+        key={symbol}
+        aria-label={`${item.number}, ${item.element[1]}, massa atom ${item.element[2]}`}
+        className="flex h-12 flex-col items-center justify-center rounded border border-slate-200 bg-white px-0.5 text-center text-slate-700"
+      >
+        <span className="text-[7px] leading-none text-slate-400">{item.number}</span>
+        <span className="text-[13px] font-extrabold leading-4 text-slate-800">{symbol}</span>
+        <span className="max-w-full truncate text-[6px] leading-none text-slate-400">{item.element[2]}</span>
+      </div>
+    );
+  };
 
   return (
     <div className="p-2.5 sm:p-4">
-      <div className="mb-2 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 ring-1 ring-slate-100">
-        <div className="min-w-0"><span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Unsur terpilih</span><p className="truncate text-xs font-bold text-slate-800">{selected.number}. {selected.element[1]} ({selected.element[0]})</p></div>
-        <div className="shrink-0 text-right"><span className="text-[9px] text-slate-400">Massa atom</span><p className="text-xs font-bold tabular-nums text-violet-700">{selected.element[2]}</p></div>
-      </div>
       <div className="overflow-x-auto pb-2">
-        <div className="min-w-[760px]">
-          <div className="mb-1 grid grid-cols-18 gap-1 px-0.5 text-center text-[8px] font-bold text-slate-400">
+        <div className="min-w-[850px]">
+          <div className="mb-1 grid grid-cols-[22px_repeat(18,minmax(0,1fr))] gap-1 text-center text-[8px] font-bold text-slate-400">
+            <span aria-hidden="true" />
             {Array.from({ length: 18 }, (_, index) => <span key={index}>{index + 1}</span>)}
           </div>
           <div className="space-y-1">
             {PERIODIC_ROWS.map((row, period) => (
-              <div key={period} className="grid grid-cols-18 gap-1">
+              <div key={period} className="grid grid-cols-[22px_repeat(18,minmax(0,1fr))] gap-1">
+                <span className="flex h-12 items-center justify-center text-[8px] font-bold text-slate-400">{period + 1}</span>
                 {row.map((symbol, index) => {
                   if (!symbol) return <span key={index}/>;
-                  if (symbol.includes('–')) return <span key={symbol} className="flex h-11 items-center justify-center rounded border border-dashed border-fuchsia-200 bg-fuchsia-50 text-[8px] font-bold text-fuchsia-600">{symbol}</span>;
-                  const item = bySymbol.get(symbol)!;
-                  return renderElement(symbol, item.number, item.element[1], item.element[2]);
+                  if (!bySymbol.has(symbol)) return <span key={symbol} className="flex h-12 items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 text-[8px] font-bold text-slate-500">{symbol}</span>;
+                  return renderElement(symbol);
                 })}
               </div>
             ))}
           </div>
-          <div className="mt-3 space-y-1 border-l-2 border-fuchsia-200 pl-[84px]">
-            {[ELEMENTS.slice(56, 71), ELEMENTS.slice(88, 103)].map((series, row) => (
-              <div key={row} className="grid grid-cols-15 gap-1">
-                {series.map((element) => { const item = bySymbol.get(element[0])!; return renderElement(element[0], item.number, element[1], element[2]); })}
+          <div className="mt-3 space-y-1 pl-[116px]">
+            {[
+              { label: 'La–Lu', elements: ELEMENTS.slice(56, 71) },
+              { label: 'Ac–Lr', elements: ELEMENTS.slice(88, 103) },
+            ].map((series) => (
+              <div key={series.label} className="grid grid-cols-[54px_repeat(15,minmax(0,1fr))] gap-1">
+                <span className="flex h-12 items-center text-[8px] font-bold text-slate-400">{series.label}</span>
+                {series.elements.map((element) => renderElement(element[0]))}
               </div>
             ))}
           </div>
@@ -148,7 +150,7 @@ export function ExamUtilityTools() {
       </div>
       <AnimatePresence>
         {activeTool && (
-          <motion.section initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} transition={{ duration: 0.14 }} className={`fixed bottom-16 right-3 z-50 max-h-[46dvh] w-[min(320px,calc(100vw-1.5rem))] overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-slate-200 sm:bottom-6 sm:right-20 sm:max-h-[520px] ${activeTool === 'calculator' ? 'sm:w-[360px]' : 'sm:w-[min(680px,calc(100vw-7rem))]'}`}>
+          <motion.section initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} transition={{ duration: 0.14 }} className={`fixed bottom-16 right-3 z-50 max-h-[46dvh] w-[min(320px,calc(100vw-1.5rem))] overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-slate-200 sm:bottom-6 sm:right-20 sm:max-h-[520px] ${activeTool === 'calculator' ? 'sm:w-[360px]' : 'sm:w-[min(960px,calc(100vw-7rem))]'}`}>
             <header className="flex h-10 items-center justify-between border-b border-slate-100 px-3 sm:h-12 sm:px-4">
               <div className="flex items-center gap-2 text-sm font-bold text-slate-800">{activeTool === 'calculator' ? <Calculator size={16}/> : <Grid3X3 size={16}/>} {activeTool === 'calculator' ? 'Kalkulator Saintifik' : 'Tabel Periodik'}</div>
               <button onClick={() => setActiveTool(null)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Perkecil alat"><X size={17}/></button>
