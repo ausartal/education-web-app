@@ -296,69 +296,93 @@ const CertificateDetailPage: FC = () => {
 
         {/* Page 2 — competency analysis */}
         <div className="cert-sheet relative overflow-hidden bg-white shadow-lg" style={{ aspectRatio: '297/210' }}>
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#6320EE] via-[#8B5CF6] to-[#F59E0B]" />
-          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#6320EE]/[0.035]" />
-          <div className="absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-[#F59E0B]/[0.04]" />
+          <div className="pointer-events-none absolute" style={{ inset: '8mm', border: '1.5px solid #C4B5FD' }} />
+          <div className="pointer-events-none absolute" style={{ inset: '10mm', border: '0.5px solid #E9E2FF' }} />
+          {['top-[7mm] left-[7mm]', 'top-[7mm] right-[7mm] scale-x-[-1]', 'bottom-[7mm] left-[7mm] scale-y-[-1]', 'bottom-[7mm] right-[7mm] scale-[-1]'].map((pos, i) => (
+            <div key={i} className={`pointer-events-none absolute h-7 w-7 ${pos}`}>
+              <svg viewBox="0 0 28 28" fill="none"><path d="M0 28V4C0 1.79 1.79 0 4 0h24" stroke="#C4B5FD" strokeWidth="1.5" /></svg>
+            </div>
+          ))}
+          <div className="absolute left-0 right-0 top-0 h-[3px]" style={{ background: 'linear-gradient(90deg, #6320EE 0%, #8B5CF6 30%, #F59E0B 50%, #8B5CF6 70%, #6320EE 100%)' }} />
 
-          <div className="absolute flex flex-col" style={{ inset: '13mm 16mm 11mm' }}>
-            <header className="flex items-start justify-between border-b border-[#E5E7EB] pb-3">
+          <div className="absolute flex flex-col" style={{ inset: '14mm 18mm' }}>
+            <header className="flex items-center justify-between border-b border-[#E5E7EB] pb-2.5">
               <div className="flex items-center gap-3">
-                <Image src="/icons/Akurat_Logo.svg" alt="AKURAT" width={36} height={36} />
+                <Image src="/icons/Akurat_Logo.svg" alt="AKURAT" width={40} height={40} />
+                <div className="h-7 w-px bg-[#D1D5DB]" />
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-[0.22em] text-[#6320EE]">AKURAT Exam</p>
-                  <h2 className="font-display text-xl font-extrabold text-[#141B34]">Laporan Analisis Kompetensi</h2>
-                  <p className="mt-0.5 text-[9px] text-[#6B7280]">Interpretasi hasil Multistage Adaptive Scored Testing</p>
+                  <p className="font-display text-lg font-extrabold leading-tight text-[#1a1040]">AKURAT</p>
+                  <p className="text-[8px] font-medium uppercase tracking-[0.12em] text-[#9CA3AF]">Adaptive Chemistry Learning</p>
                 </div>
               </div>
-              <div className="text-right text-[8px] leading-relaxed text-[#6B7280]">
-                <p className="font-mono font-semibold text-[#374151]">{cert.certificateNo}</p>
-                <p>{formatDate(cert.issuedAt)}</p>
-                <p>Halaman 2 dari 2</p>
+              <div className="text-right">
+                <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-[#9CA3AF]">Laporan Analisis Kompetensi</p>
+                <p className="mt-0.5 font-mono text-[10px] text-[#6B7280]">{cert.certificateNo}</p>
               </div>
             </header>
 
-            <div className="mt-3 grid grid-cols-[1.45fr_0.55fr] gap-3">
-              <section className="rounded-lg border border-[#E9E2FF] bg-[#FAF9FF] px-4 py-3">
-                <p className="text-[7px] font-bold uppercase tracking-[0.18em] text-[#7C3AED]">Simpulan keseluruhan</p>
-                <div className="mt-1 flex items-baseline gap-2">
-                  <h3 className="font-display text-lg font-extrabold text-[#1F2937]">{cert.predikat}</h3>
-                  <span className="text-[9px] font-semibold text-[#7C3AED]">Peringkat {PERINGKAT_ROMAN[peringkat] ?? peringkat}</span>
-                </div>
-                <p className="mt-1.5 text-[9px] leading-[1.55] text-[#4B5563]">{description}</p>
+            <div className="flex flex-1 flex-col pt-3">
+              <div className="text-center">
+                <p className="text-[8px] font-bold uppercase tracking-[0.28em] text-[#6320EE]">Hasil Asesmen Kompetensi Kimia</p>
+                <h2 className="mt-1 font-serif text-[21px] font-bold text-[#1a1040]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Simpulan dan Profil Kompetensi</h2>
+                <p className="mt-0.5 text-[8px] text-[#9CA3AF]">{cert.examTitle} · {profile?.displayName ?? '-'}{examCode ? ` · ${examCode}` : ''}</p>
+              </div>
+
+              <div className="mt-3 grid grid-cols-[1.55fr_0.45fr] gap-3 border-y border-[#E5E7EB] py-2.5">
+                <section className="border-l-2 border-[#6320EE] pl-3.5">
+                  <p className="text-[7px] font-bold uppercase tracking-[0.17em] text-[#8B829E]">Simpulan keseluruhan</p>
+                  <div className="mt-0.5 flex items-baseline gap-2">
+                    <h3 className="font-serif text-[18px] font-bold text-[#1a1040]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>{cert.predikat}</h3>
+                    <span className="text-[8px] font-semibold text-[#6320EE]">Peringkat {PERINGKAT_ROMAN[peringkat] ?? peringkat}</span>
+                  </div>
+                  <p className="mt-1 text-[8.5px] leading-[1.5] text-[#5B6475]">{description}</p>
+                </section>
+                <section className="grid grid-cols-2 divide-x divide-[#E5E7EB] text-center">
+                  <div className="flex flex-col justify-center"><p className="text-[7px] font-bold uppercase tracking-[0.14em] text-[#9CA3AF]">Skor akhir</p><p className="font-display text-[27px] font-black leading-none text-[#1a1040]">{cert.score}</p></div>
+                  <div className="flex flex-col justify-center pl-3"><p className="text-[7px] font-bold uppercase tracking-[0.14em] text-[#9CA3AF]">Predikat</p><p className="mt-1 text-[12px] font-extrabold text-[#6320EE]">{cert.predikat}</p></div>
+                </section>
+              </div>
+
+              <section className="mt-3 grid flex-1 grid-cols-3 gap-3">
+                {domainResults.map((domain, index) => (
+                  <article key={domain.key} className="flex flex-col border border-[#E5E7EB] bg-white px-3.5 py-3">
+                    <div className="flex items-start justify-between border-b border-[#EEEAF5] pb-2">
+                      <div>
+                        <span className="text-[6.5px] font-bold uppercase tracking-[0.16em] text-[#A09AAA]">Simpulan {index + 2}</span>
+                        <h3 className="mt-0.5 font-serif text-[14px] font-bold text-[#1a1040]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>{domain.label}</h3>
+                        <p className="text-[7px] text-[#8B829E]">{domain.subtitle}</p>
+                      </div>
+                      <div className="text-right"><p className="font-display text-[22px] font-black leading-none text-[#1a1040]">{domain.score}%</p><p className="mt-1 text-[7px] font-bold uppercase tracking-wide text-[#6320EE]">{domain.level}</p></div>
+                    </div>
+                    <div className="my-2 h-[2px] bg-[#F0EDF5]"><div className="h-full bg-[#6320EE]" style={{ width: `${Math.max(2, Math.min(100, domain.score))}%` }} /></div>
+                    <p className="text-[8px] leading-[1.5] text-[#5B6475]">{domain.narrative}</p>
+                    <div className="mt-auto pt-2">
+                      <p className="text-[6.5px] font-bold uppercase tracking-[0.14em] text-[#A09AAA]">Arah pengembangan</p>
+                      <p className="mt-1 text-[7.5px] leading-[1.45] text-[#737B8C]">
+                        {domain.level === 'Tinggi' ? 'Pertahankan konsistensi melalui latihan lintas konsep, konteks baru, dan persoalan non-rutin.' : domain.level === 'Sedang' ? 'Perkuat konsistensi melalui latihan bertahap, refleksi strategi, dan evaluasi kesalahan.' : 'Prioritaskan penguatan konsep dasar melalui latihan terarah, contoh konkret, dan umpan balik berkala.'}
+                      </p>
+                    </div>
+                  </article>
+                ))}
               </section>
-              <section className="flex items-center justify-around rounded-lg bg-[#141B34] px-4 py-3 text-white">
-                <div className="text-center"><p className="text-[7px] font-bold uppercase tracking-[0.14em] text-white/50">Skor akhir</p><p className="font-display text-3xl font-black">{cert.score}</p></div>
-                <div className="h-9 w-px bg-white/15" />
-                <div className="min-w-0 text-center"><p className="text-[7px] font-bold uppercase tracking-[0.14em] text-white/50">Peserta</p><p className="mt-1 max-w-[120px] truncate text-[11px] font-bold">{profile?.displayName ?? '-'}</p><p className="mt-0.5 max-w-[120px] truncate text-[7px] text-white/50">{profile?.institution ?? '-'}</p></div>
-              </section>
+
+              <p className="mt-2 text-center text-[6.5px] leading-relaxed text-[#A7A1B0]">
+                Interpretasi ini bersifat diagnostik dan digunakan untuk memetakan kekuatan serta area pengembangan peserta berdasarkan respons pada asesmen adaptif.
+              </p>
             </div>
 
-            <section className="mt-3 grid flex-1 grid-cols-3 gap-3">
-              {domainResults.map((domain, index) => (
-                <article key={domain.key} className="flex flex-col rounded-lg border border-[#E5E7EB] bg-white p-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-[7px] font-bold uppercase tracking-[0.16em] text-[#9CA3AF]">Domain {index + 1}</span>
-                      <h3 className="mt-0.5 text-[12px] font-extrabold text-[#1F2937]">{domain.label}</h3>
-                      <p className="text-[8px] text-[#6B7280]">{domain.subtitle}</p>
-                    </div>
-                    <div className="text-right"><p className="font-display text-2xl font-black leading-none text-[#6320EE]">{domain.score}%</p><p className="mt-1 text-[8px] font-bold text-[#4B5563]">{domain.level}</p></div>
-                  </div>
-                  <div className="my-2.5 h-1 overflow-hidden rounded-full bg-[#F1F5F9]"><div className="h-full rounded-full bg-gradient-to-r from-[#6320EE] to-[#9F67FF]" style={{ width: `${Math.max(2, Math.min(100, domain.score))}%` }} /></div>
-                  <p className="text-[8.5px] leading-[1.55] text-[#4B5563]">{domain.narrative}</p>
-                  <div className="mt-auto border-t border-[#F1F5F9] pt-2">
-                    <p className="text-[7px] font-bold uppercase tracking-[0.12em] text-[#9CA3AF]">Fokus pengembangan</p>
-                    <p className="mt-1 text-[8px] leading-[1.45] text-[#6B7280]">
-                      {domain.level === 'Tinggi' ? 'Pertahankan konsistensi melalui soal lintas konsep dan konteks baru.' : domain.level === 'Sedang' ? 'Perkuat konsistensi melalui latihan bertahap dan evaluasi kesalahan.' : 'Prioritaskan penguatan konsep dasar dengan latihan terarah dan umpan balik.'}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </section>
-
-            <footer className="mt-3 flex items-center justify-between border-t border-[#E5E7EB] pt-2 text-[7px] text-[#9CA3AF]">
-              <p className="max-w-[650px] leading-relaxed">Laporan ini merupakan interpretasi diagnostik berdasarkan respons peserta pada asesmen adaptif. Hasil digunakan untuk memetakan kekuatan dan area pengembangan, bukan sebagai satu-satunya dasar pengambilan keputusan akademik.</p>
-              <p className="ml-6 shrink-0 font-mono">{examCode || cert.certificateNo}</p>
+            <footer className="flex items-center justify-between border-t border-[#E5E7EB] pt-2">
+              <div className="flex items-center gap-2">
+                <Image src="/icons/Akurat_Logo.svg" alt="" width={18} height={18} className="opacity-30" />
+                <div className="text-[7px] leading-relaxed text-[#D1D5DB]">
+                  Diterbitkan secara digital oleh sistem AKURAT Exam.<br />
+                  Dokumen ini merupakan bagian dari sertifikat kompetensi.
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-[8px] text-[#9CA3AF]">{formatDate(cert.issuedAt)} · Halaman 2 dari 2</p>
+                <p className="mt-0.5 text-[7px] text-[#D1D5DB]">akurat-76834.web.app</p>
+              </div>
             </footer>
           </div>
         </div>
