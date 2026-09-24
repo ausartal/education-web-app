@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Loader2, BarChart3, Trophy, Users, Target,
   ChevronDown, Brain, BookOpen, Lightbulb,
-  CheckCircle2, XCircle,
+  CheckCircle2, XCircle, Send, LockKeyhole,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -39,6 +39,7 @@ interface SessionDetail {
   conclusions: Conclusions | null;
   status: string;
   completedAt: { _seconds: number } | null;
+  resultsReleasedAt: { _seconds: number } | null;
 }
 
 interface ExamResult {
@@ -82,6 +83,7 @@ const MsatResultsPage: FC = () => {
   const [results, setResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState('');
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -114,6 +116,7 @@ const MsatResultsPage: FC = () => {
               conclusions: s.conclusions as Conclusions | null,
               status: s.status as string,
               completedAt: s.completedAt as { _seconds: number } | null,
+              resultsReleasedAt: s.resultsReleasedAt as { _seconds: number } | null,
             }));
 
           if (completedSessions.length > 0) {
@@ -132,6 +135,28 @@ const MsatResultsPage: FC = () => {
   }, [user]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const releaseResults = async (examId: string, targetSessionId?: string) => {
+    if (!user) return;
+    const label = targetSessionId ? 'Rilis hasil peserta ini?' : 'Rilis semua hasil yang masih ditahan untuk ujian ini?';
+    if (!window.confirm(label)) return;
+
+    const loadingKey = targetSessionId ?? examId;
+    setActionLoading(loadingKey);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch(`/api/admin/msat/${examId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({
+          action: targetSessionId ? 'release_result' : 'release_results_all',
+          targetSessionId,
+        }),
+      });
+      if (res.ok) await fetchData();
+    } catch { /* ignore */ }
+    setActionLoading('');
+  };
 
   if (loading) {
     return <div className="flex h-64 items-center justify-center"><Loader2 size={24} className="animate-spin text-violet-500" /></div>;
@@ -211,13 +236,21 @@ const MsatResultsPage: FC = () => {
       ) : (
         results.map((examResult, i) => (
           <motion.div key={examResult.examId} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.05 }} className="rounded-2xl bg-white ring-1 ring-stone-100">
-            <div className="flex items-center justify-between border-b border-stone-100 px-5 py-3.5">
+            <div className="flex items-center justify-between gap-3 border-b border-stone-100 px-5 py-3.5">
               <div className="flex items-center gap-2">
                 <Brain size={14} className="text-violet-500" />
                 <h3 className="text-sm font-bold text-stone-700">{examResult.examTitle}</h3>
                 <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-500">{examResult.examCode}</span>
               </div>
-              <span className="text-[11px] text-stone-400">{examResult.sessions.length} siswa</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-stone-400">{examResult.sessions.length} siswa</span>
+                {examResult.sessions.some(s => !s.resultsReleasedAt) && (
+                  <button onClick={() => releaseResults(examResult.examId)} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#4D38D4] disabled:opacity-50">
+                    {actionLoading === examResult.examId ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                    Rilis Semua ({examResult.sessions.filter(s => !s.resultsReleasedAt).length})
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="divide-y divide-stone-50">
@@ -246,6 +279,18 @@ const MsatResultsPage: FC = () => {
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${predColors.bg} ${predColors.text} ${predColors.ring}`}>
                           {s.predikat}
                         </span>
+                      )}
+                      {!s.resultsReleasedAt ? (
+                        <button
+                          onClick={e => { e.stopPropagation(); releaseResults(examResult.examId, s.id); }}
+                          disabled={!!actionLoading}
+                          className="flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-700 ring-1 ring-violet-200 hover:bg-violet-100 disabled:opacity-50"
+                        >
+                          {actionLoading === s.id ? <Loader2 size={10} className="animate-spin" /> : <LockKeyhole size={10} />}
+                          Rilis hasil
+                        </button>
+                      ) : (
+                        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">Sudah dirilis</span>
                       )}
                       <ChevronDown size={14} className={`shrink-0 text-stone-300 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                     </button>

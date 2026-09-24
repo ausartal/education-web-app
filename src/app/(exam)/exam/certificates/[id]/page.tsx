@@ -89,14 +89,7 @@ const CertificateDetailPage: FC = () => {
         setCert(data.certificate);
         setSession(data.session);
         setExamCode(data.examCode ?? '');
-      }
-
-      const profRes = await fetch('/api/exam/profile', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (profRes.ok) {
-        const data = await profRes.json();
-        setProfile(data.profile);
+        setProfile(data.recipient);
       }
     } catch { /* ignore */ }
     setLoading(false);

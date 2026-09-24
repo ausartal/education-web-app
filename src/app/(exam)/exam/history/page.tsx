@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, Trophy, ChevronDown, BarChart3, BookOpen, Target,
   Lightbulb, CheckCircle2, XCircle, Award, TrendingUp, Brain,
+  Clock3,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useExamAuth } from '@/context/ExamAuthContext';
@@ -38,6 +39,7 @@ interface ExamHistory {
   stageResponses: StageResponse[];
   conclusions: Conclusions | null;
   completedAt: { _seconds: number } | null;
+  resultsReleased: boolean;
 }
 
 const PREDIKAT_COLORS: Record<string, { text: string; bg: string; ring: string }> = {
@@ -131,11 +133,14 @@ const ExamHistoryPage: FC = () => {
               >
                 {/* Header — clickable */}
                 <button
-                  onClick={() => setExpandedId(isExpanded ? null : exam.sessionId)}
-                  className="flex w-full items-center gap-4 p-5 text-left transition-colors hover:bg-gray-50"
+                  onClick={() => exam.resultsReleased && setExpandedId(isExpanded ? null : exam.sessionId)}
+                  className={`flex w-full items-center gap-4 p-5 text-left transition-colors ${exam.resultsReleased ? 'hover:bg-gray-50' : 'cursor-default'}`}
                 >
                   <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#5841EA] to-[#7B6AEF] shadow-md`}>
-                    <span className="font-display text-lg font-black text-white">{exam.finalScore ?? '-'}</span>
+                    {exam.resultsReleased
+                      ? <span className="font-display text-lg font-black text-white">{exam.finalScore ?? '-'}</span>
+                      : <Clock3 size={20} className="text-white" />
+                    }
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-[#0E1E47]">{exam.examTitle}</p>
@@ -149,12 +154,13 @@ const ExamHistoryPage: FC = () => {
                       {exam.predikat}
                     </span>
                   )}
-                  <ChevronDown size={16} className={`shrink-0 text-gray-300 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                  {!exam.resultsReleased && <span className="rounded-full bg-amber-50 px-3 py-1 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200">Menunggu admin</span>}
+                  {exam.resultsReleased && <ChevronDown size={16} className={`shrink-0 text-gray-300 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />}
                 </button>
 
                 {/* Expanded detail */}
                 <AnimatePresence>
-                  {isExpanded && (
+                  {isExpanded && exam.resultsReleased && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}

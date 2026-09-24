@@ -55,18 +55,24 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       examStarted = true;
     }
 
+    const resultsReleased = Boolean(session.resultsReleasedAt);
+    const canViewCompletedResults = userRole === 'admin' || resultsReleased;
+    const shouldHideResults = session.status === 'completed' && !canViewCompletedResults;
+
     return NextResponse.json({
       sessionId: id,
       status: session.status,
       currentStage: session.currentStage,
       currentStageDifficulty: session.currentStageDifficulty,
-      stagePath: session.stagePath,
-      stageResponses: session.stageResponses ?? [],
+      stagePath: shouldHideResults ? [] : session.stagePath,
+      stageResponses: shouldHideResults ? [] : (session.stageResponses ?? []),
       breakStartedAt: session.breakStartedAt?._seconds ?? null,
       breakEndsAt: session.breakEndsAt?._seconds ?? null,
-      finalScore: session.finalScore,
-      predikat: session.predikat,
-      conclusions: session.conclusions,
+      finalScore: shouldHideResults ? null : session.finalScore,
+      predikat: shouldHideResults ? null : session.predikat,
+      conclusions: shouldHideResults ? null : session.conclusions,
+      resultsReleased,
+      resultsReleasedAt: resultsReleased ? session.resultsReleasedAt : null,
       waitingCount,
       examStarted,
       exam: exam ? {

@@ -142,7 +142,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       timestamp: new Date(),
     });
 
+    // Results stay private until an admin explicitly releases them.
+    if (!session.resultsReleasedAt) {
+      return NextResponse.json({
+        pendingRelease: true,
+        resultsReleased: false,
+      }, { status: 202 });
+    }
+
     return NextResponse.json({
+      resultsReleased: true,
       finalScore,
       predikat,
       peringkat,

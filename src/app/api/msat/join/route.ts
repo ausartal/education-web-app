@@ -121,6 +121,8 @@ export async function POST(req: NextRequest) {
       predikat: null,
       peringkat: null,
       conclusions: null,
+      resultsReleasedAt: null,
+      resultsReleasedBy: null,
       anomalyFlags: [],
       durationMinutes: exam.durationPerStage ?? 30,
       createdAt: FieldValue.serverTimestamp(),

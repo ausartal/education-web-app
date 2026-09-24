@@ -159,21 +159,21 @@ Hasil akhir yang dituju:
 
 ### 4.2 Sidebar collapse dan expand
 
-- [x] Tambahkan tombol collapse di sebelah kanan search bar sidebar.
+- [ ] Tambahkan tombol collapse di sebelah kanan search bar sidebar.
 - [ ] Gunakan tombol dengan ikon panel-left-close saat sidebar terbuka.
 - [ ] Gunakan tombol dengan ikon panel-left-open saat sidebar tertutup.
-- [x] Mode expanded menampilkan logo, nama produk, search, label section, ikon, label menu, submenu, dan profil.
-- [x] Mode collapsed hanya menampilkan logo, ikon menu, indikator aktif, dan tombol expand.
-- [x] Tampilkan tooltip menu ketika sidebar collapsed.
-- [x] Submenu pada mode collapsed dibuka sebagai flyout yang dapat diakses keyboard.
-- [x] Pastikan tombol expand tetap terlihat dan mudah ditemukan.
-- [x] Simpan preferensi sidebar pada local storage.
+- [ ] Mode expanded menampilkan logo, nama produk, search, label section, ikon, label menu, submenu, dan profil.
+- [ ] Mode collapsed hanya menampilkan logo, ikon menu, indikator aktif, dan tombol expand.
+- [ ] Tampilkan tooltip menu ketika sidebar collapsed.
+- [ ] Submenu pada mode collapsed dibuka sebagai flyout yang dapat diakses keyboard.
+- [ ] Pastikan tombol expand tetap terlihat dan mudah ditemukan.
+- [ ] Simpan preferensi sidebar pada local storage.
 - [ ] Jangan menyebabkan content layout shift yang kasar.
-- [x] Gunakan transisi lebar 180–220ms.
-- [x] Nonaktifkan animasi transisi saat reduced motion aktif.
-- [x] Pada tablet/mobile, gunakan navigation drawer dan backdrop.
-- [x] Pastikan drawer dapat ditutup dengan Escape, backdrop, dan tombol close.
-- [x] Jangan menampilkan sidebar collapsed desktop pada layar mobile.
+- [ ] Gunakan transisi lebar 180–220ms.
+- [ ] Nonaktifkan animasi transisi saat reduced motion aktif.
+- [ ] Pada tablet/mobile, gunakan navigation drawer dan backdrop.
+- [ ] Pastikan drawer dapat ditutup dengan Escape, backdrop, dan tombol close.
+- [ ] Jangan menampilkan sidebar collapsed desktop pada layar mobile.
 
 ### 4.3 Search navigasi
 
@@ -204,19 +204,19 @@ Hasil akhir yang dituju:
 - [ ] Gunakan struktur utama: Mata Pelajaran → Kurikulum → Jenjang/Kelas → Unit → Topik → Subtopik → Tujuan Pembelajaran.
 - [ ] Jangan mengunci nama field pada domain Kimia.
 - [ ] Dukung mata pelajaran dengan struktur yang lebih dangkal atau lebih dalam.
-- [x] Setiap entitas memiliki ID stabil, nama, slug, deskripsi, urutan, status, parent, dan metadata.
+- [ ] Setiap entitas memiliki ID stabil, nama, slug, deskripsi, urutan, status, parent, dan metadata.
 - [ ] Pisahkan kategori utama dari tag bebas.
-- [x] Dukung alias agar istilah lama tetap dapat ditemukan.
-- [x] Dukung arsip tanpa menghapus relasi historis.
-- [x] Cegah circular parent.
-- [x] Cegah kategori duplikat dalam parent yang sama.
+- [ ] Dukung alias agar istilah lama tetap dapat ditemukan.
+- [ ] Dukung arsip tanpa menghapus relasi historis.
+- [ ] Cegah circular parent.
+- [ ] Cegah kategori duplikat dalam parent yang sama.
 
 ### 5.2 Taxonomy manager
 
-- [x] Buat halaman atau drawer pengelolaan taxonomy.
-- [x] Tampilkan tree view yang dapat expand/collapse.
-- [x] Sediakan breadcrumb untuk node aktif.
-- [x] Sediakan pencarian node.
+- [ ] Buat halaman atau drawer pengelolaan taxonomy.
+- [ ] Tampilkan tree view yang dapat expand/collapse.
+- [ ] Sediakan breadcrumb untuk node aktif.
+- [ ] Sediakan pencarian node.
 - [ ] Sediakan drag-and-drop reorder dengan alternatif keyboard.
 - [ ] Sediakan pemindahan node ke parent lain.
 - [ ] Tampilkan jumlah materi, soal, ujian, dan kelas yang menggunakan setiap node.
@@ -724,33 +724,33 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### 17.1 Overview live
 
-- [x] Jumlah exam live.
+- [ ] Jumlah exam live.
 - [ ] Jumlah peserta online.
 - [ ] Peserta belum masuk.
 - [ ] Peserta disconnect.
-- [x] Peserta flagged.
+- [ ] Peserta flagged.
 - [ ] Sesi hampir habis.
 - [ ] Submission error.
-- [x] Status real-time connection.
+- [ ] Status real-time connection.
 
 ### 17.2 Daftar exam dan peserta
 
-- [x] Panel exam aktif.
-- [x] Pilih exam untuk membuka monitor peserta.
+- [ ] Panel exam aktif.
+- [ ] Pilih exam untuk membuka monitor peserta.
 - [ ] Search peserta.
 - [ ] Filter status peserta.
-- [x] Sort berdasarkan severity.
+- [ ] Sort berdasarkan severity.
 - [ ] Pin peserta untuk dipantau.
 - [ ] Detail peserta melalui drawer.
 - [ ] Timeline event peserta.
 - [ ] Status koneksi dan last heartbeat.
 - [ ] Progress stage/domain.
 - [ ] Remaining time.
-- [x] Anomaly flags.
+- [ ] Anomaly flags.
 
 ### 17.3 Kontrol operasional
 
-- [x] Start exam.
+- [ ] Start exam.
 - [ ] Pause/resume jika model exam mengizinkan.
 - [ ] Extend time.
 - [ ] Terminate session.
@@ -763,11 +763,11 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### 17.4 Real-time UX
 
-- [x] Gunakan polling/websocket dengan interval efisien.
-- [x] Update row tanpa mereset scroll.
+- [ ] Gunakan polling/websocket dengan interval efisien.
+- [ ] Update row tanpa mereset scroll.
 - [ ] Highlight perubahan status secara singkat.
-- [x] Sediakan pause auto-refresh.
-- [x] Tampilkan last updated.
+- [ ] Sediakan pause auto-refresh.
+- [ ] Tampilkan last updated.
 - [ ] Gunakan suara hanya sebagai opsi pengguna untuk alert kritis.
 - [ ] Jangan menggunakan animasi pulse terus-menerus pada banyak elemen.
 
@@ -825,6 +825,7 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 - [ ] Bulk categorize/review/archive.
 - [ ] Deteksi soal belum siap untuk adaptive exam.
 - [ ] Tampilkan dampak sebelum edit soal yang sudah digunakan.
+- [ ] pastikan admin mampu mengedit soal dan menambahkan soal
 
 ---
 
@@ -851,13 +852,13 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 ## 21. AKURAT EXAM — Sertifikat Digital
 
 - [ ] Status eligible, pending review, issued, delivery failed, revoked.
-- [x] Queue penerbitan.
-- [x] Detail peserta dan sumber score.
-- [x] Preview sertifikat.
-- [x] Nomor sertifikat unik.
+- [ ] Queue penerbitan.
+- [ ] Detail peserta dan sumber score.
+- [ ] Preview sertifikat.
+- [ ] Nomor sertifikat unik.
 - [ ] QR/public verification.
 - [ ] Minimalisasi data pribadi pada halaman publik.
-- [x] Issue single/bulk.
+- [ ] Issue single/bulk.
 - [ ] Resend.
 - [ ] Download.
 - [ ] Revoke dengan alasan.
@@ -870,17 +871,17 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ## 22. SISTEM — User & Permission
 
-- [x] Role listing.
-- [x] Permission matrix berdasarkan fitur dan aksi.
+- [ ] Role listing.
+- [ ] Permission matrix berdasarkan fitur dan aksi.
 - [ ] Scope sekolah/subject/exam.
 - [ ] Create custom role jika dibutuhkan.
 - [ ] Assign role.
 - [ ] Review elevated permission.
 - [ ] Warning privilege escalation.
-- [x] Prevent removal of last super admin.
+- [ ] Prevent removal of last super admin.
 - [ ] Session revocation.
 - [ ] Access review report.
-- [x] Semua perubahan permission wajib audit.
+- [ ] Semua perubahan permission wajib audit.
 
 ---
 
@@ -888,13 +889,13 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### 23.1 Data log
 
-- [x] Near-real-time log.
-- [x] Actor.
-- [x] Role.
-- [x] Action.
+- [ ] Near-real-time log.
+- [ ] Actor.
+- [ ] Role.
+- [ ] Action.
 - [ ] Feature/module.
-- [x] Target type dan target ID.
-- [x] Timestamp.
+- [ ] Target type dan target ID.
+- [ ] Timestamp.
 - [ ] Status success/failure.
 - [ ] Reason.
 - [ ] Before/after changes yang telah disanitasi.
@@ -903,15 +904,15 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### 23.2 UX
 
-- [x] Auto-refresh yang dapat dijeda.
+- [ ] Auto-refresh yang dapat dijeda.
 - [ ] Filter actor, role, action, feature, target, status, dan date range.
-- [x] Search ID dan nama target.
-- [x] Detail event drawer.
+- [ ] Search ID dan nama target.
+- [ ] Detail event drawer.
 - [ ] Copy event ID.
 - [ ] Export sesuai permission.
 - [ ] Saved investigation filter.
 - [ ] Retention information.
-- [x] Audit log tidak dapat diedit dari UI biasa.
+- [ ] Audit log tidak dapat diedit dari UI biasa.
 
 ---
 
@@ -919,14 +920,14 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### 24.1 CLI & Integrasi API
 
-- [x] Permission gate khusus.
-- [x] Terminal hanya menyediakan command yang diizinkan.
-- [x] Command autocomplete.
-- [x] Command history.
-- [x] Clear output.
+- [ ] Permission gate khusus.
+- [ ] Terminal hanya menyediakan command yang diizinkan.
+- [ ] Command autocomplete.
+- [ ] Command history.
+- [ ] Clear output.
 - [ ] Copy output.
 - [ ] Timestamp dan execution duration.
-- [x] Konfirmasi command berisiko.
+- [ ] Konfirmasi command berisiko.
 - [ ] Redact secret.
 - [ ] API key management.
 - [ ] Create/revoke/rotate key.
@@ -941,17 +942,17 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### 24.2 Integrasi Database
 
-- [x] Status koneksi.
+- [ ] Status koneksi.
 - [ ] Read/write health.
-- [x] Latency.
+- [ ] Latency.
 - [ ] Backup status.
 - [ ] Last successful backup.
 - [ ] Index status.
 - [ ] Migration status.
 - [ ] Storage usage.
 - [ ] Error summary.
-- [x] Jangan tampilkan credential.
-- [x] Read-only diagnostic sebagai default.
+- [ ] Jangan tampilkan credential.
+- [ ] Read-only diagnostic sebagai default.
 - [ ] Tindakan destructive membutuhkan elevated permission dan confirmation kuat.
 
 ---
@@ -960,29 +961,29 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### 25.1 Kategorisasi setting
 
-- [x] Identitas dan branding.
+- [ ] Identitas dan branding.
 - [ ] Konfigurasi akademik.
 - [ ] Taxonomy default.
 - [ ] Authentication.
-- [x] Session dan security.
-- [x] Notification.
-- [x] Exam policy.
-- [x] Certificate policy.
+- [ ] Session dan security.
+- [ ] Notification.
+- [ ] Exam policy.
+- [ ] Certificate policy.
 - [ ] Integrations.
 - [ ] Data retention.
-- [x] Maintenance mode.
+- [ ] Maintenance mode.
 - [ ] Feature flags jika dibutuhkan.
 
 ### 25.2 UX pengaturan
 
 - [ ] Section navigation.
 - [ ] Search setting.
-- [x] Sticky save bar.
-- [x] Unsaved changes indicator.
-- [x] Reset section.
+- [ ] Sticky save bar.
+- [ ] Unsaved changes indicator.
+- [ ] Reset section.
 - [ ] Discard confirmation.
-- [x] Inline validation.
-- [x] Jelaskan dampak setiap setting.
+- [ ] Inline validation.
+- [ ] Jelaskan dampak setiap setting.
 - [ ] Tampilkan setting yang membutuhkan restart/deployment.
 - [ ] Permission per section.
 - [ ] Audit perubahan before/after.
@@ -1077,7 +1078,7 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### 30.1 Functional
 
-- [x] Semua link navigasi valid.
+- [ ] Semua link navigasi valid.
 - [ ] Semua filter bekerja sendiri dan bersama-sama.
 - [ ] Search dan pagination tidak saling mereset.
 - [ ] Bulk action bekerja pada selected scope.
@@ -1110,8 +1111,8 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### 30.4 Performance
 
-- [x] TypeScript check.
-- [x] Production build.
+- [ ] TypeScript check.
+- [ ] Production build.
 - [ ] Lighthouse sebagai indikator tambahan.
 - [ ] Bundle inspection.
 - [ ] Network request inspection.
@@ -1125,63 +1126,63 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 
 ### Fase 0 — Audit dan data contract
 
-- [x] Audit seluruh route admin.
-- [x] Audit seluruh API admin.
-- [x] Audit Firestore collections dan tipe data.
-- [x] Petakan kebutuhan UI terhadap field yang tersedia.
-- [x] Tandai data real, data turunan, data belum tersedia, dan data yang tidak valid.
-- [x] Buat glossary metrik.
-- [x] Buat permission matrix.
+- [ ] Audit seluruh route admin.
+- [ ] Audit seluruh API admin.
+- [ ] Audit Firestore collections dan tipe data.
+- [ ] Petakan kebutuhan UI terhadap field yang tersedia.
+- [ ] Tandai data real, data turunan, data belum tersedia, dan data yang tidak valid.
+- [ ] Buat glossary metrik.
+- [ ] Buat permission matrix.
 
 ### Fase 1 — Fondasi
 
 - [ ] Design tokens.
-- [x] Admin shell.
-- [x] Sidebar collapse/expand.
-- [x] Mobile navigation.
-- [x] Page header.
+- [ ] Admin shell.
+- [ ] Sidebar collapse/expand.
+- [ ] Mobile navigation.
+- [ ] Page header.
 - [ ] Data table.
 - [ ] Filter system.
 - [ ] Drawer/modal.
-- [x] Feedback states.
+- [ ] Feedback states.
 - [ ] Motion primitives.
-- [x] Taxonomy components.
+- [ ] Taxonomy components.
 
 ### Fase 2 — Umum
 
-- [x] Dashboard Overview.
-- [x] Analitik Umum.
-- [x] Analitik AKURAT Exam.
+- [ ] Dashboard Overview.
+- [ ] Analitik Umum.
+- [ ] Analitik AKURAT Exam.
 
 ### Fase 3 — Civitas
 
-- [x] Data Guru.
-- [x] Data Siswa.
-- [x] Data Exam User.
-- [x] User & Permission.
+- [ ] Data Guru.
+- [ ] Data Siswa.
+- [ ] Data Exam User.
+- [ ] User & Permission.
 
 ### Fase 4 — Sekolah
 
-- [x] Manajemen Kelas.
-- [x] Bank Soal Sekolah.
-- [x] Materi Belajar.
-- [x] Jadwal & Sesi.
-- [x] Analitik Hasil.
+- [ ] Manajemen Kelas.
+- [ ] Bank Soal Sekolah.
+- [ ] Materi Belajar.
+- [ ] Jadwal & Sesi.
+- [ ] Analitik Hasil.
 
 ### Fase 5 — AKURAT Exam
 
-- [x] Exam Live Monitor.
-- [x] Buat Ujian MSAT.
-- [x] Bank Soal MSAT.
-- [x] Skor & Analisis.
-- [x] Sertifikat Digital.
+- [ ] Exam Live Monitor.
+- [ ] Buat Ujian MSAT.
+- [ ] Bank Soal MSAT.
+- [ ] Skor & Analisis.
+- [ ] Sertifikat Digital.
 
 ### Fase 6 — Sistem
 
-- [x] Audit Trail.
-- [x] CLI & Integrasi API.
-- [x] Integrasi Database.
-- [x] Pengaturan Platform.
+- [ ] Audit Trail.
+- [ ] CLI & Integrasi API.
+- [ ] Integrasi Database.
+- [ ] Pengaturan Platform.
 
 ### Fase 7 — Final QA
 
@@ -1217,8 +1218,8 @@ Sebuah halaman hanya dianggap selesai jika seluruh poin berikut terpenuhi:
 - [ ] Reduced motion selesai.
 - [ ] Semua destructive action aman.
 - [ ] Audit logging selesai untuk aksi sensitif.
-- [x] TypeScript lolos.
-- [x] Production build lolos.
+- [ ] TypeScript lolos.
+- [ ] Production build lolos.
 - [ ] Tidak menambah regresi pada halaman lain.
 - [ ] UI tidak mengandung placeholder, angka palsu, tombol mati, atau aksi tanpa feedback.
 

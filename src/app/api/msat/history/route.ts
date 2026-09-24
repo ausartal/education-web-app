@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
 
     for (const doc of sessionsSnap.docs) {
       const session = doc.data();
+      const resultsReleased = Boolean(session.resultsReleasedAt);
 
       // Get exam info
       let examTitle = 'Ujian MSAT';
@@ -80,12 +81,13 @@ export async function GET(req: NextRequest) {
         sessionId: doc.id,
         examTitle,
         examCode,
-        finalScore: session.finalScore ?? null,
-        predikat,
-        peringkat,
-        stagePath: session.stagePath ?? [],
-        stageResponses: session.stageResponses ?? [],
-        conclusions,
+        resultsReleased,
+        finalScore: resultsReleased ? (session.finalScore ?? null) : null,
+        predikat: resultsReleased ? predikat : null,
+        peringkat: resultsReleased ? peringkat : null,
+        stagePath: resultsReleased ? (session.stagePath ?? []) : [],
+        stageResponses: resultsReleased ? (session.stageResponses ?? []) : [],
+        conclusions: resultsReleased ? conclusions : null,
         completedAt: session.completedAt ?? null,
       });
     }

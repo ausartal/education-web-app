@@ -71,9 +71,17 @@ export const TeacherNavbar: FC = () => {
                 className="flex items-center gap-2 rounded-md p-1.5 transition-colors hover:bg-gray-100"
                 aria-label="Menu profil"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-medium text-white">
-                  {profile?.displayName?.charAt(0).toUpperCase() || 'T'}
-                </div>
+                {profile?.photoURL ? (
+                  <img
+                    src={profile.photoURL}
+                    alt={`Foto profil ${profile.displayName}`}
+                    className="h-10 w-10 rounded-full object-cover ring-1 ring-gray-200"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-sm font-medium text-white">
+                    {profile?.displayName?.charAt(0).toUpperCase() || 'T'}
+                  </div>
+                )}
               </button>
               <div className="invisible absolute right-0 top-full mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 opacity-0 shadow-md transition-all group-hover:visible group-hover:opacity-100">
                 <Link
