@@ -38,6 +38,16 @@ export async function GET(
       }
     }
 
+    // Resolve recipient data from the certificate owner, never from the viewer.
+    const ownerDoc = await adminDb.collection('exam_users').doc(certData.userId).get();
+    const owner = ownerDoc.exists ? ownerDoc.data()! : null;
+    const recipient = owner ? {
+      displayName: owner.displayName ?? '',
+      identityNumber: owner.identityNumber ?? '',
+      identityType: owner.identityType ?? '',
+      institution: owner.institution ?? '',
+    } : null;
+
     // Fetch session data for cognitive scores and exam code
     let session: Record<string, unknown> | null = null;
     let examCode = '';
@@ -65,6 +75,7 @@ export async function GET(
       certificate: { id: certDoc.id, ...certData },
       session,
       examCode,
+      recipient,
     });
   } catch {
     return NextResponse.json({ error: 'Token tidak valid' }, { status: 401 });

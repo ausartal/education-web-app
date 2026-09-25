@@ -89,9 +89,17 @@ export const Navbar: FC = () => {
                   className="flex items-center gap-2 rounded-full border border-stone-200 bg-stone-50 pl-1 pr-2.5 py-1 transition-all hover:border-stone-300 hover:bg-stone-100"
                   aria-label="Menu profil"
                 >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-purple-500 text-[11px] font-bold text-white shadow-sm">
-                    {profile?.displayName?.charAt(0).toUpperCase() || 'U'}
-                  </div>
+                  {profile?.photoURL ? (
+                    <img
+                      src={profile.photoURL}
+                      alt={`Foto profil ${profile.displayName}`}
+                      className="h-9 w-9 rounded-full object-cover shadow-sm ring-1 ring-stone-200"
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-purple-500 text-xs font-bold text-white shadow-sm">
+                      {profile?.displayName?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
                   <span className="text-[13px] font-semibold text-stone-700 max-w-[80px] truncate">
                     {profile?.displayName?.split(' ')[0] ?? 'Profil'}
                   </span>

@@ -58,9 +58,17 @@ const ProfilePage: FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8 flex items-center gap-5"
       >
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-cyan text-3xl font-black text-white shadow-lg shadow-primary/25">
-          {profile.displayName.charAt(0).toUpperCase()}
-        </div>
+        {profile.photoURL ? (
+          <img
+            src={profile.photoURL}
+            alt={`Foto profil ${profile.displayName}`}
+            className="h-20 w-20 rounded-full object-cover shadow-lg ring-2 ring-white"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-cyan text-3xl font-black text-white shadow-lg shadow-primary/25">
+            {profile.displayName.charAt(0).toUpperCase()}
+          </div>
+        )}
         <div>
           <h1 className="font-display text-2xl font-extrabold text-gray-900">
             {profile.displayName}

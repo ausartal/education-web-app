@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import {
   Trophy, Target, Brain, BookOpen, Lightbulb, TrendingUp,
   Loader2, ChevronRight, ArrowLeft, CheckCircle2, XCircle, Award, BarChart3,
+  Clock3, ShieldCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -51,37 +52,99 @@ const ExamResultsPage: FC = () => {
 
   const [results, setResults] = useState<ResultsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [waitingForRelease, setWaitingForRelease] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    const init = async () => {
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setInterval> | undefined;
+
+    const checkResults = async (finalizeIfHeld: boolean): Promise<boolean> => {
       try {
         const idToken = await user.getIdToken();
         const sessionRes = await fetch(`/api/msat/sessions/${id}`, {
           headers: { Authorization: `Bearer ${idToken}` },
         });
-        if (!sessionRes.ok) { router.push('/exam'); return; }
+        if (!sessionRes.ok) { router.push('/exam'); return false; }
         const sessionData = await sessionRes.json();
 
         if (sessionData.status !== 'completed') {
           if (sessionData.status === 'on_break') router.push(`/exam/break/${id}`);
           else router.push(`/exam/session/${id}`);
-          return;
+          return false;
+        }
+
+        if (!sessionData.resultsReleased && !finalizeIfHeld) {
+          if (!cancelled) {
+            setWaitingForRelease(true);
+            setLoading(false);
+          }
+          return true;
         }
 
         const completeRes = await fetch(`/api/msat/sessions/${id}/complete`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${idToken}` },
         });
-        if (completeRes.ok) setResults(await completeRes.json());
+        if (completeRes.ok) {
+          const data = await completeRes.json();
+          if (data.pendingRelease) {
+            if (!cancelled) setWaitingForRelease(true);
+            return true;
+          }
+          if (!cancelled) {
+            setResults(data);
+            setWaitingForRelease(false);
+          }
+          return false;
+        }
       } catch { /* ignore */ }
-      setLoading(false);
+      return true;
+    };
+
+    const init = async () => {
+      const shouldPoll = await checkResults(true);
+      if (!cancelled) setLoading(false);
+      if (shouldPoll && !cancelled) {
+        pollTimer = setInterval(async () => {
+          const stillWaiting = await checkResults(false);
+          if (!stillWaiting && pollTimer) clearInterval(pollTimer);
+        }, 5000);
+      }
     };
     init();
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearInterval(pollTimer);
+    };
   }, [user, id, router]);
 
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center bg-[#F8F7FF]"><Loader2 size={28} className="animate-spin text-violet-500" /></div>;
+  }
+
+  if (waitingForRelease) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F8F7FF] px-4 py-10">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-xl shadow-violet-100/60 ring-1 ring-[#E5E0F5]">
+          <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-violet-50 text-[#5841EA]">
+            <Clock3 size={34} />
+            <span className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white ring-4 ring-white">
+              <ShieldCheck size={14} />
+            </span>
+          </div>
+          <h1 className="font-display text-2xl font-extrabold text-[#0E1E47]">Ujian telah selesai</h1>
+          <p className="mt-3 text-sm leading-6 text-[#5B6475]">
+            Hasil kamu sedang ditahan dan akan tampil setelah admin merilisnya.
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-[#F8F7FF] px-4 py-3 text-xs font-semibold text-[#5841EA] ring-1 ring-[#E5E0F5]">
+            <Loader2 size={15} className="animate-spin" />
+            Menunggu rilis hasil dari admin
+          </div>
+          <p className="mt-4 text-[11px] text-gray-400">Halaman ini akan memperbarui hasil secara otomatis.</p>
+        </motion.div>
+      </div>
+    );
   }
 
   if (!results) {

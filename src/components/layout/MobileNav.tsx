@@ -4,6 +4,7 @@ import { FC } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, School, GraduationCap, BookOpen, User } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const tabs = [
   { href: '/dashboard', label: 'Home', icon: Home },
@@ -15,6 +16,7 @@ const tabs = [
 
 export const MobileNav: FC = () => {
   const pathname = usePathname();
+  const { profile } = useAuth();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-stone-200/60 bg-white/90 backdrop-blur-md md:hidden">
@@ -34,11 +36,19 @@ export const MobileNav: FC = () => {
                     ? 'bg-violet-100'
                     : 'bg-transparent'
                 }`}>
-                  <Icon
-                    size={19}
-                    strokeWidth={isActive ? 2.5 : 1.8}
-                    className={isActive ? 'text-violet-600' : 'text-stone-400'}
-                  />
+                  {tab.href === '/profile' && profile?.photoURL ? (
+                    <img
+                      src={profile.photoURL}
+                      alt={`Foto profil ${profile.displayName}`}
+                      className="h-7 w-7 rounded-full object-cover ring-1 ring-stone-200"
+                    />
+                  ) : (
+                    <Icon
+                      size={19}
+                      strokeWidth={isActive ? 2.5 : 1.8}
+                      className={isActive ? 'text-violet-600' : 'text-stone-400'}
+                    />
+                  )}
                 </div>
                 <span className={isActive ? 'text-violet-600 font-semibold' : 'text-stone-400'}>
                   {tab.label}

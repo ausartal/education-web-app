@@ -312,9 +312,17 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({
       {/* User Footer */}
       <div className={`border-t border-slate-100 py-3 ${collapsed ? 'px-3' : 'px-4'}`}>
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-indigo-600 text-[11px] font-bold text-white">
-            {profile?.displayName?.charAt(0).toUpperCase() ?? 'A'}
-          </div>
+          {profile?.photoURL ? (
+            <img
+              src={profile.photoURL}
+              alt={`Foto profil ${profile.displayName}`}
+              className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+            />
+          ) : (
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-indigo-600 text-xs font-bold text-white">
+              {profile?.displayName?.charAt(0).toUpperCase() ?? 'A'}
+            </div>
+          )}
           <div className={`min-w-0 flex-1 ${collapsed ? 'hidden' : ''}`}>
             <p className="truncate text-[13px] font-semibold text-slate-700">
               {profile?.displayName ?? 'Admin Pusat'}

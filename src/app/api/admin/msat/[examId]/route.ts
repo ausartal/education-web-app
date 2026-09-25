@@ -123,6 +123,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
     }
 
     const { action, targetSessionId } = body;
+    let affectedSessions = 0;
 
     if (action === 'activate') {
       await examRef.update({ status: 'active' });
@@ -186,6 +187,47 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
         });
         await batch.commit();
       }
+    } else if (action === 'release_result') {
+      if (!targetSessionId) {
+        return NextResponse.json({ error: 'targetSessionId diperlukan' }, { status: 400 });
+      }
+
+      const sessionDoc = await adminDb.collection('msat_sessions').doc(targetSessionId).get();
+      const session = sessionDoc.data();
+      if (!sessionDoc.exists || session?.examId !== examId) {
+        return NextResponse.json({ error: 'Sesi tidak ditemukan' }, { status: 404 });
+      }
+      if (session.status !== 'completed') {
+        return NextResponse.json({ error: 'Ujian peserta belum selesai' }, { status: 409 });
+      }
+
+      if (!session.resultsReleasedAt) {
+        await sessionDoc.ref.update({
+          resultsReleasedAt: new Date(),
+          resultsReleasedBy: decoded.uid,
+        });
+        affectedSessions = 1;
+      }
+    } else if (action === 'release_results_all') {
+      const completedSnap = await adminDb.collection('msat_sessions')
+        .where('examId', '==', examId)
+        .where('status', '==', 'completed')
+        .get();
+
+      const unreleasedDocs = completedSnap.docs.filter(doc => !doc.data().resultsReleasedAt);
+      const releasedAt = new Date();
+      const batchSize = 450;
+      for (let offset = 0; offset < unreleasedDocs.length; offset += batchSize) {
+        const batch = adminDb.batch();
+        unreleasedDocs.slice(offset, offset + batchSize).forEach(doc => {
+          batch.update(doc.ref, {
+            resultsReleasedAt: releasedAt,
+            resultsReleasedBy: decoded.uid,
+          });
+        });
+        await batch.commit();
+      }
+      affectedSessions = unreleasedDocs.length;
     } else {
       return NextResponse.json({ error: 'Aksi tidak dikenali' }, { status: 400 });
     }
@@ -196,11 +238,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
       action: `msat_exam_${action}`,
       targetId: examId,
       targetType: 'msat_access_code',
-      details: { action },
+      details: { action, targetSessionId: targetSessionId ?? null, affectedSessions },
       timestamp: new Date(),
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, affectedSessions });
 
   } catch (err) {
     console.error('MSAT update error:', err);

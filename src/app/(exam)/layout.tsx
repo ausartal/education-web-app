@@ -1,12 +1,13 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Home, History, Award, CreditCard, Info, User } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Home, History, Award, CreditCard, Info, User, LogOut, Loader2 } from 'lucide-react';
 import { ExamAuthProvider, useExamAuth } from '@/context/ExamAuthContext';
 import { AdminPreviewBanner } from '@/components/admin/AdminPreviewBanner';
+import { examSignOut } from '@/services/exam-auth';
 
 const navItems = [
   { label: 'Beranda', icon: Home, href: '/exam' },
@@ -26,7 +27,39 @@ export default function ExamLayout({ children }: { children: ReactNode }) {
 
 function ExamLayoutInner({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, examUser } = useExamAuth();
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const closeAccountMenu = (event: MouseEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', closeAccountMenu);
+    return () => document.removeEventListener('mousedown', closeAccountMenu);
+  }, []);
+
+  useEffect(() => {
+    setAccountMenuOpen(false);
+  }, [pathname]);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+
+    setSigningOut(true);
+    try {
+      await examSignOut();
+      router.replace('/exam/login');
+    } finally {
+      setSigningOut(false);
+      setAccountMenuOpen(false);
+    }
+  };
 
   // Full-screen pages: active exam, break, login, register — no navbar/footer
   const isFullScreen =
@@ -82,23 +115,66 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
 
           {/* User menu */}
           {user && (
-            <Link href="/exam/profile" className="flex items-center gap-2.5">
+            <div ref={accountMenuRef} className="relative flex items-center gap-2.5">
               <div className="hidden text-right sm:block">
-                <p className="text-xs font-semibold text-[#0E1E47] leading-tight">
+                <p className="whitespace-nowrap text-xs font-semibold leading-tight text-[#0E1E47]">
                   {examUser?.displayName ?? 'Peserta'}
                 </p>
                 <p className="text-[10px] text-[#9CA3AF]">
                   {examUser?.verificationStatus === 'verified' ? 'Terverifikasi' : 'Belum verifikasi'}
                 </p>
               </div>
-              {examUser?.photoURL ? (
-                <img src={examUser.photoURL} alt="" className="h-8 w-8 rounded-full object-cover ring-1 ring-[#DCE5F2]" />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F0EDFF] text-xs font-bold text-[#6320EE]">
-                  {examUser?.displayName?.charAt(0).toUpperCase() ?? <User size={14} />}
+              <button
+                type="button"
+                onClick={() => setAccountMenuOpen((open) => !open)}
+                className="rounded-full transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6320EE] focus-visible:ring-offset-2"
+                aria-label="Menu akun"
+                aria-expanded={accountMenuOpen}
+              >
+                {examUser?.photoURL ? (
+                  <img
+                    src={examUser.photoURL}
+                    alt={`Foto profil ${examUser.displayName}`}
+                    className="h-10 w-10 rounded-full object-cover ring-1 ring-[#DCE5F2]"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F0EDFF] text-sm font-bold text-[#6320EE] ring-1 ring-[#DCE5F2]">
+                    {examUser?.displayName?.charAt(0).toUpperCase() ?? <User size={17} />}
+                  </div>
+                )}
+              </button>
+
+              {accountMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 min-w-56 max-w-80 overflow-hidden rounded-xl border border-[#DCE5F2] bg-white py-1.5 shadow-lg">
+                  <div className="border-b border-[#EEF2F7] px-4 py-2.5">
+                    <p className="whitespace-nowrap text-xs font-semibold text-[#0E1E47]">
+                      {examUser?.displayName ?? 'Peserta'}
+                    </p>
+                    <p className="mt-0.5 truncate text-[10px] text-[#9CA3AF]">
+                      {examUser?.email ?? user.email}
+                    </p>
+                  </div>
+                  <Link
+                    href="/exam/profile"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-[#5B6475] transition-colors hover:bg-[#F8F7FF] hover:text-[#0E1E47]"
+                  >
+                    <User size={14} />
+                    Profil
+                  </Link>
+                  <div className="border-t border-[#EEF2F7] pt-1">
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      disabled={signingOut}
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:cursor-wait disabled:opacity-60"
+                    >
+                      {signingOut ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
+                      {signingOut ? 'Keluar...' : 'Keluar'}
+                    </button>
+                  </div>
                 </div>
               )}
-            </Link>
+            </div>
           )}
 
           {!user && (
