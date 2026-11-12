@@ -93,7 +93,7 @@ const AdminQuestions: FC = () => {
   }, [filterDiff, filterStatus]);
 
   const { data, isLoading: loading, mutate } = useAuthSWR<{ questions: Question[] }>(url, {
-    dedupingInterval: 30_000,
+    dedupingInterval: 3_000,
   });
   const questions = data?.questions ?? [];
 

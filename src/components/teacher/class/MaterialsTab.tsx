@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, PlusCircle, X, ExternalLink, Clock } from 'lucide-react';
 import Link from 'next/link';
@@ -26,9 +27,9 @@ export const MaterialsTab: FC<MaterialsTabProps> = ({ classId, cls, setCls, auth
     m => !materials.find(pm => pm.id === m.id) && m.status === 'published',
   );
 
-  const fetchClassMaterials = useCallback(async () => {
+  const fetchClassMaterials = useCallback(async (silent?: unknown) => {
     if (!cls) return;
-    setLoadingMat(true);
+    if (silent !== true) setLoadingMat(true);
     try {
       const t = await authToken();
       // Fetch all materials, filter by those pinned in this class
@@ -46,6 +47,7 @@ export const MaterialsTab: FC<MaterialsTabProps> = ({ classId, cls, setCls, auth
   }, [cls, authToken]);
 
   useEffect(() => { fetchClassMaterials(); }, [fetchClassMaterials]);
+  useLivePoll(() => fetchClassMaterials(true));
 
   const handlePinMaterial = async (materialId: string) => {
     try {

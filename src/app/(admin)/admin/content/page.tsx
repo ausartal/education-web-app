@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText, Search, Plus, Pencil, Trash2, X, Eye,
@@ -80,9 +81,10 @@ const AdminContent: FC = () => {
     return user.getIdToken();
   }, [user]);
 
-  const fetchMaterials = useCallback(async () => {
+  const fetchMaterials = useCallback(async (silent?: unknown) => {
     if (!user) return;
-    setLoading(true);
+    const quiet = silent === true;
+    if (!quiet) setLoading(true);
     try {
       const token = await getToken();
       const params = filterStatus !== 'all' ? `?status=${filterStatus}` : '';
@@ -92,11 +94,12 @@ const AdminContent: FC = () => {
       if (!res.ok) throw new Error('Fetch failed');
       const data = await res.json();
       setMaterials(data.materials);
-    } catch { addToast('error', 'Gagal memuat materi'); }
+    } catch { if (!quiet) addToast('error', 'Gagal memuat materi'); }
     finally { setLoading(false); }
   }, [user, getToken, filterStatus, addToast]);
 
   useEffect(() => { fetchMaterials(); }, [fetchMaterials]);
+  useLivePoll(() => fetchMaterials(true));
 
   const openCreate = () => {
     setEditTarget(null);

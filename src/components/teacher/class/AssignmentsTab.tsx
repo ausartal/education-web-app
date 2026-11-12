@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Check, ClipboardCheck, PlusCircle, Trash2, Calendar, X, Loader2, AlertTriangle, Link2, Star } from 'lucide-react';
 import { RichEditor } from '@/components/teacher/RichEditor';
@@ -28,8 +29,8 @@ export const AssignmentsTab: FC<AssignmentsTabProps> = ({ classId, authToken }) 
   const [gradeInputs, setGradeInputs] = useState<Record<string, { grade: string; note: string }>>({});
   const [savingGrade, setSavingGrade] = useState<Record<string, boolean>>({});
 
-  const fetchAssignments = useCallback(async () => {
-    setLoadingAsgn(true);
+  const fetchAssignments = useCallback(async (silent?: unknown) => {
+    if (silent !== true) setLoadingAsgn(true);
     try {
       const t = await authToken();
       const res = await fetch(`/api/teacher/assignments?classId=${id}`, { headers: { Authorization: `Bearer ${t}` } });
@@ -42,6 +43,7 @@ export const AssignmentsTab: FC<AssignmentsTabProps> = ({ classId, authToken }) 
   }, [id, authToken]);
 
   useEffect(() => { fetchAssignments(); }, [fetchAssignments]);
+  useLivePoll(() => fetchAssignments(true));
 
   const [reminding, setReminding] = useState(false);
 

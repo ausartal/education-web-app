@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import {
@@ -329,9 +330,9 @@ const AdminUjianPage: FC = () => {
     setTab(requestedView === 'stats' ? 'stats' : requestedView === 'sessions' ? 'sessions' : 'schedules');
   }, [requestedView]);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silent?: unknown) => {
     if (!user) return;
-    setLoading(true);
+    if (silent !== true) setLoading(true);
     try {
       const token = await user.getIdToken();
       const res = await fetch('/api/admin/ujian', { headers: { Authorization: `Bearer ${token}` } });
@@ -340,6 +341,7 @@ const AdminUjianPage: FC = () => {
   }, [user]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+  useLivePoll(() => fetchData(true));
 
   const apiCall = useCallback(async (method: string, body?: object, params?: string) => {
     if (!user) return;

@@ -53,8 +53,11 @@ const RegisterPage: FC = () => {
     const checkRedirect = async () => {
       try {
         const profile = await getGoogleRedirectResult();
-        if (profile)
+        if (profile) {
           router.push(profile.role === 'teacher' ? '/teacher' : '/dashboard');
+        } else if (auth.currentUser) {
+          router.push('/dashboard');
+        }
       } catch (err) {
         const message = getAuthErrorMessage(err);
         if (message) setError(message);
@@ -70,8 +73,11 @@ const RegisterPage: FC = () => {
     try {
       const mode = await signInWithGoogle();
       if (mode === 'popup') {
-        const profile = await getUserProfile(auth.currentUser!.uid);
-        router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          const profile = await getUserProfile(uid).catch(() => null);
+          router.push(profile?.role === 'teacher' ? '/teacher' : '/dashboard');
+        }
       }
     } catch (err) {
       const message = getAuthErrorMessage(err);

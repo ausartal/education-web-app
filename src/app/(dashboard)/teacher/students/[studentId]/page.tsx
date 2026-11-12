@@ -1,6 +1,7 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -26,14 +27,19 @@ const StudentDetail: FC = () => {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const notesLoaded = useRef(false);
+
+  const fetchStudent = useCallback(async () => {
     if (!studentId) return;
-    const fetch = async () => {
+    {
       try {
         const snap = await getDoc(doc(db, 'users', studentId));
         if (snap.exists()) {
           setStudent(snap.data() as UserProfile);
-          setNotes((snap.data() as Record<string, string>).teacherNotes || '');
+          if (!notesLoaded.current) {
+            notesLoaded.current = true;
+            setNotes((snap.data() as Record<string, string>).teacherNotes || '');
+          }
         }
         const examSnap = await getDocs(
           query(collection(db, 'exam_sessions'), where('studentId', '==', studentId))
@@ -42,9 +48,11 @@ const StudentDetail: FC = () => {
       } catch { /* leave empty on error */ } finally {
         setLoading(false);
       }
-    };
-    fetch();
+    }
   }, [studentId]);
+
+  useEffect(() => { fetchStudent(); }, [fetchStudent]);
+  useLivePoll(fetchStudent);
 
   const handleSaveNotes = async (value: string) => {
     setNotes(value);

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { FC, useEffect, useState, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { motion } from 'framer-motion';
 import {
   GraduationCap, Search, ShieldCheck, UserX,
@@ -131,9 +132,10 @@ const AdminTeachers: FC = () => {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const fetchTeachers = useCallback(async () => {
+  const fetchTeachers = useCallback(async (silent?: unknown) => {
     if (!user) return;
-    setLoading(true);
+    const quiet = silent === true;
+    if (!quiet) setLoading(true);
     try {
       const token = await user.getIdToken();
       const res = await fetch('/api/admin/teachers', {
@@ -144,13 +146,14 @@ const AdminTeachers: FC = () => {
       setTeachers(data.teachers as TeacherRow[]);
     } catch (err) {
       console.error(err);
-      addToast('error', 'Gagal memuat data guru');
+      if (!quiet) addToast('error', 'Gagal memuat data guru');
     } finally {
       setLoading(false);
     }
   }, [user, addToast]);
 
   useEffect(() => { fetchTeachers(); }, [fetchTeachers]);
+  useLivePoll(() => fetchTeachers(true));
 
   const handleDeactivate = async (uid: string, current: boolean) => {
     if (!user) return;

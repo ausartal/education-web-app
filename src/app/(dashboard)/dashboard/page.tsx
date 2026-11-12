@@ -1,10 +1,15 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useLivePoll } from '@/hooks/useLivePoll';
+import { doc, getDoc } from '@/lib/client-firestore';
+import { db } from '@/lib/firebase';
+import { deriveTopics, type DerivedTopic } from '@/lib/learning';
 import { getMaterials } from '@/services/materials';
 import { Material } from '@/types/firestore';
 import {
@@ -17,100 +22,70 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-const courseTopics = [
-  {
-    id: 'stoikiometri',
-    name: 'Stoikiometri',
-    subtitle: 'Perhitungan Kimia',
-    icon: '/icons/topic-calculus.svg',
-    gradient: 'bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400',
-    lessons: [
-      'Konsep Mol & Bilangan Avogadro',
-      'Massa Molar & Perhitungan',
-      'Pereaksi Pembatas',
-    ],
-  },
-  {
-    id: 'atom-model',
-    name: 'Model Atom',
-    subtitle: 'Struktur Materi',
-    icon: '/icons/topic-atom-model.svg',
-    gradient: 'bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-400',
-    lessons: [
-      'Teori Atom Dalton & Thomson',
-      'Model Atom Bohr',
-      'Konfigurasi Elektron',
-    ],
-  },
-  {
-    id: 'larutan',
-    name: 'Larutan',
-    subtitle: 'Konsentrasi & Campuran',
-    icon: '/icons/topic-chemistry-flask.svg',
-    gradient: 'bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-400',
-    lessons: [
-      'Molaritas & Molalitas',
-      'Pengenceran Larutan',
-      'Sifat Koligatif',
-    ],
-  },
-  {
-    id: 'ikatan-kimia',
-    name: 'Ikatan Kimia',
-    subtitle: 'Gaya Antar Atom',
-    icon: '/icons/topic-coordinate-geometry.svg',
-    gradient: 'bg-gradient-to-br from-rose-500 via-pink-500 to-orange-400',
-    lessons: ['Ikatan Ion', 'Ikatan Kovalen', 'Ikatan Logam'],
-  },
-  {
-    id: 'reaksi-redoks',
-    name: 'Reaksi Redoks',
-    subtitle: 'Transfer Elektron',
-    icon: '/icons/topic-coordinate-transformations.svg',
-    gradient: 'bg-gradient-to-br from-amber-500 via-orange-500 to-red-400',
-    lessons: ['Oksidasi & Reduksi', 'Bilangan Oksidasi', 'Penyetaraan Redoks'],
-  },
-  {
-    id: 'kesetimbangan',
-    name: 'Kesetimbangan',
-    subtitle: 'Reaksi Reversibel',
-    icon: '/icons/topic-exponential-functions.svg',
-    gradient: 'bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-400',
-    lessons: [
-      'Hukum Kesetimbangan',
-      'Konstanta Kc & Kp',
-      'Pergeseran Kesetimbangan',
-    ],
-  },
-  {
-    id: 'geometri-molekul',
-    name: 'Geometri Molekul',
-    subtitle: 'Bentuk & Sudut',
-    icon: '/icons/topic-geometric-thinking.svg',
-    gradient: 'bg-gradient-to-br from-lime-500 via-green-500 to-emerald-400',
-    lessons: ['Teori VSEPR', 'Hibridisasi', 'Polaritas Molekul'],
-  },
+const TOPIC_ICONS: Record<string, string> = {
+  stoikiometri: '/icons/topic-calculus.svg',
+  'atom-model': '/icons/topic-atom-model.svg',
+  larutan: '/icons/topic-chemistry-flask.svg',
+  'ikatan-kimia': '/icons/topic-coordinate-geometry.svg',
+  'reaksi-redoks': '/icons/topic-coordinate-transformations.svg',
+  kesetimbangan: '/icons/topic-exponential-functions.svg',
+  'geometri-molekul': '/icons/topic-geometric-thinking.svg',
+};
+const FALLBACK_ICONS = Object.values(TOPIC_ICONS);
+
+const TOPIC_GRADIENTS = [
+  'bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400',
+  'bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-400',
+  'bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-400',
+  'bg-gradient-to-br from-rose-500 via-pink-500 to-orange-400',
+  'bg-gradient-to-br from-amber-500 via-orange-500 to-red-400',
+  'bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-400',
+  'bg-gradient-to-br from-lime-500 via-green-500 to-emerald-400',
 ];
 
 const DashboardPage: FC = () => {
+  const router = useRouter();
   const { profile } = useAuth();
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [topics, setTopics] = useState<DerivedTopic[]>([]);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [quizCount, setQuizCount] = useState(0);
   const [activeCourseIdx, setActiveCourseIdx] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'chart'>('list');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!profile) return;
-    const fetchData = async () => {
-      try {
-        const mats = await getMaterials();
-        setMaterials(mats);
-      } catch { /* leave empty on error */ } finally {
-        setLoading(false);
+  const profileUid = profile?.uid;
+  const profileRole = profile?.role;
+  const fetchData = useCallback(async () => {
+    if (!profileUid) return;
+    try {
+      const [mats, userSnap] = await Promise.all([
+        getMaterials(),
+        getDoc(doc(db, 'users', profileUid)),
+      ]);
+      const userData = (userSnap?.data() ?? {}) as {
+        completedMaterials?: string[];
+        settings?: { selectedTopics?: string[]; onboardingComplete?: boolean };
+        stats?: { totalQuizzes?: number };
+      };
+      const isStudent = !profileRole || profileRole === 'student';
+      if (isStudent && userData.settings?.onboardingComplete !== true) {
+        router.replace('/onboarding');
+        return;
       }
-    };
-    fetchData();
-  }, [profile]);
+      const completed = userData.completedMaterials ?? [];
+      const validIds = new Set(mats.map((m) => m.id));
+      setMaterials(mats);
+      setCompletedCount(completed.filter((id) => validIds.has(id)).length);
+      setTopics(deriveTopics(mats, completed, userData.settings?.selectedTopics ?? []));
+      setQuizCount(userData.stats?.totalQuizzes ?? 0);
+    } catch { /* keep the last data on error */ } finally {
+      setLoading(false);
+    }
+  }, [profileUid, profileRole, router]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+  useLivePoll(fetchData);
 
   if (loading || !profile) {
     return (
@@ -120,18 +95,25 @@ const DashboardPage: FC = () => {
     );
   }
 
-  const days = ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'];
+  const totalMaterials = materials.length;
+  const materialsPct = totalMaterials > 0 ? Math.round((completedCount / totalMaterials) * 100) : 0;
+  const cards = topics.map((topic, i) => ({
+    ...topic,
+    icon: TOPIC_ICONS[topic.id] ?? FALLBACK_ICONS[i % FALLBACK_ICONS.length],
+    gradient: TOPIC_GRADIENTS[i % TOPIC_GRADIENTS.length],
+  }));
+  const safeIdx = cards.length > 0 ? Math.min(activeCourseIdx, cards.length - 1) : 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      {/* Header Row - Welcome + Jump back in aligned */}
+      {/* Header Row - Welcome + Lanjutkan belajar aligned */}
       <div className="mb-8 grid animate-[fadeIn_0.5s_ease-out] gap-8 lg:grid-cols-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, {profile.displayName.split(' ')[0]}
+            Halo, {profile.displayName.split(' ')[0]}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Ready to learn something new today?
+            Siap belajar sesuatu yang baru hari ini?
           </p>
         </div>
         <div className="flex items-end justify-between">
@@ -140,8 +122,8 @@ const DashboardPage: FC = () => {
             <button
               onClick={() =>
                 setActiveCourseIdx(
-                  (activeCourseIdx - 1 + courseTopics.length) %
-                    courseTopics.length
+                  (safeIdx - 1 + cards.length) %
+                    Math.max(cards.length, 1)
                 )
               }
               className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
@@ -151,7 +133,7 @@ const DashboardPage: FC = () => {
             </button>
             <button
               onClick={() =>
-                setActiveCourseIdx((activeCourseIdx + 1) % courseTopics.length)
+                setActiveCourseIdx((safeIdx + 1) % Math.max(cards.length, 1))
               }
               className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
               aria-label="Next"
@@ -168,7 +150,7 @@ const DashboardPage: FC = () => {
           {/* Progress Overview - Soft card */}
           <div className="animate-[fadeIn_0.7s_ease-out] rounded-3xl bg-white p-6 shadow-sm shadow-gray-100">
             <div className="mb-5 flex items-center justify-between">
-              <h3 className="font-bold text-gray-900">Your Progress</h3>
+              <h3 className="font-bold text-gray-900">Progres belajar</h3>
               {/* Toggle Switch: List ↔ Chart */}
               <button
                 onClick={() =>
@@ -205,15 +187,15 @@ const DashboardPage: FC = () => {
                     <BookOpen size={16} className="text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500">Materi Selesai</p>
+                    <p className="text-xs text-gray-500">Materi selesai</p>
                     <p className="text-sm font-bold text-gray-900">
-                      0 of {materials.length}
+                      {completedCount} dari {totalMaterials}
                     </p>
                   </div>
                   <div className="h-2 w-20 overflow-hidden rounded-full bg-blue-100">
                     <div
                       className="h-full rounded-full bg-primary transition-all duration-700"
-                      style={{ width: '0%' }}
+                      style={{ width: `${materialsPct}%` }}
                     />
                   </div>
                 </div>
@@ -223,9 +205,9 @@ const DashboardPage: FC = () => {
                     <Target size={16} className="text-emerald-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500">Quiz Completed</p>
+                    <p className="text-xs text-gray-500">Latihan selesai</p>
                     <p className="text-sm font-bold text-gray-900">
-                      {profile.stats.totalQuizzes}
+                      {quizCount}
                     </p>
                   </div>
                 </div>
@@ -256,7 +238,7 @@ const DashboardPage: FC = () => {
                         stroke="url(#progressGradient)"
                         strokeWidth="4"
                         strokeLinecap="round"
-                        strokeDasharray="0 88"
+                        strokeDasharray={`${(materialsPct / 100) * 88} 88`}
                         className="transition-all duration-1000"
                       />
                       <defs>
@@ -268,7 +250,7 @@ const DashboardPage: FC = () => {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-lg font-black text-gray-900">
-                        0%
+                        {materialsPct}%
                       </span>
                     </div>
                   </div>
@@ -276,13 +258,13 @@ const DashboardPage: FC = () => {
                     <div className="flex items-center gap-2">
                       <div className="h-2.5 w-2.5 rounded-full bg-primary" />
                       <span className="text-xs text-gray-600">
-                        Completed (0)
+                        Selesai ({completedCount})
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="h-2.5 w-2.5 rounded-full bg-gray-200" />
                       <span className="text-xs text-gray-600">
-                        Remaining ({materials.length})
+                        Belum ({totalMaterials - completedCount})
                       </span>
                     </div>
                   </div>
@@ -292,8 +274,8 @@ const DashboardPage: FC = () => {
                 <div className="space-y-2.5">
                   {[
                     {
-                      label: 'Quiz',
-                      value: profile.stats.totalQuizzes,
+                      label: 'Latihan',
+                      value: quizCount,
                       max: 20,
                       color: 'from-emerald-400 to-teal-400',
                     },
@@ -325,17 +307,22 @@ const DashboardPage: FC = () => {
         <div className="space-y-5">
           {/* Stacked Card Carousel */}
           <div className="relative h-[580px]">
+            {cards.length === 0 && (
+              <div className="flex h-full flex-col items-center justify-center rounded-3xl bg-gray-50 p-8 text-center">
+                <BookOpen size={32} className="mb-3 text-gray-300" />
+                <p className="font-semibold text-gray-700">Belum ada materi</p>
+                <p className="mt-1 text-sm text-gray-500">Materi dari gurumu akan muncul di sini.</p>
+              </div>
+            )}
             <AnimatePresence mode="popLayout">
-              {courseTopics.map((topic, i) => {
-                const offset = i - activeCourseIdx;
+              {cards.map((topic, i) => {
+                const offset = i - safeIdx;
                 const isActive = offset === 0;
                 const isVisible = Math.abs(offset) <= 1;
 
                 if (!isVisible) return null;
 
-                const hasProgress = false;
-
-                return (
+                                return (
                   <motion.div
                     key={topic.id}
                     initial={{ scale: 0.9, opacity: 0 }}
@@ -368,13 +355,13 @@ const DashboardPage: FC = () => {
                         {/* Header */}
                         <div className="text-center">
                           <p className="mb-1 text-xs font-bold uppercase tracking-widest text-white/60">
-                            {topic.subtitle}
+                            {topic.total} materi
                           </p>
                           <h3 className="mb-1 font-display text-2xl font-extrabold text-white">
                             {topic.name}
                           </h3>
                           <p className="text-sm font-medium text-white/70">
-                            Level 1
+                            {topic.completed} dari {topic.total} selesai
                           </p>
                         </div>
 
@@ -417,10 +404,10 @@ const DashboardPage: FC = () => {
 
                             {/* Start / Continue Button */}
                             <Link
-                              href="/materi"
+                              href={topic.nextMaterialId ? `/materi/${topic.nextMaterialId}` : '/materi'}
                               className="mt-4 block w-full rounded-2xl bg-white py-4 text-center text-sm font-extrabold text-gray-900 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
                             >
-                              Start Learning
+                              {topic.completed > 0 ? 'Lanjutkan belajar' : 'Mulai belajar'}
                             </Link>
                           </motion.div>
                         )}
@@ -434,12 +421,12 @@ const DashboardPage: FC = () => {
 
           {/* Thumbnail Selector */}
           <div className="flex justify-center gap-2.5">
-            {courseTopics.map((topic, i) => (
+            {cards.map((topic, i) => (
               <button
                 key={topic.id}
                 onClick={() => setActiveCourseIdx(i)}
                 className={`flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${
-                  activeCourseIdx === i
+                  safeIdx === i
                     ? 'scale-110 bg-white ring-2 ring-primary shadow-lg'
                     : 'bg-gray-50 hover:bg-white hover:shadow-md hover:scale-105'
                 }`}

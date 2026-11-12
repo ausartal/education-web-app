@@ -149,7 +149,7 @@ const AdminAnalytics: FC = () => {
   const [days, setDays] = useState<7 | 30 | 90>(30);
   // Same key as admin/page.tsx — data served from cache when navigating between pages
   const { data, isLoading: loading, mutate } = useAuthSWR<AnalyticsData>('/api/admin/analytics?days=' + days, {
-    dedupingInterval: 60_000,
+    dedupingInterval: 5_000, refreshInterval: 30_000,
   });
 
   const handleExport = async (col: string, fmt: string) => {

@@ -58,7 +58,7 @@ const profileTone: Record<string, string> = {
 const DashboardOverview: FC = () => {
   const { profile } = useAuth();
   const firstName = profile?.displayName?.split(' ')[0] || 'Admin';
-  const { data, isLoading, mutate } = useAuthSWR<AnalyticsData>('/api/admin/analytics', { dedupingInterval: 60_000 });
+  const { data, isLoading, mutate } = useAuthSWR<AnalyticsData>('/api/admin/analytics', { dedupingInterval: 5_000, refreshInterval: 30_000 });
   const [refreshing, setRefreshing] = useState(false);
   const refresh = useCallback(async () => { setRefreshing(true); await mutate(); setRefreshing(false); }, [mutate]);
   const state = useMemo(() => {

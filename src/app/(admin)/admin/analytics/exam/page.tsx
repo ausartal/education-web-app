@@ -20,7 +20,7 @@ function Progress({ value, tone = 'bg-indigo-500' }: { value: number; tone?: str
 }
 
 export default function ExamAnalyticsPage() {
-  const { data, error, isLoading, mutate } = useAuthSWR<ExamAnalytics>('/api/admin/analytics/exam', { dedupingInterval: 60_000 });
+  const { data, error, isLoading, mutate } = useAuthSWR<ExamAnalytics>('/api/admin/analytics/exam', { dedupingInterval: 5_000, refreshInterval: 30_000 });
   if (isLoading) return <div className="mx-auto max-w-[1440px] space-y-6"><div className="h-24 animate-pulse rounded-xl bg-slate-200" /><div className="overflow-hidden rounded-xl border border-slate-200 bg-white"><AdminSkeleton rows={7} /></div></div>;
   if (error || !data) return <AdminErrorState onRetry={() => mutate()} />;
 

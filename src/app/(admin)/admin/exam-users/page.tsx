@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useEffect, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import {
   Users, Loader2, CheckCircle2, XCircle,
   Search, Eye, X, Camera, Phone, MapPin, Building2,
@@ -79,6 +80,7 @@ const AdminExamUsersPage: FC = () => {
   }, [user, filter]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  useLivePoll(fetchUsers);
 
   const handleAction = async (uid: string, action: Record<string, unknown>) => {
     if (!user) return;

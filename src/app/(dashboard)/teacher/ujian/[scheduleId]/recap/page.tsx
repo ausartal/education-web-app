@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState, useCallback, useRef } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -269,6 +270,7 @@ const RecapPage: FC = () => {
   }, [user, scheduleId]);
 
   useEffect(() => { fetchRecap(); }, [fetchRecap]);
+  useLivePoll(fetchRecap, 8000);
 
   // Load notes from localStorage
   useEffect(() => {

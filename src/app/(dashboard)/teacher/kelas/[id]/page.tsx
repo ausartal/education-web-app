@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -39,8 +40,8 @@ const TeacherClassDetailPage: FC = () => {
   }, [user]);
 
   // Fetch class data
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    {
       try {
         const t = await authToken();
         const res = await fetch(`/api/teacher/classes/${id}`, { headers: { Authorization: `Bearer ${t}` } });
@@ -52,9 +53,11 @@ const TeacherClassDetailPage: FC = () => {
       } finally {
         setLoading(false);
       }
-    };
-    fetchData();
+    }
   }, [id, authToken]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+  useLivePoll(fetchData);
 
   const copyCode = () => {
     if (!cls) return;

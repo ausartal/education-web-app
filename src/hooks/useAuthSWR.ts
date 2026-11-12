@@ -30,8 +30,9 @@ export function useAuthSWR<T = unknown>(
       return fetcher(u, token) as Promise<T>;
     },
     {
-      revalidateOnFocus: false,
-      dedupingInterval: 30_000,
+      revalidateOnFocus: true,
+      refreshInterval: 10_000,
+      dedupingInterval: 3_000,
       ...options,
     },
   );

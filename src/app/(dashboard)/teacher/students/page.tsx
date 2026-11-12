@@ -1,6 +1,7 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { collection, getDocs, query, where } from '@/lib/client-firestore';
@@ -24,8 +25,8 @@ const TeacherStudents: FC = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
+    {
       try {
         const snap = await getDocs(
           query(collection(db, 'users'), where('role', '==', 'student'))
@@ -50,9 +51,11 @@ const TeacherStudents: FC = () => {
       } finally {
         setLoading(false);
       }
-    };
-    fetchStudents();
+    }
   }, []);
+
+  useEffect(() => { fetchStudents(); }, [fetchStudents]);
+  useLivePoll(fetchStudents);
 
   const filtered = students.filter(
     (s) =>

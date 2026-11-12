@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useEffect, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { EmptyState } from '@/components/ui/EmptyState';
 import Link from 'next/link';
 import {
@@ -55,6 +56,7 @@ const ExamCertificatesPage: FC = () => {
   }, [user]);
 
   useEffect(() => { fetchCertificates(); }, [fetchCertificates]);
+  useLivePoll(fetchCertificates);
 
   if (loading) {
     return (

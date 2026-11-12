@@ -151,7 +151,7 @@ const AdminUsers: FC = () => {
   const { addToast } = useToast();
   const confirmAction = useAdminConfirm();
   const { data, isLoading: loading, mutate } = useAuthSWR<{ users: UserRow[] }>('/api/admin/users', {
-    dedupingInterval: 120_000,
+    dedupingInterval: 3_000,
   });
   const users = data?.users ?? [];
 

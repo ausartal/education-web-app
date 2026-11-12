@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useEffect, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   School, Search, RefreshCw, Copy, Trash2, Users,
@@ -70,9 +71,10 @@ const AdminClasses: FC = () => {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: '', teacherId: '', status: 'active' as 'active' | 'archived', taxonomy: {} as ContentTaxonomy });
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silent?: unknown) => {
     if (!user) return;
-    setLoading(true);
+    const quiet = silent === true;
+    if (!quiet) setLoading(true);
     try {
       const token = await user.getIdToken();
       const [ujianRes, usersRes] = await Promise.all([
@@ -93,13 +95,14 @@ const AdminClasses: FC = () => {
         setTeachers((usersData.users as UserRecord[]).filter(item => item.role === 'teacher'));
       }
     } catch {
-      addToast('error', 'Gagal memuat data kelas');
+      if (!quiet) addToast('error', 'Gagal memuat data kelas');
     } finally {
       setLoading(false);
     }
   }, [user, addToast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+  useLivePoll(() => fetchData(true));
 
   const handleCopyCode = (code: string, id: string) => {
     navigator.clipboard.writeText(code).then(() => {

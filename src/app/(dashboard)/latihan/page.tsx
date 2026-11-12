@@ -1,6 +1,7 @@
 'use client';
 
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Clock, Zap, Lock, Trophy, CheckCircle, ChevronRight, RotateCcw } from 'lucide-react';
@@ -58,9 +59,9 @@ const LatihanPage: FC = () => {
   const [easyDone, setEasyDone] = useState(false);
   const [moderateDone, setModerateDone] = useState(false);
 
-  useEffect(() => {
+  const loadScores = useCallback(async () => {
     if (!profile) return;
-    (async () => {
+    {
       try {
         const snap = await getDoc(doc(db, 'users', profile.uid));
         const data = snap.data() || {};
@@ -72,8 +73,11 @@ const LatihanPage: FC = () => {
         if (data.lastQuiz_hard) scores.hard = data.lastQuiz_hard.score;
         setLastScores(scores);
       } catch { /* leave defaults — levels stay locked */ }
-    })();
+    }
   }, [profile]);
+
+  useEffect(() => { loadScores(); }, [loadScores]);
+  useLivePoll(loadScores);
 
   const isLocked = (id: string) => {
     if (id === 'easy') return false;

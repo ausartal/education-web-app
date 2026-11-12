@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useEffect, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   Loader2, AlertCircle, CheckCircle2, Package, CreditCard,
@@ -63,6 +64,7 @@ const ExamTokensPage: FC = () => {
   }, [user]);
 
   useEffect(() => { fetchTokens(); }, [fetchTokens]);
+  useLivePoll(fetchTokens);
 
   const handleBuy = async (quantity: number, amount: number) => {
     if (!user) return;

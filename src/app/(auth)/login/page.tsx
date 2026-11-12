@@ -43,7 +43,11 @@ const LoginPage: FC = () => {
     const checkRedirect = async () => {
       try {
         const profile = await getGoogleRedirectResult();
-        if (profile) redirectByRole(profile.role);
+        if (profile) {
+          redirectByRole(profile.role);
+        } else if (auth.currentUser) {
+          redirectByRole();
+        }
       } catch (err) {
         const message = getAuthErrorMessage(err);
         if (message) setError(message);
@@ -79,12 +83,13 @@ const LoginPage: FC = () => {
     try {
       const mode = await signInWithGoogle();
       if (mode === 'popup') {
-        const result = await fetchProfile(auth.currentUser!.uid);
-        if (!result.ok) {
-          setError(DATA_UNAVAILABLE);
+        const uid = auth.currentUser?.uid;
+        if (!uid) {
+          setError('Gagal masuk dengan Google. Silakan coba lagi.');
           setLoading(false);
           return;
         }
+        const result = await fetchProfile(uid);
         redirectByRole(result.profile?.role);
       }
     } catch (err) {

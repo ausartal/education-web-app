@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useEffect, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import Link from 'next/link';
 import {
   Award, Loader2, CheckCircle2, Send, Eye, X,
@@ -88,6 +89,7 @@ const AdminCertificatesPage: FC = () => {
   }, [user, filter]);
 
   useEffect(() => { fetchCertificates(); }, [fetchCertificates]);
+  useLivePoll(fetchCertificates);
 
   const handleAction = async (certId: string, action: string) => {
     if (!user) return;

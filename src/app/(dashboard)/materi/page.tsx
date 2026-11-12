@@ -1,11 +1,14 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { getMaterials } from '@/services/materials';
+import { doc, getDoc } from '@/lib/client-firestore';
+import { db } from '@/lib/firebase';
 import { Material } from '@/types/firestore';
 import { CheckCircle, Lock } from 'lucide-react';
 
@@ -51,20 +54,26 @@ const topicStyles = [
 const MateriPage: FC = () => {
   const { profile } = useAuth();
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchMaterials = useCallback(async () => {
     if (!profile) return;
-    const fetch = async () => {
-      try {
-        const mats = await getMaterials();
-        setMaterials(mats);
-      } catch { /* leave empty on error */ } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
+    try {
+      const [mats, userSnap] = await Promise.all([
+        getMaterials(),
+        getDoc(doc(db, 'users', profile.uid)),
+      ]);
+      setMaterials(mats);
+      const done = (userSnap?.data()?.completedMaterials ?? []) as string[];
+      setCompleted(new Set(done));
+    } catch { /* leave empty on error */ } finally {
+      setLoading(false);
+    }
   }, [profile]);
+
+  useEffect(() => { fetchMaterials(); }, [fetchMaterials]);
+  useLivePoll(fetchMaterials);
 
   if (loading) {
     return (
@@ -86,7 +95,7 @@ const MateriPage: FC = () => {
           Materi Pembelajaran
         </h1>
         <p className="text-sm text-gray-500">
-          {materials.length} materi tersedia
+          {completed.size > 0 ? `${materials.filter((m) => completed.has(m.id)).length} dari ${materials.length} materi selesai` : `${materials.length} materi tersedia`}
         </p>
       </motion.div>
 
@@ -121,8 +130,11 @@ const MateriPage: FC = () => {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="mb-0.5 font-display text-base font-bold text-gray-900 group-hover:text-primary transition-colors">
+                  <h3 className="mb-0.5 flex items-center gap-1.5 font-display text-base font-bold text-gray-900 group-hover:text-primary transition-colors">
                     {material.title}
+                    {completed.has(material.id) && (
+                      <CheckCircle size={15} className="shrink-0 text-emerald-500" aria-label="Selesai" />
+                    )}
                   </h3>
                   <p className="text-sm text-gray-500 line-clamp-1">
                     {material.description}

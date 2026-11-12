@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState, useCallback } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -94,6 +95,7 @@ const ExamHistoryPage: FC = () => {
   }, [user]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+  useLivePoll(fetchData);
 
   if (loading) {
     return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 size={24} className="animate-spin text-violet-500" /></div>;

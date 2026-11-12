@@ -1,6 +1,7 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -19,8 +20,8 @@ const TeacherDashboard: FC = () => {
   const [questionCount, setQuestionCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
+    {
       try {
         const [studentsSnap, materialSnap, questionSnap] = await Promise.all([
           getDocs(query(collection(db, 'users'), where('role', '==', 'student'))),
@@ -42,9 +43,11 @@ const TeacherDashboard: FC = () => {
       } catch {
         // Keep the dashboard usable when optional overview data is unavailable.
       } finally { setLoading(false); }
-    };
-    fetchDashboard();
+    }
   }, []);
+
+  useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
+  useLivePoll(fetchDashboard);
 
   if (loading || !profile) return (
     <div className="flex min-h-[60vh] items-center justify-center">
