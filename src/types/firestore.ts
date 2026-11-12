@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from '@/lib/client-firestore';
 import { MSATDifficulty } from './msat';
 import type { ContentTaxonomy } from './taxonomy';
 export type { MSATDifficulty } from './msat';
@@ -15,6 +15,7 @@ export interface UserProfile {
   createdAt: Timestamp;
   lastLoginAt: Timestamp;
   isActive: boolean;
+  completedMaterials?: string[];
   profile: {
     school?: string;
     grade?: string;

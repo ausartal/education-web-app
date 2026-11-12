@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { shouldAssignExamClaim } from '@/lib/claims';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,8 +24,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 });
     }
 
-    // Set custom claim
-    await adminAuth.setCustomUserClaims(decoded.uid, { role: 'exam_user' });
+    // Never replace a school role (student/teacher/admin) with the exam claim
+    if (shouldAssignExamClaim(decoded)) {
+      await adminAuth.setCustomUserClaims(decoded.uid, { role: 'exam_user' });
+    }
 
     return NextResponse.json({ success: true });
   } catch {

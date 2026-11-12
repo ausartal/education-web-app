@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { sendDueReminders } from '@/lib/due-reminders-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,13 +24,15 @@ export async function GET(req: NextRequest) {
     .where('studentIds', 'array-contains', decoded.uid)
     .get();
 
-  if (snap.empty) return NextResponse.json({ classes: [] });
+  // Archived classes stay out of the student's list.
+  const docs = snap.docs.filter((d) => d.data().status !== 'archived');
+  if (docs.length === 0) return NextResponse.json({ classes: [] });
 
-  const classIds = snap.docs.map((d) => d.id);
-  const classDataMap = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()]));
+  const classIds = docs.map((d) => d.id);
+  const classDataMap = Object.fromEntries(docs.map((d) => [d.id, d.data()]));
 
   // Batch fetch teacher names — one get() per unique teacher, not per class
-  const uniqueTeacherIds = [...new Set(snap.docs.map((d) => d.data().teacherId as string))];
+  const uniqueTeacherIds = [...new Set(docs.map((d) => d.data().teacherId as string))];
   const teacherDocs = await Promise.all(
     uniqueTeacherIds.map((tid) => adminDb.collection('users').doc(tid).get())
   );
@@ -67,6 +70,8 @@ export async function GET(req: NextRequest) {
       activeExamCount: examCountMap[id] ?? 0,
     };
   });
+
+  await sendDueReminders(decoded.uid, classIds);
 
   return NextResponse.json({ classes });
 }

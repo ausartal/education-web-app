@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { toMillis } from '@/lib/msat-session';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -65,6 +66,7 @@ export async function GET(req: NextRequest) {
           sessionStatus: session?.status ?? null,
           sessionId: session?.sessionId ?? null,
           createdAt: data.createdAt ?? null,
+          scheduledAt: toMillis(data.scheduledAt) !== null ? new Date(toMillis(data.scheduledAt) as number).toISOString() : null,
         };
       })
       .filter(Boolean);

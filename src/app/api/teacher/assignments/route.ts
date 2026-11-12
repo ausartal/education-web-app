@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { notifyUsers } from '@/lib/notify';
+import { content } from '@/lib/notification-content';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyTeacher } from '@/lib/auth-helpers';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,6 +99,14 @@ export async function POST(req: NextRequest) {
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
+
+    const classData = classDoc.data()!;
+    await notifyUsers(classData.studentIds ?? [], content.assignmentCreated({
+      title,
+      className: classData.name as string | undefined,
+      classId,
+      dueDate: typeof dueDate === 'string' ? dueDate : null,
+    }));
 
     return NextResponse.json({ id: docRef.id }, { status: 201 });
   } catch (err) {

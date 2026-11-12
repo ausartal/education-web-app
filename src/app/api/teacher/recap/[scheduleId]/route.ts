@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyTeacher } from '@/lib/auth-helpers';
+import { toCsv, csvFileName } from '@/lib/csv';
+import { buildRecapRows, RECAP_COLUMNS } from '@/lib/gradebook';
+import { analyzeItems, type ItemAnswer, type ItemQuestion } from '@/lib/item-analysis';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,7 +87,78 @@ export async function GET(req: NextRequest, { params }: { params: { scheduleId: 
     ? Math.round(Object.values(studentBestScore).reduce((a, b) => a + b, 0) / Object.keys(studentBestScore).length)
     : null;
 
+  if (new URL(req.url).searchParams.get('format') === 'csv') {
+    const csv = toCsv(RECAP_COLUMNS, buildRecapRows(sessionsWithTotal));
+    return new NextResponse(csv, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${csvFileName(`rekap-${(schedule.title as string) ?? 'ujian'}`)}"`,
+      },
+    });
+  }
+
+  // Item analysis uses each student's best finished attempt.
+  const bestByStudent = new Map<string, (typeof completed)[number]>();
+  for (const s of completed) {
+    const current = bestByStudent.get(s.studentId);
+    if ((s.numericScore ?? -1) > (current?.numericScore ?? -1) || !current) bestByStudent.set(s.studentId, s);
+  }
+
+  const examType = (schedule.examType as string) || 'tp';
+  const itemQuestions = new Map<string, ItemQuestion>();
+  const itemAnswers: ItemAnswer[] = [];
+
+  if (examType === 'custom' || examType === 'manual') {
+    const customQuestions = (schedule.customQuestions as Array<{ id: string; stem: string; correctAnswer: string }>) ?? [];
+    customQuestions.forEach((q) => itemQuestions.set(q.id, { id: q.id, stem: q.stem, correctAnswer: q.correctAnswer }));
+    for (const s of bestByStudent.values()) {
+      for (const a of (s.customAnswers as Array<{ questionId: string; selectedAnswer: string }>) ?? []) {
+        const q = itemQuestions.get(a.questionId);
+        if (!q) continue;
+        itemAnswers.push({
+          studentId: s.studentId,
+          questionId: a.questionId,
+          selectedAnswer: a.selectedAnswer ?? null,
+          isCorrect: a.selectedAnswer === q.correctAnswer,
+        });
+      }
+    }
+  } else {
+    const usedIds = new Set<string>();
+    for (const s of bestByStudent.values()) {
+      const raw = s.domainResponses as unknown;
+      const domains = (Array.isArray(raw) ? raw : Object.values((raw as object) ?? {})) as Array<Record<string, { questionId?: string; selectedAnswer?: string; isCorrect?: boolean }>>;
+      for (const domain of domains) {
+        for (const tier of [domain.tier1, domain.tier2, domain.tier3]) {
+          if (!tier?.questionId) continue;
+          usedIds.add(tier.questionId);
+          itemAnswers.push({
+            studentId: s.studentId,
+            questionId: tier.questionId,
+            selectedAnswer: tier.selectedAnswer ?? null,
+            isCorrect: tier.isCorrect === true,
+          });
+        }
+      }
+    }
+    const docs = await Promise.all([...usedIds].map((qid) => adminDb.collection('exam_questions').doc(qid).get()));
+    docs.forEach((d, i) => {
+      if (!d.exists()) return;
+      const q = d.data() as { stem?: string; correctAnswer?: string; domainName?: string; tierPath?: string };
+      itemQuestions.set([...usedIds][i], {
+        id: [...usedIds][i],
+        stem: q.stem ?? '',
+        correctAnswer: q.correctAnswer ?? null,
+        label: [q.domainName, q.tierPath].filter(Boolean).join(' · '),
+      });
+    });
+  }
+
+  const items = analyzeItems([...itemQuestions.values()], itemAnswers);
+
   return NextResponse.json({
+    items,
+    respondents: bestByStudent.size,
     schedule: {
       id: scheduleSnap.id, ...schedule,
       examType: schedule.examType || 'tp',

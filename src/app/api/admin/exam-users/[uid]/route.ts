@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { notifyUsers } from '@/lib/notify';
+import { content } from '@/lib/notification-content';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyAdmin } from '@/lib/auth-helpers';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,6 +100,13 @@ export async function PATCH(
       details: updates,
       timestamp: new Date(),
     });
+
+    if (typeof updates.verificationStatus === 'string') {
+      await notifyUsers([params.uid], content.verificationChanged({
+        status: updates.verificationStatus,
+        notes: typeof updates.verificationNotes === 'string' ? updates.verificationNotes : undefined,
+      }));
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {

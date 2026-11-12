@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { validateRegistration, sanitizeInput } from '@/lib/exam-validation';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
+import { shouldAssignExamClaim } from '@/lib/claims';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,7 +80,9 @@ export async function POST(req: NextRequest) {
     await adminDb.collection('exam_users').doc(decoded.uid).set(data);
 
     // Sync custom claim: role = 'exam_user'
-    await adminAuth.setCustomUserClaims(decoded.uid, { role: 'exam_user' });
+    if (shouldAssignExamClaim(decoded)) {
+      await adminAuth.setCustomUserClaims(decoded.uid, { role: 'exam_user' });
+    }
 
     // Audit log
     await adminDb.collection('audit_logs').add({

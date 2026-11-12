@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from '@/lib/client-firestore';
 
 // ===== EXAM USER (separate from AKURAT users) =====
 export type ExamUserVerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected';

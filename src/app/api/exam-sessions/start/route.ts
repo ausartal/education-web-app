@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
+import { consumeRateLimit } from '@/lib/rate-limit-server';
+import { rateLimitMessage } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +20,11 @@ export async function POST(req: NextRequest) {
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
   const { examToken } = body;
   if (!examToken) return NextResponse.json({ error: 'examToken required' }, { status: 400 });
+
+  const limit = await consumeRateLimit(`exam_token:${decoded.uid}`, 15, 10 * 60 * 1000);
+  if (!limit.allowed) {
+    return NextResponse.json({ error: rateLimitMessage(limit.retryAfterSec) }, { status: 429 });
+  }
 
   // Find active exam schedule with this token
   const scheduleSnap = await adminDb.collection('exam_schedules')
@@ -40,6 +47,10 @@ export async function POST(req: NextRequest) {
 
   if (!(classData.studentIds || []).includes(decoded.uid)) {
     return NextResponse.json({ error: 'Kamu tidak terdaftar di kelas ini. Minta gurumu untuk menambahkanmu atau bergabung lewat kode kelas.' }, { status: 403 });
+  }
+
+  if (classData.status === 'archived') {
+    return NextResponse.json({ error: 'Kelas ini sudah diarsipkan.' }, { status: 403 });
   }
 
   const schedulePayload = {

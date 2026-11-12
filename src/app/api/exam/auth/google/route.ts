@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { shouldAssignExamClaim } from '@/lib/claims';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,7 +89,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    await adminAuth.setCustomUserClaims(decoded.uid, { role: 'exam_user' });
+    if (shouldAssignExamClaim(decoded)) {
+      await adminAuth.setCustomUserClaims(decoded.uid, { role: 'exam_user' });
+    }
     return NextResponse.json({ success: true, needsProfileCompletion });
   } catch (error) {
     console.error('Exam Google sign-in error:', error);

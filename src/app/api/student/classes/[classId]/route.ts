@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from '@/lib/pg-firestore';
+import { notifyUsers } from '@/lib/notify';
+import { content } from '@/lib/notification-content';
 
 export const dynamic = 'force-dynamic';
 
@@ -161,4 +164,64 @@ export async function GET(
     exams,
     assignments,
   });
+}
+
+
+/**
+ * DELETE /api/student/classes/[classId]
+ * The signed-in student leaves the class. Submissions and exam results stay
+ * with the class for the teacher's records.
+ */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { classId: string } },
+) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer '))
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let decoded;
+  try {
+    decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const ref = adminDb.collection('classes').doc(params.classId);
+    const snap = await ref.get();
+    if (!snap.exists()) return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
+
+    const cls = snap.data()!;
+    if (!((cls.studentIds as string[]) ?? []).includes(decoded.uid)) {
+      return NextResponse.json({ error: 'Kamu tidak terdaftar di kelas ini' }, { status: 404 });
+    }
+
+    await ref.update({
+      studentIds: FieldValue.arrayRemove(decoded.uid),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    const studentDoc = await adminDb.collection('users').doc(decoded.uid).get();
+    await adminDb.collection('audit_logs').add({
+      actorId: decoded.uid,
+      actorRole: 'student',
+      action: 'leave_class',
+      targetId: params.classId,
+      targetType: 'class',
+      details: { className: cls.name },
+      timestamp: new Date(),
+    });
+
+    await notifyUsers([cls.teacherId as string], content.studentLeft({
+      studentName: (studentDoc.data()?.displayName as string) ?? 'Siswa',
+      className: (cls.name as string) ?? 'kelas',
+      classId: params.classId,
+    }));
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('[student/classes DELETE]', err);
+    return NextResponse.json({ error: 'Gagal keluar dari kelas' }, { status: 500 });
+  }
 }

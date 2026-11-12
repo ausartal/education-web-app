@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { notifyUsers } from '@/lib/notify';
+import { cancelSessionByAdmin, isServiceError, terminateSessionByAdmin } from '@/lib/msat-server';
+import { content } from '@/lib/notification-content';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -110,7 +113,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
   }
 
   const { examId } = params;
-  let body: { action?: string; targetSessionId?: string };
+  let body: { action?: string; targetSessionId?: string; reason?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
@@ -123,6 +126,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
     }
 
     const { action, targetSessionId } = body;
+    const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
     let affectedSessions = 0;
 
     if (action === 'activate') {
@@ -207,6 +211,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
           resultsReleasedBy: decoded.uid,
         });
         affectedSessions = 1;
+        await notifyUsers([session.studentId], content.resultsReleased({
+          sessionId: targetSessionId,
+          examTitle: examDoc.data()?.title,
+        }));
       }
     } else if (action === 'release_results_all') {
       const completedSnap = await adminDb.collection('msat_sessions')
@@ -228,6 +236,36 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
         await batch.commit();
       }
       affectedSessions = unreleasedDocs.length;
+      const releasedExamTitle = examDoc.data()?.title;
+      for (let offset = 0; offset < unreleasedDocs.length; offset += 20) {
+        await Promise.all(unreleasedDocs.slice(offset, offset + 20).map(doc =>
+          notifyUsers([doc.data().studentId], content.resultsReleased({ sessionId: doc.id, examTitle: releasedExamTitle })),
+        ));
+      }
+    } else if (action === 'terminate_session' || action === 'cancel_session') {
+      if (!targetSessionId) {
+        return NextResponse.json({ error: 'targetSessionId diperlukan' }, { status: 400 });
+      }
+      if (reason.length < 5 || reason.length > 300) {
+        return NextResponse.json({ error: 'Alasan wajib diisi (5-300 karakter)' }, { status: 400 });
+      }
+
+      const target = await adminDb.collection('msat_sessions').doc(targetSessionId).get();
+      if (!target.exists() || target.data()?.examId !== examId) {
+        return NextResponse.json({ error: 'Sesi tidak ditemukan' }, { status: 404 });
+      }
+
+      const result = action === 'terminate_session'
+        ? await terminateSessionByAdmin(targetSessionId, decoded.uid, reason)
+        : await cancelSessionByAdmin(targetSessionId, decoded.uid, reason);
+      if (isServiceError(result)) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
+      }
+
+      affectedSessions = 1;
+      await notifyUsers([result.studentId], action === 'terminate_session'
+        ? content.sessionTerminated({ reason })
+        : content.sessionCancelled({ wasCompleted: result.wasCompleted, reason }));
     } else {
       return NextResponse.json({ error: 'Aksi tidak dikenali' }, { status: 400 });
     }
@@ -238,7 +276,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
       action: `msat_exam_${action}`,
       targetId: examId,
       targetType: 'msat_access_code',
-      details: { action, targetSessionId: targetSessionId ?? null, affectedSessions },
+      details: { action, targetSessionId: targetSessionId ?? null, affectedSessions, reason: reason || null },
       timestamp: new Date(),
     });
 

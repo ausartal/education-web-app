@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyAdmin } from '@/lib/auth-helpers';
 import type { TaxonomyLevel } from '@/types/taxonomy';

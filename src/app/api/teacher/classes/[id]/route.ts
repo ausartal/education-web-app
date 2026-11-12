@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyTeacher } from '@/lib/auth-helpers';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +50,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const body = await req.json();
   const allowed = ['name', 'subject', 'status', 'materialIds'];
   const update: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
+  if ('status' in body && body.status !== 'active' && body.status !== 'archived') {
+    return NextResponse.json({ error: 'status harus active atau archived' }, { status: 400 });
+  }
   for (const key of allowed) {
     if (key in body) update[key] = body[key];
   }

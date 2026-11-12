@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { advanceBreakIfDue } from '@/lib/msat-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const { id } = params;
 
   try {
+    await advanceBreakIfDue(id);
     const sessionDoc = await adminDb.collection('msat_sessions').doc(id).get();
     if (!sessionDoc.exists) {
       return NextResponse.json({ error: 'Sesi tidak ditemukan' }, { status: 404 });
@@ -71,6 +73,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       finalScore: shouldHideResults ? null : session.finalScore,
       predikat: shouldHideResults ? null : session.predikat,
       conclusions: shouldHideResults ? null : session.conclusions,
+      violations: session.violations ?? 0,
+      terminated: session.terminated === true,
+      serverNow: Date.now(),
       resultsReleased,
       resultsReleasedAt: resultsReleased ? session.resultsReleasedAt : null,
       waitingCount,

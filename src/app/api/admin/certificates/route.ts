@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { notifyUsers } from '@/lib/notify';
+import { content } from '@/lib/notification-content';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyAdmin } from '@/lib/auth-helpers';
 import { generateCertificateNo } from '@/lib/exam-validation';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,6 +107,7 @@ export async function PATCH(req: NextRequest) {
         timestamp: FieldValue.serverTimestamp(),
       });
 
+      await notifyUsers([certData.userId], content.certificateStatus({ status: 'approved', examTitle: certData.examTitle, certificateId }));
       return NextResponse.json({ success: true, status: 'approved' });
     }
 
@@ -127,18 +130,21 @@ export async function PATCH(req: NextRequest) {
         timestamp: FieldValue.serverTimestamp(),
       });
 
+      await notifyUsers([certData.userId], content.certificateStatus({ status: 'sent', examTitle: certData.examTitle, certificateId }));
       return NextResponse.json({ success: true, status: 'sent' });
     }
 
     if (action === 'revoke') {
       await certRef.update({ status: 'revoked', revokedAt: FieldValue.serverTimestamp(), revokedBy: admin.uid });
       await adminDb.collection('audit_logs').add({ actorId: admin.uid, actorRole: 'admin', action: 'revoke_certificate', targetId: certificateId, targetType: 'exam_certificate', details: { userId: certData.userId, previousStatus: certData.status }, timestamp: FieldValue.serverTimestamp() });
+      await notifyUsers([certData.userId], content.certificateStatus({ status: 'revoked', examTitle: certData.examTitle, certificateId }));
       return NextResponse.json({ success: true, status: 'revoked' });
     }
 
     if (action === 'restore') {
       await certRef.update({ status: 'approved', revokedAt: null, revokedBy: null, approvedAt: FieldValue.serverTimestamp() });
       await adminDb.collection('audit_logs').add({ actorId: admin.uid, actorRole: 'admin', action: 'restore_certificate', targetId: certificateId, targetType: 'exam_certificate', details: { userId: certData.userId }, timestamp: FieldValue.serverTimestamp() });
+      await notifyUsers([certData.userId], content.certificateStatus({ status: 'restored', examTitle: certData.examTitle, certificateId }));
       return NextResponse.json({ success: true, status: 'approved' });
     }
 

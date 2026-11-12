@@ -46,6 +46,8 @@ export async function GET(
       identityNumber: owner.identityNumber ?? '',
       identityType: owner.identityType ?? '',
       institution: owner.institution ?? '',
+      photoURL: owner.photoURL ?? null,
+      gender: owner.gender ?? '',
     } : null;
 
     // Fetch session data for cognitive scores and exam code

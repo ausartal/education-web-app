@@ -20,9 +20,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
     }
 
-    const role = userDoc.data()?.role as string;
+    // The data API strips `role` from client writes, so self-registered profiles
+    // have none yet: they are students. Teachers and admins are set by an admin.
+    let role = userDoc.data()?.role as string | undefined;
     if (!role) {
-      return NextResponse.json({ error: 'No role found' }, { status: 400 });
+      role = 'student';
+      await userDoc.ref.update({ role });
     }
 
     await setUserRoleClaim(decoded.uid, role);

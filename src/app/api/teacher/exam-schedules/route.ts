@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { notifyUsers } from '@/lib/notify';
+import { content } from '@/lib/notification-content';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyTeacher } from '@/lib/auth-helpers';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
 import { randomBytes } from 'crypto';
 import {
   isExamQuestionAccessible,
@@ -230,6 +232,12 @@ export async function POST(req: NextRequest) {
     if (!storedSchedule) {
       return NextResponse.json({ error: 'Gagal membuat token ujian unik. Silakan coba lagi.' }, { status: 503 });
     }
+
+    const scheduledClass = classSnap.data()!;
+    await notifyUsers(scheduledClass.studentIds ?? [], content.examScheduled({
+      title,
+      className: scheduledClass.name as string | undefined,
+    }));
 
     return NextResponse.json({
       schedule: {

@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from '@/lib/client-firestore';
 
 export type TaxonomyLevel =
   | 'subject'

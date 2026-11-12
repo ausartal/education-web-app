@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
+import { mockPurchasesAllowed } from '@/lib/token-ledger';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +62,11 @@ export async function POST(req: NextRequest) {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Request body tidak valid' }, { status: 400 });
+  }
+
+  // Without a payment provider this would hand out free tokens, so it stays off in production.
+  if (!mockPurchasesAllowed({ NODE_ENV: process.env.NODE_ENV, ALLOW_MOCK_TOKEN_PURCHASE: process.env.ALLOW_MOCK_TOKEN_PURCHASE })) {
+    return NextResponse.json({ error: 'Pembelian token belum tersedia. Hubungi administrator untuk menambah token.', code: 'payments-unavailable' }, { status: 403 });
   }
 
   const quantity = body.quantity;

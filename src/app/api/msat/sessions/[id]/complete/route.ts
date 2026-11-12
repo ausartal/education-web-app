@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { notifyUsers, notifyAdmins } from '@/lib/notify';
+import { content } from '@/lib/notification-content';
+import { adminAuth, adminDb, runTransaction } from '@/lib/firebase-admin';
+import { FieldValue } from '@/lib/pg-firestore';
 import {
   calculateFinalScore,
   getPredikatFromStageResults,
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   try {
     const sessionDoc = await adminDb.collection('msat_sessions').doc(id).get();
-    if (!sessionDoc.exists) {
+    if (!sessionDoc.exists()) {
       return NextResponse.json({ error: 'Sesi tidak ditemukan' }, { status: 404 });
     }
 
@@ -80,48 +82,80 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       peringkat,
       conclusions,
       anomalyFlags,
+      anomalyNotified: anomalyFlags.length > 0 ? true : (session.anomalyNotified ?? false),
     });
 
-    // Create certificate request (pending admin approval, not auto-issued)
+    if (anomalyFlags.length > 0 && !session.anomalyNotified) {
+      await notifyAdmins(content.anomalyDetected({
+        examId: session.examId,
+        sessionId: id,
+        studentName: session.studentName,
+        flags: anomalyFlags,
+      }));
+    }
+
+    // Create certificate request (pending admin approval, not auto-issued).
+    // Sessions ended by the proctoring limit never get a certificate.
     let certificateGenerated = false;
+    let examTitleForNotice: string | undefined;
     const examUserDoc = await adminDb.collection('exam_users').doc(decoded.uid).get();
-    if (examUserDoc.exists) {
+    if (examUserDoc.exists() && session.terminated !== true) {
       let examTitle = 'Ujian Kimia';
+      examTitleForNotice = examTitle;
       if (session.examId) {
         const examDoc = await adminDb.collection('msat_access_code').doc(session.examId).get();
-        if (examDoc.exists) {
+        if (examDoc.exists()) {
           examTitle = examDoc.data()?.title ?? examTitle;
+          examTitleForNotice = examTitle;
         }
       }
 
-      const existingCert = await adminDb.collection('exam_certificates')
-        .where('sessionId', '==', id)
-        .limit(1)
-        .get();
+      const year = new Date().getFullYear();
+      certificateGenerated = await runTransaction(async (tx) => {
+        await tx.lock(`exam_certificate:${year}`);
 
-      if (existingCert.empty) {
-        const year = new Date().getFullYear();
-        const countSnap = await adminDb.collection('exam_certificates')
-          .where('issuedAt', '>=', new Date(`${year}-01-01`))
+        const existingCert = await adminDb.collection('exam_certificates')
+          .where('sessionId', '==', id)
+          .limit(1)
           .get();
-        const sequence = countSnap.size + 1;
-        const certificateNo = generateCertificateNo(sequence, year);
+        if (!existingCert.empty) return false;
 
-        await adminDb.collection('exam_certificates').add({
+        const counterRef = adminDb.collection('counters').doc(`exam_certificates_${year}`);
+        const counterSnap = await tx.get(counterRef);
+        let current: number;
+        if (counterSnap.exists()) {
+          current = (counterSnap.data()?.value as number) ?? 0;
+        } else {
+          const seeded = await adminDb.collection('exam_certificates')
+            .where('issuedAt', '>=', new Date(`${year}-01-01`))
+            .get();
+          current = seeded.size;
+        }
+        const sequence = current + 1;
+        await tx.set(counterRef, { value: sequence });
+
+        await tx.set(adminDb.collection('exam_certificates').doc(), {
           userId: decoded.uid,
           sessionId: id,
           examTitle,
           score: finalScore,
           predikat,
           issuedAt: FieldValue.serverTimestamp(),
-          certificateNo,
+          certificateNo: generateCertificateNo(sequence, year),
           pdfUrl: null,
           status: 'pending_approval',
           approvedAt: null,
           sentAt: null,
         });
-        certificateGenerated = true;
-      }
+        return true;
+      });
+    }
+
+    if (certificateGenerated) {
+      await notifyAdmins(content.certificatePending({
+        participant: examUserDoc.data()?.displayName,
+        examTitle: examTitleForNotice,
+      }));
     }
 
     // Log completion

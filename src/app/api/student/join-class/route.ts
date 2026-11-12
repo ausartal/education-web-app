@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { notifyUsers } from '@/lib/notify';
+import { content } from '@/lib/notification-content';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyStudent } from '@/lib/auth-helpers';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
+import { consumeRateLimit } from '@/lib/rate-limit-server';
+import { rateLimitMessage } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +17,11 @@ export async function POST(req: NextRequest) {
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
   const { joinCode } = body;
   if (!joinCode) return NextResponse.json({ error: 'joinCode required' }, { status: 400 });
+
+  const limit = await consumeRateLimit(`join_class:${auth.uid}`, 10, 10 * 60 * 1000);
+  if (!limit.allowed) {
+    return NextResponse.json({ error: rateLimitMessage(limit.retryAfterSec) }, { status: 429 });
+  }
 
   const snap = await adminDb.collection('classes')
     .where('joinCode', '==', joinCode.toUpperCase())
@@ -38,6 +47,13 @@ export async function POST(req: NextRequest) {
     targetId: classDoc.id, targetType: 'class',
     details: { joinCode, className: classData.name }, timestamp: new Date(),
   });
+
+  const studentDoc = await adminDb.collection('users').doc(auth.uid).get();
+  await notifyUsers([classData.teacherId as string], content.studentJoined({
+    studentName: (studentDoc.data()?.displayName as string) ?? 'Siswa',
+    className: (classData.name as string) ?? 'kelas',
+    classId: classDoc.id,
+  }));
 
   return NextResponse.json({ class: { id: classDoc.id, ...classData }, alreadyJoined: false });
 }

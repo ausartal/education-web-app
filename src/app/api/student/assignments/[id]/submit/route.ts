@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { notifyUsers } from '@/lib/notify';
+import { content } from '@/lib/notification-content';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from '@/lib/pg-firestore';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +39,10 @@ export async function POST(
     const classDoc = await adminDb.collection('classes').doc(data.classId as string).get();
     if (!classDoc.exists) return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
 
+    if (classDoc.data()?.status === 'archived') {
+      return NextResponse.json({ error: 'Kelas ini sudah diarsipkan.' }, { status: 403 });
+    }
+
     const studentIds: string[] = classDoc.data()?.studentIds ?? [];
     if (!studentIds.includes(decoded.uid)) {
       return NextResponse.json({ error: 'Anda tidak terdaftar di kelas ini' }, { status: 403 });
@@ -64,6 +70,15 @@ export async function POST(
       },
       updatedAt: FieldValue.serverTimestamp(),
     });
+
+    await notifyUsers([data.teacherId as string], content.assignmentSubmitted({
+      studentName,
+      title: (data.title as string) ?? 'Tugas',
+      classId: data.classId as string,
+      late: isLate,
+      assignmentId: id,
+      studentId: decoded.uid,
+    }));
 
     return NextResponse.json({ success: true, isLate });
   } catch (err) {

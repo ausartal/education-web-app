@@ -1,8 +1,9 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-import { getStorage } from 'firebase-admin/storage';
 import { getAppCheck } from 'firebase-admin/app-check';
+
+// Postgres-backed Firestore-compatible DB (replaces firebase-admin/firestore)
+import { pgDb, FieldValue, Timestamp, WriteBatch, runTransaction, DocumentReference, CollectionReference, Query } from './pg-firestore';
 
 function getServiceAccount() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
@@ -31,14 +32,13 @@ const app =
     : getApps()[0];
 
 export const adminAuth = getAuth(app);
-export const adminDb = getFirestore(app);
-export const adminStorage = getStorage(app);
+export const adminDb = pgDb;
 export const adminAppCheck = getAppCheck(app);
+export { FieldValue, Timestamp, WriteBatch, runTransaction, DocumentReference, CollectionReference, Query };
 export default app;
 
 /**
  * Set a custom claim with the user's role on their Firebase Auth token.
- * This eliminates the need for Firestore lookups in security rules.
  */
 export async function setUserRoleClaim(uid: string, role: string): Promise<void> {
   await adminAuth.setCustomUserClaims(uid, { role });

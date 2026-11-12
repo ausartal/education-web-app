@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from '@/lib/client-firestore';
 
 // ===== MSAT QUESTION (from msat_question collection) =====
 export type MSATDifficulty = 'sangat_mudah' | 'mudah' | 'sedang' | 'sukar' | 'sangat_sukar';
@@ -70,13 +70,13 @@ export interface MSATAccessCode {
 }
 
 // ===== MSAT SESSION (stored in Firestore) =====
-export type MSATSessionStatus = 'waiting' | 'in_progress' | 'on_break' | 'completed' | 'timed_out' | 'flagged';
+export type MSATSessionStatus = 'waiting' | 'in_progress' | 'on_break' | 'completed' | 'terminated' | 'cancelled' | 'timed_out' | 'flagged';
 export type MSATStageDifficulty = 'rendah' | 'medium' | 'tinggi';
 
 export interface MSATStageAnswer {
   questionId: string;
   cognitiveDomain: MSATCognitiveDomain;
-  selectedAnswer: MSATAnswerKey;
+  selectedAnswer: MSATAnswerKey | null;
   isCorrect: boolean;
   timeSpentMs: number;
 }

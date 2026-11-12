@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
 import { verifyAdmin } from '@/lib/auth-helpers';
+import { getDatabaseStats } from '@/lib/pg-firestore';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,19 +10,21 @@ export async function GET(req: NextRequest) {
 
   const startedAt = Date.now();
   try {
-    const collections = ['users', 'classes', 'materials', 'question_bank', 'exam_sessions', 'msat_sessions', 'audit_logs', 'taxonomy_nodes'];
-    const results = await Promise.all(collections.map(async name => {
-      const result = await adminDb.collection(name).count().get();
-      return { name, count: result.data().count };
-    }));
+    const stats = await getDatabaseStats();
 
     return NextResponse.json({
-      status: 'connected', provider: 'Cloud Firestore', latencyMs: Date.now() - startedAt,
-      checkedAt: new Date().toISOString(), collections: results,
-      backup: { available: false, reason: 'Status backup belum terhubung ke provider infrastructure.' },
-      migrations: { available: false, reason: 'Registry migrasi belum tersedia.' },
+      status: 'connected',
+      provider: stats.version || 'PostgreSQL',
+      latencyMs: Date.now() - startedAt,
+      checkedAt: new Date().toISOString(),
+      sizeBytes: stats.sizeBytes,
+      pool: stats.pool,
+      collections: stats.collections,
+      backup: { available: false, reason: 'Backup dikelola oleh penyedia database dan statusnya belum bisa dibaca dari aplikasi. Pastikan backup terjadwal aktif di dashboard penyedia.' },
+      migrations: { available: false, reason: 'Aplikasi memakai penyimpanan dokumen tanpa skema, jadi tidak ada registry migrasi. Skrip perubahan data ada di folder scripts.' },
     });
-  } catch {
+  } catch (err) {
+    console.error('[admin/database GET]', err);
     return NextResponse.json({ status: 'error', checkedAt: new Date().toISOString(), error: 'Pemeriksaan database gagal.' }, { status: 503 });
   }
 }
