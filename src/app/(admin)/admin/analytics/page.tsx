@@ -5,10 +5,11 @@ import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion } from 'framer-motion';
 import {
   BarChart3, Users, ClipboardList,
-  RefreshCw, Download, Target,
+  RefreshCw, Target,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { AdminPageHeader } from '@/components/admin/AdminUI';
+import { ExportMenu } from '@/components/ui/ExportMenu';
 
 interface AnalyticsData {
   dayKeys: string[];
@@ -198,28 +199,13 @@ const AdminAnalytics: FC = () => {
                   </button>
                 ))}
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {(['users', 'question_bank', 'exam_sessions'] as const).map(col => (
-                  <div key={col} className="relative group">
-                    <button className="flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                      <Download size={13} /> {col === 'users' ? 'Pengguna' : col === 'question_bank' ? 'Soal' : 'Ujian'}
-                    </button>
-                    {/* Invisible bridge — covers gap so hover doesn't break */}
-                    <div className="absolute right-0 top-full z-10 h-3 w-full group-hover:block hidden" />
-                    {/* Dropdown with visible gap */}
-                    <div className="absolute right-0 top-full z-20 mt-3 hidden min-w-[140px] flex-col gap-1 rounded-xl bg-white p-2 shadow-lg ring-1 ring-slate-200/60 group-hover:flex">
-                      <button onClick={() => handleExport(col, 'csv')}
-                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
-                        <span className="flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-[8px] font-bold text-emerald-700">CSV</span>
-                        Download CSV
-                      </button>
-                      <button onClick={() => handleExport(col, 'json')}
-                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
-                        <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-[8px] font-bold text-blue-700">JSON</span>
-                        Download JSON
-                      </button>
-                    </div>
-                  </div>
+                  <ExportMenu
+                    key={col}
+                    label={col === 'users' ? 'Pengguna' : col === 'question_bank' ? 'Soal' : 'Ujian'}
+                    onExport={fmt => handleExport(col, fmt)}
+                  />
                 ))}
               </div>
               <button onClick={() => mutate()}

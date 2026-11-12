@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC, useState, useCallback } from 'react';
+import React, { FC, useState, useCallback, useMemo } from 'react';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserRole } from '@/types/firestore';
@@ -8,10 +8,12 @@ import { useToast } from '@/hooks/useToast';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
 import { useAuth } from '@/context/AuthContext';
 import { AdminPageHeader, AdminEmptyState } from '@/components/admin/AdminUI';
+import { ExportMenu } from '@/components/ui/ExportMenu';
 import {
-  Search, Trash2, UserPlus, X, Download,
+  Search, Trash2, UserPlus, X,
   CheckSquare, Square, Users, ChevronDown, ChevronUp,
-  Zap, ClipboardList, BookOpen, FileText, Pencil, Check,
+  ClipboardList, BookOpen, FileText, Pencil, Check,
+  ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Copy,
 } from 'lucide-react';
 
 interface UserRow {
@@ -47,6 +49,18 @@ function fmtDate(iso: unknown): string {
   const d = typeof secs === 'number' ? new Date(secs * 1000) : new Date(iso as string);
   return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
+
+const toMs = (v: unknown): number => {
+  if (!v) return 0;
+  const o = v as Record<string, unknown>;
+  const secs = (o._seconds ?? o.seconds) as number | undefined;
+  if (typeof secs === 'number') return secs * 1000;
+  const t = new Date(v as string).getTime();
+  return Number.isNaN(t) ? 0 : t;
+};
+
+type SortKey = 'name' | 'role' | 'exam' | 'quiz' | 'lessons' | 'login';
+const PAGE_SIZES = [10, 25, 50, 100];
 
 function EditableStat({
   label, value, onSave, color = 'text-slate-900',
@@ -97,7 +111,7 @@ function UserExpandedRow({
 }) {
   return (
     <tr className="bg-blue-50/30">
-      <td colSpan={8} className="px-8 py-4">
+      <td colSpan={9} className="px-8 py-4">
         <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
           {/* Exam data */}
           <div>
@@ -153,7 +167,7 @@ const AdminUsers: FC = () => {
   const { data, isLoading: loading, mutate } = useAuthSWR<{ users: UserRow[] }>('/api/admin/users', {
     dedupingInterval: 3_000,
   });
-  const users = data?.users ?? [];
+  const users = useMemo(() => data?.users ?? [], [data]);
 
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');
@@ -163,19 +177,57 @@ const AdminUsers: FC = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
-  const filtered = users.filter(u => {
-    const matchSearch = !search ||
-      u.displayName?.toLowerCase().includes(search.toLowerCase()) ||
-      u.email?.toLowerCase().includes(search.toLowerCase());
-    const matchRole = filterRole === 'all' || u.role === filterRole;
-    return matchSearch && matchRole;
-  });
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const list = users.filter(u => {
+      const matchSearch = !q || u.displayName?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+      const matchRole = filterRole === 'all' || u.role === filterRole;
+      const matchStatus = filterStatus === 'all' || (filterStatus === 'active' ? u.isActive : !u.isActive);
+      return matchSearch && matchRole && matchStatus;
+    });
+    const value = (u: UserRow): string | number => {
+      switch (sortKey) {
+        case 'name': return (u.displayName || '').toLowerCase();
+        case 'role': return u.role;
+        case 'exam': return u.examSessions ?? 0;
+        case 'quiz': return u.quizCount ?? 0;
+        case 'lessons': return u.stats?.totalLessons ?? 0;
+        case 'login': return toMs(u.lastLoginAt);
+      }
+    };
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...list].sort((a, b) => {
+      const x = value(a); const y = value(b);
+      if (typeof x === 'number' && typeof y === 'number') return (x - y) * dir;
+      return String(x).localeCompare(String(y), 'id') * dir;
+    });
+  }, [users, search, filterRole, filterStatus, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(key); setSortDir(key === 'name' || key === 'role' ? 'asc' : 'desc'); }
+    setPage(1);
+  };
+
+  const copyEmail = async (email: string) => {
+    try { await navigator.clipboard.writeText(email); addToast('success', 'Email disalin'); }
+    catch { addToast('error', 'Gagal menyalin email'); }
+  };
 
   const toggleSelect = (uid: string) => {
     setSelected(prev => { const n = new Set(prev); if (n.has(uid)) { n.delete(uid); } else { n.add(uid); } return n; });
   };
-  const allSelected = filtered.length > 0 && filtered.every(u => selected.has(u.uid));
+  const allSelected = pageRows.length > 0 && pageRows.every(u => selected.has(u.uid));
 
   const getToken = useCallback(async () => user!.getIdToken(), [user]);
 
@@ -288,6 +340,9 @@ const AdminUsers: FC = () => {
   const roleCount = { student: 0, teacher: 0, admin: 0 };
   users.forEach(u => { if (u.role in roleCount) roleCount[u.role as UserRole]++; });
 
+  const SortIcon = ({ k }: { k: SortKey }) =>
+    sortKey !== k ? <ArrowUpDown size={11} className="text-slate-300" /> : sortDir === 'asc' ? <ArrowUp size={11} className="text-violet-600" /> : <ArrowDown size={11} className="text-violet-600" />;
+
   if (loading) return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-600 border-t-transparent" />
@@ -305,15 +360,7 @@ const AdminUsers: FC = () => {
         actions={
           <>
             <div className="flex items-center gap-2">
-              <div className="relative group">
-                <button className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50">
-                  <Download size={14} /> Export
-                </button>
-                <div className="absolute right-0 top-full z-10 mt-1 hidden flex-col gap-1 rounded-xl bg-white p-1.5 shadow-lg group-hover:flex min-w-[100px]">
-                  <button onClick={() => handleExport('csv')} className="rounded-lg px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50">CSV</button>
-                  <button onClick={() => handleExport('json')} className="rounded-lg px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50">JSON</button>
-                </div>
-              </div>
+              <ExportMenu label="Export" onExport={fmt => handleExport(fmt)} />
               <button onClick={() => setShowCreateModal(true)}
                 className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90">
                 <UserPlus size={15} /> Buat Pengguna
@@ -340,20 +387,27 @@ const AdminUsers: FC = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative min-w-[220px] flex-1">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)}
+          <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
             placeholder="Cari nama atau email..."
             className="w-full rounded-xl border border-slate-100 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20" />
         </div>
         <div className="flex gap-1.5">
           {(['all', 'student', 'teacher', 'admin'] as const).map(r => (
-            <button key={r} onClick={() => setFilterRole(r)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filterRole === r ? 'bg-violet-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>
-              {r === 'all' ? 'Semua' : r.charAt(0).toUpperCase() + r.slice(1)}
+            <button key={r} onClick={() => { setFilterRole(r); setPage(1); }}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filterRole === r ? 'bg-violet-600 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-100 hover:bg-slate-100'}`}>
+              {r === 'all' ? 'Semua' : r === 'student' ? 'Siswa' : r === 'teacher' ? 'Guru' : 'Admin'}
             </button>
           ))}
         </div>
+        <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value as 'all' | 'active' | 'inactive'); setPage(1); }}
+          aria-label="Filter status"
+          className="rounded-xl border border-slate-100 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm outline-none focus:border-violet-400">
+          <option value="all">Semua status</option>
+          <option value="active">Aktif</option>
+          <option value="inactive">Nonaktif</option>
+        </select>
       </div>
 
       {/* Bulk action bar */}
@@ -377,34 +431,59 @@ const AdminUsers: FC = () => {
       </AnimatePresence>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[920px] text-left text-sm">
           <thead>
-            <tr className="border-b border-slate-100 text-xs text-slate-500">
-              <th className="px-4 py-4 font-medium">
-                <button onClick={allSelected ? () => setSelected(new Set()) : () => setSelected(new Set(filtered.map(u => u.uid)))}
+            <tr className="border-b border-slate-100 bg-slate-50/70 text-[11px] text-slate-500">
+              <th className="w-12 px-4 py-3.5">
+                <button aria-label="Pilih semua di halaman ini" onClick={allSelected ? () => setSelected(prev => { const n = new Set(prev); pageRows.forEach(u => n.delete(u.uid)); return n; }) : () => setSelected(prev => { const n = new Set(prev); pageRows.forEach(u => n.add(u.uid)); return n; })}
                   className="text-slate-400 hover:text-slate-600">
                   {allSelected ? <CheckSquare size={15} className="text-violet-600" /> : <Square size={15} />}
                 </button>
               </th>
-              <th className="px-4 py-4 font-medium">Pengguna</th>
-              <th className="px-4 py-4 font-medium">Role</th>
-              <th className="px-4 py-4 font-medium">Status</th>
-              <th className="px-4 py-4 font-medium"><Zap size={12} className="inline" /> XP</th>
-              <th className="px-4 py-4 font-medium"><ClipboardList size={12} className="inline" /> Ujian</th>
-              <th className="px-4 py-4 font-medium"><BookOpen size={12} className="inline" /> Kuis</th>
-              <th className="px-4 py-4 font-medium"><FileText size={12} className="inline" /> Materi</th>
-              <th className="px-4 py-4 font-medium">Aksi</th>
+              <th className="px-4 py-3.5 font-semibold" aria-sort={sortKey === 'name' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                <button onClick={() => toggleSort('name')} className="inline-flex items-center gap-1.5 uppercase tracking-wide hover:text-slate-800">
+                  Pengguna <SortIcon k="name" />
+                </button>
+              </th>
+              <th className="px-4 py-3.5 font-semibold" aria-sort={sortKey === 'role' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                <button onClick={() => toggleSort('role')} className="inline-flex items-center gap-1.5 uppercase tracking-wide hover:text-slate-800">
+                  Role <SortIcon k="role" />
+                </button>
+              </th>
+              <th className="px-4 py-3.5 font-semibold uppercase tracking-wide">Status</th>
+              <th className="px-4 py-3.5 font-semibold" aria-sort={sortKey === 'exam' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                <button onClick={() => toggleSort('exam')} className="inline-flex items-center gap-1.5 uppercase tracking-wide hover:text-slate-800">
+                  <ClipboardList size={12} />Ujian <SortIcon k="exam" />
+                </button>
+              </th>
+              <th className="px-4 py-3.5 font-semibold" aria-sort={sortKey === 'quiz' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                <button onClick={() => toggleSort('quiz')} className="inline-flex items-center gap-1.5 uppercase tracking-wide hover:text-slate-800">
+                  <BookOpen size={12} />Latihan <SortIcon k="quiz" />
+                </button>
+              </th>
+              <th className="px-4 py-3.5 font-semibold" aria-sort={sortKey === 'lessons' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                <button onClick={() => toggleSort('lessons')} className="inline-flex items-center gap-1.5 uppercase tracking-wide hover:text-slate-800">
+                  <FileText size={12} />Materi <SortIcon k="lessons" />
+                </button>
+              </th>
+              <th className="px-4 py-3.5 font-semibold" aria-sort={sortKey === 'login' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                <button onClick={() => toggleSort('login')} className="inline-flex items-center gap-1.5 uppercase tracking-wide hover:text-slate-800">
+                  Login terakhir <SortIcon k="login" />
+                </button>
+              </th>
+              <th className="px-4 py-3.5 text-right font-semibold uppercase tracking-wide">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((u, i) => (
+            {pageRows.map(u => (
               <React.Fragment key={u.uid}>
-                <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
-                  className={`cursor-pointer border-b border-slate-50 hover:bg-slate-50 ${selected.has(u.uid) ? 'bg-violet-50' : ''}`}
+                <tr
+                  className={`cursor-pointer border-b border-slate-50 transition-colors hover:bg-slate-50 ${selected.has(u.uid) ? 'bg-violet-50/70' : ''} ${!u.isActive ? 'opacity-70' : ''}`}
                   onClick={() => setExpandedId(expandedId === u.uid ? null : u.uid)}>
                   <td className="px-4 py-3" onClick={e => { e.stopPropagation(); toggleSelect(u.uid); }}>
-                    <button className="text-slate-400 hover:text-violet-600">
+                    <button aria-label="Pilih pengguna" className="text-slate-400 hover:text-violet-600">
                       {selected.has(u.uid) ? <CheckSquare size={15} className="text-violet-600" /> : <Square size={15} />}
                     </button>
                   </td>
@@ -413,39 +492,47 @@ const AdminUsers: FC = () => {
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-400 text-xs font-bold text-white">
                         {u.displayName?.charAt(0).toUpperCase() ?? '?'}
                       </div>
-                      <div>
-                        <p className="font-medium text-slate-900">{u.displayName}</p>
-                        <p className="text-xs text-slate-400">{u.email}</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-900">{u.displayName || 'Tanpa nama'}</p>
+                        <p className="truncate text-xs text-slate-400">{u.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <select value={u.role} onChange={e => handleChangeRole(u.uid, e.target.value as UserRole)}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold outline-none cursor-pointer ${roleColors[u.role]}`}>
-                      <option value="student">Student</option>
-                      <option value="teacher">Teacher</option>
+                      aria-label={`Role ${u.displayName}`}
+                      className={`cursor-pointer rounded-full px-3 py-1 text-xs font-semibold outline-none ${roleColors[u.role]}`}>
+                      <option value="student">Siswa</option>
+                      <option value="teacher">Guru</option>
                       <option value="admin">Admin</option>
                     </select>
                   </td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <button onClick={() => handleToggleActive(u.uid, u.isActive)}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${u.isActive ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${u.isActive ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${u.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                       {u.isActive ? 'Aktif' : 'Nonaktif'}
                     </button>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`font-bold ${u.examSessions > 0 ? 'text-fuchsia-600' : 'text-slate-300'}`}>
-                      {u.examSessions}
-                    </span>
-                    {u.examSessions > 0 && (
-                      <span className="text-[10px] text-slate-400 ml-1">({u.examCompleted} selesai)</span>
-                    )}
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {u.examSessions > 0 ? (
+                      <div>
+                        <p className="font-bold text-fuchsia-600">{u.examSessions} <span className="text-[11px] font-medium text-slate-400">sesi</span></p>
+                        <p className="text-[11px] text-slate-400">{u.examCompleted} selesai{u.examAvgScore ? ` · rata-rata ${u.examAvgScore}` : ''}</p>
+                      </div>
+                    ) : <span className="text-slate-300">—</span>}
                   </td>
-                  <td className="px-4 py-3 font-bold text-amber-500">{u.quizCount || <span className="text-slate-300">0</span>}</td>
+                  <td className="px-4 py-3 font-bold text-amber-500">{u.quizCount || <span className="font-normal text-slate-300">—</span>}</td>
+                  <td className="px-4 py-3 font-bold text-blue-600">{u.stats?.totalLessons || <span className="font-normal text-slate-300">—</span>}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{fmtDate(u.lastLoginAt)}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => setExpandedId(expandedId === u.uid ? null : u.uid)}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+                    <div className="flex items-center justify-end gap-0.5">
+                      <button aria-label="Salin email" title="Salin email" onClick={() => copyEmail(u.email)}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                        <Copy size={14} />
+                      </button>
+                      <button aria-label={expandedId === u.uid ? 'Tutup detail' : 'Lihat detail'} title="Detail" onClick={() => setExpandedId(expandedId === u.uid ? null : u.uid)}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
                         {expandedId === u.uid ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </button>
                       <button aria-label="Hapus" title="Hapus" onClick={() => handleDelete(u.uid)}
@@ -454,7 +541,7 @@ const AdminUsers: FC = () => {
                       </button>
                     </div>
                   </td>
-                </motion.tr>
+                </tr>
                 {expandedId === u.uid && (
                   <UserExpandedRow u={u} onUpdateStats={handleUpdateStats} />
                 )}
@@ -462,8 +549,27 @@ const AdminUsers: FC = () => {
             ))}
           </tbody>
         </table>
+        </div>
         {filtered.length === 0 && (
-          <AdminEmptyState icon={<Users size={24} />} title="Tidak ada pengguna ditemukan" description="Coba ubah filter peran atau kata kunci pencarian." />
+          <AdminEmptyState icon={<Users size={24} />} title="Tidak ada pengguna ditemukan" description="Coba ubah filter peran, status, atau kata kunci pencarian." />
+        )}
+        {filtered.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 text-xs text-slate-500">
+            <div className="flex items-center gap-2">
+              <span>Menampilkan {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filtered.length)} dari {filtered.length}</span>
+              <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} aria-label="Jumlah baris per halaman"
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs outline-none">
+                {PAGE_SIZES.map(n => <option key={n} value={n}>{n} / halaman</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} aria-label="Halaman sebelumnya"
+                className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-slate-50 disabled:opacity-40"><ChevronLeft size={14} /></button>
+              <span className="px-2 font-semibold text-slate-700">{safePage} / {totalPages}</span>
+              <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} aria-label="Halaman berikutnya"
+                className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-slate-50 disabled:opacity-40"><ChevronRight size={14} /></button>
+            </div>
+          </div>
         )}
       </div>
 
