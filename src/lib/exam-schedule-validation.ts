@@ -18,6 +18,7 @@ export interface CreateExamScheduleInput {
   module: string;
   domainIds: string[];
   scheduledAt?: Date;
+  closesAt?: Date;
   durationMinutes: number;
   maxAttempts: number;
   shuffleQuestions: boolean;
@@ -89,6 +90,20 @@ function normalizeCustomQuestion(value: unknown): StoredExamQuestion | null {
   return { id, stem, options, correctAnswer: answer as ExamAnswerKey };
 }
 
+export function validateExamWindow(opensMs: number | null, closesMs: number | null, nowMs = Date.now()): string | null {
+  if (closesMs === null) return null;
+  if (closesMs <= nowMs) return 'Waktu ditutup harus setelah sekarang';
+  if (opensMs !== null && closesMs <= opensMs) return 'Waktu ditutup harus setelah waktu dibuka';
+  return null;
+}
+
+export function examWindowError(opensMs: number | null, closesMs: number | null, nowMs = Date.now()): string | null {
+  const fmt = (ms: number) => new Date(ms).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Jakarta' }) + ' WIB';
+  if (opensMs !== null && nowMs < opensMs) return `Ujian belum dibuka. Dibuka pada ${fmt(opensMs)}.`;
+  if (closesMs !== null && nowMs > closesMs) return `Ujian sudah ditutup sejak ${fmt(closesMs)}.`;
+  return null;
+}
+
 export function parseCreateExamSchedule(body: unknown): CreateExamScheduleValidation {
   if (!isRecord(body)) return { ok: false, error: 'Payload ujian tidak valid' };
 
@@ -144,6 +159,15 @@ export function parseCreateExamSchedule(body: unknown): CreateExamScheduleValida
     }
   }
 
+  let closesAt: Date | undefined;
+  if (body.closesAt !== undefined && body.closesAt !== null && body.closesAt !== '') {
+    if (typeof body.closesAt !== 'string') return { ok: false, error: 'Waktu penutupan tidak valid' };
+    closesAt = new Date(body.closesAt);
+    if (Number.isNaN(closesAt.getTime())) return { ok: false, error: 'Waktu penutupan tidak valid' };
+    const windowError = validateExamWindow(scheduledAt?.getTime() ?? null, closesAt.getTime());
+    if (windowError) return { ok: false, error: windowError };
+  }
+
   let domainIds: string[] = [];
   let selectedQuestionIds: string[] = [];
   const customQuestions: StoredExamQuestion[] = [];
@@ -184,6 +208,7 @@ export function parseCreateExamSchedule(body: unknown): CreateExamScheduleValida
       module: moduleName,
       domainIds,
       scheduledAt,
+      closesAt,
       durationMinutes,
       maxAttempts: maxAttempts as number,
       shuffleQuestions,

@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
   const {
     classId, title, module, domainIds, scheduledAt, durationMinutes,
-    maxAttempts, shuffleQuestions, examType, customQuestions, selectedQuestionIds,
+    maxAttempts, shuffleQuestions, examType, customQuestions, selectedQuestionIds, closesAt,
   } = parsed.value;
   const isCustom = examType === 'custom';
   const isManual = examType === 'manual';
@@ -176,6 +176,7 @@ export async function POST(req: NextRequest) {
       module,
       domainIds: (isCustom || isManual) ? [] : domainIds,
       scheduledAt: scheduledAt ?? new Date(),
+      closesAt: closesAt ?? null,
       durationMinutes,
       maxAttempts,
       shuffleQuestions,
@@ -245,6 +246,7 @@ export async function POST(req: NextRequest) {
         ...storedSchedule,
         examToken,
         scheduledAt: (storedSchedule.scheduledAt as Date).toISOString(),
+        closesAt: closesAt ? closesAt.toISOString() : null,
         createdAt: new Date().toISOString(),
       },
     }, { status: 201 });

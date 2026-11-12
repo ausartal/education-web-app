@@ -3,6 +3,8 @@ import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from '@/lib/pg-firestore';
 import { consumeRateLimit } from '@/lib/rate-limit-server';
 import { rateLimitMessage } from '@/lib/rate-limit';
+import { toMillis } from '@/lib/msat-session';
+import { examWindowError } from '@/lib/exam-schedule-validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,6 +112,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Check attempts limit
+    const windowErr = examWindowError(toMillis(schedule.scheduledAt), toMillis(schedule.closesAt));
+    if (windowErr) return NextResponse.json({ error: windowErr }, { status: 403 });
+
     const attempts = await countAttempts(scheduleDoc.id, decoded.uid);
     if (maxAttempts > 0 && attempts.count >= maxAttempts) {
       return NextResponse.json({ error: 'Kamu sudah mencapai batas percobaan ujian ini', completed: true, sessionId: attempts.firstId }, { status: 409 });
@@ -264,6 +269,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Check attempts limit for MSAT
+  const windowErrMsat = examWindowError(toMillis(schedule.scheduledAt), toMillis(schedule.closesAt));
+  if (windowErrMsat) return NextResponse.json({ error: windowErrMsat }, { status: 403 });
+
   const attemptsMsat = await countAttempts(scheduleDoc.id, decoded.uid);
   const maxAttemptsMsat = (schedule.maxAttempts as number) ?? 1;
   if (maxAttemptsMsat > 0 && attemptsMsat.count >= maxAttemptsMsat) {

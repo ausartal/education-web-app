@@ -24,7 +24,7 @@ interface ScheduleItem {
   id: string; title: string; module: string; domainIds: string[];
   examToken: string; status: string; durationMinutes: number;
   classId: string; sessionCount: number; completedCount: number; avgScore: number | null;
-  scheduledAt: unknown; examType?: string; maxAttempts?: number;
+  scheduledAt: unknown; closesAt?: unknown; examType?: string; maxAttempts?: number;
 }
 interface TPDef {
   id: string; code: string; name: string; isComplete: boolean; totalQuestions: number; coveredPaths?: number;
@@ -52,6 +52,25 @@ const TIER_PATH_LABELS: Record<string, string> = {
   anchor: 'T1 Anchor', mudah: 'T2 Mudah', sukar: 'T2 Sukar',
   sangat_mudah: 'T3 Sgt Mudah', sedang_a: 'T3 Sedang A',
   sedang_b: 'T3 Sedang B', sangat_sukar: 'T3 Sgt Sukar',
+};
+
+const toMs = (v: unknown): number | null => {
+  if (!v) return null;
+  if (typeof v === 'string') { const t = Date.parse(v); return Number.isNaN(t) ? null : t; }
+  const o = v as { _seconds?: number; seconds?: number };
+  const sec = o._seconds ?? o.seconds;
+  return typeof sec === 'number' ? sec * 1000 : null;
+};
+const toLocalInput = (v: unknown): string => {
+  const ms = toMs(v);
+  if (ms === null) return '';
+  const d = new Date(ms - new Date(ms).getTimezoneOffset() * 60000);
+  return d.toISOString().slice(0, 16);
+};
+const fromLocalInput = (v: string): string | null => (v ? new Date(v).toISOString() : null);
+const fmtWindow = (v: unknown): string => {
+  const ms = toMs(v);
+  return ms === null ? '' : new Date(ms).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
 
 const emptyCustomQ = (): CustomQuestion => ({
@@ -85,10 +104,10 @@ const TeacherUjianPage: FC = () => {
   const [saving, setSaving] = useState(false);
 
   // ── Form state ──
-  const [examSource, setExamSource] = useState<'tp' | 'manual' | 'custom'>('tp');
+  const [examSource, setExamSource] = useState<'tp' | 'manual' | 'custom'>('manual');
   const [form, setForm] = useState({
     classId: '', title: '', durationMinutes: 50, maxAttempts: 1, shuffleQuestions: false,
-    domainIds: [] as string[],
+    domainIds: [] as string[], opensAt: '', closesAt: '',
   });
 
   // Manual picker state
@@ -117,8 +136,8 @@ const TeacherUjianPage: FC = () => {
   const getClassName = (classId: string) => classes.find(c => c.id === classId)?.name || '—';
 
   const resetForm = () => {
-    setForm({ classId: '', title: '', durationMinutes: 50, maxAttempts: 1, shuffleQuestions: false, domainIds: [] });
-    setExamSource('tp');
+    setForm({ classId: '', title: '', durationMinutes: 50, maxAttempts: 1, shuffleQuestions: false, domainIds: [], opensAt: '', closesAt: '' });
+    setExamSource('manual');
     setManualFilterTP(''); setManualFilterTier(''); setManualSelectedIds([]);
     setCustomQuestions([emptyCustomQ()]);
   };
@@ -129,7 +148,12 @@ const TeacherUjianPage: FC = () => {
     setTimeout(() => setCopiedToken(null), 2000);
   };
 
-  const canCreate = !!(form.classId && form.title && (
+  const windowInvalid = !!form.closesAt && (
+    new Date(form.closesAt).getTime() <= Date.now() ||
+    (!!form.opensAt && new Date(form.closesAt).getTime() <= new Date(form.opensAt).getTime())
+  );
+
+  const canCreate = !windowInvalid && !!(form.classId && form.title && (
     examSource === 'tp' ? form.domainIds.length > 0
     : examSource === 'manual' ? manualSelectedIds.length > 0
     : customQuestions.length > 0 && customQuestions.every(q => q.stem.trim())
@@ -151,6 +175,8 @@ const TeacherUjianPage: FC = () => {
           maxAttempts: form.maxAttempts,
           shuffleQuestions: form.shuffleQuestions,
           examType: examSource,
+          ...(form.opensAt && { scheduledAt: fromLocalInput(form.opensAt) }),
+          ...(form.closesAt && { closesAt: fromLocalInput(form.closesAt) }),
           ...(examSource === 'tp' && { domainIds: form.domainIds }),
           ...(examSource === 'manual' && { selectedQuestionIds: manualSelectedIds }),
           ...(examSource === 'custom' && { customQuestions }),
@@ -172,14 +198,27 @@ const TeacherUjianPage: FC = () => {
     setSaving(true);
     try {
       const t = await getToken();
-      await fetch(`/api/teacher/exam-schedules/${editItem.id}`, {
+      const res = await fetch(`/api/teacher/exam-schedules/${editItem.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify({ title: form.title, status: editItem.status, domainIds: form.domainIds, durationMinutes: form.durationMinutes, maxAttempts: form.maxAttempts }),
+        body: JSON.stringify({
+          title: form.title,
+          status: editItem.status,
+          ...(editItem.examType === 'tp' && { domainIds: form.domainIds }),
+          durationMinutes: form.durationMinutes,
+          maxAttempts: form.maxAttempts,
+          scheduledAt: fromLocalInput(form.opensAt),
+          closesAt: fromLocalInput(form.closesAt),
+        }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        addToast('error', (err as { error?: string }).error || 'Gagal menyimpan perubahan');
+        return;
+      }
       setEditItem(null);
       mutateScheds();
-    } catch { /* ignore */ } finally { setSaving(false); }
+    } catch { addToast('error', 'Terjadi kesalahan jaringan'); } finally { setSaving(false); }
   };
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -270,6 +309,11 @@ const TeacherUjianPage: FC = () => {
                       <p className="mt-0.5 text-xs text-gray-400">
                         {sch.examType === 'tp' ? `${sch.domainIds?.length || 0} TP` : 'Soal linear'} · {sch.durationMinutes} menit
                       </p>
+                      {(toMs(sch.scheduledAt) !== null || toMs(sch.closesAt) !== null) && (
+                        <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-400">
+                          <Clock size={11} /> Dibuka {fmtWindow(sch.scheduledAt) || 'langsung'} · Ditutup {fmtWindow(sch.closesAt) || 'tanpa batas'}
+                        </p>
+                      )}
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
                       <div className="rounded-xl bg-primary/5 px-4 py-2 text-center">
@@ -303,7 +347,7 @@ const TeacherUjianPage: FC = () => {
                       <button
                         onClick={() => {
                           setEditItem(sch);
-                          setForm({ classId: sch.classId, title: sch.title, domainIds: sch.domainIds || [], durationMinutes: sch.durationMinutes, maxAttempts: sch.maxAttempts ?? 1, shuffleQuestions: false });
+                          setForm({ classId: sch.classId, title: sch.title, domainIds: sch.domainIds || [], durationMinutes: sch.durationMinutes, maxAttempts: sch.maxAttempts ?? 1, shuffleQuestions: false, opensAt: toLocalInput(sch.scheduledAt), closesAt: toLocalInput(sch.closesAt) });
                         }}
                         className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><Pencil size={14} />
                       </button>
@@ -358,15 +402,15 @@ const TeacherUjianPage: FC = () => {
                     <label className="mb-2 block text-xs font-semibold text-gray-700">Jenis Soal</label>
                     <div className="grid grid-cols-3 gap-2">
                       {[
-                        { key: 'tp' as const, icon: BookOpen, label: 'MSAT Adaptif', sub: 'Dari bank soal, urutan adaptif', sel: 'border-primary/60 bg-primary/5 text-primary', icon_sel: 'text-primary', unsel: 'border-gray-200 hover:border-primary/30 text-gray-600' },
+                        { key: 'tp' as const, icon: BookOpen, label: 'MSAT Adaptif', sub: tps.length === 0 && !tpLoading ? 'Perlu TP di bank soal' : 'Dari bank soal, urutan adaptif', sel: 'border-primary/60 bg-primary/5 text-primary', icon_sel: 'text-primary', unsel: 'border-gray-200 hover:border-primary/30 text-gray-600' },
                         { key: 'manual' as const, icon: ListChecks, label: 'Pilih Soal Manual', sub: 'Pilih soal spesifik dari bank', sel: 'border-blue-500 bg-blue-50 text-blue-800', icon_sel: 'text-blue-600', unsel: 'border-gray-200 hover:border-blue-200 text-gray-600' },
                         { key: 'custom' as const, icon: PenLine, label: 'Tulis Sendiri', sub: 'Buat soal pilihan ganda baru', sel: 'border-primary bg-primary/5 text-primary', icon_sel: 'text-primary', unsel: 'border-gray-200 hover:border-primary text-gray-600' },
                       ].map(opt => {
                         const Icon = opt.icon;
                         const selected = examSource === opt.key;
                         return (
-                          <button key={opt.key} type="button" onClick={() => setExamSource(opt.key)}
-                            className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-3 py-3.5 text-center transition-all ${selected ? opt.sel : opt.unsel}`}>
+                          <button key={opt.key} type="button" disabled={opt.key === 'tp' && !tpLoading && tps.length === 0} onClick={() => setExamSource(opt.key)}
+                            className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-3 py-3.5 text-center transition-all disabled:cursor-not-allowed disabled:opacity-50 ${selected ? opt.sel : opt.unsel}`}>
                             <Icon size={20} className={selected ? opt.icon_sel : 'text-gray-400'} />
                             <span className="text-xs font-bold leading-tight">{opt.label}</span>
                             <span className="text-[10px] text-gray-400 leading-tight">{opt.sub}</span>
@@ -543,6 +587,21 @@ const TeacherUjianPage: FC = () => {
                     </div>
                   )}
 
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-gray-700">Dibuka pada</label>
+                      <input type="datetime-local" value={form.opensAt} onChange={e => setForm(f => ({ ...f, opensAt: e.target.value }))}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary/60" />
+                      <p className="mt-1 text-[10px] text-gray-400">Kosong = langsung dibuka</p>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-gray-700">Ditutup pada</label>
+                      <input type="datetime-local" value={form.closesAt} onChange={e => setForm(f => ({ ...f, closesAt: e.target.value }))}
+                        className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:border-primary/60 ${windowInvalid ? "border-rose-300" : "border-gray-200"}`} />
+                      <p className={`mt-1 text-[10px] ${windowInvalid ? "text-rose-500" : "text-gray-400"}`}>{windowInvalid ? "Harus setelah waktu dibuka dan setelah sekarang" : "Kosong = tanpa batas waktu"}</p>
+                    </div>
+                  </div>
+
                   {/* ── Duration + Max attempts ── */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -631,6 +690,21 @@ const TeacherUjianPage: FC = () => {
                       </div>
                     </div>
                   )}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-gray-700">Dibuka pada</label>
+                      <input type="datetime-local" value={form.opensAt} onChange={e => setForm(f => ({ ...f, opensAt: e.target.value }))}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary/60" />
+                      <p className="mt-1 text-[10px] text-gray-400">Kosong = langsung dibuka</p>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-gray-700">Ditutup pada</label>
+                      <input type="datetime-local" value={form.closesAt} onChange={e => setForm(f => ({ ...f, closesAt: e.target.value }))}
+                        className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:border-primary/60 ${windowInvalid ? "border-rose-300" : "border-gray-200"}`} />
+                      <p className={`mt-1 text-[10px] ${windowInvalid ? "text-rose-500" : "text-gray-400"}`}>{windowInvalid ? "Harus setelah waktu dibuka dan setelah sekarang" : "Kosong = tanpa batas waktu"}</p>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold text-gray-700">Durasi (menit)</label>

@@ -174,3 +174,23 @@ describe('manual question authorization', () => {
     });
   });
 });
+
+describe('exam window', () => {
+  const now = Date.UTC(2026, 0, 10, 5, 0, 0);
+
+  it('blocks before opening and after closing, allows inside and with no limits', async () => {
+    const { examWindowError } = await import('@/lib/exam-schedule-validation');
+    expect(examWindowError(now + 60_000, null, now)).toContain('belum dibuka');
+    expect(examWindowError(null, now - 60_000, now)).toContain('sudah ditutup');
+    expect(examWindowError(now - 60_000, now + 60_000, now)).toBeNull();
+    expect(examWindowError(null, null, now)).toBeNull();
+  });
+
+  it('rejects a close time that is past or before the open time', async () => {
+    const { validateExamWindow } = await import('@/lib/exam-schedule-validation');
+    expect(validateExamWindow(null, now - 1, now)).not.toBeNull();
+    expect(validateExamWindow(now + 120_000, now + 60_000, now)).not.toBeNull();
+    expect(validateExamWindow(now + 60_000, now + 120_000, now)).toBeNull();
+    expect(validateExamWindow(null, null, now)).toBeNull();
+  });
+});
