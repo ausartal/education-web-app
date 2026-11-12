@@ -20,31 +20,30 @@ const TeacherDashboard: FC = () => {
   const [questionCount, setQuestionCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const profileUid = profile?.uid;
   const fetchDashboard = useCallback(async () => {
-    {
-      try {
-        const [studentsSnap, materialSnap, questionSnap] = await Promise.all([
-          getDocs(query(collection(db, 'users'), where('role', '==', 'student'))),
-          getDocs(collection(db, 'materials')),
-          getDocs(collection(db, 'question_bank')),
-        ]);
-        setStudents(studentsSnap.docs.map((document) => {
-          const data = document.data();
-          return {
-            uid: document.id,
-            displayName: data.displayName ?? 'Siswa',
-            xp: data.stats?.xp || 0,
-            totalLessons: data.stats?.totalLessons || 0,
-            lastLoginAt: data.lastLoginAt?.toDate?.()?.toLocaleDateString('id-ID') || '-',
-          };
-        }));
-        setMaterialCount(materialSnap.size);
-        setQuestionCount(questionSnap.size);
-      } catch {
-        // Keep the dashboard usable when optional overview data is unavailable.
-      } finally { setLoading(false); }
+    if (!profileUid) return;
+    const [studentsRes, materialRes, questionRes] = await Promise.allSettled([
+      getDocs(query(collection(db, 'users'), where('role', '==', 'student'))),
+      getDocs(collection(db, 'materials')),
+      getDocs(collection(db, 'question_bank')),
+    ]);
+    if (studentsRes.status === 'fulfilled') {
+      setStudents(studentsRes.value.docs.map((document) => {
+        const data = document.data();
+        return {
+          uid: document.id,
+          displayName: data.displayName ?? 'Siswa',
+          xp: data.stats?.xp || 0,
+          totalLessons: data.stats?.totalLessons || 0,
+          lastLoginAt: data.lastLoginAt?.toDate?.()?.toLocaleDateString('id-ID') || '-',
+        };
+      }));
     }
-  }, []);
+    if (materialRes.status === 'fulfilled') setMaterialCount(materialRes.value.size);
+    if (questionRes.status === 'fulfilled') setQuestionCount(questionRes.value.size);
+    setLoading(false);
+  }, [profileUid]);
 
   useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
   useLivePoll(fetchDashboard);

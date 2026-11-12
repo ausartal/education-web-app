@@ -151,7 +151,12 @@ async function verifyAuth(req: NextRequest): Promise<{ uid: string; role?: strin
   try {
     const app = getAdminApp();
     const decoded = await getAuth(app).verifyIdToken(authHeader.slice(7));
-    return { uid: decoded.uid, role: decoded.role as string | undefined };
+    const res = await pool.query(
+      "SELECT data->>'role' AS role FROM documents WHERE collection = 'users' AND id = $1",
+      [decoded.uid],
+    );
+    const dbRole = res.rows[0]?.role as string | undefined;
+    return { uid: decoded.uid, role: dbRole || (decoded.role as string | undefined) };
   } catch {
     return null;
   }

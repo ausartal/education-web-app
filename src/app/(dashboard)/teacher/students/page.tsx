@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { collection, getDocs, query, where } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { Search, Zap, Flame, BookOpen, Trophy } from 'lucide-react';
 
@@ -21,16 +22,18 @@ interface Student {
 }
 
 const TeacherStudents: FC = () => {
+  const { profile } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const profileUid = profile?.uid;
   const fetchStudents = useCallback(async () => {
-    {
-      try {
-        const snap = await getDocs(
-          query(collection(db, 'users'), where('role', '==', 'student'))
-        );
+    if (!profileUid) return;
+    try {
+      const snap = await getDocs(
+        query(collection(db, 'users'), where('role', '==', 'student'))
+      );
         setStudents(
           snap.docs.map((d) => {
             const data = d.data();
@@ -47,12 +50,11 @@ const TeacherStudents: FC = () => {
           })
         );
       } catch {
-        // Permission error or network failure — leave students empty
+        // permission error or network failure — leave empty
       } finally {
         setLoading(false);
       }
-    }
-  }, []);
+  }, [profileUid]);
 
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
   useLivePoll(fetchStudents);

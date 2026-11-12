@@ -99,13 +99,14 @@ const TeacherMessages: FC = () => {
 
   // Load contacts (students)
   useEffect(() => {
+    if (!profile) return;
     getDocs(query(collection(db, 'users'), where('role', '==', 'student')))
       .then(snap => {
         setContacts(snap.docs.map(d => ({ uid: d.id, displayName: d.data().displayName || 'Siswa' })));
       })
       .catch(() => { /* leave empty */ })
       .finally(() => setLoading(false));
-  }, []);
+  }, [profile?.uid]);
 
   // Real-time messages listener
   useEffect(() => {

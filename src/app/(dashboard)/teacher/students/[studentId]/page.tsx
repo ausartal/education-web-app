@@ -3,6 +3,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useLivePoll } from '@/hooks/useLivePoll';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import {
   doc,
@@ -20,6 +21,7 @@ import { BookOpen, Target, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 const StudentDetail: FC = () => {
+  const { profile } = useAuth();
   const params = useParams();
   const studentId = params.studentId as string;
   const [student, setStudent] = useState<UserProfile | null>(null);
@@ -29,8 +31,9 @@ const StudentDetail: FC = () => {
 
   const notesLoaded = useRef(false);
 
+  const profileUid = profile?.uid;
   const fetchStudent = useCallback(async () => {
-    if (!studentId) return;
+    if (!profileUid || !studentId) return;
     {
       try {
         const snap = await getDoc(doc(db, 'users', studentId));
@@ -49,7 +52,7 @@ const StudentDetail: FC = () => {
         setLoading(false);
       }
     }
-  }, [studentId]);
+  }, [profileUid, studentId]);
 
   useEffect(() => { fetchStudent(); }, [fetchStudent]);
   useLivePoll(fetchStudent);

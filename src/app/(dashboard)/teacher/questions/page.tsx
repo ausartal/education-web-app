@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import {
@@ -13,6 +13,8 @@ import {
 } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { Question, Difficulty, AnswerKey } from '@/types/firestore';
+import { useAuth } from '@/context/AuthContext';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { useToast } from '@/hooks/useToast';
 import { PlusCircle, Trash2, Upload } from 'lucide-react';
@@ -34,6 +36,7 @@ const diffLabels: Record<Difficulty, string> = {
 };
 
 const TeacherQuestions: FC = () => {
+  const { profile } = useAuth();
   const { addToast } = useToast();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filter, setFilter] = useState<Difficulty | 'all'>('all');
@@ -52,17 +55,19 @@ const TeacherQuestions: FC = () => {
     baseTime: 60,
   });
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const snap = await getDocs(collection(db, 'question_bank'));
-        setQuestions(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Question));
-      } catch { /* leave empty */ } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, []);
+  const profileUid = profile?.uid;
+  const fetchQuestions = useCallback(async () => {
+    if (!profileUid) return;
+    try {
+      const snap = await getDocs(collection(db, 'question_bank'));
+      setQuestions(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Question));
+    } catch { /* leave empty */ } finally {
+      setLoading(false);
+    }
+  }, [profileUid]);
+
+  useEffect(() => { fetchQuestions(); }, [fetchQuestions]);
+  useLivePoll(fetchQuestions);
 
   const filtered =
     filter === 'all'

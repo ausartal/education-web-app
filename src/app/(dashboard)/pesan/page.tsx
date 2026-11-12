@@ -93,6 +93,7 @@ const PesanPage: FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (!profile) return;
     getDocs(query(collection(db, 'users'), where('role', 'in', ['teacher', 'admin'])))
       .then(snap => {
         setContacts(snap.docs.map(d => ({
@@ -103,7 +104,7 @@ const PesanPage: FC = () => {
       })
       .catch(() => { })
       .finally(() => setLoading(false));
-  }, []);
+  }, [profile?.uid]);
 
   useEffect(() => {
     if (!selectedUid || !profile) { setMessages([]); return; }
