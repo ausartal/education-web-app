@@ -46,6 +46,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!snap.exists) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   if (snap.data()!.teacherId !== teacher.uid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+  const sessions = await adminDb.collection('exam_sessions').where('examScheduleId', '==', params.id).limit(1).get();
+  if (!sessions.empty) {
+    return NextResponse.json({ error: 'Ujian ini sudah dikerjakan siswa. Tutup ujian agar tidak bisa dimasuki lagi, hasilnya tetap tersimpan.' }, { status: 409 });
+  }
+
   await ref.delete();
 
   await adminDb.collection('audit_logs').add({

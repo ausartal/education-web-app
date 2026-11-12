@@ -80,6 +80,7 @@ const TeacherUjianPage: FC = () => {
   const [editItem, setEditItem] = useState<ScheduleItem | null>(null);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState('');
   const [saving, setSaving] = useState(false);
 
   // ── Form state ──
@@ -192,7 +193,12 @@ const TeacherUjianPage: FC = () => {
 
   const handleDelete = async (id: string) => {
     const t = await getToken();
-    await fetch(`/api/teacher/exam-schedules/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+    const res = await fetch(`/api/teacher/exam-schedules/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setDeleteError(json.error || 'Gagal menghapus ujian');
+      return;
+    }
     setDeleteConfirm(null);
     mutateScheds();
   };
@@ -305,7 +311,7 @@ const TeacherUjianPage: FC = () => {
                         }}
                         className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><Pencil size={14} />
                       </button>
-                      <button onClick={() => setDeleteConfirm(sch.id)} className="rounded-lg p-1.5 text-gray-400 hover:bg-rose-50 hover:text-rose-500"><Trash2 size={14} /></button>
+                      <button onClick={() => { setDeleteError(''); setDeleteConfirm(sch.id); }} className="rounded-lg p-1.5 text-gray-400 hover:bg-rose-50 hover:text-rose-500"><Trash2 size={14} /></button>
                       <Link href={`/teacher/ujian/${sch.id}/recap`}
                         className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700">
                         Rekap <ArrowRight size={12} />
@@ -670,9 +676,10 @@ const TeacherUjianPage: FC = () => {
               <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
                 className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
                 <h3 className="mb-2 font-bold text-gray-900">Hapus Ujian?</h3>
-                <p className="mb-6 text-sm text-gray-500">Jadwal akan dihapus. Sesi yang sudah berjalan tidak terpengaruh.</p>
+                <p className="mb-6 text-sm text-gray-500">Jadwal akan dihapus permanen. Ujian yang sudah dikerjakan siswa tidak bisa dihapus.</p>
+                {deleteError && <p className="mb-4 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{deleteError}</p>}
                 <div className="flex gap-3">
-                  <button onClick={() => setDeleteConfirm(null)} className="flex-1 rounded-xl bg-gray-100 py-2.5 text-sm font-semibold">Batal</button>
+                  <button onClick={() => { setDeleteConfirm(null); setDeleteError(''); }} className="flex-1 rounded-xl bg-gray-100 py-2.5 text-sm font-semibold">Batal</button>
                   <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 rounded-xl bg-rose-600 py-2.5 text-sm font-semibold text-white">Hapus</button>
                 </div>
               </motion.div>
