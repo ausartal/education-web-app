@@ -45,7 +45,7 @@ export const ExamAuthGuard: FC<ExamAuthGuardProps> = ({ children }) => {
 
   if (profileStatus === 'error') {
     return (
-      <Notice title="Profil belum bisa dimuat" text="Periksa koneksi internetmu, lalu coba lagi.">
+      <Notice title="Profil belum bisa dimuat" text="Server data sedang tidak bisa dihubungi. Periksa koneksimu atau coba lagi sebentar lagi.">
         <button onClick={() => refreshProfile()} className="rounded-xl bg-[#5841EA] px-4 py-2.5 text-sm font-semibold text-white">
           Coba lagi
         </button>

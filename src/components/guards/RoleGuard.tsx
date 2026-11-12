@@ -44,7 +44,7 @@ export const RoleGuard: FC<RoleGuardProps> = ({ children, allowedRoles }) => {
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-gray-100">
           <h1 className="font-display text-lg font-extrabold text-gray-900">Profil belum bisa dimuat</h1>
-          <p className="mt-2 text-sm text-gray-500">Periksa koneksi internetmu, lalu coba lagi.</p>
+          <p className="mt-2 text-sm text-gray-500">Server data sedang tidak bisa dihubungi. Periksa koneksimu atau coba lagi sebentar lagi.</p>
           <button onClick={() => refreshProfile()} className="mt-5 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white">
             Coba lagi
           </button>
