@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
 
   const schedules = snap.docs.map((d) => {
     const sessions = sessionsBySchedule[d.id] ?? [];
-    const completed = sessions.filter((s) => s.status === 'completed');
+    const completed = sessions.filter((s) => s.status === 'completed' || s.status === 'flagged');
     const avgScore =
       completed.length > 0
         ? Math.round(completed.reduce((acc, s) => acc + (s.numericScore ?? 0), 0) / completed.length)

@@ -6,6 +6,27 @@ import { rateLimitMessage } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
+const ATTEMPT_STATUSES = ['completed', 'flagged', 'timed_out', 'terminated'];
+
+async function countAttempts(scheduleId: string, studentId: string): Promise<{ count: number; firstId: string | null }> {
+  const snap = await adminDb.collection('exam_sessions')
+    .where('examScheduleId', '==', scheduleId)
+    .where('studentId', '==', studentId)
+    .get();
+  const finished = snap.docs.filter(d => ATTEMPT_STATUSES.includes(d.data().status as string));
+  return { count: finished.length, firstId: finished[0]?.id ?? null };
+}
+
+async function expireStaleSession(doc: { data: () => any; ref: { update: (v: Record<string, unknown>) => Promise<unknown> } }): Promise<boolean> {
+  const data = doc.data();
+  const startedAt = data.startedAt?.toDate?.();
+  if (!startedAt) return false;
+  const maxMs = ((data.durationMinutes || 50) + 5) * 60 * 1000;
+  if (Date.now() - startedAt.getTime() <= maxMs) return false;
+  await doc.ref.update({ status: 'timed_out', completedAt: FieldValue.serverTimestamp() });
+  return true;
+}
+
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -74,8 +95,11 @@ export async function POST(req: NextRequest) {
       .where('status', '==', 'in_progress')
       .limit(1).get();
 
-    if (!existingSnap.empty) {
-      const ed = existingSnap.docs[0];
+    let activeDoc = existingSnap.docs[0];
+    if (activeDoc && await expireStaleSession(activeDoc)) activeDoc = undefined as unknown as typeof activeDoc;
+
+    if (activeDoc) {
+      const ed = activeDoc;
       // Strip correctAnswer before sending to client
       const safeCustomQuestions = (customQuestions as Array<Record<string, unknown>>).map(({ correctAnswer, ...rest }) => rest);
       return NextResponse.json({
@@ -86,13 +110,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Check attempts limit
-    const completedSnap = await adminDb.collection('exam_sessions')
-      .where('examScheduleId', '==', scheduleDoc.id)
-      .where('studentId', '==', decoded.uid)
-      .where('status', '==', 'completed').get();
-
-    if (maxAttempts > 0 && completedSnap.size >= maxAttempts) {
-      return NextResponse.json({ error: 'Kamu sudah mencapai batas percobaan ujian ini', completed: true, sessionId: completedSnap.docs[0].id }, { status: 409 });
+    const attempts = await countAttempts(scheduleDoc.id, decoded.uid);
+    if (maxAttempts > 0 && attempts.count >= maxAttempts) {
+      return NextResponse.json({ error: 'Kamu sudah mencapai batas percobaan ujian ini', completed: true, sessionId: attempts.firstId }, { status: 409 });
     }
 
     const docRef = adminDb.collection('exam_sessions').doc();
@@ -210,8 +230,11 @@ export async function POST(req: NextRequest) {
     .limit(1)
     .get();
 
-  if (!existingSnap.empty) {
-    const existingDoc = existingSnap.docs[0];
+  let activeDoc = existingSnap.docs[0];
+  if (activeDoc && await expireStaleSession(activeDoc)) activeDoc = undefined as unknown as typeof activeDoc;
+
+  if (activeDoc) {
+    const existingDoc = activeDoc;
     const existingSession = existingDoc.data();
     if (!existingSession.questionIds) {
       await existingDoc.ref.update({ questionIds });
@@ -241,15 +264,10 @@ export async function POST(req: NextRequest) {
   }
 
   // Check attempts limit for MSAT
-  const completedSnap = await adminDb.collection('exam_sessions')
-    .where('examScheduleId', '==', scheduleDoc.id)
-    .where('studentId', '==', decoded.uid)
-    .where('status', '==', 'completed')
-    .get();
-
+  const attemptsMsat = await countAttempts(scheduleDoc.id, decoded.uid);
   const maxAttemptsMsat = (schedule.maxAttempts as number) ?? 1;
-  if (maxAttemptsMsat > 0 && completedSnap.size >= maxAttemptsMsat) {
-    return NextResponse.json({ error: 'Kamu sudah mencapai batas percobaan ujian ini', completed: true, sessionId: completedSnap.docs[0].id }, { status: 409 });
+  if (maxAttemptsMsat > 0 && attemptsMsat.count >= maxAttemptsMsat) {
+    return NextResponse.json({ error: 'Kamu sudah mencapai batas percobaan ujian ini', completed: true, sessionId: attemptsMsat.firstId }, { status: 409 });
   }
 
   // Create session

@@ -21,6 +21,25 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: 'Status tidak valid' }, { status: 400 });
   }
 
+  if ('title' in body && (typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200)) {
+    return NextResponse.json({ error: 'Judul ujian tidak valid' }, { status: 400 });
+  }
+  if ('durationMinutes' in body && (!Number.isInteger(body.durationMinutes) || body.durationMinutes < 5 || body.durationMinutes > 300)) {
+    return NextResponse.json({ error: 'Durasi harus 5-300 menit' }, { status: 400 });
+  }
+  if ('domainIds' in body) {
+    if (snap.data()!.examType !== 'tp') {
+      return NextResponse.json({ error: 'Topik hanya bisa diubah pada ujian bank soal' }, { status: 400 });
+    }
+    if (!Array.isArray(body.domainIds) || body.domainIds.length === 0 || body.domainIds.some((d: unknown) => typeof d !== 'string')) {
+      return NextResponse.json({ error: 'Topik ujian tidak valid' }, { status: 400 });
+    }
+    const started = await adminDb.collection('exam_sessions').where('examScheduleId', '==', params.id).limit(1).get();
+    if (!started.empty) {
+      return NextResponse.json({ error: 'Topik tidak bisa diubah karena sudah ada siswa yang mengerjakan' }, { status: 409 });
+    }
+  }
+
   const allowed = ['title', 'status', 'domainIds', 'scheduledAt', 'durationMinutes'];
   const update: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
   for (const key of allowed) {

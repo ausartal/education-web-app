@@ -126,8 +126,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }).length;
     const numericScore = totalQ > 0 ? Math.round((correctCount / totalQ) * 100) : 0;
 
+    const verifiedAnswers = customAnswers.map(a => {
+      const q = customQuestions.find(cq => cq.id === a.questionId);
+      return { ...a, isCorrect: !!q && a.selectedAnswer === q.correctAnswer };
+    });
+
     await ref.update({
-      customAnswers,
+      customAnswers: verifiedAnswers,
       numericScore,
       anomalyFlags: [],
       status: 'completed',
@@ -140,7 +145,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       details: { numericScore, totalQ, correctCount, examType: 'custom' }, timestamp: new Date(),
     });
 
-    return NextResponse.json({ numericScore, correctCount, totalQ, customAnswers });
+    return NextResponse.json({ numericScore, correctCount, totalQ, customAnswers: verifiedAnswers });
   }
 
   // ── Standard MSAT completion ──────────────────────────────────────
