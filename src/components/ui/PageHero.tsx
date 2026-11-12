@@ -47,8 +47,6 @@ export const PageHero: FC<PageHeroProps> = ({
       className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${styles.hero} p-6 text-white shadow-lg shadow-black/5 sm:p-8 ${className}`}
     >
       <div className="pointer-events-none absolute -right-10 -top-12 h-44 w-44 rounded-full bg-white/10" aria-hidden="true" />
-      <div className="pointer-events-none absolute -bottom-10 left-1/3 h-32 w-32 rounded-full bg-white/10" aria-hidden="true" />
-      <div className="pointer-events-none absolute right-1/4 top-6 h-14 w-14 rounded-full bg-white/5" aria-hidden="true" />
 
       <div className="relative flex items-center justify-between gap-6">
         <div className="min-w-0 flex-1">

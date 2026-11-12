@@ -3,7 +3,7 @@
 import { FC, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Clock, Zap, Lock, Trophy, CheckCircle, ChevronRight, RotateCcw } from 'lucide-react';
+import { Brain, Clock, Zap, Lock, Trophy, CheckCircle, ChevronRight, RotateCcw, Sprout, Flame, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { doc, getDoc, updateDoc } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
@@ -26,7 +26,7 @@ const QUIZZES = [
     timePerQuestion: 45,
     gradient: 'from-emerald-500 to-teal-500',
     badge: 'bg-emerald-100 text-emerald-700',
-    icon: '🌱',
+    icon: Sprout,
     locked: false,
     unlockHint: null,
   },
@@ -39,7 +39,7 @@ const QUIZZES = [
     timePerQuestion: 60,
     gradient: 'from-amber-500 to-orange-500',
     badge: 'bg-amber-100 text-amber-700',
-    icon: '⚡',
+    icon: Zap,
     locked: true,
     unlockHint: 'Selesaikan Latihan Dasar terlebih dahulu',
   },
@@ -52,7 +52,7 @@ const QUIZZES = [
     timePerQuestion: 90,
     gradient: 'from-rose-500 to-pink-600',
     badge: 'bg-rose-100 text-rose-700',
-    icon: '🔥',
+    icon: Flame,
     locked: true,
     unlockHint: 'Selesaikan Latihan Menengah terlebih dahulu',
   },
@@ -188,12 +188,9 @@ const LatihanPage: FC = () => {
                 }`}
               >
                 <div className={`relative bg-gradient-to-r ${quiz.gradient} p-5 text-white ${locked ? 'opacity-50 grayscale' : ''}`}>
-                  {/* Decorative circle */}
-                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
-
                   <div className="relative flex items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-sm">
-                      {quiz.icon}
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20">
+                      <quiz.icon size={24} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -227,7 +224,7 @@ const LatihanPage: FC = () => {
                   </div>
 
                   {locked && lockHint(quiz) && (
-                    <p className="relative mt-2 text-xs text-white/60">🔒 {lockHint(quiz)}</p>
+                    <p className="relative mt-2 flex items-center gap-1.5 text-xs text-white/70"><Lock size={12} /> {lockHint(quiz)}</p>
                   )}
                 </div>
               </button>
@@ -255,7 +252,7 @@ const LatihanPage: FC = () => {
             >
               {/* Level badge */}
               <div className={`mb-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r ${selectedQuiz.gradient} px-4 py-2 text-white`}>
-                <span className="text-lg">{selectedQuiz.icon}</span>
+                <selectedQuiz.icon size={18} />
                 <span className="font-bold text-sm">{selectedQuiz.title}</span>
               </div>
 
@@ -276,7 +273,7 @@ const LatihanPage: FC = () => {
               </div>
 
               <div className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
-                ⚠ Soal yang melewati batas waktu otomatis dianggap salah.
+                <AlertTriangle size={14} className="mr-1.5 inline -mt-0.5" />Soal yang melewati batas waktu otomatis dianggap salah.
               </div>
 
               <div className="flex gap-3">

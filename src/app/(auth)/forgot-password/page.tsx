@@ -2,6 +2,7 @@
 
 import { FC, FormEvent, useState } from 'react';
 import Link from 'next/link';
+import { MailCheck } from 'lucide-react';
 import { resetPassword } from '@/services/auth';
 
 const ForgotPasswordPage: FC = () => {
@@ -32,7 +33,7 @@ const ForgotPasswordPage: FC = () => {
   if (success) {
     return (
       <div className="rounded-xl bg-white p-8 shadow-md">
-        <div className="mb-4 text-center text-4xl">📧</div>
+        <MailCheck size={40} className="mx-auto mb-4 text-primary" />
         <h1 className="mb-2 text-center font-display text-2xl font-bold text-gray-900">
           Email Terkirim
         </h1>

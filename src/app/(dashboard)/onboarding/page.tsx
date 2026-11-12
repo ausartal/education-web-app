@@ -9,7 +9,7 @@ import { getMaterials } from '@/services/materials';
 import { slugTopic, topicLabel } from '@/lib/learning';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2, FlaskConical } from 'lucide-react';
 
 const knownTopics = [
   {
@@ -132,7 +132,7 @@ const OnboardingPage: FC = () => {
       className="text-center"
     >
       <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-cyan shadow-lg shadow-primary/25">
-        <span className="text-4xl">🧪</span>
+        <FlaskConical size={40} className="text-white" />
       </div>
       <h1 className="mb-3 font-display text-3xl font-extrabold text-gray-900">
         Welcome to AKURAT!

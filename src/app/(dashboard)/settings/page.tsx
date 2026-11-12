@@ -202,7 +202,7 @@ const SettingsPage: FC = () => {
                     : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                🇮🇩 Bahasa Indonesia
+                Bahasa Indonesia
               </button>
               <button
                 onClick={() => setLanguage('en')}
@@ -212,7 +212,7 @@ const SettingsPage: FC = () => {
                     : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                🇬🇧 English
+                English
               </button>
             </div>
           </div>

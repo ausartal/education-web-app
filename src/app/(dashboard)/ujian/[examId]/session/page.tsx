@@ -3,7 +3,7 @@
 import { FC, useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Wifi, WifiOff, Maximize, AlertTriangle, X, Shield, Loader2 } from 'lucide-react';
+import { Clock, Wifi, WifiOff, Maximize, AlertTriangle, X, Shield, Loader2, HelpCircle, ThumbsUp } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
@@ -846,7 +846,7 @@ const ExamSessionPage: FC = () => {
             <motion.div key="cri" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
               <div className="mx-auto max-w-md rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-100">
                 <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
-                  <span className="text-3xl">🤔</span>
+                  <HelpCircle size={30} className="text-blue-500" />
                 </div>
                 <h2 className="mb-2 font-display text-xl font-bold text-gray-900">Seberapa yakin?</h2>
                 <p className="mb-6 text-sm leading-relaxed text-gray-500">
@@ -858,7 +858,7 @@ const ExamSessionPage: FC = () => {
                     disabled={submitting}
                     className="flex flex-1 flex-col items-center gap-2.5 rounded-2xl border border-emerald-200 bg-emerald-50 py-5 font-semibold text-emerald-700 transition-all hover:bg-emerald-100 disabled:opacity-50"
                   >
-                    <span className="text-3xl">😊</span>
+                    <ThumbsUp size={28} />
                     <span className="text-sm">Yakin</span>
                   </button>
                   <button
@@ -866,7 +866,7 @@ const ExamSessionPage: FC = () => {
                     disabled={submitting}
                     className="flex flex-1 flex-col items-center gap-2.5 rounded-2xl border border-gray-200 bg-gray-50 py-5 font-semibold text-gray-500 transition-all hover:bg-gray-100 disabled:opacity-50"
                   >
-                    <span className="text-3xl">😕</span>
+                    <HelpCircle size={28} />
                     <span className="text-sm">Tidak Yakin</span>
                   </button>
                 </div>

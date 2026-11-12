@@ -63,8 +63,6 @@ export const AdminEmptyState: FC<{
   <div className="flex min-h-56 flex-col items-center justify-center p-8 text-center">
     <span className="relative mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-500 ring-1 ring-indigo-100">
       {icon ?? <Inbox size={24} />}
-      <span className="absolute -right-1.5 -top-1 h-2.5 w-2.5 rounded-full bg-indigo-300" aria-hidden="true" />
-      <span className="absolute -bottom-1 -left-1.5 h-2 w-2 rounded-full bg-amber-300" aria-hidden="true" />
     </span>
     <h3 className="text-sm font-bold text-slate-800">{title}</h3>
     <p className="mt-1 max-w-md text-xs leading-5 text-slate-500">{description}</p>
