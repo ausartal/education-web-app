@@ -24,6 +24,7 @@ import {
   GraduationCap,
   Users,
   ClipboardList,
+  Plus,
 } from 'lucide-react';
 
 interface MyClass {
@@ -34,6 +35,8 @@ interface MyClass {
   studentCount: number;
   activeExamCount: number;
 }
+
+const CLASSES_PER_PAGE = 3;
 
 const TOPIC_ICONS: Record<string, string> = {
   stoikiometri: '/icons/topic-calculus.svg',
@@ -68,6 +71,7 @@ const DashboardPage: FC = () => {
   const [loading, setLoading] = useState(true);
   const { data: classData } = useAuthSWR<{ classes: MyClass[] }>('/api/student/classes');
   const myClasses = classData?.classes ?? [];
+  const [classPage, setClassPage] = useState(0);
 
   const profileUid = profile?.uid;
   const profileRole = profile?.role;
@@ -117,6 +121,9 @@ const DashboardPage: FC = () => {
     icon: TOPIC_ICONS[topic.id] ?? FALLBACK_ICONS[i % FALLBACK_ICONS.length],
     gradient: TOPIC_GRADIENTS[i % TOPIC_GRADIENTS.length],
   }));
+  const totalClassPages = Math.max(1, Math.ceil(myClasses.length / CLASSES_PER_PAGE));
+  const safeClassPage = Math.min(classPage, totalClassPages - 1);
+  const pageClasses = myClasses.slice(safeClassPage * CLASSES_PER_PAGE, (safeClassPage + 1) * CLASSES_PER_PAGE);
   const safeIdx = cards.length > 0 ? Math.min(activeCourseIdx, cards.length - 1) : 0;
 
   return (
@@ -161,7 +168,7 @@ const DashboardPage: FC = () => {
 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* LEFT COLUMN */}
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           {/* Progress Overview - Soft card */}
           <div className="animate-[fadeIn_0.7s_ease-out] rounded-3xl bg-white p-6 shadow-sm shadow-gray-100">
             <div className="mb-5 flex items-center justify-between">
@@ -195,35 +202,34 @@ const DashboardPage: FC = () => {
             </div>
 
             {viewMode === 'list' ? (
-              /* List View - Colorful pills */
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 rounded-2xl bg-blue-50/80 px-4 py-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-                    <BookOpen size={16} className="text-primary" />
+              <div>
+                <div className="mb-4 flex items-end justify-between">
+                  <div>
+                    <p className="text-3xl font-extrabold tabular-nums text-gray-900">{materialsPct}%</p>
+                    <p className="text-xs text-gray-500">materi telah diselesaikan</p>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-500">Materi selesai</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {completedCount} dari {totalMaterials}
-                    </p>
-                  </div>
-                  <div className="h-2 w-20 overflow-hidden rounded-full bg-blue-100">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all duration-700"
-                      style={{ width: `${materialsPct}%` }}
-                    />
-                  </div>
+                  <p className="text-xs font-medium text-gray-400">{completedCount} dari {totalMaterials} materi</p>
                 </div>
-
-                <div className="flex items-center gap-3 rounded-2xl bg-emerald-50/80 px-4 py-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
-                    <Target size={16} className="text-emerald-600" />
+                <div className="mb-5 h-2.5 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-sky-400 transition-all duration-700"
+                    style={{ width: `${materialsPct}%` }}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-gray-100 p-3.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <BookOpen size={15} className="text-primary" />
+                    </div>
+                    <p className="mt-2.5 text-lg font-bold tabular-nums text-gray-900">{completedCount}</p>
+                    <p className="text-xs text-gray-500">Materi selesai</p>
                   </div>
-                  <div className="flex-1">
+                  <div className="rounded-2xl border border-gray-100 p-3.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50">
+                      <Target size={15} className="text-emerald-600" />
+                    </div>
+                    <p className="mt-2.5 text-lg font-bold tabular-nums text-gray-900">{quizCount}</p>
                     <p className="text-xs text-gray-500">Latihan selesai</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {quizCount}
-                    </p>
                   </div>
                 </div>
               </div>
@@ -318,48 +324,70 @@ const DashboardPage: FC = () => {
           </div>
 
           {/* Kelas yang diikuti */}
-          <div className="animate-[fadeIn_0.9s_ease-out] rounded-3xl bg-white p-6 shadow-sm shadow-gray-100">
+          <div className="flex flex-1 animate-[fadeIn_0.9s_ease-out] flex-col rounded-3xl bg-white p-6 shadow-sm shadow-gray-100">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="flex items-center gap-2 font-bold text-gray-900">
                 <GraduationCap size={18} className="text-primary" /> Kelas saya
               </h3>
               <Link href="/kelas" className="text-xs font-semibold text-primary hover:underline">Lihat semua</Link>
             </div>
-            {myClasses.length === 0 ? (
-              <div className="rounded-2xl bg-gray-50 px-4 py-6 text-center">
-                <p className="text-sm font-semibold text-gray-700">Belum ada kelas</p>
-                <p className="mt-1 text-xs text-gray-500">Masukkan kode dari gurumu untuk bergabung.</p>
-                <Link href="/kelas" className="mt-3 inline-block rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90">Gabung kelas</Link>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {myClasses.slice(0, 4).map((cls) => (
-                  <Link
-                    key={cls.id}
-                    href={`/kelas/${cls.id}`}
-                    className="group flex items-center gap-3 rounded-2xl border border-gray-100 px-4 py-3 transition-all hover:border-primary/30 hover:shadow-sm"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                      <GraduationCap size={18} className="text-primary" />
+            <div className="flex flex-1 flex-col gap-3">
+              {pageClasses.map((cls) => (
+                <Link
+                  key={cls.id}
+                  href={`/kelas/${cls.id}`}
+                  className="group flex flex-1 items-center gap-3 rounded-2xl border border-gray-100 px-4 py-3 transition-all hover:border-primary/30 hover:shadow-sm"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                    <GraduationCap size={20} className="text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-gray-900">{cls.name}</p>
+                    <p className="truncate text-xs text-gray-500">{cls.subject} · Guru: {cls.teacherName}</p>
+                    <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-400">
+                      <span className="flex items-center gap-1"><Users size={12} /> {cls.studentCount} siswa</span>
+                      {cls.activeExamCount > 0 && (
+                        <span className="flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">
+                          <ClipboardList size={10} /> {cls.activeExamCount} ujian aktif
+                        </span>
+                      )}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-gray-900">{cls.name}</p>
-                      <p className="truncate text-xs text-gray-500">{cls.subject} · Guru: {cls.teacherName}</p>
-                    </div>
-                    {cls.activeExamCount > 0 && (
-                      <span className="flex shrink-0 items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">
-                        <ClipboardList size={10} /> {cls.activeExamCount} ujian
-                      </span>
-                    )}
-                    <span className="flex shrink-0 items-center gap-1 text-xs text-gray-400"><Users size={12} /> {cls.studentCount}</span>
-                    <ChevronRight size={14} className="shrink-0 text-gray-300 transition-transform group-hover:translate-x-0.5" />
-                  </Link>
-                ))}
-                {myClasses.length > 4 && (
-                  <Link href="/kelas" className="block pt-1 text-center text-xs font-semibold text-gray-500 hover:text-primary">
-                    +{myClasses.length - 4} kelas lainnya
-                  </Link>
-                )}
+                  </div>
+                  <ChevronRight size={16} className="shrink-0 text-gray-300 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              ))}
+              {pageClasses.length < CLASSES_PER_PAGE && (
+                <Link
+                  href="/kelas"
+                  className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-gray-200 px-4 py-4 text-center transition-colors hover:border-primary/40 hover:bg-primary/5"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"><Plus size={18} /></span>
+                  <span className="text-sm font-bold text-gray-800">Bergabung ke kelas</span>
+                  <span className="text-xs text-gray-500">
+                    {myClasses.length === 0 ? 'Masukkan kode dari gurumu untuk mulai.' : 'Masukkan kode kelas baru dari gurumu.'}
+                  </span>
+                </Link>
+              )}
+            </div>
+            {totalClassPages > 1 && (
+              <div className="mt-4 flex items-center justify-between">
+                <button
+                  onClick={() => setClassPage(safeClassPage - 1)}
+                  disabled={safeClassPage === 0}
+                  aria-label="Halaman sebelumnya"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 disabled:opacity-40"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="text-xs font-medium text-gray-500">Halaman {safeClassPage + 1} dari {totalClassPages}</span>
+                <button
+                  onClick={() => setClassPage(safeClassPage + 1)}
+                  disabled={safeClassPage >= totalClassPages - 1}
+                  aria-label="Halaman berikutnya"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 disabled:opacity-40"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
             )}
           </div>
