@@ -1,5 +1,9 @@
 # AKURAT Admin UI/UX Reconstruction — Master To-Do List
 
+> **Status audit (diperbarui dari pembacaan kode).** Dokumen ini sebelumnya tidak punya centang sama sekali meski sebagian sudah dikerjakan.
+> Hanya item yang bisa dibuktikan langsung dari kode yang dicentang (41 dari 862). Item lain dibiarkan terbuka karena belum diverifikasi, bukan berarti belum ada.
+> Saat mengerjakan sebuah bagian, periksa dulu kodenya, lalu centang hanya yang terbukti. Pelacakan prioritas terbaru ada di `docs/FLOW_AUDIT_TODO.md`.
+
 ## 1. Tujuan Dokumen
 
 Dokumen ini menjadi sumber kerja utama untuk merekonstruksi seluruh admin panel AKURAT secara bertahap. Setiap halaman harus diselesaikan sebagai alat kerja yang nyata, bukan hanya tampilan statis.
@@ -92,7 +96,7 @@ Hasil akhir yang dituju:
 
 ### 3.2 Komponen reusable
 
-- [ ] AdminPageHeader.
+- [x] AdminPageHeader.
 - [ ] Breadcrumb.
 - [ ] ContextBadge.
 - [ ] PrimaryAction.
@@ -108,16 +112,16 @@ Hasil akhir yang dituju:
 - [ ] StatusBadge.
 - [ ] MetricCard.
 - [ ] AlertSummary.
-- [ ] SectionCard.
+- [x] SectionCard.
 - [ ] DetailDrawer.
 - [ ] Tabs dan segmented control.
-- [ ] EmptyState.
-- [ ] ErrorState.
-- [ ] SkeletonState.
+- [x] EmptyState.
+- [x] ErrorState.
+- [x] SkeletonState.
 - [ ] InlineLoading.
-- [ ] ConfirmationDialog.
+- [x] ConfirmationDialog.
 - [ ] DestructiveConfirmationDialog.
-- [ ] Toast dan persistent notification.
+- [x] Toast dan persistent notification.
 - [ ] DateRangePicker.
 - [ ] SubjectTaxonomyPicker.
 - [ ] EntityPicker.
@@ -151,28 +155,28 @@ Hasil akhir yang dituju:
 
 - [ ] Kelompokkan navigasi menjadi Umum, Civitas, Sekolah, AKURAT Exam, dan Sistem & Pengaturan.
 - [ ] Pastikan satu fitur tidak tampil pada dua grup berbeda tanpa alasan.
-- [ ] Pisahkan Analitik Umum dan Analitik AKURAT Exam.
-- [ ] Tempatkan Guru, Siswa, Exam User, dan User & Permission dalam konteks Civitas/Akses yang jelas.
-- [ ] Pisahkan Ujian Sekolah dari AKURAT Exam.
-- [ ] Pisahkan halaman operasional live dari halaman hasil historis.
+- [x] Pisahkan Analitik Umum dan Analitik AKURAT Exam.
+- [x] Tempatkan Guru, Siswa, Exam User, dan User & Permission dalam konteks Civitas/Akses yang jelas.
+- [x] Pisahkan Ujian Sekolah dari AKURAT Exam.
+- [x] Pisahkan halaman operasional live dari halaman hasil historis.
 - [ ] Tampilkan badge jumlah item yang perlu perhatian hanya jika relevan.
 
 ### 4.2 Sidebar collapse dan expand
 
 - [ ] Tambahkan tombol collapse di sebelah kanan search bar sidebar.
-- [ ] Gunakan tombol dengan ikon panel-left-close saat sidebar terbuka.
-- [ ] Gunakan tombol dengan ikon panel-left-open saat sidebar tertutup.
+- [x] Gunakan tombol dengan ikon panel-left-close saat sidebar terbuka.
+- [x] Gunakan tombol dengan ikon panel-left-open saat sidebar tertutup.
 - [ ] Mode expanded menampilkan logo, nama produk, search, label section, ikon, label menu, submenu, dan profil.
 - [ ] Mode collapsed hanya menampilkan logo, ikon menu, indikator aktif, dan tombol expand.
-- [ ] Tampilkan tooltip menu ketika sidebar collapsed.
+- [x] Tampilkan tooltip menu ketika sidebar collapsed.
 - [ ] Submenu pada mode collapsed dibuka sebagai flyout yang dapat diakses keyboard.
 - [ ] Pastikan tombol expand tetap terlihat dan mudah ditemukan.
-- [ ] Simpan preferensi sidebar pada local storage.
+- [x] Simpan preferensi sidebar pada local storage.
 - [ ] Jangan menyebabkan content layout shift yang kasar.
 - [ ] Gunakan transisi lebar 180–220ms.
 - [ ] Nonaktifkan animasi transisi saat reduced motion aktif.
 - [ ] Pada tablet/mobile, gunakan navigation drawer dan backdrop.
-- [ ] Pastikan drawer dapat ditutup dengan Escape, backdrop, dan tombol close.
+- [x] Pastikan drawer dapat ditutup dengan Escape, backdrop, dan tombol close.
 - [ ] Jangan menampilkan sidebar collapsed desktop pada layar mobile.
 
 ### 4.3 Search navigasi
@@ -187,13 +191,13 @@ Hasil akhir yang dituju:
 
 ### 4.4 Topbar
 
-- [ ] Tampilkan breadcrumb dan konteks halaman.
+- [x] Tampilkan breadcrumb dan konteks halaman.
 - [ ] Sediakan global search/command palette.
-- [ ] Sediakan notification center.
+- [x] Sediakan notification center.
 - [ ] Sediakan status koneksi jika relevan.
 - [ ] Sediakan user menu dengan profil, preferensi, bantuan, dan keluar.
-- [ ] Preview sebagai siswa/guru/exam hanya tersedia bagi admin yang berwenang.
-- [ ] Berikan penanda jelas saat admin sedang berada dalam preview mode.
+- [x] Preview sebagai siswa/guru/exam hanya tersedia bagi admin yang berwenang.
+- [x] Berikan penanda jelas saat admin sedang berada dalam preview mode.
 
 ---
 
@@ -744,20 +748,20 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 - [ ] Detail peserta melalui drawer.
 - [ ] Timeline event peserta.
 - [ ] Status koneksi dan last heartbeat.
-- [ ] Progress stage/domain.
+- [x] Progress stage/domain.
 - [ ] Remaining time.
-- [ ] Anomaly flags.
+- [x] Anomaly flags.
 
 ### 17.3 Kontrol operasional
 
-- [ ] Start exam.
+- [x] Start exam.
 - [ ] Pause/resume jika model exam mengizinkan.
 - [ ] Extend time.
-- [ ] Terminate session.
-- [ ] Force submit dengan alasan.
-- [ ] Allow reconnect/re-entry.
-- [ ] Mark for review.
-- [ ] Acknowledge anomaly.
+- [x] Terminate session.
+- [x] Force submit dengan alasan.
+- [x] Allow reconnect/re-entry.
+- [x] Mark for review.
+- [x] Acknowledge anomaly.
 - [ ] Broadcast announcement.
 - [ ] Semua tindakan memiliki confirmation dan audit.
 
@@ -825,7 +829,7 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 - [ ] Bulk categorize/review/archive.
 - [ ] Deteksi soal belum siap untuk adaptive exam.
 - [ ] Tampilkan dampak sebelum edit soal yang sudah digunakan.
-- [ ] pastikan admin mampu mengedit soal dan menambahkan soal
+- [ ] pastikan admin mampu mengedit soal dan menambahkan soal 
 
 ---
 
@@ -855,7 +859,7 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 - [ ] Queue penerbitan.
 - [ ] Detail peserta dan sumber score.
 - [ ] Preview sertifikat.
-- [ ] Nomor sertifikat unik.
+- [x] Nomor sertifikat unik.
 - [ ] QR/public verification.
 - [ ] Minimalisasi data pribadi pada halaman publik.
 - [ ] Issue single/bulk.
@@ -865,23 +869,23 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 - [ ] Reissue dengan version history.
 - [ ] Template management.
 - [ ] Delivery status.
-- [ ] Audit seluruh lifecycle sertifikat.
+- [x] Audit seluruh lifecycle sertifikat.
 
 ---
 
 ## 22. SISTEM — User & Permission
 
-- [ ] Role listing.
-- [ ] Permission matrix berdasarkan fitur dan aksi.
+- [x] Role listing.
+- [x] Permission matrix berdasarkan fitur dan aksi.
 - [ ] Scope sekolah/subject/exam.
 - [ ] Create custom role jika dibutuhkan.
-- [ ] Assign role.
+- [x] Assign role.
 - [ ] Review elevated permission.
 - [ ] Warning privilege escalation.
-- [ ] Prevent removal of last super admin.
+- [x] Prevent removal of last super admin.
 - [ ] Session revocation.
 - [ ] Access review report.
-- [ ] Semua perubahan permission wajib audit.
+- [x] Semua perubahan permission wajib audit.
 
 ---
 
@@ -890,12 +894,12 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 ### 23.1 Data log
 
 - [ ] Near-real-time log.
-- [ ] Actor.
-- [ ] Role.
-- [ ] Action.
+- [x] Actor.
+- [x] Role.
+- [x] Action.
 - [ ] Feature/module.
-- [ ] Target type dan target ID.
-- [ ] Timestamp.
+- [x] Target type dan target ID.
+- [x] Timestamp.
 - [ ] Status success/failure.
 - [ ] Reason.
 - [ ] Before/after changes yang telah disanitasi.
@@ -912,7 +916,7 @@ Referensi dasar: Figma node 259:5142. Referensi tersebut digunakan sebagai dasar
 - [ ] Export sesuai permission.
 - [ ] Saved investigation filter.
 - [ ] Retention information.
-- [ ] Audit log tidak dapat diedit dari UI biasa.
+- [x] Audit log tidak dapat diedit dari UI biasa.
 
 ---
 

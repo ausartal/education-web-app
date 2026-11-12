@@ -31,6 +31,8 @@
       position: relative;
       overflow: hidden;
       box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
     }
 
     /* ── Outer border ── */
@@ -39,6 +41,7 @@
       inset: 8mm;
       border: 1.5px solid #C4B5FD;
       pointer-events: none;
+      z-index: 3;
     }
 
     /* ── Inner border ── */
@@ -47,6 +50,7 @@
       inset: 10mm;
       border: 0.5px solid #E9E2FF;
       pointer-events: none;
+      z-index: 3;
     }
 
     /* ── Corner ornaments ── */
@@ -55,6 +59,7 @@
       width: 28px;
       height: 28px;
       pointer-events: none;
+      z-index: 4;
     }
     .corner svg { width: 100%; height: 100%; }
     .corner-tl { top: 7mm; left: 7mm; }
@@ -70,14 +75,16 @@
       right: 0;
       height: 3px;
       background: linear-gradient(90deg, #6320EE 0%, #8B5CF6 30%, #F59E0B 50%, #8B5CF6 70%, #6320EE 100%);
+      z-index: 5;
     }
 
-    /* ── Content area ── */
+    /* ── Content shell ── */
     .content {
       position: absolute;
       inset: 14mm 18mm;
       display: flex;
       flex-direction: column;
+      z-index: 2;
     }
 
     /* ── Header ── */
@@ -156,51 +163,185 @@
       margin-top: 2px;
     }
 
-    /* ── Main body ── */
-    .body {
+    /* ── Main: portrait + achievement ── */
+    .main {
       flex: 1;
+      display: flex;
+      gap: 0;
+      min-height: 0;
+    }
+
+    /* ── Portrait panel ── */
+    .portrait-panel {
+      width: 32%;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 0 20px;
+      padding: 8px 18px 8px 8px;
+      position: relative;
+    }
+
+    /* soft lavender wash behind the person */
+    .portrait-panel::before {
+      content: '';
+      position: absolute;
+      inset: 4px 28px 4px 4px;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% 28%, rgba(237, 233, 254, 0.9) 0%, rgba(245, 243, 255, 0.45) 55%, transparent 100%);
+      border-radius: 18px;
+      pointer-events: none;
+    }
+
+    .portrait-frame {
+      position: relative;
+      width: 132px;
+      height: 132px;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    /* gold outer ring */
+    .portrait-frame::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: conic-gradient(from 210deg, #F59E0B, #FBBF24, #D4A017, #F59E0B);
+      z-index: 0;
+    }
+
+    /* white hairline between gold and photo */
+    .portrait-frame::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 50%;
+      border: 1.5px solid #ffffff;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .portrait-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      overflow: hidden;
+      background: linear-gradient(160deg, #EDE9FE 0%, #DDD6FE 45%, #C4B5FD 100%);
+      z-index: 2;
+      box-shadow: 0 6px 18px rgba(99, 32, 238, 0.18);
+    }
+
+    .portrait-ring img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 18%;
+      display: block;
+    }
+
+    /* fallback when photo missing */
+    .portrait-fallback {
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 36px;
+      color: #6320EE;
+      letter-spacing: -0.02em;
+    }
+
+    .given-label {
+      font-size: 8px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: #9CA3AF;
+      margin-bottom: 6px;
+      position: relative;
+    }
+
+    .student-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+      font-size: 28px;
+      color: #1a1040;
+      line-height: 1.15;
+      margin-bottom: 6px;
+      position: relative;
+      max-width: 100%;
+    }
+
+    .student-details {
+      font-size: 10px;
+      color: #6B7280;
+      line-height: 1.55;
+      position: relative;
+    }
+
+    .student-details .sep {
+      margin: 0 5px;
+      color: #D1D5DB;
+    }
+
+    /* thin vertical divider between panels */
+    .panel-divider {
+      width: 1px;
+      align-self: stretch;
+      margin: 8px 0;
+      background: linear-gradient(180deg, transparent 0%, #E9E2FF 18%, #E9E2FF 82%, transparent 100%);
+      flex-shrink: 0;
+    }
+
+    /* ── Achievement panel ── */
+    .achievement-panel {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 4px 4px 4px 22px;
     }
 
     .cert-label {
       font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.3em;
+      letter-spacing: 0.28em;
       color: #6320EE;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .cert-heading {
       font-family: 'Cormorant Garamond', serif;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       color: #6B7280;
-      letter-spacing: 0.06em;
-      margin-bottom: 18px;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
     }
 
     .exam-title {
       font-family: 'Cormorant Garamond', serif;
       font-weight: 700;
-      font-size: 30px;
+      font-size: 28px;
       color: #1a1040;
-      line-height: 1.2;
+      line-height: 1.18;
       margin-bottom: 10px;
     }
 
     .exam-code-stamp {
       display: inline-flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start;
       border: 1px solid #D1D5DB;
       border-radius: 4px;
-      padding: 4px 14px 5px;
+      padding: 4px 12px 5px;
       margin-bottom: 14px;
     }
 
@@ -223,62 +364,23 @@
       line-height: 1;
     }
 
-    .exam-subtitle {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 500;
-      font-style: italic;
-      font-size: 14px;
-      color: #9CA3AF;
-      margin-bottom: 18px;
-    }
-
     .ornament {
       width: 48px;
       height: 1px;
       background: linear-gradient(90deg, transparent, #6320EE, transparent);
-      margin: 0 auto 16px;
-    }
-
-    .given-label {
-      font-size: 8px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.2em;
-      color: #9CA3AF;
-      margin-bottom: 6px;
-    }
-
-    .student-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 700;
-      font-size: 32px;
-      color: #1a1040;
-      line-height: 1.15;
-      margin-bottom: 4px;
-    }
-
-    .student-details {
-      font-size: 11px;
-      color: #6B7280;
-      margin-bottom: 16px;
-    }
-
-    .student-details span {
-      margin: 0 6px;
-      color: #D1D5DB;
+      margin: 0 0 14px;
     }
 
     /* ── Score row ── */
     .score-row {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 24px;
-      margin-bottom: 14px;
+      gap: 22px;
+      margin-bottom: 16px;
     }
 
     .score-block {
-      text-align: center;
+      text-align: left;
     }
 
     .score-label {
@@ -287,29 +389,29 @@
       text-transform: uppercase;
       letter-spacing: 0.15em;
       color: #9CA3AF;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
 
     .score-value {
       font-family: 'Nunito', sans-serif;
       font-weight: 900;
-      font-size: 36px;
+      font-size: 40px;
       color: #1a1040;
       line-height: 1;
     }
 
     .score-sep {
       width: 1px;
-      height: 36px;
+      height: 40px;
       background: #E5E7EB;
     }
 
     .predikat-value {
       font-family: 'Nunito', sans-serif;
       font-weight: 800;
-      font-size: 20px;
+      font-size: 22px;
       color: #6320EE;
-      line-height: 1;
+      line-height: 1.15;
     }
 
     .predikat-rank {
@@ -321,14 +423,13 @@
     /* ── Cognitive row ── */
     .cognitive-row {
       display: flex;
-      justify-content: center;
-      gap: 56px;
-      margin-bottom: 16px;
+      gap: 28px;
+      margin-bottom: 14px;
     }
 
     .cog-item {
-      text-align: center;
-      min-width: 80px;
+      text-align: left;
+      min-width: 72px;
     }
 
     .cog-label {
@@ -337,7 +438,7 @@
       text-transform: uppercase;
       letter-spacing: 0.12em;
       color: #9CA3AF;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .cog-score {
@@ -349,20 +450,19 @@
     }
 
     .cog-divider {
-      width: 24px;
+      width: 28px;
       height: 0.5px;
       background: #E5E7EB;
-      margin: 8px auto 0;
+      margin-top: 7px;
     }
 
     /* ── Description ── */
     .description {
-      max-width: 520px;
+      max-width: 100%;
       font-size: 9px;
       line-height: 1.7;
       color: #9CA3AF;
-      text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
     }
 
     /* ── Footer ── */
@@ -407,7 +507,7 @@
       margin-top: 1px;
     }
 
-    /* ── Seal ── */
+    /* ── Seal watermark ── */
     .seal {
       position: absolute;
       bottom: 18mm;
@@ -415,11 +515,24 @@
       width: 56px;
       height: 56px;
       opacity: 0.12;
+      z-index: 1;
     }
 
     .seal svg {
       width: 100%;
       height: 100%;
+    }
+
+    /* ── Decorative atom watermark (chemistry, quiet) ── */
+    .chem-mark {
+      position: absolute;
+      top: 42%;
+      right: 12mm;
+      width: 92px;
+      height: 92px;
+      opacity: 0.055;
+      pointer-events: none;
+      z-index: 0;
     }
 
     @media print {
@@ -451,6 +564,16 @@
     <!-- Top accent -->
     <div class="top-accent"></div>
 
+    <!-- Quiet chemistry watermark -->
+    <div class="chem-mark" aria-hidden="true">
+      <svg viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="6" fill="#6320EE"/>
+        <ellipse cx="50" cy="50" rx="34" ry="13" stroke="#6320EE" stroke-width="1.2"/>
+        <ellipse cx="50" cy="50" rx="34" ry="13" stroke="#6320EE" stroke-width="1.2" transform="rotate(60 50 50)"/>
+        <ellipse cx="50" cy="50" rx="34" ry="13" stroke="#6320EE" stroke-width="1.2" transform="rotate(120 50 50)"/>
+      </svg>
+    </div>
+
     <!-- Content -->
     <div class="content">
       <!-- Header -->
@@ -471,63 +594,84 @@
         </div>
       </div>
 
-      <!-- Body -->
-      <div class="body">
-        <div class="cert-label">Sertifikat Kompetensi Kimia</div>
-        <div class="cert-heading">Multistage Adaptive Scored Testing</div>
-
-        <div class="exam-title">Ujian Kimia Stoichiometry</div>
-
-        <div class="exam-code-stamp">
-          <span class="stamp-label">Kode Penyelenggaraan</span>
-          <span class="stamp-code">A7K9-X2M1</span>
-        </div>
-
-        <div class="ornament"></div>
-
-        <div class="given-label">Diberikan kepada</div>
-        <div class="student-name">Ahmad Nabalfalah</div>
-        <div class="student-details">
-          NIM: 2024101001 <span>&middot;</span> Universitas Negeri Jakarta
-        </div>
-
-        <!-- Score -->
-        <div class="score-row">
-          <div class="score-block">
-            <div class="score-label">Skor Akhir</div>
-            <div class="score-value">83</div>
+      <!-- Body: portrait + achievement -->
+      <div class="main">
+        <!-- Portrait / person -->
+        <aside class="portrait-panel">
+          <div class="portrait-frame">
+            <div class="portrait-ring">
+              <!-- Ganti src dengan photoURL peserta (Firebase Storage / Google) -->
+              <img
+                src="../public/images/hero-student-male.png"
+                alt="Foto Ahmad Nabalfalah"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              >
+              <div class="portrait-fallback">AN</div>
+            </div>
           </div>
-          <div class="score-sep"></div>
-          <div class="score-block">
-            <div class="score-label">Predikat</div>
-            <div class="predikat-value">Unggul</div>
-            <div class="predikat-rank">Peringkat II</div>
-          </div>
-        </div>
 
-        <!-- Cognitive -->
-        <div class="cognitive-row">
-          <div class="cog-item">
-            <div class="cog-label">Knowing</div>
-            <div class="cog-score">92%</div>
-            <div class="cog-divider"></div>
+          <div class="given-label">Diberikan kepada</div>
+          <h1 class="student-name">Ahmad Nabalfalah</h1>
+          <div class="student-details">
+            NIM: 2024101001<br>
+            Universitas Negeri Jakarta
           </div>
-          <div class="cog-item">
-            <div class="cog-label">Applying</div>
-            <div class="cog-score">83%</div>
-            <div class="cog-divider"></div>
-          </div>
-          <div class="cog-item">
-            <div class="cog-label">Reasoning</div>
-            <div class="cog-score">75%</div>
-            <div class="cog-divider"></div>
-          </div>
-        </div>
+        </aside>
 
-        <!-- Description -->
-        <div class="description">
-          Peserta memiliki pemahaman konsep dasar kimia yang kokoh dan mampu menerapkannya secara akurat pada situasi prosedural, serta mulai mampu melakukan penalaran ilmiah untuk menginterpretasikan data dan menyelesaikan masalah kontekstual tingkat menengah.
-        </div>
+        <div class="panel-divider" aria-hidden="true"></div>
+
+        <!-- Achievement -->
+        <section class="achievement-panel">
+          <div class="cert-label">Sertifikat Kompetensi Kimia</div>
+          <div class="cert-heading">Multistage Adaptive Scored Testing</div>
+
+          <div class="exam-title">Ujian Kimia Stoichiometry</div>
+
+          <div class="exam-code-stamp">
+            <span class="stamp-label">Kode Penyelenggaraan</span>
+            <span class="stamp-code">A7K9-X2M1</span>
+          </div>
+
+          <div class="ornament"></div>
+
+          <!-- Score -->
+          <div class="score-row">
+            <div class="score-block">
+              <div class="score-label">Skor Akhir</div>
+              <div class="score-value">83</div>
+            </div>
+            <div class="score-sep"></div>
+            <div class="score-block">
+              <div class="score-label">Predikat</div>
+              <div class="predikat-value">Unggul</div>
+              <div class="predikat-rank">Peringkat II</div>
+            </div>
+          </div>
+
+          <!-- Cognitive -->
+          <div class="cognitive-row">
+            <div class="cog-item">
+              <div class="cog-label">Knowing</div>
+              <div class="cog-score">92%</div>
+              <div class="cog-divider"></div>
+            </div>
+            <div class="cog-item">
+              <div class="cog-label">Applying</div>
+              <div class="cog-score">83%</div>
+              <div class="cog-divider"></div>
+            </div>
+            <div class="cog-item">
+              <div class="cog-label">Reasoning</div>
+              <div class="cog-score">75%</div>
+              <div class="cog-divider"></div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="description">
+            Ahmad menunjukkan penguasaan konsep stoichiometry yang kokoh dan mampu menerapkannya secara akurat pada situasi prosedural. Profil kompetensinya mengarah pada penalaran ilmiah yang mulai matang untuk menginterpretasikan data dan menyelesaikan masalah kontekstual tingkat menengah.
+          </div>
+        </section>
       </div>
 
       <!-- Footer -->
