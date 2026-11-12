@@ -7,6 +7,7 @@ import { Settings, Save, Loader2, Globe, Shield, Brain, Bell, type LucideIcon } 
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/useToast';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface PlatformConfig {
   platformName: string;
@@ -185,26 +186,25 @@ const AdminConfig: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-slate-600 to-slate-700 text-white">
-            <Settings size={20} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-extrabold text-slate-900">Pengaturan Platform</h1>
-            <p className="text-sm text-slate-500">Konfigurasi umum aplikasi AKURAT</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving || !dirty}
-          className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-slate-700 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          {saving ? 'Menyimpan…' : 'Simpan Pengaturan'}
-        </button>
-      </div>
+      <AdminPageHeader
+        icon={<Settings size={22} />}
+        eyebrow="Sistem"
+        title="Pengaturan Platform"
+        description="Konfigurasi umum aplikasi AKURAT"
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || !dirty}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-slate-700 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              {saving ? 'Menyimpan…' : 'Simpan Pengaturan'}
+            </button>
+          </>
+        }
+      />
 
       {/* ── General ─────────────────────────────────────────────────── */}
       <SectionCard icon={Globe} title="Umum" description="Pengaturan dasar platform" delay={0.05}>

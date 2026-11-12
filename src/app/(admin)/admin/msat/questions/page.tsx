@@ -3,13 +3,13 @@
 import { FC, useEffect, useState, useCallback } from 'react';
 import {
   BookOpen, Search, Loader2, ChevronDown, Plus, Trash2, Edit3,
-  ArrowLeft, X, Check, AlertCircle, Save,
+  X, Check, AlertCircle, Save,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
 import { TaxonomyPicker } from '@/components/admin/TaxonomyPicker';
 import { ContentTaxonomy } from '@/types/taxonomy';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface MSATQuestion {
   id: string;
@@ -236,21 +236,18 @@ const MsatQuestionsPage: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/msat" className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600">
-            <ArrowLeft size={16} />
-          </Link>
-          <div>
-            <h1 className="font-display text-xl font-extrabold text-stone-800">Bank Soal MSAT</h1>
-            <p className="text-xs text-stone-400">{questions.length} soal · {filtered.length} ditampilkan</p>
-          </div>
-        </div>
-        <button onClick={openCreate}
-          className="flex items-center gap-1.5 rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-violet-700">
-          <Plus size={14} /> Tambah Soal
-        </button>
-      </div>
+      <AdminPageHeader
+        backHref="/admin/msat"
+        eyebrow="AKURAT Exam"
+        title="Bank Soal MSAT"
+        description={`${questions.length} soal · ${filtered.length} ditampilkan`}
+        actions={
+          <button onClick={openCreate}
+            className="flex items-center gap-1.5 rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-violet-700">
+            <Plus size={14} /> Tambah Soal
+          </button>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">

@@ -3,12 +3,12 @@
 import { FC, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Loader2, BarChart3, Trophy, Users, Target,
+  Loader2, BarChart3, Trophy, Users, Target,
   ChevronDown, Brain, BookOpen, Lightbulb,
   CheckCircle2, XCircle, Send, LockKeyhole,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface StageResponse {
   stageNumber: number;
@@ -174,17 +174,12 @@ const MsatResultsPage: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/msat" className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600">
-            <ArrowLeft size={16} />
-          </Link>
-          <div>
-            <h1 className="font-display text-xl font-extrabold text-stone-800">Hasil Ujian MSAT</h1>
-            <p className="text-xs text-stone-400">{allSessions.length} siswa telah menyelesaikan ujian</p>
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader
+        backHref="/admin/msat"
+        eyebrow="AKURAT Exam"
+        title="Hasil Ujian MSAT"
+        description={`${allSessions.length} siswa telah menyelesaikan ujian`}
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

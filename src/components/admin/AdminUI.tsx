@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react';
-import { AlertCircle, Inbox, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+import { AlertCircle, ArrowLeft, Inbox, RefreshCw } from 'lucide-react';
 
 export const AdminPageHeader: FC<{
   eyebrow?: string;
@@ -8,9 +9,16 @@ export const AdminPageHeader: FC<{
   actions?: ReactNode;
   /** Optional icon shown in a soft tile before the title. */
   icon?: ReactNode;
-}> = ({ eyebrow, title, description, actions, icon }) => (
+  /** Adds a back arrow that links to the parent page. */
+  backHref?: string;
+}> = ({ eyebrow, title, description, actions, icon, backHref }) => (
   <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
     <div className="flex min-w-0 items-start gap-4">
+      {backHref && (
+        <Link href={backHref} aria-label="Kembali" className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700">
+          <ArrowLeft size={16} aria-hidden="true" />
+        </Link>
+      )}
       {icon && (
         <span className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 sm:flex" aria-hidden="true">
           {icon}

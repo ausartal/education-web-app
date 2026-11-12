@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface MSATStats {
   totalQuestions: number;
@@ -122,30 +123,29 @@ const MsatPage: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white">
-            <Brain size={18} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-800">AKURAT Exam</h1>
-            <p className="text-sm text-stone-400">Multistage Adaptive Scored Testing</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setAutoRefresh(value => !value)} className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${autoRefresh ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-stone-200 bg-white text-stone-500'}`}>
-            {autoRefresh ? 'Live · 15 dtk' : 'Live dijeda'}
-          </button>
-          <button
-            onClick={() => fetchData()}
-            disabled={refreshing}
-            className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-stone-500 shadow-sm border border-stone-200 transition-colors hover:bg-stone-50 disabled:opacity-50"
-          >
-            <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
-            {lastUpdated ? lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Refresh'}
-          </button>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={<Brain size={22} />}
+        eyebrow="Monitor langsung"
+        title="AKURAT Exam"
+        description="Multistage Adaptive Scored Testing"
+        actions={
+          <>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setAutoRefresh(value => !value)} className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${autoRefresh ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-stone-200 bg-white text-stone-500'}`}>
+                {autoRefresh ? 'Live · 15 dtk' : 'Live dijeda'}
+              </button>
+              <button
+                onClick={() => fetchData()}
+                disabled={refreshing}
+                className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-stone-500 shadow-sm border border-stone-200 transition-colors hover:bg-stone-50 disabled:opacity-50"
+              >
+                <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
+                {lastUpdated ? lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Refresh'}
+              </button>
+            </div>
+          </>
+        }
+      />
 
       {/* Quick Access — Prominent top section */}
       <div className="grid gap-3 sm:grid-cols-3">

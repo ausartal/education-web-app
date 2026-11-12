@@ -3,6 +3,7 @@
 import { FC, useEffect, useRef, useState, useCallback, KeyboardEvent } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Terminal, Trash2 } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface OutputLine {
   type: 'input' | 'output' | 'error' | 'success' | 'info' | 'table';
@@ -344,21 +345,20 @@ const AdminCLI: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-stone-700 to-stone-800 text-white">
-            <Terminal size={18} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-800">CLI Terminal</h1>
-            <p className="text-sm text-stone-400">Antarmuka baris perintah untuk manajemen platform</p>
-          </div>
-        </div>
-        <button onClick={() => setOutput([])}
-          className="flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-xs font-semibold text-stone-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500">
-          <Trash2 size={13} /> Bersihkan
-        </button>
-      </div>
+      <AdminPageHeader
+        icon={<Terminal size={22} />}
+        eyebrow="Sistem"
+        title="CLI Terminal"
+        description="Antarmuka baris perintah untuk manajemen platform"
+        actions={
+          <>
+            <button onClick={() => setOutput([])}
+              className="flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-xs font-semibold text-stone-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500">
+              <Trash2 size={13} /> Bersihkan
+            </button>
+          </>
+        }
+      />
 
       {/* Terminal window */}
       <div className="overflow-hidden rounded-2xl border border-stone-800 shadow-lg">

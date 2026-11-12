@@ -7,6 +7,7 @@ import { UserRole } from '@/types/firestore';
 import { useToast } from '@/hooks/useToast';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
 import { useAuth } from '@/context/AuthContext';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 import {
   Search, Trash2, UserPlus, X, Download,
   CheckSquare, Square, Users, ChevronDown, ChevronUp,
@@ -296,32 +297,31 @@ const AdminUsers: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-            <Users size={18} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-900">Manajemen Pengguna</h1>
-            <p className="text-sm text-stone-500">{users.length} pengguna terdaftar</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative group">
-            <button className="flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm font-medium text-stone-600 shadow-sm hover:bg-stone-50">
-              <Download size={14} /> Export
-            </button>
-            <div className="absolute right-0 top-full z-10 mt-1 hidden flex-col gap-1 rounded-xl bg-white p-1.5 shadow-lg group-hover:flex min-w-[100px]">
-              <button onClick={() => handleExport('csv')} className="rounded-lg px-3 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-50">CSV</button>
-              <button onClick={() => handleExport('json')} className="rounded-lg px-3 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-50">JSON</button>
+      <AdminPageHeader
+        icon={<Users size={22} />}
+        eyebrow="Data civitas"
+        title="Manajemen Pengguna"
+        description={`${users.length} pengguna terdaftar`}
+        actions={
+          <>
+            <div className="flex items-center gap-2">
+              <div className="relative group">
+                <button className="flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm font-medium text-stone-600 shadow-sm hover:bg-stone-50">
+                  <Download size={14} /> Export
+                </button>
+                <div className="absolute right-0 top-full z-10 mt-1 hidden flex-col gap-1 rounded-xl bg-white p-1.5 shadow-lg group-hover:flex min-w-[100px]">
+                  <button onClick={() => handleExport('csv')} className="rounded-lg px-3 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-50">CSV</button>
+                  <button onClick={() => handleExport('json')} className="rounded-lg px-3 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-50">JSON</button>
+                </div>
+              </div>
+              <button onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90">
+                <UserPlus size={15} /> Buat Pengguna
+              </button>
             </div>
-          </div>
-          <button onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90">
-            <UserPlus size={15} /> Buat Pengguna
-          </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Role stats */}
       <div className="grid grid-cols-4 gap-3">

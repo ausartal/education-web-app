@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/useToast';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
 import { TaxonomyPicker } from '@/components/admin/TaxonomyPicker';
 import { ContentTaxonomy } from '@/types/taxonomy';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface ClassDoc {
   id: string;
@@ -184,21 +185,20 @@ const AdminClasses: FC = () => {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
-            <School size={18} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-slate-900">Manajemen Kelas</h1>
-            <p className="text-sm text-slate-500">{classes.length} kelas terdaftar</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2"><button onClick={fetchData}
-          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50 transition-colors">
-          <RefreshCw size={13} /> Refresh
-        </button><button onClick={openCreate} className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700"><Plus size={14} /> Buat kelas</button></div>
-      </div>
+      <AdminPageHeader
+        icon={<School size={22} />}
+        eyebrow="Sekolah"
+        title="Manajemen Kelas"
+        description={`${classes.length} kelas terdaftar`}
+        actions={
+          <>
+            <div className="flex items-center gap-2"><button onClick={fetchData}
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50 transition-colors">
+              <RefreshCw size={13} /> Refresh
+            </button><button onClick={openCreate} className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700"><Plus size={14} /> Buat kelas</button></div>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-3 gap-3">
         {[

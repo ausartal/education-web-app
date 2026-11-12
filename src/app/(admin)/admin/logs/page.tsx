@@ -7,6 +7,7 @@ import { collection, limit as firestoreLimit, onSnapshot, orderBy, query } from 
 import { useAuth } from '@/context/AuthContext';
 import { AuditLog } from '@/types/firestore';
 import { db } from '@/lib/firebase';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 const actionColors: Record<string, string> = {
   create_user: 'bg-emerald-50 text-emerald-700',
@@ -138,23 +139,20 @@ const AdminLogs: FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 text-white">
-            <ClipboardList size={20} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-900">
-              Audit Log
-            </h1>
-            <p className="text-sm text-stone-500">Riwayat seluruh aktivitas admin</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setAutoRefresh(value => !value)} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold ${autoRefresh ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600'}`}>{autoRefresh ? <Pause size={13} /> : <Play size={13} />}{autoRefresh ? (realtimeConnected ? 'Realtime terhubung' : 'Menghubungkan...') : 'Realtime dijeda'}</button>
-          <button onClick={() => fetchLogs(limit)} disabled={loading} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-50"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />Perbarui</button>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={<ClipboardList size={22} />}
+        eyebrow="Sistem"
+        title="Audit Log"
+        description="Riwayat seluruh aktivitas admin"
+        actions={
+          <>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setAutoRefresh(value => !value)} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold ${autoRefresh ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600'}`}>{autoRefresh ? <Pause size={13} /> : <Play size={13} />}{autoRefresh ? (realtimeConnected ? 'Realtime terhubung' : 'Menghubungkan...') : 'Realtime dijeda'}</button>
+              <button onClick={() => fetchLogs(limit)} disabled={loading} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-50"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />Perbarui</button>
+            </div>
+          </>
+        }
+      />
 
       {/* Stats strip */}
       <motion.div

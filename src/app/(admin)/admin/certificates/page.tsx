@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface Certificate {
   id: string;
@@ -142,29 +143,28 @@ const AdminCertificatesPage: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-            <Award size={18} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-800">Sertifikat</h1>
-            <p className="text-sm text-stone-400">Kelola penerbitan dan pengiriman sertifikat</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={handleGenerateAll} disabled={generating}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] px-4 py-2.5 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-40">
-            {generating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
-            {generating ? 'Generate...' : 'Generate Semua'}
-          </button>
-          {pendingCount > 0 && (
-            <span className="rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700">
-              {pendingCount} menunggu
-            </span>
-          )}
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={<Award size={22} />}
+        eyebrow="AKURAT Exam"
+        title="Sertifikat"
+        description="Kelola penerbitan dan pengiriman sertifikat"
+        actions={
+          <>
+            <div className="flex items-center gap-2">
+              <button onClick={handleGenerateAll} disabled={generating}
+                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#4f6ef7] to-[#6366f1] px-4 py-2.5 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-40">
+                {generating ? <Loader2 size={12} className="animate-spin" /> : <Award size={12} />}
+                {generating ? 'Generate...' : 'Generate Semua'}
+              </button>
+              {pendingCount > 0 && (
+                <span className="rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700">
+                  {pendingCount} menunggu
+                </span>
+              )}
+            </div>
+          </>
+        }
+      />
 
       {generateResult && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-xs text-emerald-700 border border-emerald-100">

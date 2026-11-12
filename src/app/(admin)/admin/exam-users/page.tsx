@@ -6,6 +6,7 @@ import {
   Search, Eye, X, Camera, Phone, MapPin, Building2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface ExamUser {
   id: string;
@@ -104,20 +105,19 @@ const AdminExamUsersPage: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-            <Users size={18} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-800">Peserta Ujian</h1>
-            <p className="text-sm text-stone-400">Kelola akun AKURAT Exam dan verifikasi identitas</p>
-          </div>
-        </div>
-        <span className="rounded-xl bg-stone-100 px-3 py-1.5 text-xs font-bold text-stone-500">
-          {users.length} peserta
-        </span>
-      </div>
+      <AdminPageHeader
+        icon={<Users size={22} />}
+        eyebrow="Data civitas"
+        title="Peserta Ujian"
+        description="Kelola akun AKURAT Exam dan verifikasi identitas"
+        actions={
+          <>
+            <span className="rounded-xl bg-stone-100 px-3 py-1.5 text-xs font-bold text-stone-500">
+              {users.length} peserta
+            </span>
+          </>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">

@@ -7,10 +7,10 @@ import {
   ArrowLeft, Loader2, Copy, Check, RefreshCw, ChevronRight,
   AlertCircle, Sparkles,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { TaxonomyPicker } from '@/components/admin/TaxonomyPicker';
 import { ContentTaxonomy } from '@/types/taxonomy';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface Question {
   id: string;
@@ -213,15 +213,12 @@ const MsatCreatePage: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link href="/admin/msat" className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600">
-          <ArrowLeft size={16} />
-        </Link>
-        <div>
-          <h1 className="font-display text-xl font-extrabold text-stone-800">Buat Ujian MSAT</h1>
-          <p className="text-xs text-stone-400">Konfigurasi ujian baru</p>
-        </div>
-      </div>
+      <AdminPageHeader
+        backHref="/admin/msat"
+        eyebrow="AKURAT Exam"
+        title="Buat Ujian MSAT"
+        description="Atur judul, kode, dan soal tiap cabang, lalu terbitkan ujian untuk peserta."
+      />
 
       {/* Step indicator */}
       <div className="flex items-center gap-2">

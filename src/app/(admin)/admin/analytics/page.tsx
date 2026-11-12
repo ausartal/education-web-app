@@ -8,6 +8,7 @@ import {
   RefreshCw, Download, Target,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface AnalyticsData {
   dayKeys: string[];
@@ -182,54 +183,53 @@ const AdminAnalytics: FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 text-white">
-            <BarChart3 size={18} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-900">Analitik Platform</h1>
-            <p className="text-sm text-stone-500">Statistik dan tren {days} hari terakhir</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-slate-200 bg-white p-1" aria-label="Pilih periode analitik">
-            {([7, 30, 90] as const).map(option => (
-              <button key={option} type="button" onClick={() => setDays(option)} className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${days === option ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}>
-                {option} hari
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1.5">
-            {(['users', 'question_bank', 'exam_sessions'] as const).map(col => (
-              <div key={col} className="relative group">
-                <button className="flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-50">
-                  <Download size={13} /> {col === 'users' ? 'Pengguna' : col === 'question_bank' ? 'Soal' : 'Ujian'}
-                </button>
-                {/* Invisible bridge — covers gap so hover doesn't break */}
-                <div className="absolute right-0 top-full z-10 h-3 w-full group-hover:block hidden" />
-                {/* Dropdown with visible gap */}
-                <div className="absolute right-0 top-full z-20 mt-3 hidden min-w-[140px] flex-col gap-1 rounded-xl bg-white p-2 shadow-lg ring-1 ring-stone-200/60 group-hover:flex">
-                  <button onClick={() => handleExport(col, 'csv')}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-stone-600 transition-colors hover:bg-stone-50 hover:text-stone-900">
-                    <span className="flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-[8px] font-bold text-emerald-700">CSV</span>
-                    Download CSV
+      <AdminPageHeader
+        icon={<BarChart3 size={22} />}
+        eyebrow="Umum"
+        title="Analitik Platform"
+        description={`Statistik dan tren ${days} hari terakhir`}
+        actions={
+          <>
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-lg border border-slate-200 bg-white p-1" aria-label="Pilih periode analitik">
+                {([7, 30, 90] as const).map(option => (
+                  <button key={option} type="button" onClick={() => setDays(option)} className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${days === option ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}>
+                    {option} hari
                   </button>
-                  <button onClick={() => handleExport(col, 'json')}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-stone-600 transition-colors hover:bg-stone-50 hover:text-stone-900">
-                    <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-[8px] font-bold text-blue-700">JSON</span>
-                    Download JSON
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <button onClick={() => mutate()}
-            className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-medium text-stone-700 shadow-sm hover:bg-stone-50">
-            <RefreshCw size={13} /> Refresh
-          </button>
-        </div>
-      </div>
+              <div className="flex gap-1.5">
+                {(['users', 'question_bank', 'exam_sessions'] as const).map(col => (
+                  <div key={col} className="relative group">
+                    <button className="flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-50">
+                      <Download size={13} /> {col === 'users' ? 'Pengguna' : col === 'question_bank' ? 'Soal' : 'Ujian'}
+                    </button>
+                    {/* Invisible bridge — covers gap so hover doesn't break */}
+                    <div className="absolute right-0 top-full z-10 h-3 w-full group-hover:block hidden" />
+                    {/* Dropdown with visible gap */}
+                    <div className="absolute right-0 top-full z-20 mt-3 hidden min-w-[140px] flex-col gap-1 rounded-xl bg-white p-2 shadow-lg ring-1 ring-stone-200/60 group-hover:flex">
+                      <button onClick={() => handleExport(col, 'csv')}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-stone-600 transition-colors hover:bg-stone-50 hover:text-stone-900">
+                        <span className="flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-[8px] font-bold text-emerald-700">CSV</span>
+                        Download CSV
+                      </button>
+                      <button onClick={() => handleExport(col, 'json')}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-stone-600 transition-colors hover:bg-stone-50 hover:text-stone-900">
+                        <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-[8px] font-bold text-blue-700">JSON</span>
+                        Download JSON
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => mutate()}
+                className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-medium text-stone-700 shadow-sm hover:bg-stone-50">
+                <RefreshCw size={13} /> Refresh
+              </button>
+            </div>
+          </>
+        }
+      />
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">

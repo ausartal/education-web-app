@@ -11,6 +11,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
 import { useSearchParams } from 'next/navigation';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
@@ -402,21 +403,20 @@ const AdminUjianPage: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-fuchsia-600 text-white">
-            <FlaskConical size={18} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-800">Ujian Sekolah</h1>
-            <p className="text-sm text-stone-400">Kelola kelas, jadwal ujian, soal, dan hasil sesi</p>
-          </div>
-        </div>
-        <button onClick={fetchData}
-          className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-medium text-stone-600 shadow-sm border border-stone-200 hover:bg-stone-50">
-          <RefreshCw size={13} /> Refresh
-        </button>
-      </div>
+      <AdminPageHeader
+        icon={<FlaskConical size={22} />}
+        eyebrow="Sekolah"
+        title="Ujian Sekolah"
+        description="Kelola kelas, jadwal ujian, soal, dan hasil sesi"
+        actions={
+          <>
+            <button onClick={fetchData}
+              className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-medium text-stone-600 shadow-sm border border-stone-200 hover:bg-stone-50">
+              <RefreshCw size={13} /> Refresh
+            </button>
+          </>
+        }
+      />
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-2xl bg-stone-100 p-1">

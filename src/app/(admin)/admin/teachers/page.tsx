@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/useToast';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
 import Link from 'next/link';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 
 interface TeacherRow {
   uid: string;
@@ -196,21 +197,20 @@ const AdminTeachers: FC = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-            <GraduationCap size={18} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-900">Manajemen Guru</h1>
-            <p className="text-sm text-stone-500">{teachersOnly.length} guru terdaftar</p>
-          </div>
-        </div>
-        <button onClick={fetchTeachers}
-          className="flex items-center gap-1.5 rounded-xl border border-stone-100 bg-white px-3 py-2 text-xs font-medium text-stone-600 shadow-sm hover:bg-stone-50">
-          <RefreshCw size={13} /> Refresh
-        </button>
-      </div>
+      <AdminPageHeader
+        icon={<GraduationCap size={22} />}
+        eyebrow="Data civitas"
+        title="Manajemen Guru"
+        description={`${teachersOnly.length} guru terdaftar`}
+        actions={
+          <>
+            <button onClick={fetchTeachers}
+              className="flex items-center gap-1.5 rounded-xl border border-stone-100 bg-white px-3 py-2 text-xs font-medium text-stone-600 shadow-sm hover:bg-stone-50">
+              <RefreshCw size={13} /> Refresh
+            </button>
+          </>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
