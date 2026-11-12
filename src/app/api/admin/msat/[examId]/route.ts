@@ -3,6 +3,7 @@ import { notifyUsers } from '@/lib/notify';
 import { cancelSessionByAdmin, isServiceError, terminateSessionByAdmin } from '@/lib/msat-server';
 import { content } from '@/lib/notification-content';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { refundJoinToken } from '@/lib/token-paywall';
 
 export const dynamic = 'force-dynamic';
 
@@ -263,6 +264,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
       }
 
       affectedSessions = 1;
+      if (action === 'cancel_session') await refundJoinToken(targetSessionId, decoded.uid);
       await notifyUsers([result.studentId], action === 'terminate_session'
         ? content.sessionTerminated({ reason })
         : content.sessionCancelled({ wasCompleted: result.wasCompleted, reason }));

@@ -47,6 +47,8 @@ const ExamTokensPage: FC = () => {
   const [buying, setBuying] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [paywallEnabled, setPaywallEnabled] = useState(false);
+  const [joinCost, setJoinCost] = useState(1);
 
   const tokenBalance = examUser?.tokenBalance ?? 0;
 
@@ -58,6 +60,8 @@ const ExamTokensPage: FC = () => {
       if (res.ok) {
         const d = await res.json();
         setTokens(d.tokens ?? []);
+        setPaywallEnabled(d.paywallEnabled === true);
+        if (typeof d.joinCost === 'number') setJoinCost(d.joinCost);
       }
     } catch { /* ignore */ }
     setLoading(false);
@@ -113,6 +117,12 @@ const ExamTokensPage: FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className={`mt-4 rounded-lg px-4 py-3 text-sm ring-1 ${paywallEnabled ? 'bg-amber-50 text-amber-800 ring-amber-100' : 'bg-emerald-50 text-emerald-800 ring-emerald-100'}`}>
+        {paywallEnabled
+          ? `Setiap ujian memakai ${joinCost} token. Pastikan saldo cukup sebelum memasukkan kode ujian.`
+          : 'Saat ini ujian gratis. Kamu tidak perlu token untuk mengikuti ujian.'}
       </div>
 
       {/* Messages */}

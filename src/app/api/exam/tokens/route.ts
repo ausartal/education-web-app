@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from '@/lib/pg-firestore';
 import { mockPurchasesAllowed } from '@/lib/token-ledger';
+import { JOIN_TOKEN_COST, getPaywallState } from '@/lib/token-paywall';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,8 @@ export async function GET(req: NextRequest) {
       ...doc.data(),
     }));
 
-    return NextResponse.json({ tokenBalance, tokens });
+    const paywall = await getPaywallState();
+    return NextResponse.json({ tokenBalance, tokens, paywallEnabled: paywall.enabled, joinCost: JOIN_TOKEN_COST });
   } catch {
     return NextResponse.json({ error: 'Token tidak valid' }, { status: 401 });
   }

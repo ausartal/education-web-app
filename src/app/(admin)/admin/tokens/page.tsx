@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { AdminEmptyState, AdminErrorState, AdminPageHeader, AdminSection, AdminSkeleton } from '@/components/admin/AdminUI';
 import { MAX_ADJUSTMENT } from '@/lib/token-ledger';
+import { TokenPaywallPanel } from '@/components/admin/TokenPaywallPanel';
 
 interface TokenOverview {
   summary: {
@@ -88,6 +89,8 @@ export default function TokensPage() {
   return (
     <div className="mx-auto max-w-[1200px] space-y-6 pb-10">
       <AdminPageHeader icon={<Coins size={22} />} eyebrow="AKURAT Exam" title="Token Peserta" description="Lihat saldo token, sesuaikan saldo dengan alasan yang tercatat, dan tinjau riwayat perubahan." />
+
+      <TokenPaywallPanel />
 
       <section className="grid gap-3 sm:grid-cols-3">
         {cards.map(({ icon: Icon, color, value, label }) => (

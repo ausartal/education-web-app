@@ -5,6 +5,7 @@ import { advanceBreakIfDue } from '@/lib/msat-server';
 import { ACTIVE_SESSION_STATUSES } from '@/lib/msat-session';
 import { consumeRateLimit } from '@/lib/rate-limit-server';
 import { rateLimitMessage } from '@/lib/rate-limit';
+import { JOIN_TOKEN_COST, canJoinWithBalance, getPaywallState } from '@/lib/token-paywall';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,6 +84,8 @@ export async function POST(req: NextRequest) {
       studentName = userDoc.data()?.displayName ?? 'Siswa';
     }
 
+    const paywallOn = isExamUser && (await getPaywallState()).enabled;
+
     const outcome = await runTransaction(async (tx): Promise<JoinOutcome> => {
       await tx.lock(`msat_join:${examId}`);
 
@@ -122,6 +125,31 @@ export async function POST(req: NextRequest) {
       const initialStatus = examIsActive ? 'in_progress' : 'waiting';
       const sessionRef = adminDb.collection('msat_sessions').doc();
 
+      if (paywallOn) {
+        await tx.lock(`exam_token_balance:${decoded.uid}`);
+        const walletRef = adminDb.collection('exam_users').doc(decoded.uid);
+        const wallet = await tx.get(walletRef);
+        const rawBalance = wallet.data()?.tokenBalance;
+        const balance = typeof rawBalance === 'number' ? rawBalance : 0;
+        if (!canJoinWithBalance(balance)) {
+          return { kind: 'rejected', status: 402, error: `Token tidak cukup. Ujian ini memakai ${JOIN_TOKEN_COST} token, saldo kamu ${balance}.` };
+        }
+        await tx.update(walletRef, { tokenBalance: balance - JOIN_TOKEN_COST, updatedAt: FieldValue.serverTimestamp() });
+        await tx.set(adminDb.collection('exam_token_ledger').doc(), {
+          userId: decoded.uid,
+          userName: studentName,
+          userEmail: (examUserDoc.data()?.email as string) ?? '',
+          delta: -JOIN_TOKEN_COST,
+          balanceAfter: balance - JOIN_TOKEN_COST,
+          type: 'exam_join',
+          reason: `Mengikuti ujian ${String(exam.title ?? exam.code)}`,
+          actorId: decoded.uid,
+          sessionId: sessionRef.id,
+          examId,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+      }
+
       await tx.set(sessionRef, {
         studentId: decoded.uid,
         studentName,
@@ -151,7 +179,6 @@ export async function POST(req: NextRequest) {
         createdAt: FieldValue.serverTimestamp(),
       });
 
-      // Token decrement stays disabled until the payment flow exists.
       await tx.update(examRef, { currentUses: FieldValue.increment(1) });
 
       if (!examIsActive) {
