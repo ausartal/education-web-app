@@ -1,13 +1,15 @@
 'use client';
 
 import { FC, useEffect, useState } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PageHero } from '@/components/ui/PageHero';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { getMaterials } from '@/services/materials';
 import { Material } from '@/types/firestore';
-import { CheckCircle, Lock } from 'lucide-react';
+import { BookOpen, CheckCircle, Lock } from 'lucide-react';
 
 // Map materials to colorful topic icons and gradients
 const topicStyles = [
@@ -77,18 +79,29 @@ const MateriPage: FC = () => {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-10 text-center"
-      >
-        <h1 className="mb-2 font-display text-2xl font-extrabold text-gray-900">
-          Materi Pembelajaran
-        </h1>
-        <p className="text-sm text-gray-500">
-          {materials.length} materi tersedia
-        </p>
-      </motion.div>
+      <PageHero
+        tone="teal"
+        eyebrow="Belajar mandiri"
+        title="Materi Pembelajaran"
+        description="Pelajari konsep selangkah demi selangkah, lalu uji pemahamanmu lewat latihan soal."
+        image="/icons/hero-materi.svg"
+        chips={[{ label: `${materials.length} materi tersedia` }]}
+        className="mb-8"
+      />
+
+      {materials.length === 0 && (
+        <EmptyState
+          tone="teal"
+          icon={<BookOpen size={32} />}
+          title="Belum ada materi"
+          description="Materi akan muncul di sini setelah dipublikasikan. Sementara itu, kamu bisa mencoba latihan soal."
+          action={
+            <Link href="/latihan" className="inline-flex rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90">
+              Buka Latihan Soal
+            </Link>
+          }
+        />
+      )}
 
       {/* Material Cards - Duolingo style */}
       <div className="space-y-4">

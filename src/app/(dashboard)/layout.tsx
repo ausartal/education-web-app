@@ -8,6 +8,7 @@ import { MobileNav } from '@/components/layout/MobileNav';
 import { TeacherMobileNav } from '@/components/layout/TeacherMobileNav';
 import { AuthGuard } from '@/components/guards/AuthGuard';
 import { AdminPreviewBanner } from '@/components/admin/AdminPreviewBanner';
+import { EmailVerificationBanner } from '@/components/shared/EmailVerificationBanner';
 import { useAuth } from '@/context/AuthContext';
 
 interface DashboardLayoutProps {
@@ -23,6 +24,7 @@ const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <AuthGuard>
       {isTeacher ? <TeacherNavbar /> : <Navbar />}
+      <EmailVerificationBanner />
       <main
         id="main-content"
         className="mx-auto min-h-screen max-w-7xl px-4 pb-16 pt-6 md:pb-6"

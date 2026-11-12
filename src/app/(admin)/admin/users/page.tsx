@@ -39,9 +39,12 @@ const roleColors: Record<UserRole, string> = {
 interface CreateUserForm { email: string; password: string; displayName: string; role: UserRole; }
 const defaultForm: CreateUserForm = { email: '', password: '', displayName: '', role: 'student' };
 
-function fmtDate(iso?: string | null): string {
+function fmtDate(iso: unknown): string {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  const o = iso as Record<string, unknown>;
+  const secs = (o._seconds ?? o.seconds) as number | undefined;
+  const d = typeof secs === 'number' ? new Date(secs * 1000) : new Date(iso as string);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function EditableStat({

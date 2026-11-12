@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import type { Metadata, Viewport } from 'next';
-import { Nunito, Ubuntu, Space_Mono } from 'next/font/google';
+import { Nunito, Ubuntu, Space_Mono, Cormorant_Garamond } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/hooks/useToast';
 import { ToastContainer } from '@/components/ui/Toast';
@@ -26,6 +26,13 @@ const spaceMono = Space_Mono({
   subsets: ['latin'],
   weight: ['400', '700'],
   variable: '--font-mono',
+  display: 'swap',
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-cert',
   display: 'swap',
 });
 
@@ -76,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${nunito.variable} ${ubuntu.variable} ${spaceMono.variable} antialiased`}
+        className={`${nunito.variable} ${ubuntu.variable} ${spaceMono.variable} ${cormorant.variable} antialiased`}
       >
         <AuthProvider>
           <ToastProvider>

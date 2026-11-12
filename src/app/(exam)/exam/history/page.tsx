@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, Trophy, ChevronDown, BarChart3, BookOpen, Target,
@@ -106,22 +107,27 @@ const ExamHistoryPage: FC = () => {
       </div>
 
       {history.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl bg-[#F8F7FF] py-16 ring-1 ring-[#E5E0F5]">
-          <BarChart3 size={28} className="text-gray-300" />
-          <p className="mt-3 text-sm font-semibold text-gray-500">Belum ada hasil ujian</p>
-          <p className="mt-1 text-xs text-gray-400">Hasil akan muncul setelah kamu menyelesaikan ujian</p>
-          <Link href="/exam" className="mt-4 rounded-xl bg-[#5841EA] px-5 py-2 text-xs font-semibold text-white">
-            Masuk Ujian
-          </Link>
-        </div>
+        <EmptyState
+          tone="violet"
+          icon={<BarChart3 size={32} />}
+          title="Belum ada hasil ujian"
+          description="Hasil dan analisis kompetensimu akan muncul di sini setelah kamu menyelesaikan ujian."
+          action={
+            <Link href="/exam" className="rounded-xl bg-[#5841EA] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#4D38D4]">
+              Masuk Ujian
+            </Link>
+          }
+        />
       ) : (
         <div className="space-y-4">
           {history.map((exam, i) => {
             const predColors = PREDIKAT_COLORS[exam.predikat ?? ''] ?? { text: 'text-stone-600', bg: 'bg-stone-50', ring: 'ring-stone-200' };
             const isExpanded = expandedId === exam.sessionId;
-            const completedDate = exam.completedAt?._seconds
-              ? new Date(exam.completedAt._seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-              : '-';
+            const completedDate = (() => {
+              const t = exam.completedAt as Record<string, unknown> | null;
+              const secs = (t?._seconds ?? t?.seconds) as number | undefined;
+              return typeof secs === 'number' ? new Date(secs * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+            })();
 
             return (
               <motion.div

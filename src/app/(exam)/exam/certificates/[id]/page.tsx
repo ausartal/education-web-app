@@ -34,13 +34,16 @@ interface UserProfile {
   identityNumber: string;
   identityType: string;
   institution: string;
+  photoURL?: string | null;
 }
 
-function formatDate(ts: { _seconds: number } | null): string {
+function formatDate(ts: unknown): string {
   if (!ts) return '-';
-  return new Date(ts._seconds * 1000).toLocaleDateString('id-ID', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
+  const o = ts as Record<string, unknown>;
+  const secs = (o._seconds ?? o.seconds) as number | undefined;
+  if (typeof secs === 'number') return new Date(secs * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const d = new Date(ts as string);
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 const PERINGKAT_ROMAN: Record<number, string> = {
@@ -176,6 +179,16 @@ const CertificateDetailPage: FC = () => {
           {/* Top accent */}
           <div className="absolute left-0 right-0 top-0 h-[3px]" style={{ background: 'linear-gradient(90deg, #6320EE 0%, #8B5CF6 30%, #F59E0B 50%, #8B5CF6 70%, #6320EE 100%)' }} />
 
+          {/* Quiet chemistry watermark */}
+          <div className="pointer-events-none absolute" style={{ top: '42%', right: '12mm', width: '92px', height: '92px', opacity: 0.055 }}>
+            <svg viewBox="0 0 100 100" fill="none">
+              <circle cx="50" cy="50" r="6" fill="#6320EE" />
+              <ellipse cx="50" cy="50" rx="34" ry="13" stroke="#6320EE" strokeWidth="1.2" />
+              <ellipse cx="50" cy="50" rx="34" ry="13" stroke="#6320EE" strokeWidth="1.2" transform="rotate(60 50 50)" />
+              <ellipse cx="50" cy="50" rx="34" ry="13" stroke="#6320EE" strokeWidth="1.2" transform="rotate(120 50 50)" />
+            </svg>
+          </div>
+
           {/* Seal watermark */}
           <div className="pointer-events-none absolute bottom-[18mm] right-[22mm] h-14 w-14 opacity-[0.12]">
             <svg viewBox="0 0 100 100" fill="none">
@@ -204,70 +217,101 @@ const CertificateDetailPage: FC = () => {
               <div className="text-right">
                 <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-[#9CA3AF]">Sertifikat Kompetensi</p>
                 <p className="mt-0.5 font-mono text-[10px] text-[#6B7280]">{cert.certificateNo}</p>
+                <p className="font-mono text-[7px] text-[#9CA3AF]">Verifikasi: {typeof window !== 'undefined' ? window.location.host : ''}/verifikasi/{cert.certificateNo}</p>
               </div>
             </div>
 
-            {/* Body */}
-            <div className="flex flex-1 flex-col items-center justify-center text-center" style={{ padding: '0 20px' }}>
-              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#6320EE]">Sertifikat Kompetensi Kimia</p>
-              <p className="mt-1.5 font-serif text-sm font-semibold text-[#6B7280]" style={{ fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.06em' }}>Multistage Adaptive Scored Testing</p>
+            {/* Body — portrait + achievement (certificate-sample layout) */}
+            <div className="flex min-h-0 flex-1">
+              {/* Portrait panel */}
+              <aside className="relative flex w-[32%] min-w-0 flex-col items-center justify-center px-2 py-2 text-center">
+                <div className="pointer-events-none absolute" style={{ inset: '4px 28px 4px 4px', background: 'radial-gradient(ellipse 80% 55% at 50% 28%, rgba(237,233,254,0.9) 0%, rgba(245,243,255,0.45) 55%, transparent 100%)', borderRadius: '18px' }} />
 
-              <h2 className="mt-4 font-serif text-[28px] font-bold leading-tight text-[#1a1040]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                {cert.examTitle}
-              </h2>
-
-              {examCode && (
-                <div className="mt-2.5 inline-flex flex-col items-center rounded border border-[#D1D5DB] px-3.5 py-1">
-                  <span className="text-[7px] font-bold uppercase tracking-[0.15em] text-[#9CA3AF]">Kode Penyelenggaraan</span>
-                  <span className="font-mono text-[13px] font-bold tracking-[0.12em] text-[#6B7280]">{examCode}</span>
-                </div>
-              )}
-
-              <div className="mx-auto my-4 h-px w-12" style={{ background: 'linear-gradient(90deg, transparent, #6320EE, transparent)' }} />
-
-              <p className="text-[8px] font-medium uppercase tracking-[0.2em] text-[#9CA3AF]">Diberikan kepada</p>
-              <h3 className="mt-1.5 font-serif text-[30px] font-bold leading-tight text-[#1a1040]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                {profile?.displayName ?? '-'}
-              </h3>
-              <p className="mt-1 text-[11px] text-[#6B7280]">
-                {profile?.identityType}: {profile?.identityNumber}
-                <span className="mx-1.5 text-[#D1D5DB]">&middot;</span>
-                {profile?.institution}
-              </p>
-
-              {/* Score */}
-              <div className="mt-4 flex items-center justify-center gap-6">
-                <div className="text-center">
-                  <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-[#9CA3AF]">Skor Akhir</p>
-                  <p className="font-display text-[34px] font-black leading-none text-[#1a1040]">{cert.score}</p>
-                </div>
-                <div className="h-9 w-px bg-[#E5E7EB]" />
-                <div className="text-center">
-                  <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-[#9CA3AF]">Predikat</p>
-                  <p className="font-display text-xl font-extrabold leading-none text-[#6320EE]">{cert.predikat}</p>
-                  <p className="mt-0.5 text-[9px] text-[#9CA3AF]">Peringkat {PERINGKAT_ROMAN[peringkat] ?? peringkat}</p>
-                </div>
-              </div>
-
-              {/* Cognitive */}
-              <div className="mt-4 flex justify-center gap-14">
-                {[
-                  { label: 'Knowing', value: knowing },
-                  { label: 'Applying', value: applying },
-                  { label: 'Reasoning', value: reasoning },
-                ].map((cog) => (
-                  <div key={cog.label} className="text-center">
-                    <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-[#9CA3AF]">{cog.label}</p>
-                    <p className="font-display text-xl font-extrabold leading-none text-[#1a1040]">{cog.value}%</p>
-                    <div className="mx-auto mt-2 h-px w-6 bg-[#E5E7EB]" />
+                {/* Portrait with gold ring */}
+                <div className="relative mb-4 shrink-0" style={{ width: '132px', height: '132px' }}>
+                  <div className="absolute rounded-full" style={{ inset: '-4px', background: 'conic-gradient(from 210deg, #F59E0B, #FBBF24, #D4A017, #F59E0B)' }} />
+                  <div className="absolute rounded-full border-white" style={{ inset: '-1px', borderWidth: '1.5px' }} />
+                  <div className="absolute inset-0 overflow-hidden rounded-full" style={{ background: 'linear-gradient(160deg, #EDE9FE 0%, #DDD6FE 45%, #C4B5FD 100%)', boxShadow: '0 6px 18px rgba(99,32,238,0.18)' }}>
+                    {profile?.photoURL ? (
+                      <img
+                        src={profile.photoURL}
+                        alt={`Foto ${profile.displayName}`}
+                        className="h-full w-full object-cover"
+                        style={{ objectPosition: 'center 18%' }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; const n = e.currentTarget.nextElementSibling as HTMLElement | null; if (n) n.style.display = 'flex'; }}
+                      />
+                    ) : null}
+                    <div
+                      className="flex h-full w-full items-center justify-center font-display text-3xl font-black text-[#6320EE]"
+                      style={{ display: profile?.photoURL ? 'none' : 'flex' }}
+                    >
+                      {(profile?.displayName ?? '-').charAt(0).toUpperCase()}
+                    </div>
                   </div>
-                ))}
-              </div>
+                </div>
 
-              {/* Description */}
-              <p className="mx-auto mt-4 max-w-lg text-center text-[9px] leading-relaxed text-[#9CA3AF]">
-                {description}
-              </p>
+                <p className="relative mb-1.5 text-[8px] font-medium uppercase text-[#9CA3AF]" style={{ letterSpacing: '0.22em' }}>Diberikan kepada</p>
+                <h1 className="relative mb-1.5 font-bold leading-tight text-[#1a1040]" style={{ fontFamily: 'var(--font-cert), serif', fontSize: '28px' }}>
+                  {profile?.displayName ?? '-'}
+                </h1>
+                <div className="relative text-[10px] leading-relaxed text-[#6B7280]">
+                  {profile?.identityType && profile?.identityNumber && (
+                    <p>{profile.identityType}: {profile.identityNumber}</p>
+                  )}
+                  {profile?.institution && <p>{profile.institution}</p>}
+                </div>
+              </aside>
+
+              {/* Divider */}
+              <div className="my-2 w-px shrink-0" style={{ background: 'linear-gradient(180deg, transparent 0%, #E9E2FF 18%, #E9E2FF 82%, transparent 100%)' }} />
+
+              {/* Achievement panel */}
+              <section className="flex min-w-0 flex-1 flex-col justify-center py-2 pl-6">
+                <p className="text-[9px] font-bold uppercase text-[#6320EE]" style={{ letterSpacing: '0.28em' }}>Sertifikat Kompetensi Kimia</p>
+                <p className="mt-1 font-semibold text-[#6B7280]" style={{ fontFamily: 'var(--font-cert), serif', fontSize: '13px', letterSpacing: '0.05em' }}>Multistage Adaptive Scored Testing</p>
+
+                <h2 className="mt-2.5 font-bold leading-snug text-[#1a1040]" style={{ fontFamily: 'var(--font-cert), serif', fontSize: '28px' }}>
+                  {cert.examTitle}
+                </h2>
+
+                {examCode && (
+                  <div className="mt-2.5 inline-flex w-fit flex-col items-start rounded border border-[#D1D5DB] px-3 py-1">
+                    <span className="text-[7px] font-bold uppercase text-[#9CA3AF]" style={{ letterSpacing: '0.15em' }}>Kode Penyelenggaraan</span>
+                    <span className="font-mono text-[13px] font-bold text-[#6B7280]" style={{ letterSpacing: '0.12em' }}>{examCode}</span>
+                  </div>
+                )}
+
+                <div className="my-3 h-px w-12" style={{ background: 'linear-gradient(90deg, transparent, #6320EE, transparent)' }} />
+
+                {/* Score row */}
+                <div className="mb-4 flex items-center gap-5">
+                  <div>
+                    <p className="mb-1 text-[8px] font-bold uppercase text-[#9CA3AF]" style={{ letterSpacing: '0.15em' }}>Skor Akhir</p>
+                    <p className="font-black leading-none text-[#1a1040]" style={{ fontFamily: 'Nunito, sans-serif', fontSize: '40px' }}>{cert.score}</p>
+                  </div>
+                  <div className="h-10 w-px bg-[#E5E7EB]" />
+                  <div>
+                    <p className="mb-1 text-[8px] font-bold uppercase text-[#9CA3AF]" style={{ letterSpacing: '0.15em' }}>Predikat</p>
+                    <p className="font-extrabold leading-tight text-[#6320EE]" style={{ fontFamily: 'Nunito, sans-serif', fontSize: '22px' }}>{cert.predikat}</p>
+                    <p className="mt-0.5 text-[9px] text-[#9CA3AF]">Peringkat {PERINGKAT_ROMAN[peringkat] ?? peringkat}</p>
+                  </div>
+                </div>
+
+                {/* Cognitive row */}
+                <div className="mb-3 flex gap-7">
+                  {[{ label: 'Knowing', value: knowing }, { label: 'Applying', value: applying }, { label: 'Reasoning', value: reasoning }].map((cog) => (
+                    <div key={cog.label} className="min-w-[72px]">
+                      <p className="mb-1 text-[8px] font-bold uppercase text-[#9CA3AF]" style={{ letterSpacing: '0.12em' }}>{cog.label}</p>
+                      <p className="font-extrabold leading-none text-[#1a1040]" style={{ fontFamily: 'Nunito, sans-serif', fontSize: '20px' }}>{cog.value}%</p>
+                      <div className="mt-1.5 h-px w-7 bg-[#E5E7EB]" />
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[9px] leading-relaxed text-[#9CA3AF]">
+                  {description}
+                </p>
+              </section>
             </div>
 
             {/* Footer */}
@@ -311,21 +355,22 @@ const CertificateDetailPage: FC = () => {
               <div className="text-right">
                 <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-[#9CA3AF]">Laporan Analisis Kompetensi</p>
                 <p className="mt-0.5 font-mono text-[10px] text-[#6B7280]">{cert.certificateNo}</p>
+                <p className="font-mono text-[7px] text-[#9CA3AF]">Verifikasi: {typeof window !== 'undefined' ? window.location.host : ''}/verifikasi/{cert.certificateNo}</p>
               </div>
             </header>
 
             <div className="flex flex-1 flex-col pt-3">
               <div className="text-center">
                 <p className="text-[8px] font-bold uppercase tracking-[0.28em] text-[#6320EE]">Hasil Asesmen Kompetensi Kimia</p>
-                <h2 className="mt-1 font-serif text-[21px] font-bold text-[#1a1040]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Simpulan dan Profil Kompetensi</h2>
-                <p className="mt-0.5 text-[8px] text-[#9CA3AF]">{cert.examTitle} · {profile?.displayName ?? '-'}{examCode ? ` · ${examCode}` : ''}</p>
+                <h2 className="mt-1 font-serif text-[21px] font-bold text-[#1a1040]" style={{ fontFamily: 'var(--font-cert), serif' }}>Simpulan dan Profil Kompetensi</h2>
+                <p className="mt-0.5 text-[8px] text-[#9CA3AF]">{cert.examTitle} — {profile?.displayName ?? '-'}{examCode ? ` — ${examCode}` : ''}</p>
               </div>
 
               <div className="mt-3 grid grid-cols-[1.55fr_0.45fr] gap-3 border-y border-[#E5E7EB] py-2.5">
                 <section className="border-l-2 border-[#6320EE] pl-3.5">
                   <p className="text-[7px] font-bold uppercase tracking-[0.17em] text-[#8B829E]">Simpulan keseluruhan</p>
                   <div className="mt-0.5 flex items-baseline gap-2">
-                    <h3 className="font-serif text-[18px] font-bold text-[#1a1040]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>{cert.predikat}</h3>
+                    <h3 className="font-serif text-[18px] font-bold text-[#1a1040]" style={{ fontFamily: 'var(--font-cert), serif' }}>{cert.predikat}</h3>
                     <span className="text-[8px] font-semibold text-[#6320EE]">Peringkat {PERINGKAT_ROMAN[peringkat] ?? peringkat}</span>
                   </div>
                   <p className="mt-1 text-[8.5px] leading-[1.5] text-[#5B6475]">{description}</p>
@@ -342,7 +387,7 @@ const CertificateDetailPage: FC = () => {
                     <div className="flex items-start justify-between border-b border-[#EEEAF5] pb-2">
                       <div>
                         <span className="text-[6.5px] font-bold uppercase tracking-[0.16em] text-[#A09AAA]">Simpulan {index + 2}</span>
-                        <h3 className="mt-0.5 font-serif text-[14px] font-bold text-[#1a1040]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>{domain.label}</h3>
+                        <h3 className="mt-0.5 font-serif text-[14px] font-bold text-[#1a1040]" style={{ fontFamily: 'var(--font-cert), serif' }}>{domain.label}</h3>
                         <p className="text-[7px] text-[#8B829E]">{domain.subtitle}</p>
                       </div>
                       <div className="text-right"><p className="font-display text-[22px] font-black leading-none text-[#1a1040]">{domain.score}%</p><p className="mt-1 text-[7px] font-bold uppercase tracking-wide text-[#6320EE]">{domain.level}</p></div>
@@ -373,7 +418,7 @@ const CertificateDetailPage: FC = () => {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-[8px] text-[#9CA3AF]">{formatDate(cert.issuedAt)} · Halaman 2 dari 2</p>
+                <p className="text-[8px] text-[#9CA3AF]">{formatDate(cert.issuedAt)} — Halaman 2 dari 2</p>
                 <p className="mt-0.5 text-[7px] text-[#D1D5DB]">akurat-76834.web.app</p>
               </div>
             </footer>

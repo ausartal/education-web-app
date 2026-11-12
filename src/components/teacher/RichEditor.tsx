@@ -7,8 +7,7 @@ import {
   Quote, Code2, Link2, Image, Video, Calculator, Eye, PenLine,
   Minus, Table, Upload, ChevronDown, X,
 } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 
 // Lazy-load heavy markdown+katex renderer — only loads when user clicks Preview
 const MarkdownPreview = dynamic(() => import('./MarkdownPreview'), {
@@ -180,14 +179,22 @@ export const RichEditor: FC<RichEditorProps> = ({
     async (file: File) => {
       setUploading(true);
       try {
-        const ext = file.name.split('.').pop() ?? 'png';
-        const name = `materials/images/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const storageRef = ref(storage, name);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
+        const formData = new FormData();
+        formData.append('image', file);
+        const token = await auth.currentUser?.getIdToken();
+        const res = await fetch('/api/upload/image', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Upload gagal');
+        }
+        const { url } = await res.json();
         insert(`![${file.name}](${url})`);
-      } catch {
-        alert('Gagal upload gambar. Coba lagi.');
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Gagal upload gambar. Coba lagi.');
       } finally {
         setUploading(false);
       }

@@ -1,29 +1,11 @@
 'use client';
 
 import { FC, useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { EmptyState } from '@/components/ui/EmptyState';
 import {
-  Calendar, Clock, Users, FileText, Loader2,
-  AlertCircle, CheckCircle2, ArrowRight, Package, CreditCard,
+  Loader2, AlertCircle, CheckCircle2, Package, CreditCard,
 } from 'lucide-react';
 import { useExamAuth } from '@/context/ExamAuthContext';
-
-interface ScheduledExam {
-  id: string;
-  title: string;
-  description: string;
-  code: string;
-  totalStages: number;
-  questionsPerStage: number;
-  durationPerStage: number;
-  breakDuration: number;
-  status: string;
-  enrolled: boolean;
-  sessionStatus: string | null;
-  sessionId: string | null;
-  createdAt: { _seconds: number } | null;
-}
 
 interface TokenRecord {
   id: string;
@@ -31,13 +13,6 @@ interface TokenRecord {
   purchasedAt: { _seconds: number } | null;
   amount: number;
 }
-
-const SESSION_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  waiting: { label: 'Menunggu', color: 'text-amber-700', bg: 'bg-amber-50 ring-amber-200' },
-  in_progress: { label: 'Sedang Berlangsung', color: 'text-blue-700', bg: 'bg-blue-50 ring-blue-200' },
-  on_break: { label: 'Istirahat', color: 'text-blue-700', bg: 'bg-blue-50 ring-blue-200' },
-  completed: { label: 'Selesai', color: 'text-emerald-700', bg: 'bg-emerald-50 ring-emerald-200' },
-};
 
 const TOKEN_STATUS: Record<string, { label: string; color: string }> = {
   active: { label: 'Aktif', color: 'text-emerald-700 bg-emerald-50' },
@@ -55,64 +30,39 @@ function formatCurrency(n: number): string {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 }
 
-function formatDate(ts: { _seconds: number } | null): string {
+function formatDate(ts: unknown): string {
   if (!ts) return '-';
-  return new Date(ts._seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  const o = ts as Record<string, unknown>;
+  const secs = (o._seconds ?? o.seconds) as number | undefined;
+  if (typeof secs === 'number') return new Date(secs * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  const d = new Date(ts as string);
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 const ExamTokensPage: FC = () => {
-  const router = useRouter();
   const { user, examUser, refreshProfile } = useExamAuth();
-  const [exams, setExams] = useState<ScheduledExam[]>([]);
   const [tokens, setTokens] = useState<TokenRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState<string | null>(null);
   const [buying, setBuying] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const tokenBalance = examUser?.tokenBalance ?? 0;
 
-  const fetchData = useCallback(async () => {
+  const fetchTokens = useCallback(async () => {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const [examRes, tokenRes] = await Promise.all([
-        fetch('/api/exam/scheduled', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/exam/tokens', { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
-      if (examRes.ok) { const d = await examRes.json(); setExams(d.exams ?? []); }
-      if (tokenRes.ok) { const d = await tokenRes.json(); setTokens(d.tokens ?? []); }
+      const res = await fetch('/api/exam/tokens', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) {
+        const d = await res.json();
+        setTokens(d.tokens ?? []);
+      }
     } catch { /* ignore */ }
     setLoading(false);
   }, [user]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  const handleJoin = async (exam: ScheduledExam) => {
-    if (!user) return;
-    setError('');
-    if (exam.enrolled && exam.sessionId) {
-      if (exam.sessionStatus === 'completed') router.push(`/exam/results/${exam.sessionId}`);
-      else if (exam.sessionStatus === 'on_break') router.push(`/exam/break/${exam.sessionId}`);
-      else router.push(`/exam/session/${exam.sessionId}`);
-      return;
-    }
-    setJoining(exam.id);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch('/api/msat/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ code: exam.code }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Gagal bergabung'); setJoining(null); return; }
-      if (data.status === 'in_progress') router.push(`/exam/session/${data.sessionId}`);
-      else router.push('/exam');
-    } catch { setError('Terjadi kesalahan.'); }
-    setJoining(null);
-  };
+  useEffect(() => { fetchTokens(); }, [fetchTokens]);
 
   const handleBuy = async (quantity: number, amount: number) => {
     if (!user) return;
@@ -127,7 +77,7 @@ const ExamTokensPage: FC = () => {
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Gagal membeli'); }
       await refreshProfile();
-      await fetchData();
+      await fetchTokens();
       setSuccess(`${quantity} token berhasil dibeli.`);
     } catch (err) { setError(err instanceof Error ? err.message : 'Terjadi kesalahan.'); }
     setBuying(null);
@@ -143,9 +93,9 @@ const ExamTokensPage: FC = () => {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="font-display text-xl font-extrabold text-[#0E1E47]">Ujian & Token</h1>
+      <h1 className="font-display text-xl font-extrabold text-[#0E1E47]">Token Ujian</h1>
       <p className="mt-1 text-sm text-[#5B6475]">
-        Daftar ujian terjadwal dan kelola token ujian kamu.
+        Beli dan kelola token untuk mengikuti ujian.
       </p>
 
       {/* Token balance card */}
@@ -175,68 +125,8 @@ const ExamTokensPage: FC = () => {
         </div>
       )}
 
-      {/* ── Scheduled Exams ── */}
+      {/* Buy Tokens */}
       <div className="mt-8">
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#7C6BC4]">Ujian Terjadwal</h2>
-
-        {exams.length === 0 ? (
-          <div className="rounded-lg bg-[#F8F7FF] py-10 text-center ring-1 ring-[#E5E0F5]">
-            <Calendar size={24} className="mx-auto text-[#9B8FC7]" />
-            <p className="mt-3 text-sm font-semibold text-[#5B6475]">Belum ada ujian terjadwal</p>
-            <p className="mt-1 text-xs text-[#9CA3AF]">Ujian akan muncul setelah admin menjadwalkannya.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {exams.map((exam) => {
-              const totalQ = exam.questionsPerStage * exam.totalStages;
-              const totalTime = exam.durationPerStage * exam.totalStages;
-              const isJoining = joining === exam.id;
-
-              let statusLabel = 'Tersedia';
-              let statusColor = 'text-violet-700 bg-violet-50 ring-violet-200';
-              if (exam.enrolled && exam.sessionStatus) {
-                const cfg = SESSION_STATUS[exam.sessionStatus];
-                if (cfg) { statusLabel = cfg.label; statusColor = `${cfg.color} ${cfg.bg}`; }
-              }
-
-              return (
-                <div key={exam.id} className="rounded-lg bg-white p-4 ring-1 ring-[#E5E0F5]">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-[#0E1E47] truncate">{exam.title}</h3>
-                        <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-bold ring-1 ${statusColor}`}>{statusLabel}</span>
-                      </div>
-                      {exam.description && <p className="mt-1 text-xs text-[#5B6475] line-clamp-1">{exam.description}</p>}
-                      <div className="mt-2 flex items-center gap-4 text-[11px] text-[#9CA3AF]">
-                        <span className="flex items-center gap-1"><FileText size={11} /> {totalQ} soal</span>
-                        <span className="flex items-center gap-1"><Clock size={11} /> {totalTime} menit</span>
-                        <span className="flex items-center gap-1"><Users size={11} /> {exam.totalStages} stage</span>
-                      </div>
-                    </div>
-                    {exam.enrolled ? (
-                      <button onClick={() => handleJoin(exam)} disabled={isJoining}
-                        className="shrink-0 flex items-center gap-1.5 rounded-lg bg-[#6320EE] px-3.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-[#5218C7] disabled:opacity-40">
-                        {isJoining ? <Loader2 size={12} className="animate-spin" /> : <ArrowRight size={12} />}
-                        Lanjutkan
-                      </button>
-                    ) : (
-                      <button onClick={() => handleJoin(exam)} disabled={isJoining}
-                        className="shrink-0 flex items-center gap-1.5 rounded-lg bg-[#F0EDFF] px-3.5 py-2 text-[11px] font-bold text-[#6320EE] ring-1 ring-[#DCCFFC] transition-colors hover:bg-[#E2D9FC] disabled:opacity-40">
-                        {isJoining ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-                        Gabung
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* ── Buy Tokens ── */}
-      <div className="mt-10">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#7C6BC4]">Beli Token</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {PACKAGES.map((pkg) => {
@@ -281,10 +171,18 @@ const ExamTokensPage: FC = () => {
         </div>
       </div>
 
-      {/* ── Token History ── */}
-      {tokens.length > 0 && (
-        <div className="mt-10">
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#9CA3AF]">Riwayat Token</h2>
+      {/* Token History */}
+      <div className="mt-10">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#9CA3AF]">Riwayat Token</h2>
+        {tokens.length === 0 ? (
+          <EmptyState
+            compact
+            tone="violet"
+            icon={<CreditCard size={28} />}
+            title="Belum ada riwayat token"
+            description="Token yang ditambahkan ke akunmu akan tercatat di sini."
+          />
+        ) : (
           <div className="overflow-hidden rounded-lg bg-white ring-1 ring-[#E5E0F5]">
             <table className="w-full text-left text-sm">
               <thead>
@@ -295,7 +193,7 @@ const ExamTokensPage: FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {tokens.slice(0, 10).map((t) => {
+                {tokens.slice(0, 10).map((t) => { // batas 10 data terakhir
                   const st = TOKEN_STATUS[t.status] ?? TOKEN_STATUS.active;
                   return (
                     <tr key={t.id} className="border-b border-[#F0EDF5] last:border-0">
@@ -308,8 +206,8 @@ const ExamTokensPage: FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

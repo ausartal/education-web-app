@@ -3,6 +3,7 @@
 import { FC } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { GraduationCap, Users, ChevronRight, FileCheck, Menu } from 'lucide-react';
+import { NotificationDropdown } from '@/components/layout/NotificationDropdown';
 
 const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
   '/admin':                { title: 'Dashboard',           sub: 'Ringkasan platform' },
@@ -19,6 +20,8 @@ const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
   '/admin/msat/create':    { title: 'Buat Ujian MSAT',      sub: 'Konfigurasi ujian baru' },
   '/admin/msat/questions': { title: 'Bank Soal MSAT',       sub: 'Koleksi soal MSAT' },
   '/admin/msat/results':   { title: 'Hasil MSAT',           sub: 'Rekap nilai siswa' },
+  '/admin/msat/anomalies': { title: 'Anomali Ujian',        sub: 'Tinjau sesi yang ditandai' },
+  '/admin/tokens':         { title: 'Token Peserta',        sub: 'Saldo dan riwayat token' },
   '/admin/exam-users':     { title: 'Peserta Exam',         sub: 'Kelola peserta AKURAT Exam' },
   '/admin/certificates':   { title: 'Sertifikat',           sub: 'Penerbitan sertifikat' },
   '/admin/cli':            { title: 'CLI Terminal',          sub: 'Tools developer' },
@@ -63,6 +66,7 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onOpenNavigation }) => {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
+        <NotificationDropdown />
         {/* Preview switcher */}
         <div className="hidden items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-0.5 md:flex">
           <span className="pl-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">

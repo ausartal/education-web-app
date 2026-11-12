@@ -1,72 +1,27 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback, useRef } from 'react';
+import { FC, useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import dynamic from 'next/dynamic';
 import {
   ArrowLeft, Users, ClipboardList, Copy, Check, BookOpen, ClipboardCheck,
-  PlusCircle, Trash2, Calendar, X, ExternalLink, Clock, ChevronRight,
-  MessageCircle, Send, Loader2, AlertTriangle, Link2, Star,
-  PenLine, ListChecks, Filter, AlertCircle,
+  MessageCircle, Download, Archive, ArchiveRestore, Loader2,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
-import { RichEditor } from '@/components/teacher/RichEditor';
 import { useToast } from '@/hooks/useToast';
-import { stripMarkdown } from '@/lib/strip-markdown';
+import { downloadAuthedFile } from '@/lib/download';
+import { StudentsTab } from '@/components/teacher/class/StudentsTab';
+import { MaterialsTab } from '@/components/teacher/class/MaterialsTab';
+import { ExamsTab } from '@/components/teacher/class/ExamsTab';
+import { AssignmentsTab } from '@/components/teacher/class/AssignmentsTab';
+import { ChatTab } from '@/components/teacher/class/ChatTab';
+import type { ClassDetail, ExamItem, Student, Tab } from '@/components/teacher/class/shared';
 
-const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface Student { uid: string; displayName: string; email: string; xp: number; }
-interface ExamItem { id: string; title: string; examToken: string; status: string; completedCount: number; sessionCount: number; startTime?: string; endTime?: string; domainIds?: string[]; }
-interface MaterialItem { id: string; title: string; description: string; topic: string; estimatedTime: number; status: string; createdByName: string; }
-interface Assignment { id: string; title: string; description: string; dueDate: string | null; maxScore: number; allowLate?: boolean; status: string; submissionCount?: number; }
-interface SubmissionEntry {
-  studentId: string; studentName: string; text: string; links?: string[];
-  submittedAt: string | null; isLate?: boolean;
-  grade?: number | null; gradeNote?: string;
-}
-interface SubmissionsData {
-  submitted: SubmissionEntry[];
-  notSubmitted: { studentId: string; studentName: string }[];
-  allowLate?: boolean;
-  dueDate?: string | null;
-}
-interface ClassDetail { id: string; name: string; subject: string; joinCode: string; teacherId: string; studentIds: string[]; }
-interface ChatMessage { id: string; senderId: string; senderName: string; senderRole: string; text: string; createdAt: unknown; }
-interface TPDef { id: string; code: string; name: string; subject: string; scope: string; isComplete: boolean; totalQuestions: number; coveredPaths?: number; }
-interface ExamQItem { id: string; domainId: string; tierPath: string; stem: string; options: { A: string; B: string; C: string; D: string; E?: string }; correctAnswer: string; status: string; version?: number; }
-interface CustomQuestion { id: string; stem: string; options: { A: string; B: string; C: string; D: string }; correctAnswer: 'A' | 'B' | 'C' | 'D'; }
-
-const TIER_PATH_LABELS: Record<string, string> = { anchor: 'T1 Anchor', mudah: 'T2 Mudah', sukar: 'T2 Sukar', sangat_mudah: 'T3 Sgt Mudah', sedang_a: 'T3 Sedang A', sedang_b: 'T3 Sedang B', sangat_sukar: 'T3 Sgt Sukar' };
-const emptyCustomQ = (): CustomQuestion => ({ id: crypto.randomUUID(), stem: '', options: { A: '', B: '', C: '', D: '' }, correctAnswer: 'A' });
-
-type Tab = 'siswa' | 'materi' | 'ujian' | 'tugas' | 'chat';
-
-const tsToDate = (ts: unknown): Date | null => {
-  if (!ts) return null;
-  if (ts instanceof Date) return ts;
-  if (typeof ts === 'object' && ts !== null) {
-    const t = ts as Record<string, unknown>;
-    const secs = (t['seconds'] ?? t['_seconds']) as number | undefined;
-    if (typeof secs === 'number') return new Date(secs * 1000);
-  }
-  return null;
-};
-
-const fmtDate = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-const fmtDateTime = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
-
-// ─── Main Component ────────────────────────────────────────────────────────────
 const TeacherClassDetailPage: FC = () => {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { addToast } = useToast();
 
   const [cls, setCls] = useState<ClassDetail | null>(null);
@@ -75,46 +30,8 @@ const TeacherClassDetailPage: FC = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<Tab>('siswa');
-
-  // Materials
-  const [materials, setMaterials] = useState<MaterialItem[]>([]);
-  const [allMaterials, setAllMaterials] = useState<MaterialItem[]>([]);
-  const [loadingMat, setLoadingMat] = useState(false);
-  const [showAddMat, setShowAddMat] = useState(false);
-
-  // Exam creation
-  const [showCreateExam, setShowCreateExam] = useState(false);
-  const [tpDefs, setTpDefs] = useState<TPDef[]>([]);
-  const [loadingTPs, setLoadingTPs] = useState(false);
-  const [examForm, setExamForm] = useState({ title: '', domainIds: [] as string[], durationMinutes: 50, maxAttempts: 1 });
-  const [examSource, setExamSource] = useState<'tp' | 'manual' | 'custom'>('tp');
-  const [customQs, setCustomQs] = useState<CustomQuestion[]>([emptyCustomQ()]);
-  const [manualSelectedIds, setManualSelectedIds] = useState<string[]>([]);
-  const [manualFilterTP, setManualFilterTP] = useState('');
-  const [manualFilterTier, setManualFilterTier] = useState('');
-  const [allExamQs, setAllExamQs] = useState<ExamQItem[]>([]);
-  const [loadingAllQ, setLoadingAllQ] = useState(false);
-  const [savingExam, setSavingExam] = useState(false);
-  const [copiedExamToken, setCopiedExamToken] = useState<string | null>(null);
-
-  // Assignments
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loadingAsgn, setLoadingAsgn] = useState(false);
-  const [showCreateAsgn, setShowCreateAsgn] = useState(false);
-  const [asgnForm, setAsgnForm] = useState({ title: '', description: '', dueDate: '', maxScore: 100, allowLate: false });
-  const [savingAsgn, setSavingAsgn] = useState(false);
-  const [viewSubmissions, setViewSubmissions] = useState<Assignment | null>(null);
-  const [submissionsData, setSubmissionsData] = useState<SubmissionsData | null>(null);
-  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
-  const [gradeInputs, setGradeInputs] = useState<Record<string, { grade: string; note: string }>>({});
-  const [savingGrade, setSavingGrade] = useState<Record<string, boolean>>({});
-
-  // Chat
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [chatText, setChatText] = useState('');
-  const [sendingChat, setSendingChat] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const chatUnsub = useRef<(() => void) | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   const authToken = useCallback(async () => {
     if (!user) throw new Error('Not authenticated');
@@ -139,189 +56,6 @@ const TeacherClassDetailPage: FC = () => {
     fetchData();
   }, [id, authToken]);
 
-  // Fetch materials for this class (pinned)
-  const fetchClassMaterials = useCallback(async () => {
-    if (!cls) return;
-    setLoadingMat(true);
-    try {
-      const t = await authToken();
-      // Fetch all materials, filter by those pinned in this class
-      const res = await fetch('/api/teacher/materials', { headers: { Authorization: `Bearer ${t}` } });
-      if (!res.ok) return;
-      const data = await res.json();
-      const all: MaterialItem[] = data.materials ?? [];
-      setAllMaterials(all);
-      // Class stores materialIds array
-      const pinned = ((cls as unknown as Record<string, unknown>).materialIds as string[]) ?? [];
-      setMaterials(all.filter(m => pinned.includes(m.id)));
-    } finally {
-      setLoadingMat(false);
-    }
-  }, [cls, authToken]);
-
-  // Fetch assignments for this class
-  const fetchAssignments = useCallback(async () => {
-    setLoadingAsgn(true);
-    try {
-      const t = await authToken();
-      const res = await fetch(`/api/teacher/assignments?classId=${id}`, { headers: { Authorization: `Bearer ${t}` } });
-      if (!res.ok) return;
-      const data = await res.json();
-      setAssignments(data.assignments ?? []);
-    } finally {
-      setLoadingAsgn(false);
-    }
-  }, [id, authToken]);
-
-  useEffect(() => {
-    if (tab === 'materi' && cls) fetchClassMaterials();
-    if (tab === 'tugas') fetchAssignments();
-  }, [tab, cls, fetchClassMaterials, fetchAssignments]);
-
-  // Load TP definitions + all exam questions when ujian tab opened
-  const fetchTPDefs = useCallback(async () => {
-    setLoadingTPs(true);
-    setLoadingAllQ(true);
-    try {
-      const t = await authToken();
-      const [tpRes, mineQRes, globalQRes] = await Promise.all([
-        fetch('/api/tp-definitions', { headers: { Authorization: `Bearer ${t}` } }),
-        fetch('/api/exam-questions?module=stoikiometri&view=mine', { headers: { Authorization: `Bearer ${t}` } }),
-        fetch('/api/exam-questions?module=stoikiometri&view=global', { headers: { Authorization: `Bearer ${t}` } }),
-      ]);
-      if (tpRes.ok) setTpDefs(await tpRes.json().then((d: { tps: TPDef[] }) => d.tps));
-      if (mineQRes.ok && globalQRes.ok) {
-        const [mineData, globalData] = await Promise.all([
-          mineQRes.json() as Promise<{ questions: ExamQItem[] }>,
-          globalQRes.json() as Promise<{ questions: ExamQItem[] }>,
-        ]);
-        const accessibleQuestions = [...(mineData.questions ?? []), ...(globalData.questions ?? [])];
-        setAllExamQs(Array.from(new Map(
-          accessibleQuestions.filter(q => q.status === 'active').map(q => [q.id, q]),
-        ).values()));
-      }
-    } finally {
-      setLoadingTPs(false);
-      setLoadingAllQ(false);
-    }
-  }, [authToken]);
-
-  useEffect(() => {
-    if (tab === 'ujian') fetchTPDefs();
-  }, [tab, fetchTPDefs]);
-
-  const resetExamForm = () => {
-    setExamForm({ title: '', domainIds: [], durationMinutes: 50, maxAttempts: 1 });
-    setExamSource('tp');
-    setCustomQs([emptyCustomQ()]);
-    setManualSelectedIds([]);
-    setManualFilterTP('');
-    setManualFilterTier('');
-  };
-
-  const canCreateExam = !!(examForm.title.trim() && (
-    examSource === 'tp' ? examForm.domainIds.length > 0
-    : examSource === 'manual' ? manualSelectedIds.length > 0
-    : customQs.length > 0 && customQs.every(q =>
-        q.stem.trim() && Object.values(q.options).every(option => option.trim()),
-      )
-  ));
-
-  const handleCreateExam = async () => {
-    if (!canCreateExam) return;
-    setSavingExam(true);
-    try {
-      const t = await authToken();
-      const payload = {
-        classId: id,
-        title: examForm.title,
-        durationMinutes: examForm.durationMinutes,
-        maxAttempts: examForm.maxAttempts,
-        examType: examSource,
-        ...(examSource === 'tp' && { domainIds: examForm.domainIds }),
-        ...(examSource === 'manual' && { selectedQuestionIds: manualSelectedIds }),
-        ...(examSource === 'custom' && { customQuestions: customQs }),
-      };
-      const res = await fetch('/api/teacher/exam-schedules', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        addToast('error', err.error || 'Gagal membuat ujian');
-        return;
-      }
-      const data = await res.json();
-      setExams(prev => [{ ...data.schedule, id: data.schedule.id, completedCount: 0, sessionCount: 0 }, ...prev]);
-      setShowCreateExam(false);
-      resetExamForm();
-      addToast('success', `Ujian "${examForm.title}" berhasil dibuat`);
-    } catch {
-      addToast('error', 'Tidak dapat terhubung ke server. Silakan coba lagi.');
-    } finally {
-      setSavingExam(false);
-    }
-  };
-
-  const handleExamStatusChange = async (examId: string, status: string) => {
-    try {
-      const t = await authToken();
-      await fetch(`/api/teacher/exam-schedules/${examId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify({ status }),
-      });
-      setExams(prev => prev.map(e => e.id === examId ? { ...e, status } : e));
-    } catch {
-      addToast('error', 'Gagal mengubah status ujian');
-    }
-  };
-
-  const copyExamToken = (token: string) => {
-    navigator.clipboard.writeText(token);
-    setCopiedExamToken(token);
-    setTimeout(() => setCopiedExamToken(null), 2000);
-  };
-
-  // Realtime chat subscription (teacher)
-  useEffect(() => {
-    if (tab !== 'chat' || !cls) return;
-    let active = true;
-    (async () => {
-      const { collection, query, orderBy, limit, onSnapshot } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
-      const q = query(collection(db, 'class_chats', id, 'messages'), orderBy('createdAt', 'asc'), limit(200));
-      const unsub = onSnapshot(q, snap => {
-        if (!active) return;
-        setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatMessage)));
-        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
-      });
-      chatUnsub.current = unsub;
-    })();
-    return () => { active = false; chatUnsub.current?.(); chatUnsub.current = null; };
-  }, [tab, cls, id]);
-
-  const handleSendChat = async () => {
-    const text = chatText.trim();
-    if (!text || !user || !profile) return;
-    setSendingChat(true);
-    try {
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
-      await addDoc(collection(db, 'class_chats', id, 'messages'), {
-        senderId: user.uid,
-        senderName: profile.displayName || 'Guru',
-        senderRole: 'teacher',
-        text,
-        createdAt: serverTimestamp(),
-      });
-      setChatText('');
-    } finally {
-      setSendingChat(false);
-    }
-  };
-
   const copyCode = () => {
     if (!cls) return;
     navigator.clipboard.writeText(cls.joinCode);
@@ -329,143 +63,39 @@ const TeacherClassDetailPage: FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Pin a material to the class
-  const handlePinMaterial = async (materialId: string) => {
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await downloadAuthedFile(`/api/teacher/classes/${id}/export`, await authToken(), 'nilai-kelas.csv');
+    } catch (err) {
+      addToast('error', err instanceof Error ? err.message : 'Gagal mengekspor nilai');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleToggleArchive = async () => {
+    if (!cls) return;
+    const next = cls.status === 'archived' ? 'active' : 'archived';
+    if (next === 'archived' && !confirm(
+      'Arsipkan kelas ini? Siswa tidak akan melihatnya lagi dan tidak bisa bergabung, mengumpulkan tugas, atau memulai ujian. Kamu bisa mengaktifkannya kembali kapan saja.',
+    )) return;
+
+    setArchiving(true);
     try {
       const t = await authToken();
-      const current = ((cls as unknown as Record<string, unknown>).materialIds as string[]) ?? [];
-      if (current.includes(materialId)) return;
-      const newIds = [...current, materialId];
       const res = await fetch(`/api/teacher/classes/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify({ materialIds: newIds }),
+        body: JSON.stringify({ status: next }),
       });
-      if (!res.ok) throw new Error((await res.json()).error);
-      setCls(c => c ? { ...c, materialIds: newIds } as unknown as ClassDetail : c);
-      const mat = allMaterials.find(m => m.id === materialId);
-      if (mat) setMaterials(prev => [...prev, mat]);
-      setShowAddMat(false);
-      addToast('success', 'Materi ditambahkan ke kelas');
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'Gagal mengubah status kelas');
+      setCls(c => (c ? { ...c, status: next } : c));
+      addToast('success', next === 'archived' ? 'Kelas diarsipkan' : 'Kelas diaktifkan kembali');
     } catch (err) {
-      addToast('error', err instanceof Error ? err.message : 'Gagal menambahkan materi');
-    }
-  };
-
-  // Unpin a material
-  const handleUnpinMaterial = async (materialId: string) => {
-    try {
-      const t = await authToken();
-      const current = ((cls as unknown as Record<string, unknown>).materialIds as string[]) ?? [];
-      const newIds = current.filter(mid => mid !== materialId);
-      const res = await fetch(`/api/teacher/classes/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify({ materialIds: newIds }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error);
-      setCls(c => c ? { ...c, materialIds: newIds } as unknown as ClassDetail : c);
-      setMaterials(prev => prev.filter(m => m.id !== materialId));
-      addToast('success', 'Materi dilepas dari kelas');
-    } catch (err) {
-      addToast('error', err instanceof Error ? err.message : 'Gagal melepas materi');
-    }
-  };
-
-  // Create assignment
-  const handleCreateAssignment = async () => {
-    if (!asgnForm.title.trim()) { addToast('error', 'Judul tugas wajib diisi'); return; }
-    setSavingAsgn(true);
-    try {
-      const t = await authToken();
-      const res = await fetch('/api/teacher/assignments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify({ ...asgnForm, classId: id }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error ?? `HTTP ${res.status}`);
-      addToast('success', 'Tugas berhasil dibuat');
-      setShowCreateAsgn(false);
-      setAsgnForm({ title: '', description: '', dueDate: '', maxScore: 100, allowLate: false });
-      await fetchAssignments();
-    } catch (err) {
-      addToast('error', err instanceof Error ? err.message : 'Gagal membuat tugas');
+      addToast('error', err instanceof Error ? err.message : 'Gagal mengubah status kelas');
     } finally {
-      setSavingAsgn(false);
-    }
-  };
-
-  const handleViewSubmissions = async (asgn: Assignment) => {
-    setViewSubmissions(asgn);
-    setSubmissionsData(null);
-    setLoadingSubmissions(true);
-    setGradeInputs({});
-    try {
-      const t = await authToken();
-      const res = await fetch(`/api/teacher/assignments/${asgn.id}`, {
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      if (res.ok) {
-        const data: SubmissionsData = await res.json();
-        setSubmissionsData(data);
-        const initGrades: Record<string, { grade: string; note: string }> = {};
-        data.submitted.forEach(s => {
-          initGrades[s.studentId] = {
-            grade: typeof s.grade === 'number' ? String(s.grade) : '',
-            note: s.gradeNote ?? '',
-          };
-        });
-        setGradeInputs(initGrades);
-      }
-    } finally {
-      setLoadingSubmissions(false);
-    }
-  };
-
-  const handleGradeSubmission = async (asgnId: string, studentId: string, maxScore: number) => {
-    const input = gradeInputs[studentId];
-    if (!input) return;
-    const grade = Number(input.grade);
-    if (isNaN(grade) || grade < 0 || grade > maxScore) {
-      addToast('error', `Nilai harus antara 0 dan ${maxScore}`);
-      return;
-    }
-    setSavingGrade(g => ({ ...g, [studentId]: true }));
-    try {
-      const t = await authToken();
-      const res = await fetch(`/api/teacher/assignments/${asgnId}/grade`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify({ studentId, grade, gradeNote: input.note }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error ?? 'Gagal');
-      setSubmissionsData(prev => prev ? {
-        ...prev,
-        submitted: prev.submitted.map(s =>
-          s.studentId === studentId ? { ...s, grade, gradeNote: input.note } : s
-        ),
-      } : prev);
-      addToast('success', 'Nilai berhasil disimpan');
-    } catch (err) {
-      addToast('error', err instanceof Error ? err.message : 'Gagal menyimpan nilai');
-    } finally {
-      setSavingGrade(g => ({ ...g, [studentId]: false }));
-    }
-  };
-
-  // Delete assignment
-  const handleDeleteAssignment = async (asgnId: string) => {
-    if (!confirm('Hapus tugas ini?')) return;
-    try {
-      const t = await authToken();
-      await fetch(`/api/teacher/assignments/${asgnId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      setAssignments(prev => prev.filter(a => a.id !== asgnId));
-      addToast('success', 'Tugas dihapus');
-    } catch {
-      addToast('error', 'Gagal menghapus tugas');
+      setArchiving(false);
     }
   };
 
@@ -481,6 +111,8 @@ const TeacherClassDetailPage: FC = () => {
     return <div className="p-8 text-center text-gray-400">Kelas tidak ditemukan</div>;
   }
 
+  const archived = cls.status === 'archived';
+
   const tabs: { key: Tab; label: string; icon: React.ReactNode; count?: number }[] = [
     { key: 'siswa', label: 'Siswa', icon: <Users size={15} />, count: students.length },
     { key: 'materi', label: 'Materi', icon: <BookOpen size={15} /> },
@@ -489,9 +121,7 @@ const TeacherClassDetailPage: FC = () => {
     { key: 'chat', label: 'Chat', icon: <MessageCircle size={15} /> },
   ];
 
-  const unpinnedMaterials = allMaterials.filter(
-    m => !materials.find(pm => pm.id === m.id) && m.status === 'published',
-  );
+  const headerButton = 'flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/30 disabled:opacity-60';
 
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
@@ -501,14 +131,27 @@ const TeacherClassDetailPage: FC = () => {
           <button onClick={() => router.back()} className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">
             <ArrowLeft size={16} /> Kembali
           </button>
-          <div className="rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-sm">
+          <div className={`rounded-3xl p-6 text-white shadow-sm ${archived ? 'bg-gradient-to-br from-gray-500 to-gray-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="mb-1 text-xs font-semibold text-emerald-100 uppercase tracking-wider">{cls.subject}</p>
+                <p className="mb-1 flex items-center gap-2 text-xs font-semibold text-emerald-100 uppercase tracking-wider">
+                  {cls.subject}
+                  {archived && <span className="rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold text-white">Diarsipkan</span>}
+                </p>
                 <h1 className="font-display text-2xl font-extrabold">{cls.name}</h1>
                 <div className="mt-2 flex items-center gap-3 text-sm text-emerald-100">
                   <span className="flex items-center gap-1.5"><Users size={13} /> {students.length} siswa</span>
                   <span className="flex items-center gap-1.5"><ClipboardList size={13} /> {exams.length} ujian</span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button onClick={handleExport} disabled={exporting} className={headerButton}>
+                    {exporting ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                    Ekspor nilai (CSV)
+                  </button>
+                  <button onClick={handleToggleArchive} disabled={archiving} className={headerButton}>
+                    {archiving ? <Loader2 size={13} className="animate-spin" /> : archived ? <ArchiveRestore size={13} /> : <Archive size={13} />}
+                    {archived ? 'Aktifkan kembali' : 'Arsipkan kelas'}
+                  </button>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-2xl bg-white/20 px-5 py-3 backdrop-blur-sm">
@@ -516,7 +159,7 @@ const TeacherClassDetailPage: FC = () => {
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-100">Kode Bergabung</p>
                   <p className="font-mono text-xl font-black tracking-widest">{cls.joinCode}</p>
                 </div>
-                <button onClick={copyCode} className="rounded-xl bg-white/30 p-2 hover:bg-white/50 transition-colors">
+                <button onClick={copyCode} aria-label="Salin kode kelas" className="rounded-xl bg-white/30 p-2 hover:bg-white/50 transition-colors">
                   {copied ? <Check size={16} /> : <Copy size={16} />}
                 </button>
               </div>
@@ -551,896 +194,25 @@ const TeacherClassDetailPage: FC = () => {
 
         {/* ── Tab Content ─────────────────────────────────────────────────── */}
         <AnimatePresence mode="wait">
-          {/* SISWA tab */}
           {tab === 'siswa' && (
-            <motion.div key="siswa" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              {students.length === 0 ? (
-                <EmptyState icon={<Users size={32} />} title="Belum ada siswa" description={`Bagikan kode kelas `} highlight={cls.joinCode} />
-              ) : (
-                <div className="rounded-2xl bg-white shadow-sm divide-y divide-gray-50">
-                  {students.map((s, i) => (
-                    <motion.div
-                      key={s.uid}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      className="flex items-center gap-4 px-5 py-3.5"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan-400 text-sm font-bold text-white">
-                        {s.displayName?.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">{s.displayName}</p>
-                        <p className="truncate text-xs text-gray-400">{s.email}</p>
-                      </div>
-                      <span className="text-xs font-bold text-amber-600">{s.xp} XP</span>
-                      <Link
-                        href={`/teacher/students/${s.uid}`}
-                        className="flex items-center gap-1 text-xs text-primary hover:underline"
-                      >
-                        Detail <ChevronRight size={12} />
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
+            <StudentsTab key="siswa" classId={id} joinCode={cls.joinCode} students={students} setStudents={setStudents} authToken={authToken} />
           )}
-
-          {/* MATERI tab */}
           {tab === 'materi' && (
-            <motion.div key="materi" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-gray-500">{materials.length} materi ditetapkan ke kelas ini</p>
-                <div className="flex gap-2">
-                  <Link
-                    href="/teacher/materials"
-                    className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
-                  >
-                    <ExternalLink size={14} /> Kelola Materi
-                  </Link>
-                  <button
-                    onClick={() => { fetchClassMaterials(); setShowAddMat(true); }}
-                    className="flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
-                  >
-                    <PlusCircle size={14} /> Tambah
-                  </button>
-                </div>
-              </div>
-
-              {loadingMat ? (
-                <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" /></div>
-              ) : materials.length === 0 ? (
-                <EmptyState icon={<BookOpen size={32} />} title="Belum ada materi" description="Tetapkan materi yang relevan ke kelas ini" />
-              ) : (
-                <div className="space-y-3">
-                  {materials.map((m, i) => (
-                    <motion.div
-                      key={m.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm"
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
-                        <BookOpen size={18} className="text-emerald-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">{m.title}</p>
-                        <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400">
-                          <Clock size={10} /> {m.estimatedTime} menit · {m.topic}
-                          · oleh {m.createdByName}
-                        </div>
-                      </div>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                        m.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
-                      }`}>
-                        {m.status === 'published' ? 'Publik' : 'Draf'}
-                      </span>
-                      <button
-                        onClick={() => handleUnpinMaterial(m.id)}
-                        className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                        title="Lepas dari kelas"
-                      >
-                        <X size={14} />
-                      </button>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {/* Add material picker */}
-              <AnimatePresence>
-                {showAddMat && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
-                    onClick={e => { if (e.target === e.currentTarget) setShowAddMat(false); }}
-                  >
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      className="w-full max-w-lg rounded-2xl bg-white shadow-2xl"
-                    >
-                      <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-                        <h3 className="font-semibold text-gray-900">Tambah Materi ke Kelas</h3>
-                        <button onClick={() => setShowAddMat(false)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
-                      </div>
-                      <div className="max-h-80 overflow-y-auto p-4">
-                        {unpinnedMaterials.length === 0 ? (
-                          <p className="py-8 text-center text-sm text-gray-400">Semua materi sudah ditambahkan</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {unpinnedMaterials.map(m => (
-                              <button
-                                key={m.id}
-                                onClick={() => handlePinMaterial(m.id)}
-                                className="flex w-full items-center gap-3 rounded-xl border border-gray-100 p-3 text-left hover:border-emerald-200 hover:bg-emerald-50 transition-colors"
-                              >
-                                <BookOpen size={16} className="shrink-0 text-emerald-500" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="truncate text-sm font-medium text-gray-900">{m.title}</p>
-                                  <p className="text-xs text-gray-400">{m.topic} · {m.estimatedTime} menit</p>
-                                </div>
-                                <PlusCircle size={16} className="shrink-0 text-emerald-400" />
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+            <MaterialsTab key="materi" classId={id} cls={cls} setCls={setCls} authToken={authToken} />
           )}
-
-          {/* UJIAN tab */}
           {tab === 'ujian' && (
-            <motion.div key="ujian" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-gray-500">{exams.length} ujian terjadwal</p>
-                <button
-                  onClick={() => setShowCreateExam(true)}
-                  className="flex items-center gap-1.5 rounded-xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-600 transition-colors"
-                >
-                  <PlusCircle size={14} /> Buat Ujian
-                </button>
-              </div>
-
-              {exams.length === 0 ? (
-                <EmptyState icon={<ClipboardList size={32} />} title="Belum ada ujian" description="Buat ujian adaptif MSAT untuk kelas ini" />
-              ) : (
-                <div className="space-y-3">
-                  {exams.map((exam, i) => {
-                    const pct = exam.sessionCount > 0 ? Math.round((exam.completedCount / exam.sessionCount) * 100) : 0;
-                    return (
-                      <motion.div
-                        key={exam.id}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.04 }}
-                        className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-gray-900">{exam.title}</p>
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                exam.status === 'active' ? 'bg-emerald-100 text-emerald-700'
-                                : exam.status === 'closed' ? 'bg-gray-100 text-gray-500'
-                                : 'bg-amber-100 text-amber-700'
-                              }`}>
-                                {exam.status === 'active' ? 'Aktif' : exam.status === 'closed' ? 'Ditutup' : exam.status}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-xs text-gray-400">{exam.completedCount}/{exam.sessionCount} siswa selesai</p>
-                          </div>
-
-                          {/* Token */}
-                          <div className="flex shrink-0 flex-col items-end gap-2">
-                            <button
-                              onClick={() => copyExamToken(exam.examToken)}
-                              className="flex items-center gap-2 rounded-xl bg-violet-50 px-3 py-1.5 transition-colors hover:bg-violet-100"
-                              title="Klik untuk salin token"
-                            >
-                              <p className="font-mono text-sm font-black tracking-widest text-violet-700">{exam.examToken}</p>
-                              {copiedExamToken === exam.examToken
-                                ? <Check size={12} className="text-emerald-500" />
-                                : <Copy size={12} className="text-violet-400" />}
-                            </button>
-                          </div>
-                        </div>
-
-                        {exam.sessionCount > 0 && (
-                          <div className="mt-3">
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-violet-400 to-purple-500 transition-all duration-500"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="mt-3 flex items-center justify-between">
-                          <div className="flex gap-2">
-                            {exam.status === 'active' ? (
-                              <button onClick={() => handleExamStatusChange(exam.id, 'closed')} className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
-                                Tutup Ujian
-                              </button>
-                            ) : (
-                              <button onClick={() => handleExamStatusChange(exam.id, 'active')} className="rounded-lg border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
-                                Buka Kembali
-                              </button>
-                            )}
-                          </div>
-                          <Link
-                            href={`/teacher/ujian/${exam.id}/recap`}
-                            className="flex items-center gap-1 rounded-lg bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
-                          >
-                            Lihat Rekap <ChevronRight size={12} />
-                          </Link>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Create Exam Modal */}
-              <AnimatePresence>
-                {showCreateExam && (
-                  <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-8 backdrop-blur-sm"
-                    onClick={e => { if (e.target === e.currentTarget) { setShowCreateExam(false); resetExamForm(); } }}
-                  >
-                    <motion.div
-                      initial={{ scale: 0.96, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 20 }}
-                      className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"
-                    >
-                      <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-                        <h3 className="font-display text-lg font-bold text-gray-900">Buat Ujian Baru</h3>
-                        <button onClick={() => { setShowCreateExam(false); resetExamForm(); }} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><X size={18} /></button>
-                      </div>
-
-                      <div className="space-y-5 px-6 py-5">
-                        {/* Title */}
-                        <div>
-                          <label className="mb-1.5 block text-xs font-semibold text-gray-700">Judul Ujian *</label>
-                          <input
-                            value={examForm.title}
-                            onChange={e => setExamForm(f => ({ ...f, title: e.target.value }))}
-                            maxLength={120}
-                            placeholder="contoh: Ujian Stoikiometri Bab 3"
-                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
-                          />
-                        </div>
-
-                        {/* Source selector */}
-                        <div>
-                          <label className="mb-2 block text-xs font-semibold text-gray-700">Jenis Soal</label>
-                          <div className="grid grid-cols-3 gap-2">
-                            {[
-                              { key: 'tp' as const, icon: BookOpen, label: 'MSAT Adaptif', sub: 'Dari bank soal, urutan adaptif', sel: 'border-violet-500 bg-violet-50 text-violet-800', iconSel: 'text-violet-600' },
-                              { key: 'manual' as const, icon: ListChecks, label: 'Pilih Soal Manual', sub: 'Pilih soal spesifik dari bank', sel: 'border-blue-500 bg-blue-50 text-blue-800', iconSel: 'text-blue-600' },
-                              { key: 'custom' as const, icon: PenLine, label: 'Tulis Sendiri', sub: 'Buat soal pilihan ganda baru', sel: 'border-indigo-500 bg-indigo-50 text-indigo-800', iconSel: 'text-indigo-600' },
-                            ].map(opt => {
-                              const Icon = opt.icon;
-                              const selected = examSource === opt.key;
-                              return (
-                                <button key={opt.key} type="button" onClick={() => setExamSource(opt.key)}
-                                  className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-3 py-3.5 text-center transition-all ${selected ? opt.sel : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                                  <Icon size={20} className={selected ? opt.iconSel : 'text-gray-400'} />
-                                  <span className="text-xs font-bold leading-tight">{opt.label}</span>
-                                  <span className="text-[10px] text-gray-400 leading-tight">{opt.sub}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* MSAT: TP selection */}
-                        {examSource === 'tp' && (
-                          <div>
-                            <label className="mb-2 block text-xs font-semibold text-gray-700">
-                              Pilih TP
-                              {examForm.domainIds.length > 0 && <span className="ml-2 font-normal text-violet-600">{examForm.domainIds.length} dipilih</span>}
-                            </label>
-                            {loadingTPs ? (
-                              <div className="flex justify-center py-6"><Loader2 size={18} className="animate-spin text-violet-400" /></div>
-                            ) : tpDefs.length === 0 ? (
-                              <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
-                                <AlertCircle size={14} /> Belum ada TP. Buat di Bank Soal terlebih dahulu.
-                              </div>
-                            ) : (
-                              <div className="max-h-52 overflow-y-auto space-y-2 pr-1">
-                                {tpDefs.map(tp => {
-                                  const sel = examForm.domainIds.includes(tp.id);
-                                  return (
-                                    <button key={tp.id} type="button"
-                                      onClick={() => setExamForm(f => ({ ...f, domainIds: sel ? f.domainIds.filter(d => d !== tp.id) : [...f.domainIds, tp.id] }))}
-                                      className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all ${sel ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:bg-gray-50'} ${!tp.isComplete ? 'opacity-60' : ''}`}>
-                                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${sel ? 'border-violet-500 bg-violet-500' : 'border-gray-300'}`}>
-                                        {sel && <Check size={11} className="text-white" />}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1.5">
-                                          <span className="text-xs font-bold text-violet-700">{tp.code}</span>
-                                          <span className="truncate text-xs text-gray-700">{tp.name}</span>
-                                        </div>
-                                        <p className={`mt-0.5 text-[10px] ${tp.isComplete ? 'text-emerald-600' : 'text-amber-500'}`}>
-                                          {tp.isComplete ? `✓ Lengkap · ${tp.totalQuestions} soal` : `⚠ ${tp.coveredPaths ?? 0}/7 tingkat terisi · ${tp.totalQuestions} soal`}
-                                        </p>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Manual: question picker */}
-                        {examSource === 'manual' && (
-                          <div>
-                            <div className="mb-2 flex items-center justify-between">
-                              <label className="text-xs font-semibold text-gray-700">
-                                Pilih Soal dari Bank
-                                {manualSelectedIds.length > 0 && (
-                                  <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">{manualSelectedIds.length} dipilih</span>
-                                )}
-                              </label>
-                              {manualSelectedIds.length > 0 && (
-                                <button type="button" onClick={() => setManualSelectedIds([])} className="text-[10px] text-gray-400 hover:text-rose-500">Bersihkan</button>
-                              )}
-                            </div>
-                            <div className="mb-2 flex gap-2">
-                              <div className="relative flex-1">
-                                <Filter size={11} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <select value={manualFilterTP} onChange={e => setManualFilterTP(e.target.value)}
-                                  className="w-full appearance-none rounded-lg border border-gray-200 py-2 pl-7 pr-2 text-xs outline-none focus:border-blue-400">
-                                  <option value="">Semua TP</option>
-                                  {tpDefs.map(tp => <option key={tp.id} value={tp.id}>{tp.code} – {tp.name}</option>)}
-                                </select>
-                              </div>
-                              <div className="relative flex-1">
-                                <select value={manualFilterTier} onChange={e => setManualFilterTier(e.target.value)}
-                                  className="w-full appearance-none rounded-lg border border-gray-200 py-2 pl-3 pr-2 text-xs outline-none focus:border-blue-400">
-                                  <option value="">Semua Tier</option>
-                                  {Object.entries(TIER_PATH_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                                </select>
-                              </div>
-                            </div>
-                            {loadingAllQ ? (
-                              <div className="flex justify-center py-6"><Loader2 size={18} className="animate-spin text-blue-400" /></div>
-                            ) : (
-                              <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
-                                {allExamQs.filter(q => (!manualFilterTP || q.domainId === manualFilterTP) && (!manualFilterTier || q.tierPath === manualFilterTier)).map(q => {
-                                  const sel = manualSelectedIds.includes(q.id);
-                                  const tp = tpDefs.find(t => t.id === q.domainId);
-                                  return (
-                                    <button key={q.id} type="button" disabled={!sel && manualSelectedIds.length >= 100}
-                                      onClick={() => setManualSelectedIds(prev => prev.includes(q.id) ? prev.filter(x => x !== q.id) : [...prev, q.id])}
-                                      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${sel ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                                      <div className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-colors ${sel ? 'border-blue-500 bg-blue-500' : 'border-gray-300'}`}>
-                                        {sel && <Check size={9} className="text-white" />}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <div className="mb-1 flex flex-wrap items-center gap-1">
-                                          <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold text-violet-700">{tp?.code ?? q.domainId}</span>
-                                          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-semibold text-gray-600">{TIER_PATH_LABELS[q.tierPath] ?? q.tierPath}</span>
-                                          {(q.version ?? 1) > 1 && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">v{q.version}</span>}
-                                        </div>
-                                        <div className="line-clamp-2 text-xs text-gray-700"><QuestionRenderer content={q.stem} /></div>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                                {allExamQs.filter(q => (!manualFilterTP || q.domainId === manualFilterTP) && (!manualFilterTier || q.tierPath === manualFilterTier)).length === 0 && (
-                                  <div className="rounded-xl bg-gray-50 py-6 text-center text-xs text-gray-400">
-                                    {allExamQs.length === 0 ? 'Bank soal masih kosong.' : 'Tidak ada soal untuk filter ini.'}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Custom: question builder */}
-                        {examSource === 'custom' && (
-                          <div>
-                            <div className="mb-2 flex items-center justify-between">
-                              <label className="text-xs font-semibold text-gray-700">{customQs.length} Soal</label>
-                              <button type="button" disabled={customQs.length >= 100}
-                                onClick={() => setCustomQs(qs => [...qs, emptyCustomQ()])}
-                                className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40">
-                                <PlusCircle size={13} /> Tambah Soal
-                              </button>
-                            </div>
-                            <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
-                              {customQs.map((cq, idx) => (
-                                <div key={cq.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                  <div className="mb-3 flex items-center justify-between">
-                                    <span className="text-xs font-bold text-indigo-700">Soal {idx + 1}</span>
-                                    {customQs.length > 1 && (
-                                      <button type="button" onClick={() => setCustomQs(qs => qs.filter((_, i) => i !== idx))} className="rounded p-1 text-gray-400 hover:text-rose-500"><Trash2 size={12} /></button>
-                                    )}
-                                  </div>
-                                  <textarea value={cq.stem} maxLength={10000} onChange={e => setCustomQs(qs => qs.map((q, i) => i === idx ? { ...q, stem: e.target.value } : q))}
-                                    placeholder="Tulis pertanyaan di sini..." rows={2}
-                                    className="mb-3 w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300" />
-                                  <div className="mb-3 grid grid-cols-2 gap-2">
-                                    {(['A', 'B', 'C', 'D'] as const).map(key => (
-                                      <div key={key} className="flex items-center gap-1.5">
-                                        <span className="w-4 text-xs font-bold text-gray-500">{key}.</span>
-                                        <input value={cq.options[key]} maxLength={5000} onChange={e => setCustomQs(qs => qs.map((q, i) => i === idx ? { ...q, options: { ...q.options, [key]: e.target.value } } : q))}
-                                          placeholder={`Opsi ${key}`}
-                                          className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-indigo-300" />
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-600">Jawaban benar:</span>
-                                    {(['A', 'B', 'C', 'D'] as const).map(key => (
-                                      <button key={key} type="button" onClick={() => setCustomQs(qs => qs.map((q, i) => i === idx ? { ...q, correctAnswer: key } : q))}
-                                        className={`h-7 w-7 rounded-full text-xs font-bold transition-colors ${cq.correctAnswer === key ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
-                                        {key}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Duration + Max attempts */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="mb-1.5 block text-xs font-semibold text-gray-700">Durasi (menit)</label>
-                            <div className="relative">
-                              <Clock size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                              <input type="number" min={10} max={180}
-                                value={examForm.durationMinutes || ''}
-                                onChange={e => { const n = parseInt(e.target.value); setExamForm(f => ({ ...f, durationMinutes: isNaN(n) ? 0 : n })); }}
-                                onBlur={() => setExamForm(f => ({ ...f, durationMinutes: Math.min(180, Math.max(10, f.durationMinutes || 50)) }))}
-                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-8 pr-4 text-sm outline-none focus:border-violet-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
-                            </div>
-                            <p className="mt-1 text-[10px] text-gray-400">10–180 menit</p>
-                          </div>
-                          <div>
-                            <label className="mb-1.5 block text-xs font-semibold text-gray-700">Maks Percobaan</label>
-                            <div className="space-y-1.5">
-                              {[{ v: 1, label: '1× — sekali saja' }, { v: 2, label: '2× percobaan' }, { v: 3, label: '3× percobaan' }, { v: 0, label: '∞ tak terbatas' }].map(opt => (
-                                <button key={opt.v} type="button" onClick={() => setExamForm(f => ({ ...f, maxAttempts: opt.v }))}
-                                  className={`flex w-full items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition-colors ${examForm.maxAttempts === opt.v ? 'border-violet-400 bg-violet-50 font-semibold text-violet-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-                                  <div className={`h-3 w-3 shrink-0 rounded-full border-2 ${examForm.maxAttempts === opt.v ? 'border-violet-500 bg-violet-500' : 'border-gray-300'}`} />
-                                  {opt.label}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 border-t border-gray-100 px-6 py-4">
-                        <button onClick={() => { setShowCreateExam(false); resetExamForm(); }}
-                          className="flex-1 rounded-xl bg-gray-100 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200">
-                          Batal
-                        </button>
-                        <button onClick={handleCreateExam} disabled={savingExam || !canCreateExam}
-                          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 py-2.5 text-sm font-bold text-white disabled:opacity-40 hover:bg-violet-700">
-                          {savingExam && <Loader2 size={14} className="animate-spin" />}
-                          Buat Ujian
-                        </button>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+            <ExamsTab key="ujian" classId={id} exams={exams} setExams={setExams} authToken={authToken} />
           )}
-
-          {/* TUGAS tab */}
           {tab === 'tugas' && (
-            <motion.div key="tugas" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-gray-500">{assignments.length} tugas</p>
-                <button
-                  onClick={() => setShowCreateAsgn(true)}
-                  className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600"
-                >
-                  <PlusCircle size={14} /> Buat Tugas
-                </button>
-              </div>
-
-              {loadingAsgn ? (
-                <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-400 border-t-transparent" /></div>
-              ) : assignments.length === 0 ? (
-                <EmptyState icon={<ClipboardCheck size={32} />} title="Belum ada tugas" description="Buat tugas untuk siswa di kelas ini" />
-              ) : (
-                <div className="space-y-3">
-                  {assignments.map((a, i) => {
-                    const isOverdue = a.dueDate && new Date(a.dueDate) < new Date();
-                    const plainDesc = a.description ? stripMarkdown(a.description) : '';
-                    return (
-                      <motion.div
-                        key={a.id}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.04 }}
-                        className="rounded-2xl bg-white p-5 shadow-sm"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-gray-900">{a.title}</p>
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                isOverdue ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'
-                              }`}>
-                                {isOverdue ? 'Lewat batas' : a.status === 'published' ? 'Aktif' : 'Draf'}
-                              </span>
-                              {a.allowLate && (
-                                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-600">
-                                  Boleh terlambat
-                                </span>
-                              )}
-                            </div>
-                            {plainDesc && (
-                              <p className="mt-1 line-clamp-2 text-xs text-gray-500">{plainDesc}</p>
-                            )}
-                            <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
-                              {a.dueDate && (
-                                <span className={`flex items-center gap-1 ${isOverdue ? 'text-red-500' : ''}`}>
-                                  <Calendar size={10} /> Batas: {fmtDate(a.dueDate)}
-                                </span>
-                              )}
-                              <span>Nilai maks: {a.maxScore}</span>
-                            </div>
-                            <button
-                              onClick={() => handleViewSubmissions(a)}
-                              className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
-                            >
-                              <ClipboardCheck size={12} />
-                              {a.submissionCount ?? 0} pengumpulan · Lihat Detail
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleDeleteAssignment(a.id)}
-                              className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Submissions Modal */}
-              <AnimatePresence>
-                {viewSubmissions && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
-                    onClick={e => { if (e.target === e.currentTarget) setViewSubmissions(null); }}
-                  >
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.96, y: 16 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      className="w-full max-w-lg rounded-2xl bg-white shadow-2xl"
-                    >
-                      <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">Pengumpulan Tugas</h3>
-                          <p className="text-xs text-gray-400">{viewSubmissions.title}</p>
-                        </div>
-                        <button onClick={() => setViewSubmissions(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
-                      </div>
-                      <div className="max-h-[60vh] overflow-y-auto">
-                        {loadingSubmissions ? (
-                          <div className="flex justify-center py-10"><div className="h-7 w-7 animate-spin rounded-full border-4 border-amber-400 border-t-transparent" /></div>
-                        ) : submissionsData ? (
-                          <>
-                            {submissionsData.submitted.length > 0 && (
-                              <div className="p-4">
-                                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-emerald-600">Sudah Mengumpulkan ({submissionsData.submitted.length})</p>
-                                <div className="space-y-2">
-                                  {submissionsData.submitted.map(s => (
-                                    <div key={s.studentId} className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 space-y-2">
-                                      <div className="flex flex-wrap items-center gap-2 justify-between">
-                                        <p className="text-sm font-semibold text-gray-800">{s.studentName}</p>
-                                        <div className="flex items-center gap-1.5">
-                                          {s.isLate && (
-                                            <span className="flex items-center gap-0.5 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-600">
-                                              <AlertTriangle size={9} /> Terlambat
-                                            </span>
-                                          )}
-                                          {s.submittedAt && (
-                                            <span className="text-[10px] text-gray-400">{fmtDateTime(s.submittedAt)}</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                      {s.text && (
-                                        <p className="text-xs text-gray-600 whitespace-pre-wrap">{s.text}</p>
-                                      )}
-                                      {s.links && s.links.length > 0 && (
-                                        <div className="space-y-1">
-                                          {s.links.map((link, i) => (
-                                            <a key={i} href={link} target="_blank" rel="noopener noreferrer"
-                                              className="flex items-center gap-1.5 text-xs text-violet-600 hover:underline truncate">
-                                              <Link2 size={11} className="shrink-0" /> {link}
-                                            </a>
-                                          ))}
-                                        </div>
-                                      )}
-                                      {/* Grading */}
-                                      <div className="border-t border-emerald-200 pt-2">
-                                        {typeof s.grade === 'number' && (
-                                          <p className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold text-violet-600">
-                                            <Star size={11} /> Nilai saat ini: {s.grade}/{viewSubmissions!.maxScore}
-                                            {s.gradeNote && <span className="font-normal text-gray-500"> — {s.gradeNote}</span>}
-                                          </p>
-                                        )}
-                                        <div className="flex items-center gap-2">
-                                          <input
-                                            type="number"
-                                            min={0}
-                                            max={viewSubmissions!.maxScore}
-                                            value={gradeInputs[s.studentId]?.grade ?? ''}
-                                            onChange={e => setGradeInputs(g => ({ ...g, [s.studentId]: { ...(g[s.studentId] ?? { grade: '', note: '' }), grade: e.target.value } }))}
-                                            placeholder={`0–${viewSubmissions!.maxScore}`}
-                                            className="w-20 rounded-lg border border-gray-200 px-2 py-1.5 text-sm outline-none focus:border-violet-300 focus:ring-1 focus:ring-violet-100"
-                                          />
-                                          <input
-                                            type="text"
-                                            value={gradeInputs[s.studentId]?.note ?? ''}
-                                            onChange={e => setGradeInputs(g => ({ ...g, [s.studentId]: { ...(g[s.studentId] ?? { grade: '', note: '' }), note: e.target.value } }))}
-                                            placeholder="Catatan (opsional)"
-                                            className="flex-1 rounded-lg border border-gray-200 px-2 py-1.5 text-sm outline-none focus:border-violet-300 focus:ring-1 focus:ring-violet-100"
-                                          />
-                                          <button
-                                            onClick={() => handleGradeSubmission(viewSubmissions!.id, s.studentId, viewSubmissions!.maxScore)}
-                                            disabled={savingGrade[s.studentId] || !gradeInputs[s.studentId]?.grade}
-                                            className="flex items-center gap-1 rounded-lg bg-violet-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-600 disabled:opacity-40 whitespace-nowrap"
-                                          >
-                                            {savingGrade[s.studentId] ? <Loader2 size={11} className="animate-spin" /> : <Star size={11} />}
-                                            Simpan
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            {submissionsData.notSubmitted.length > 0 && (
-                              <div className="border-t border-gray-50 p-4">
-                                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-red-500">Belum Mengumpulkan ({submissionsData.notSubmitted.length})</p>
-                                <div className="space-y-1.5">
-                                  {submissionsData.notSubmitted.map(s => (
-                                    <div key={s.studentId} className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
-                                      <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-500">
-                                        {s.studentName.charAt(0).toUpperCase()}
-                                      </div>
-                                      <p className="text-sm text-gray-600">{s.studentName}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            {submissionsData.submitted.length === 0 && submissionsData.notSubmitted.length === 0 && (
-                              <p className="py-10 text-center text-sm text-gray-400">Belum ada siswa di kelas ini</p>
-                            )}
-                          </>
-                        ) : null}
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Create Assignment Modal */}
-              <AnimatePresence>
-                {showCreateAsgn && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8 backdrop-blur-sm"
-                    onClick={e => { if (e.target === e.currentTarget) setShowCreateAsgn(false); }}
-                  >
-                    <motion.div
-                      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 16, scale: 0.97 }}
-                      className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"
-                    >
-                      <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-                        <h3 className="font-display text-lg font-bold text-gray-900">Buat Tugas Baru</h3>
-                        <button onClick={() => setShowCreateAsgn(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><X size={18} /></button>
-                      </div>
-                      <div className="space-y-4 px-6 py-5">
-                        <div>
-                          <label className="mb-1.5 block text-xs font-semibold text-gray-700">Judul Tugas *</label>
-                          <input
-                            value={asgnForm.title}
-                            onChange={e => setAsgnForm(f => ({ ...f, title: e.target.value }))}
-                            placeholder="mis. Latihan Soal Stoikiometri Bab 1"
-                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-100"
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1.5 block text-xs font-semibold text-gray-700">Deskripsi / Instruksi</label>
-                          <RichEditor
-                            value={asgnForm.description}
-                            onChange={v => setAsgnForm(f => ({ ...f, description: v }))}
-                            placeholder="Tulis instruksi tugas..."
-                            minHeight={200}
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="mb-1.5 block text-xs font-semibold text-gray-700">Batas Waktu</label>
-                            <input
-                              type="datetime-local"
-                              value={asgnForm.dueDate}
-                              onChange={e => setAsgnForm(f => ({ ...f, dueDate: e.target.value }))}
-                              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-100"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-1.5 block text-xs font-semibold text-gray-700">Nilai Maksimum</label>
-                            <input
-                              type="number"
-                              min={1}
-                              value={asgnForm.maxScore}
-                              onChange={e => setAsgnForm(f => ({ ...f, maxScore: Number(e.target.value) }))}
-                              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-100"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <button
-                            type="button"
-                            onClick={() => setAsgnForm(f => ({ ...f, allowLate: !f.allowLate }))}
-                            className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
-                              asgnForm.allowLate
-                                ? 'border-orange-200 bg-orange-50 text-orange-700'
-                                : 'border-gray-200 text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            <div className={`flex h-4 w-4 items-center justify-center rounded border-2 transition-colors ${
-                              asgnForm.allowLate ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                            }`}>
-                              {asgnForm.allowLate && <Check size={10} className="text-white" />}
-                            </div>
-                            Izinkan pengumpulan terlambat
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
-                        <button
-                          onClick={() => setShowCreateAsgn(false)}
-                          className="rounded-xl border border-gray-200 px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
-                        >
-                          Batal
-                        </button>
-                        <button
-                          onClick={handleCreateAssignment}
-                          disabled={savingAsgn || !asgnForm.title.trim()}
-                          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-400 px-6 py-2 text-sm font-semibold text-white shadow-md disabled:opacity-50"
-                        >
-                          {savingAsgn && <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-                          Buat Tugas
-                        </button>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+            <AssignmentsTab key="tugas" classId={id} authToken={authToken} />
           )}
-          {/* CHAT tab */}
           {tab === 'chat' && (
-            <motion.div key="chat" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="flex h-[520px] flex-col rounded-2xl bg-white shadow-sm">
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {messages.length === 0 && (
-                  <div className="flex h-full flex-col items-center justify-center text-center">
-                    <MessageCircle size={36} className="mb-3 text-gray-200" />
-                    <p className="text-sm font-medium text-gray-400">Belum ada pesan</p>
-                    <p className="text-xs text-gray-300">Mulai percakapan dengan siswa</p>
-                  </div>
-                )}
-                {messages.map(msg => {
-                  const isMe = msg.senderId === user?.uid;
-                  const time = tsToDate(msg.createdAt);
-                  return (
-                    <div key={msg.id} className={`flex gap-2.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
-                        msg.senderRole === 'teacher' ? 'bg-emerald-500' : 'bg-primary'
-                      }`}>
-                        {msg.senderName?.charAt(0).toUpperCase()}
-                      </div>
-                      <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
-                        <div className="flex items-center gap-1.5">
-                          {!isMe && <span className="text-[10px] font-semibold text-gray-500">{msg.senderName}</span>}
-                          {msg.senderRole === 'teacher' && (
-                            <span className="rounded-full bg-emerald-100 px-1.5 py-px text-[9px] font-bold text-emerald-700">Guru</span>
-                          )}
-                        </div>
-                        <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                          isMe ? 'rounded-tr-sm bg-emerald-500 text-white' : 'rounded-tl-sm bg-gray-100 text-gray-800'
-                        }`}>
-                          {msg.text}
-                        </div>
-                        {time && (
-                          <span className="text-[9px] text-gray-300">
-                            {time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                <div ref={chatEndRef} />
-              </div>
-              <div className="border-t border-gray-100 p-3">
-                <div className="flex gap-2">
-                  <input
-                    value={chatText}
-                    onChange={e => setChatText(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
-                    placeholder="Tulis pesan ke siswa..."
-                    className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
-                  />
-                  <button
-                    onClick={handleSendChat}
-                    disabled={sendingChat || !chatText.trim()}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white disabled:opacity-40 hover:opacity-90 transition-opacity"
-                  >
-                    {sendingChat ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+            <ChatTab key="chat" classId={id} />
           )}
-
         </AnimatePresence>
       </div>
     </RoleGuard>
   );
 };
-
-// ─── Empty State ───────────────────────────────────────────────────────────────
-const EmptyState: FC<{
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  highlight?: string;
-}> = ({ icon, title, description, highlight }) => (
-  <div className="rounded-2xl bg-white py-16 text-center shadow-sm">
-    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-50 text-gray-300">
-      {icon}
-    </div>
-    <p className="text-sm font-medium text-gray-500">{title}</p>
-    <p className="mt-1 text-xs text-gray-400">
-      {description}
-      {highlight && <> <strong className="font-mono text-gray-600">{highlight}</strong> ke siswa</>}
-    </p>
-  </div>
-);
 
 export default TeacherClassDetailPage;

@@ -33,11 +33,13 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   revoked: { label: 'Dicabut', color: 'text-rose-700', bg: 'bg-rose-50', icon: Ban },
 };
 
-function formatDate(ts: { _seconds: number } | null): string {
+function formatDate(ts: unknown): string {
   if (!ts) return '-';
-  return new Date(ts._seconds * 1000).toLocaleDateString('id-ID', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  });
+  const o = ts as Record<string, unknown>;
+  const secs = (o._seconds ?? o.seconds) as number | undefined;
+  if (typeof secs === 'number') return new Date(secs * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  const d = new Date(ts as string);
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 const PREDIKAT_STYLES: Record<string, string> = {

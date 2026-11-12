@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -367,16 +368,20 @@ const TeacherMaterials: FC = () => {
             </span>
           </div>
           {teacherMaterials.length === 0 ? (
-            <div className="rounded-2xl border-2 border-dashed border-gray-200 py-16 text-center">
-              <BookOpen size={32} className="mx-auto mb-3 text-gray-300" />
-              <p className="text-sm font-medium text-gray-400">Belum ada materi</p>
-              <button
-                onClick={openCreate}
-                className="mt-4 rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
-              >
-                Buat Materi Pertama
-              </button>
-            </div>
+            <EmptyState
+              tone="teal"
+              icon={<BookOpen size={32} />}
+              title="Belum ada materi"
+              description="Tulis materi pertamamu. Siswa bisa langsung membacanya dan kamu bisa menyematkannya ke kelas."
+              action={
+                <button
+                  onClick={openCreate}
+                  className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600"
+                >
+                  Buat Materi Pertama
+                </button>
+              }
+            />
           ) : (
             <div className="space-y-3">
               {teacherMaterials.map((m, i) => (

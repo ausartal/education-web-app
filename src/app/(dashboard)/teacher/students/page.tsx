@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { Search, Zap, Flame, BookOpen, Trophy } from 'lucide-react';

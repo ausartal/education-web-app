@@ -12,6 +12,7 @@ const ExamBreakPage: FC = () => {
   const { user } = useAuth();
 
   const [timeLeft, setTimeLeft] = useState(0);
+  const [totalSec, setTotalSec] = useState(600);
   const [loading, setLoading] = useState(true);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -29,9 +30,12 @@ const ExamBreakPage: FC = () => {
         if (data.status === 'completed') { router.push(`/exam/results/${id}`); return; }
         if (data.status === 'in_progress') { router.push(`/exam/session/${id}`); return; }
 
+        const serverNow: number = data.serverNow ?? Date.now();
+        const configured = (data.exam?.breakDuration ?? 10) * 60;
+        setTotalSec(configured);
         if (data.breakEndsAt) {
-          const endsAt = data.breakEndsAt * 1000;
-          const remaining = Math.max(0, Math.floor((endsAt - Date.now()) / 1000));
+          // Use the server clock so a wrong device clock cannot shorten the break.
+          const remaining = Math.max(0, Math.ceil((data.breakEndsAt * 1000 - serverNow) / 1000));
           setTimeLeft(remaining);
         }
       } catch { /* ignore */ }
@@ -88,7 +92,7 @@ const ExamBreakPage: FC = () => {
 
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
-  const pct = timeLeft > 0 ? timeLeft / 600 : 0;
+  const pct = timeLeft > 0 ? Math.min(1, timeLeft / totalSec) : 0;
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-10">

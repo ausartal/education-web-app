@@ -51,9 +51,12 @@ interface UjianData {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmtDate(iso: string | null) {
+function fmtDate(iso: unknown) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const o = iso as Record<string, unknown>;
+  const secs = (o._seconds ?? o.seconds) as number | undefined;
+  const d = typeof secs === 'number' ? new Date(secs * 1000) : new Date(iso as string);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 const COMPREHENSION_LABELS: Record<string, { label: string; color: string }> = {

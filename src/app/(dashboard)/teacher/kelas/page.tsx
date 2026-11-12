@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Users, BookOpen, Copy, Check, Pencil, Trash2, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -22,6 +23,9 @@ const TeacherKelasPage: FC = () => {
   const { user } = useAuth();
   const { data, isLoading, mutate } = useAuthSWR<{ classes: ClassItem[] }>('/api/teacher/classes');
   const classes = data?.classes ?? [];
+  const [showArchived, setShowArchived] = useState(false);
+  const archivedCount = classes.filter((c) => c.status === 'archived').length;
+  const visibleClasses = classes.filter((c) => (c.status === 'archived') === showArchived);
   const loading = isLoading;
 
   const [showCreate, setShowCreate] = useState(false);
@@ -110,16 +114,41 @@ const TeacherKelasPage: FC = () => {
           </button>
         </div>
 
-        {/* Classes Grid */}
-        {classes.length === 0 ? (
-          <div className="rounded-3xl bg-white p-16 text-center shadow-sm">
-            <Users size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="font-semibold text-gray-500">Belum ada kelas</p>
-            <p className="mt-1 text-sm text-gray-400">Buat kelas pertama untuk mulai mengundang siswa</p>
+        {archivedCount > 0 && (
+          <div className="mb-5 inline-flex gap-1 rounded-xl bg-gray-100 p-1" role="tablist" aria-label="Status kelas">
+            {([['Aktif', false, classes.length - archivedCount], ['Diarsipkan', true, archivedCount]] as const).map(([label, value, count]) => (
+              <button
+                key={label}
+                role="tab"
+                aria-selected={showArchived === value}
+                onClick={() => setShowArchived(value)}
+                className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-all ${showArchived === value ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                {label} <span className="ml-1 text-xs text-gray-400">{count}</span>
+              </button>
+            ))}
           </div>
+        )}
+
+        {/* Classes Grid */}
+        {visibleClasses.length === 0 ? (
+          <EmptyState
+            tone="emerald"
+            icon={<Users size={32} />}
+            title={showArchived ? 'Tidak ada kelas diarsipkan' : 'Belum ada kelas'}
+            description={showArchived ? 'Kelas yang kamu arsipkan akan muncul di sini.' : 'Buat kelas pertama, lalu bagikan kode bergabung ke siswa.'}
+            action={!showArchived ? (
+              <button
+                onClick={() => { setShowCreate(true); setForm({ name: '', subject: '' }); }}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+              >
+                <Plus size={16} /> Buat Kelas
+              </button>
+            ) : undefined}
+          />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {classes.map((cls) => (
+            {visibleClasses.map((cls) => (
               <motion.div
                 key={cls.id}
                 initial={{ opacity: 0, y: 8 }}
@@ -128,7 +157,7 @@ const TeacherKelasPage: FC = () => {
               >
                 <div className="mb-4 flex items-start justify-between">
                   <div>
-                    <h3 className="font-bold text-gray-900">{cls.name}</h3>
+                    <h3 className="font-bold text-gray-900">{cls.name}{cls.status === 'archived' && <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500">Diarsipkan</span>}</h3>
                     <p className="text-sm text-gray-500">{cls.subject}</p>
                   </div>
                   <div className="flex gap-1.5">

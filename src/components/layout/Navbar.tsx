@@ -4,7 +4,7 @@ import { FC, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LogOut, Settings, User, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { signOut } from '@/services/auth';
 import { NotificationDropdown } from './NotificationDropdown';
@@ -83,27 +83,31 @@ export const Navbar: FC = () => {
             <div className="flex items-center gap-2">
               <NotificationDropdown />
 
-              <div ref={ref} className="relative">
+              <div ref={ref} className="relative flex items-center gap-2.5">
+                <div className="hidden text-right sm:block">
+                  <p className="whitespace-nowrap text-xs font-semibold leading-tight text-stone-800">
+                    {profile?.displayName ?? 'Profil'}
+                  </p>
+                  <p className="text-[10px] text-stone-400">
+                    {profile?.role === 'admin' ? 'Admin' : profile?.role === 'teacher' ? 'Guru' : 'Siswa'}
+                  </p>
+                </div>
                 <button
                   onClick={() => setOpen(v => !v)}
-                  className="flex items-center gap-2 rounded-full border border-stone-200 bg-stone-50 pl-1 pr-2.5 py-1 transition-all hover:border-stone-300 hover:bg-stone-100"
+                  className="rounded-full transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                   aria-label="Menu profil"
                 >
                   {profile?.photoURL ? (
                     <img
                       src={profile.photoURL}
                       alt={`Foto profil ${profile.displayName}`}
-                      className="h-9 w-9 rounded-full object-cover shadow-sm ring-1 ring-stone-200"
+                      className="h-10 w-10 rounded-full object-cover ring-1 ring-stone-200"
                     />
                   ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-purple-500 text-xs font-bold text-white shadow-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-50 text-sm font-bold text-violet-600 ring-1 ring-stone-200">
                       {profile?.displayName?.charAt(0).toUpperCase() || 'U'}
                     </div>
                   )}
-                  <span className="text-[13px] font-semibold text-stone-700 max-w-[80px] truncate">
-                    {profile?.displayName?.split(' ')[0] ?? 'Profil'}
-                  </span>
-                  <ChevronDown size={12} className={`text-stone-400 transition-transform ${open ? 'rotate-180' : ''}`} />
                 </button>
 
                 {open && (

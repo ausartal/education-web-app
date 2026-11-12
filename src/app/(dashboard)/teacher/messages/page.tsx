@@ -6,7 +6,7 @@ import {
   collection, query, where, onSnapshot, addDoc,
   serverTimestamp, getDocs, or, Timestamp,
   orderBy, limit,
-} from 'firebase/firestore';
+} from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';

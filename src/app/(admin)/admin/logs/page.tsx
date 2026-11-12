@@ -3,7 +3,7 @@
 import { FC, useEffect, useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ClipboardList, RefreshCw, ChevronDown, Search, Pause, Play, X } from 'lucide-react';
-import { collection, limit as firestoreLimit, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { collection, limit as firestoreLimit, onSnapshot, orderBy, query } from '@/lib/client-firestore';
 import { useAuth } from '@/context/AuthContext';
 import { AuditLog } from '@/types/firestore';
 import { db } from '@/lib/firebase';

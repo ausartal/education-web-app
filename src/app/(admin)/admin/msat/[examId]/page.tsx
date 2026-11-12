@@ -43,6 +43,8 @@ interface Session {
   breakEndsAt: { _seconds: number } | null;
   completedAt: { _seconds: number } | null;
   resultsReleasedAt: { _seconds: number } | null;
+  anomalyFlags?: string[];
+  terminated?: boolean;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -57,6 +59,7 @@ const SESSION_STATUS: Record<string, { label: string; color: string; bg: string 
   in_progress: { label: 'Mengerjakan', color: 'text-blue-600', bg: 'bg-blue-50' },
   on_break: { label: 'Istirahat', color: 'text-orange-600', bg: 'bg-orange-50' },
   completed: { label: 'Selesai', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  cancelled: { label: 'Dibatalkan', color: 'text-stone-500', bg: 'bg-stone-100' },
 };
 
 const DIFF_LABELS: Record<string, string> = { rendah: 'R', medium: 'M', tinggi: 'T' };
@@ -70,7 +73,9 @@ const MsatExamDetailPage: FC = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [actionLoading, setActionLoading] = useState('');
-  const [confirmAction, setConfirmAction] = useState<{ action: string; label: string; target?: string } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ action: string; label: string; target?: string; needsReason?: boolean } | null>(null);
+  const [reason, setReason] = useState('');
+  const [actionError, setActionError] = useState('');
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -106,15 +111,32 @@ const MsatExamDetailPage: FC = () => {
     setActionLoading(action + (target ?? ''));
     try {
       const idToken = await user.getIdToken();
-      await fetch(`/api/admin/msat/${examId}`, {
+      const res = await fetch(`/api/admin/msat/${examId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({ action, targetSessionId: target }),
+        body: JSON.stringify({ action, targetSessionId: target, reason: reason.trim() || undefined }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setActionError(data.error ?? 'Aksi gagal dijalankan');
+        setActionLoading('');
+        return;
+      }
       await fetchData();
-    } catch { /* ignore */ }
+    } catch {
+      setActionError('Koneksi bermasalah. Coba lagi.');
+      setActionLoading('');
+      return;
+    }
     setActionLoading('');
     setConfirmAction(null);
+    setReason('');
+  };
+
+  const openConfirm = (next: { action: string; label: string; target?: string; needsReason?: boolean }) => {
+    setReason('');
+    setActionError('');
+    setConfirmAction(next);
   };
 
   const copyCode = () => {
@@ -148,7 +170,7 @@ const MsatExamDetailPage: FC = () => {
       {/* Confirm Dialog */}
       <AnimatePresence>
         {confirmAction && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/50 backdrop-blur-sm" onClick={() => setConfirmAction(null)}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/50 backdrop-blur-sm" onClick={() => { setConfirmAction(null); setActionError(''); }}>
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} onClick={e => e.stopPropagation()} className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50"><AlertCircle size={20} className="text-amber-500" /></div>
@@ -157,9 +179,24 @@ const MsatExamDetailPage: FC = () => {
                   <p className="text-xs text-stone-400">Aksi ini tidak bisa dibatalkan</p>
                 </div>
               </div>
+              {confirmAction.needsReason && (
+                <div className="mb-4">
+                  <label htmlFor="action-reason" className="mb-1.5 block text-xs font-semibold text-stone-600">Alasan (wajib, tercatat di audit log dan dikirim ke peserta)</label>
+                  <textarea
+                    id="action-reason"
+                    value={reason}
+                    onChange={e => setReason(e.target.value)}
+                    maxLength={300}
+                    rows={3}
+                    className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-700 outline-none focus:border-violet-400"
+                    placeholder="Contoh: Terdeteksi membuka aplikasi lain saat ujian"
+                  />
+                </div>
+              )}
+              {actionError && <p role="alert" className="mb-3 text-xs font-medium text-rose-600">{actionError}</p>}
               <div className="flex gap-3">
-                <button onClick={() => setConfirmAction(null)} className="flex-1 rounded-xl bg-stone-100 py-2.5 text-sm font-semibold text-stone-600 hover:bg-stone-200">Batal</button>
-                <button onClick={() => handleAction(confirmAction.action, confirmAction.target)} disabled={!!actionLoading} className="flex-1 rounded-xl bg-[#5841EA] py-2.5 text-sm font-bold text-white hover:bg-[#4D38D4] disabled:opacity-50">
+                <button onClick={() => { setConfirmAction(null); setActionError(''); }} className="flex-1 rounded-xl bg-stone-100 py-2.5 text-sm font-semibold text-stone-600 hover:bg-stone-200">Batal</button>
+                <button onClick={() => handleAction(confirmAction.action, confirmAction.target)} disabled={!!actionLoading || (!!confirmAction.needsReason && reason.trim().length < 5)} className="flex-1 rounded-xl bg-[#5841EA] py-2.5 text-sm font-bold text-white hover:bg-[#4D38D4] disabled:opacity-50">
                   {actionLoading ? <Loader2 size={14} className="mx-auto animate-spin" /> : 'Ya, Lanjutkan'}
                 </button>
               </div>
@@ -298,7 +335,9 @@ const MsatExamDetailPage: FC = () => {
           </div>
           <div className="divide-y divide-stone-50">
             {onBreakSessions.map(s => {
-              const breakEnds = s.breakEndsAt?._seconds ? new Date(s.breakEndsAt._seconds * 1000) : null;
+              const bEnd = s.breakEndsAt as Record<string, unknown> | null;
+              const bSecs = (bEnd?._seconds ?? bEnd?.seconds) as number | undefined;
+              const breakEnds = typeof bSecs === 'number' ? new Date(bSecs * 1000) : null;
               const remaining = breakEnds ? Math.max(0, Math.floor((breakEnds.getTime() - Date.now()) / 1000)) : 0;
               const mins = Math.floor(remaining / 60);
               const secs = remaining % 60;
@@ -408,7 +447,30 @@ const MsatExamDetailPage: FC = () => {
                       ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">Hasil dirilis</span>
                       : <button onClick={() => setConfirmAction({ action: 'release_result', label: `Rilis hasil untuk ${s.studentName ?? 'siswa ini'}?`, target: s.id })} disabled={!!actionLoading} className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-700 ring-1 ring-violet-200 hover:bg-violet-100 disabled:opacity-50">Rilis hasil</button>
                   )}
+                  {(s.anomalyFlags?.length ?? 0) > 0 && (
+                    <Link href="/admin/msat/anomalies" title={s.anomalyFlags?.join(', ')} className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100">
+                      Anomali {s.anomalyFlags?.length}
+                    </Link>
+                  )}
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${sCfg.bg} ${sCfg.color}`}>{sCfg.label}</span>
+                  {(s.status === 'in_progress' || s.status === 'on_break') && (
+                    <button
+                      onClick={() => openConfirm({ action: 'terminate_session', label: `Hentikan paksa ujian ${s.studentName ?? 'peserta'}?`, target: s.id, needsReason: true })}
+                      disabled={!!actionLoading}
+                      className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 disabled:opacity-50"
+                    >
+                      Hentikan
+                    </button>
+                  )}
+                  {s.status !== 'cancelled' && (
+                    <button
+                      onClick={() => openConfirm({ action: 'cancel_session', label: `Batalkan sesi ${s.studentName ?? 'peserta'}?`, target: s.id, needsReason: true })}
+                      disabled={!!actionLoading}
+                      className="rounded-full bg-stone-100 px-2.5 py-1 text-[10px] font-bold text-stone-600 hover:bg-stone-200 disabled:opacity-50"
+                    >
+                      Batalkan
+                    </button>
+                  )}
                 </div>
               );
             })}

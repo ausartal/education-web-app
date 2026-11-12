@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState, useCallback, useMemo } from 'react';
+import { FC, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
@@ -9,8 +9,10 @@ import { PracticeQuestion, Difficulty, AnswerKey } from '@/types/firestore';
 import { ScientificCalculator } from '@/components/tools/ScientificCalculator';
 import { PeriodicTableRef } from '@/components/tools/PeriodicTableRef';
 import { useAuth } from '@/context/AuthContext';
-import { doc, updateDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, increment } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
+import { LEGACY_PRACTICE_TOPIC, dayKey, slugTopic } from '@/lib/learning';
+import { Celebration } from '@/components/ui/Celebration';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
@@ -32,6 +34,9 @@ const QuizPage: FC = () => {
   const [showCalc, setShowCalc] = useState(false);
   const [showPeriodic, setShowPeriodic] = useState(false);
   const [checking, setChecking] = useState(false);
+  const topicRef = useRef(LEGACY_PRACTICE_TOPIC);
+  const [celebrate, setCelebrate] = useState(false);
+  const startedAtRef = useRef(Date.now());
 
   const currentQ = questions[currentIdx];
   const options: AnswerKey[] = ['A', 'B', 'C', 'D', 'E'];
@@ -55,13 +60,15 @@ const QuizPage: FC = () => {
     const fetchQuestions = async () => {
       try {
         const idToken = await user.getIdToken();
-        const res = await fetch(`/api/practice-questions?topic=stoikiometri&difficulty=${difficulty}&count=10`, {
+        topicRef.current = new URLSearchParams(window.location.search).get('topic') || LEGACY_PRACTICE_TOPIC;
+        const res = await fetch(`/api/practice-questions?topic=${encodeURIComponent(topicRef.current)}&difficulty=${difficulty}&count=10`, {
           headers: { Authorization: `Bearer ${idToken}` },
         });
         if (!res.ok) throw new Error('Failed to fetch questions');
         const data = await res.json();
         setQuestions(data.questions);
         setTimer(data.questions[0]?.baseTime || 60);
+        startedAtRef.current = Date.now();
       } catch { /* leave empty */ } finally {
         setLoading(false);
       }
@@ -111,26 +118,31 @@ const QuizPage: FC = () => {
   const handleNext = () => {
     if (currentIdx >= questions.length - 1) {
       setFinished(true);
+      if (Math.round((score / questions.length) * 100) >= 70) setCelebrate(true);
       // Save completion to Firestore
       if (profile) {
         const finalScore = score;
         const percentage = Math.round((finalScore / questions.length) * 100);
+        const topicKey = slugTopic(topicRef.current);
+        const result = {
+          score: percentage,
+          completedAt: new Date().toISOString(),
+          correct: finalScore,
+          total: questions.length,
+        };
+        const minutes = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 60000));
         const data: Record<string, unknown> = {
-          [`lastQuiz_${difficulty}`]: {
-            score: percentage,
-            completedAt: new Date().toISOString(),
-            correct: finalScore,
-            total: questions.length,
-          },
+          [`topicProgress.${topicKey}.${difficulty}`]: result,
+          [`studyMinutes.${dayKey()}`]: increment(minutes),
           'stats.totalQuizzes': increment(1),
         };
-        if (difficulty === 'easy') {
-          data.easyQuizCompleted = true;
+        // Results saved before topics existed live in the old fields.
+        if (topicKey === LEGACY_PRACTICE_TOPIC) {
+          data[`lastQuiz_${difficulty}`] = result;
+          if (difficulty === 'easy') data.easyQuizCompleted = true;
+          if (difficulty === 'moderate') data.moderateQuizCompleted = true;
         }
-        if (difficulty === 'moderate') {
-          data.moderateQuizCompleted = true;
-        }
-        updateDoc(doc(db, 'users', profile.uid), data);
+        updateDoc(doc(db, 'users', profile.uid), data).catch(() => { /* progress is retried on the next quiz */ });
       }
       return;
     }
@@ -149,6 +161,7 @@ const QuizPage: FC = () => {
     setScore(0);
     setFinished(false);
     setTimer(questions[0]?.baseTime || 60);
+    startedAtRef.current = Date.now();
   };
 
   if (loading) {
@@ -170,8 +183,14 @@ const QuizPage: FC = () => {
   // Finished screen
   if (finished) {
     const percentage = Math.round((score / questions.length) * 100);
+    const verdict =
+      percentage >= 90 ? { title: 'Luar biasa!', note: 'Pemahamanmu sangat kuat. Siap lanjut ke level berikutnya.' }
+      : percentage >= 70 ? { title: 'Kerja bagus!', note: 'Kamu sudah menguasai sebagian besar konsepnya.' }
+      : percentage >= 50 ? { title: 'Terus berlatih!', note: 'Ulangi soal yang salah dan baca materinya sekali lagi.' }
+      : { title: 'Jangan menyerah!', note: 'Mulai dari materinya dulu, lalu coba lagi. Kamu pasti bisa.' };
     return (
       <div className="mx-auto max-w-lg px-4 py-16">
+        {celebrate && <Celebration onDone={() => setCelebrate(false)} />}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -183,24 +202,33 @@ const QuizPage: FC = () => {
             </span>
           </div>
           <h2 className="mb-2 font-display text-2xl font-extrabold text-gray-900">
-            Quiz Complete!
+            {verdict.title}
           </h2>
-          <p className="mb-6 text-gray-500">
-            {score} of {questions.length} correct
+          <p className="mb-1 font-semibold text-gray-700">
+            {score} dari {questions.length} soal benar
           </p>
+          <p className="mb-6 text-sm text-gray-500">{verdict.note}</p>
 
           <div className="flex gap-3">
             <button
               onClick={handleRetake}
               className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gray-100 py-3.5 text-sm font-bold text-gray-700 transition-all hover:bg-gray-200"
             >
-              <RotateCcw size={16} /> Retake
+              <RotateCcw size={16} /> Ulangi
             </button>
             <button
               onClick={() => router.push('/dashboard')}
               className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-primary-cyan py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5"
             >
               Dashboard
+            </button>
+          </div>
+          <div className="mt-3">
+            <button
+              onClick={() => router.push(`/latihan?topic=${encodeURIComponent(topicRef.current)}`)}
+              className="w-full rounded-2xl border border-gray-200 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              Pilih latihan lain
             </button>
           </div>
         </motion.div>
@@ -214,7 +242,7 @@ const QuizPage: FC = () => {
         {/* Top bar */}
         <div className="mb-4 flex items-center justify-between">
           <button
-            onClick={() => router.push('/latihan')}
+            onClick={() => router.push(`/latihan?topic=${encodeURIComponent(topicRef.current)}`)}
             className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
           >
             ← Back

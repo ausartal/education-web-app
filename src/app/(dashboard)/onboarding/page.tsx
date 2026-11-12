@@ -1,15 +1,17 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, updateDoc } from '@/lib/client-firestore';
+import { getMaterials } from '@/services/materials';
+import { slugTopic, topicLabel } from '@/lib/learning';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { ChevronRight, Loader2 } from 'lucide-react';
 
-const topics = [
+const knownTopics = [
   {
     id: 'stoikiometri',
     name: 'Stoikiometri',
@@ -41,6 +43,10 @@ const goals = [
   { value: 30, label: '30 min/day', desc: 'Intensif' },
 ];
 
+const DEFAULT_TOPIC_ICON = '/icons/topic-atom-model.svg';
+
+type TopicOption = { id: string; name: string; icon: string };
+
 const OnboardingPage: FC = () => {
   const router = useRouter();
   const { user, profile } = useAuth();
@@ -49,6 +55,34 @@ const OnboardingPage: FC = () => {
   const [selectedGoal, setSelectedGoal] = useState(10);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [topics, setTopics] = useState<TopicOption[]>(knownTopics);
+
+  // Offer the topics students can really study or practise; keep the default list if none load.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await user.getIdToken();
+        const [materials, practiceRes] = await Promise.all([
+          getMaterials(),
+          fetch('/api/practice-questions/topics', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        const practice: { topics?: Array<{ topic: string }> } = practiceRes.ok ? await practiceRes.json() : {};
+        const raws = [...materials.map((m) => m.topic), ...(practice.topics ?? []).map((p) => p.topic)];
+
+        const found = new Map<string, TopicOption>();
+        for (const raw of raws) {
+          const id = slugTopic(raw || '');
+          if (!id || found.has(id)) continue;
+          const known = knownTopics.find((k) => k.id === id);
+          found.set(id, { id, name: known?.name ?? topicLabel(raw), icon: known?.icon ?? DEFAULT_TOPIC_ICON });
+        }
+        if (!cancelled && found.size > 0) setTopics([...found.values()]);
+      } catch { /* keep the default list */ }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   const toggleTopic = (id: string) => {
     setSelectedTopics((prev) =>
@@ -62,18 +96,28 @@ const OnboardingPage: FC = () => {
     setSaving(true);
     setSaveError('');
     try {
-      await setDoc(doc(db, 'users', uid), {
-        settings: {
-          dailyGoal: selectedGoal,
-          selectedTopics,
-          onboardingComplete: true,
-          notifications: true,
-          language: 'id',
-        },
-      }, { merge: true });
+      await updateDoc(doc(db, 'users', uid), {
+        'settings.dailyGoal': selectedGoal,
+        'settings.selectedTopics': selectedTopics,
+        'settings.onboardingComplete': true,
+      });
       router.push('/dashboard');
     } catch {
       setSaveError('Gagal menyimpan. Coba lagi.');
+      setSaving(false);
+    }
+  };
+
+  // Skipping still marks the setup as done so it is not shown again.
+  const handleSkip = async () => {
+    const uid = user?.uid ?? profile?.uid;
+    if (!uid || saving) return;
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, 'users', uid), { 'settings.onboardingComplete': true });
+      router.push('/dashboard');
+    } catch {
+      setSaveError('Gagal melewati. Coba lagi.');
       setSaving(false);
     }
   };
@@ -225,6 +269,16 @@ const OnboardingPage: FC = () => {
         </div>
 
         <AnimatePresence mode="wait">{steps[step]}</AnimatePresence>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={handleSkip}
+            disabled={saving}
+            className="text-xs font-medium text-gray-400 underline-offset-2 hover:text-gray-600 hover:underline disabled:opacity-50"
+          >
+            Lewati untuk sekarang
+          </button>
+        </div>
       </div>
     </div>
   );

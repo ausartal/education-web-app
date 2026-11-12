@@ -42,20 +42,75 @@ const BarChart: FC<ChartProps> = ({ data, title, color, height = 96 }) => {
   const vals = Object.values(data);
   const keys = Object.keys(data);
   const max = Math.max(...vals, 1);
+  const count = keys.length;
+  const barW = Math.max(16, Math.min(44, Math.floor(660 / count)));
+  const glowColor = color.includes('#') ? color.split(',')[1]?.trim() ?? color : color;
+
   return (
-    <div>
-      <p className="mb-3 text-xs font-bold text-stone-700">{title}</p>
-      <div className="flex items-end gap-1.5" style={{ height }}>
-        {vals.map((v, i) => (
-          <div key={keys[i]} className="flex flex-1 flex-col items-center gap-1">
-            {v > 0 && <span className="text-[9px] font-semibold text-stone-500">{v}</span>}
-            <div className="w-full rounded-t-md" style={{
-              height: `${Math.max((v / max) * (height - 28), v > 0 ? 8 : 2)}px`,
-              background: color,
-            }} />
-            <span className="text-[9px] text-stone-400 truncate w-full text-center">{fmtDay(keys[i])}</span>
+    <div className="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs font-bold uppercase tracking-wider text-stone-500">{title}</p>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] text-stone-400">
+            Total: <span className="font-bold text-stone-700">{vals.reduce((a, b) => a + b, 0)}</span>
+          </span>
+          <span className="text-[10px] text-stone-400">
+            Maks: <span className="font-bold text-stone-700">{max}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Grid lines */}
+      <div className="relative">
+        <div className="absolute inset-x-0 top-0" style={{ height }}>
+          {[0.25, 0.5, 0.75, 1].map((ratio) => (
+            <div key={ratio} className="absolute w-full border-t border-dashed border-stone-100" style={{ bottom: `${ratio * 100}%` }}>
+              <span className="absolute -top-2 right-0 text-[8px] font-medium text-stone-300">{Math.round(max * ratio)}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Bars + date labels in single scroll */}
+      <div className="overflow-x-auto">
+        <div className="px-1" style={{ minWidth: count * (barW + 2) + 8 }}>
+          {/* Bars */}
+          <div className="flex items-end gap-[2px]" style={{ height }}>
+            {vals.map((v, i) => {
+              const barH = Math.max((v / max) * height, v > 0 ? 4 : 1);
+              return (
+                <motion.div
+                  key={keys[i]}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: barH, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: i * 0.012, ease: [0.22, 1, 0.36, 1] }}
+                  className="group/bar relative"
+                  style={{ width: barW, height: barH }}
+                >
+                  <div
+                    className="absolute inset-x-[1px] bottom-0 rounded-t transition-all duration-200 group-hover/bar:brightness-110"
+                    style={{ height: barH, background: v === 0 ? '#f5f5f4' : color, boxShadow: v === 0 ? 'none' : `0 -2px 8px ${glowColor}22` }}
+                  />
+                  {v > 0 && (
+                    <div className="absolute inset-x-0 flex justify-center" style={{ bottom: barH + 2 }}>
+                      <span className="rounded bg-stone-800 px-1 py-0.5 text-[8px] font-bold text-white opacity-0 transition-opacity group-hover/bar:opacity-100">{v}</span>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
-        ))}
+          {/* Date labels row */}
+          <div className="flex gap-[2px]" style={{ marginTop: 2 }}>
+            {keys.map((k) => (
+              <div key={k} className="flex items-start justify-center" style={{ width: barW, minWidth: barW }}>
+                <span className="text-[7px] leading-tight text-stone-400" style={{ whiteSpace: 'nowrap' }}>
+                  {fmtDay(k).replace(/^\w{3},\s*/, '')}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   );
@@ -148,14 +203,23 @@ const AdminAnalytics: FC = () => {
           <div className="flex gap-1.5">
             {(['users', 'question_bank', 'exam_sessions'] as const).map(col => (
               <div key={col} className="relative group">
-                <button className="flex items-center gap-1 rounded-xl bg-white px-3 py-2 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-50">
+                <button className="flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-50">
                   <Download size={13} /> {col === 'users' ? 'Pengguna' : col === 'question_bank' ? 'Soal' : 'Ujian'}
                 </button>
-                <div className="absolute right-0 top-full z-10 mt-1 hidden min-w-[120px] flex-col gap-1 rounded-xl bg-white p-1.5 shadow-lg group-hover:flex">
+                {/* Invisible bridge — covers gap so hover doesn't break */}
+                <div className="absolute right-0 top-full z-10 h-3 w-full group-hover:block hidden" />
+                {/* Dropdown with visible gap */}
+                <div className="absolute right-0 top-full z-20 mt-3 hidden min-w-[140px] flex-col gap-1 rounded-xl bg-white p-2 shadow-lg ring-1 ring-stone-200/60 group-hover:flex">
                   <button onClick={() => handleExport(col, 'csv')}
-                    className="rounded-lg px-3 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-50">CSV</button>
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-stone-600 transition-colors hover:bg-stone-50 hover:text-stone-900">
+                    <span className="flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-[8px] font-bold text-emerald-700">CSV</span>
+                    Download CSV
+                  </button>
                   <button onClick={() => handleExport(col, 'json')}
-                    className="rounded-lg px-3 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-50">JSON</button>
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-stone-600 transition-colors hover:bg-stone-50 hover:text-stone-900">
+                    <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-[8px] font-bold text-blue-700">JSON</span>
+                    Download JSON
+                  </button>
                 </div>
               </div>
             ))}

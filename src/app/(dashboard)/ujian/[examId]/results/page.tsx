@@ -4,7 +4,7 @@ import { FC, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Trophy, ArrowLeft, Home } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { MSATExamSession } from '@/types/firestore';
 

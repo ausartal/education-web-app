@@ -60,6 +60,7 @@ const MsatCreatePage: FC = () => {
   const [durationPerStage, setDurationPerStage] = useState(30);
   const [breakDuration, setBreakDuration] = useState(10);
   const [waitingRoom, setWaitingRoom] = useState(true);
+  const [scheduledAt, setScheduledAt] = useState('');
 
   // Questions
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
@@ -186,6 +187,7 @@ const MsatCreatePage: FC = () => {
           durationPerStage,
           breakDuration,
           waitingRoom,
+          scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
           stageQuestions: selectedQuestions,
         }),
       });
@@ -284,6 +286,11 @@ const MsatCreatePage: FC = () => {
                     <label className="mb-1.5 block text-xs font-semibold text-stone-500">Durasi Istirahat (menit)</label>
                     <input type="number" value={breakDuration} onChange={e => setBreakDuration(Number(e.target.value))} min={1} max={30} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none" />
                   </div>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-stone-500">Jadwal Mulai (opsional)</label>
+                  <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none" />
+                  <p className="mt-1 text-[11px] text-stone-400">Ditampilkan kepada peserta sebagai informasi. Ujian tetap dimulai oleh admin dari ruang tunggu.</p>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-stone-500">Mode Ujian</label>

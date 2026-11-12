@@ -3,10 +3,16 @@
 import { FC, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { getMaterials } from '@/services/materials';
 import { Material } from '@/types/firestore';
+import { deriveTopics, studyStats, type DerivedTopic } from '@/lib/learning';
+import { bestQuizScore, deriveBadges, greeting, motivation } from '@/lib/gamification';
+import { PageHero } from '@/components/ui/PageHero';
+import { BadgeShelf } from '@/components/shared/BadgeShelf';
+import { TONE_STYLES, type Tone } from '@/components/ui/tones';
 import {
   BookOpen,
   Target,
@@ -15,9 +21,26 @@ import {
   PieChart,
   ChevronLeft,
   ChevronRight,
+  GraduationCap,
+  Users,
+  Flame,
+  Brain,
+  ClipboardList,
+  Trophy,
 } from 'lucide-react';
+import { doc, getDoc } from '@/lib/client-firestore';
+import { db } from '@/lib/firebase';
 
-const courseTopics = [
+interface EnrolledClass {
+  id: string;
+  name: string;
+  subject: string;
+  teacherName: string;
+  studentCount: number;
+}
+
+// Icon and gradient per known topic; the content of each card comes from real materials.
+const topicStyles = [
   {
     id: 'stoikiometri',
     name: 'Stoikiometri',
@@ -92,9 +115,23 @@ const courseTopics = [
   },
 ];
 
+function styleFor(id: string, index: number) {
+  return topicStyles.find((s) => s.id === id) ?? topicStyles[index % topicStyles.length];
+}
+
+const DEFAULT_DAILY_GOAL = 10;
+
 const DashboardPage: FC = () => {
-  const { profile } = useAuth();
+  const router = useRouter();
+  const { profile, user } = useAuth();
+  const [topics, setTopics] = useState<DerivedTopic[]>([]);
+  const [studyLog, setStudyLog] = useState<Record<string, number>>({});
+  const [dailyGoal, setDailyGoal] = useState(DEFAULT_DAILY_GOAL);
+  const [bestScore, setBestScore] = useState(0);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [quizCount, setQuizCount] = useState(0);
+  const [classes, setClasses] = useState<EnrolledClass[]>([]);
   const [activeCourseIdx, setActiveCourseIdx] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'chart'>('list');
   const [loading, setLoading] = useState(true);
@@ -103,14 +140,50 @@ const DashboardPage: FC = () => {
     if (!profile) return;
     const fetchData = async () => {
       try {
-        const mats = await getMaterials();
+        const [mats, userSnap, classRes] = await Promise.all([
+          getMaterials(),
+          getDoc(doc(db, 'users', profile.uid)),
+          fetch('/api/student/classes', {
+            headers: { Authorization: `Bearer ${await user?.getIdToken()}` },
+          }).then(r => (r.ok ? r.json() : { classes: [] })).catch(() => ({ classes: [] })),
+        ]);
         setMaterials(mats);
+
+        const userData = (userSnap?.data() ?? {}) as {
+          completedMaterials?: string[];
+          studyMinutes?: Record<string, number>;
+          settings?: { dailyGoal?: number; selectedTopics?: string[]; onboardingComplete?: boolean };
+          stats?: { totalQuizzes?: number };
+          topicProgress?: Record<string, Record<string, { score?: number }>>;
+          lastQuiz_easy?: { score?: number };
+          lastQuiz_moderate?: { score?: number };
+          lastQuiz_hard?: { score?: number };
+        };
+
+        // Students who have not done the setup yet are sent there once (it can be skipped).
+        const isStudent = !profile.role || profile.role === 'student';
+        if (isStudent && userData.settings?.onboardingComplete !== true) {
+          router.replace('/onboarding');
+          return;
+        }
+
+        const completed: string[] = userData.completedMaterials ?? [];
+        // Only count completions that still match existing materials
+        const validIds = new Set(mats.map(m => m.id));
+        setCompletedCount(completed.filter(id => validIds.has(id)).length);
+        setTopics(deriveTopics(mats, completed, userData.settings?.selectedTopics ?? []));
+        setStudyLog(userData.studyMinutes ?? {});
+        setDailyGoal(userData.settings?.dailyGoal ?? DEFAULT_DAILY_GOAL);
+        setBestScore(bestQuizScore(userData));
+        setQuizCount(userData.stats?.totalQuizzes ?? profile.stats?.totalQuizzes ?? 0);
+        setClasses((classRes.classes ?? []) as EnrolledClass[]);
       } catch { /* leave empty on error */ } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [profile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, user]);
 
   if (loading || !profile) {
     return (
@@ -120,19 +193,112 @@ const DashboardPage: FC = () => {
     );
   }
 
-  const days = ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'];
+  const stats = studyStats(studyLog);
+  const goalPct = Math.min(100, Math.round((stats.todayMinutes / Math.max(1, dailyGoal)) * 100));
+  const maxDay = Math.max(1, ...stats.last7.map((d) => d.minutes));
+  const cards = topics.map((topic, i) => ({
+    ...topic,
+    icon: styleFor(topic.id, i).icon,
+    gradient: styleFor(topic.id, i).gradient,
+    subtitle: `${topic.total} materi`,
+  }));
+  const cardCount = Math.max(cards.length, 1);
+  const badges = deriveBadges({
+    quizzes: quizCount,
+    completedMaterials: completedCount,
+    streak: stats.streak,
+    classes: classes.length,
+    bestScore,
+  });
+  const firstName = profile.displayName.split(' ')[0];
+  const quickActions: Array<{ href: string; label: string; desc: string; icon: typeof Brain; tone: Tone }> = [
+    { href: '/latihan', label: 'Latihan Soal', desc: 'Asah kemampuanmu', icon: Brain, tone: 'violet' },
+    { href: '/materi', label: 'Materi', desc: 'Pelajari konsep', icon: BookOpen, tone: 'teal' },
+    { href: '/kelas', label: 'Kelas Saya', desc: 'Tugas dan chat kelas', icon: Users, tone: 'emerald' },
+    { href: '/ujian', label: 'Ujian', desc: 'Masuk dengan token', icon: ClipboardList, tone: 'amber' },
+  ];
+  const totalMaterials = materials.length;
+  const materialsPct = totalMaterials > 0 ? Math.round((completedCount / totalMaterials) * 100) : 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      {/* Header Row - Welcome + Jump back in aligned */}
+      {/* Hero */}
+      <PageHero
+        tone="blue"
+        eyebrow={greeting()}
+        title={`Halo, ${firstName}!`}
+        description={motivation({ streak: stats.streak, todayMinutes: stats.todayMinutes, dailyGoal, quizzes: quizCount })}
+        image="/icons/hero-pelajar-aktif.svg"
+        chips={[
+          { icon: <Flame size={13} aria-hidden="true" />, label: `${stats.streak} hari berturut-turut` },
+          { icon: <Clock size={13} aria-hidden="true" />, label: `${stats.todayMinutes}/${dailyGoal} menit hari ini` },
+          { icon: <Trophy size={13} aria-hidden="true" />, label: `${badges.filter((b) => b.earned).length} pencapaian` },
+        ]}
+        className="mb-6"
+      />
+
+      {/* Quick actions */}
+      <nav aria-label="Pintasan" className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {quickActions.map(({ href, label, desc, icon: Icon, tone }) => (
+          <Link
+            key={href}
+            href={href}
+            className="group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 transition-all hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${TONE_STYLES[tone].soft} ${TONE_STYLES[tone].icon} transition-transform group-hover:scale-110`}>
+              <Icon size={20} aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold text-gray-900">{label}</span>
+              <span className="block truncate text-xs text-gray-500">{desc}</span>
+            </span>
+          </Link>
+        ))}
+      </nav>
+
+      {/* Daily goal */}
+      <div className="mb-8 rounded-3xl bg-white p-5 shadow-sm shadow-gray-100">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          <div className="min-w-[200px] flex-1">
+            <div className="mb-2 flex items-baseline justify-between">
+              <p className="text-sm font-bold text-gray-900">Target belajar hari ini</p>
+              <p className="text-xs text-gray-500">
+                <span className="font-bold text-gray-900">{stats.todayMinutes}</span> / {dailyGoal} menit
+              </p>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-gray-100" role="progressbar" aria-valuenow={goalPct} aria-valuemin={0} aria-valuemax={100} aria-label="Progres target belajar harian">
+              <div className={`h-full rounded-full transition-all duration-700 ${goalPct >= 100 ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${goalPct}%` }} />
+            </div>
+            <p className="mt-2 text-xs text-gray-400">
+              {goalPct >= 100 ? 'Target hari ini tercapai.' : 'Kerjakan latihan soal untuk menambah menit belajarmu.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 rounded-2xl bg-amber-50 px-4 py-2.5">
+            <Flame size={18} className={stats.streak > 0 ? 'text-amber-500' : 'text-gray-300'} aria-hidden="true" />
+            <div>
+              <p className="text-sm font-black leading-none text-gray-900">{stats.streak} hari</p>
+              <p className="text-[10px] text-gray-500">berturut-turut</p>
+            </div>
+          </div>
+          <div className="flex h-12 items-end gap-1.5" aria-label="Menit belajar 7 hari terakhir">
+            {stats.last7.map((d) => (
+              <div key={d.key} className="flex h-full w-4 flex-col justify-end" title={`${d.key}: ${d.minutes} menit`}>
+                <div className={`w-full rounded-sm ${d.minutes > 0 ? 'bg-primary/70' : 'bg-gray-100'}`} style={{ height: `${Math.max(8, (d.minutes / maxDay) * 100)}%` }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <BadgeShelf badges={badges} />
+      </div>
+
+      {/* Header Row - Summary + Jump back in aligned */}
       <div className="mb-8 grid animate-[fadeIn_0.5s_ease-out] gap-8 lg:grid-cols-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, {profile.displayName.split(' ')[0]}
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Ready to learn something new today?
-          </p>
+          <h2 className="text-lg font-bold text-gray-900">Ringkasan belajar</h2>
+          <p className="mt-1 text-sm text-gray-500">Perkembanganmu sejauh ini</p>
         </div>
         <div className="flex items-end justify-between">
           <h2 className="text-lg font-bold text-gray-900">Jump back in</h2>
@@ -140,8 +306,8 @@ const DashboardPage: FC = () => {
             <button
               onClick={() =>
                 setActiveCourseIdx(
-                  (activeCourseIdx - 1 + courseTopics.length) %
-                    courseTopics.length
+                  (activeCourseIdx - 1 + cardCount) %
+                    cardCount
                 )
               }
               className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
@@ -151,7 +317,7 @@ const DashboardPage: FC = () => {
             </button>
             <button
               onClick={() =>
-                setActiveCourseIdx((activeCourseIdx + 1) % courseTopics.length)
+                setActiveCourseIdx((activeCourseIdx + 1) % cardCount)
               }
               className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:scale-105"
               aria-label="Next"
@@ -207,13 +373,13 @@ const DashboardPage: FC = () => {
                   <div className="flex-1">
                     <p className="text-xs text-gray-500">Materi Selesai</p>
                     <p className="text-sm font-bold text-gray-900">
-                      0 of {materials.length}
+                      {completedCount} of {totalMaterials}
                     </p>
                   </div>
                   <div className="h-2 w-20 overflow-hidden rounded-full bg-blue-100">
                     <div
                       className="h-full rounded-full bg-primary transition-all duration-700"
-                      style={{ width: '0%' }}
+                      style={{ width: `${materialsPct}%` }}
                     />
                   </div>
                 </div>
@@ -225,7 +391,7 @@ const DashboardPage: FC = () => {
                   <div className="flex-1">
                     <p className="text-xs text-gray-500">Quiz Completed</p>
                     <p className="text-sm font-bold text-gray-900">
-                      {profile.stats.totalQuizzes}
+                      {quizCount}
                     </p>
                   </div>
                 </div>
@@ -256,7 +422,7 @@ const DashboardPage: FC = () => {
                         stroke="url(#progressGradient)"
                         strokeWidth="4"
                         strokeLinecap="round"
-                        strokeDasharray="0 88"
+                        strokeDasharray={`${(materialsPct / 100) * 88} 88`}
                         className="transition-all duration-1000"
                       />
                       <defs>
@@ -268,7 +434,7 @@ const DashboardPage: FC = () => {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-lg font-black text-gray-900">
-                        0%
+                        {materialsPct}%
                       </span>
                     </div>
                   </div>
@@ -276,13 +442,13 @@ const DashboardPage: FC = () => {
                     <div className="flex items-center gap-2">
                       <div className="h-2.5 w-2.5 rounded-full bg-primary" />
                       <span className="text-xs text-gray-600">
-                        Completed (0)
+                        Completed ({completedCount})
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="h-2.5 w-2.5 rounded-full bg-gray-200" />
                       <span className="text-xs text-gray-600">
-                        Remaining ({materials.length})
+                        Remaining ({Math.max(totalMaterials - completedCount, 0)})
                       </span>
                     </div>
                   </div>
@@ -293,8 +459,8 @@ const DashboardPage: FC = () => {
                   {[
                     {
                       label: 'Quiz',
-                      value: profile.stats.totalQuizzes,
-                      max: 20,
+                      value: quizCount,
+                      max: Math.max(quizCount, 20),
                       color: 'from-emerald-400 to-teal-400',
                     },
                   ].map((stat) => (
@@ -319,14 +485,64 @@ const DashboardPage: FC = () => {
               </div>
             )}
           </div>
+
+          {/* Kelas yang diikuti */}
+          <div className="animate-[fadeIn_0.8s_ease-out] rounded-3xl bg-white p-6 shadow-sm shadow-gray-100">
+            <div className="mb-4 flex items-center gap-2">
+              <GraduationCap size={18} className="text-primary" />
+              <h3 className="font-bold text-gray-900">Kelas Saya</h3>
+            </div>
+            {classes.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-gray-200 px-4 py-8 text-center">
+                <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                  <Users size={20} />
+                </div>
+                <p className="text-sm font-semibold text-gray-700">Belum mengikuti kelas</p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Gabung kelas dengan kode dari gurumu untuk mulai belajar.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {classes.map((cls) => (
+                  <Link
+                    key={cls.id}
+                    href={`/kelas/${cls.id}`}
+                    className="flex items-center gap-3 rounded-2xl border border-gray-100 px-4 py-3 transition-colors hover:border-primary/30 hover:bg-primary/5"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                      <GraduationCap size={18} className="text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-gray-900">{cls.name}</p>
+                      <p className="truncate text-xs text-gray-500">
+                        {cls.subject || 'Tanpa mata pelajaran'} · Guru: {cls.teacherName}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1 text-xs text-gray-400">
+                      <Users size={12} />
+                      {cls.studentCount}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* RIGHT COLUMN - Jump Back In */}
         <div className="space-y-5">
           {/* Stacked Card Carousel */}
-          <div className="relative h-[580px]">
+          {cards.length === 0 && (
+            <div className="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-gray-100">
+              <BookOpen size={32} className="mx-auto mb-3 text-gray-300" />
+              <p className="text-sm font-semibold text-gray-600">Belum ada materi</p>
+              <p className="mt-1 text-xs text-gray-400">Materi akan muncul di sini setelah dipublikasikan.</p>
+            </div>
+          )}
+          <div className={`relative ${cards.length > 0 ? 'h-[580px]' : ''}`}>
             <AnimatePresence mode="popLayout">
-              {courseTopics.map((topic, i) => {
+              {cards.map((topic, i) => {
                 const offset = i - activeCourseIdx;
                 const isActive = offset === 0;
                 const isVisible = Math.abs(offset) <= 1;
@@ -374,7 +590,7 @@ const DashboardPage: FC = () => {
                             {topic.name}
                           </h3>
                           <p className="text-sm font-medium text-white/70">
-                            Level 1
+                            {topic.completed} dari {topic.total} materi selesai
                           </p>
                         </div>
 
@@ -417,10 +633,10 @@ const DashboardPage: FC = () => {
 
                             {/* Start / Continue Button */}
                             <Link
-                              href="/materi"
+                              href={topic.nextMaterialId ? `/materi/${topic.nextMaterialId}` : '/materi'}
                               className="mt-4 block w-full rounded-2xl bg-white py-4 text-center text-sm font-extrabold text-gray-900 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
                             >
-                              Start Learning
+                              {topic.completed === 0 ? 'Mulai belajar' : topic.completed >= topic.total ? 'Ulangi materi' : 'Lanjutkan belajar'}
                             </Link>
                           </motion.div>
                         )}
@@ -434,7 +650,7 @@ const DashboardPage: FC = () => {
 
           {/* Thumbnail Selector */}
           <div className="flex justify-center gap-2.5">
-            {courseTopics.map((topic, i) => (
+            {cards.map((topic, i) => (
               <button
                 key={topic.id}
                 onClick={() => setActiveCourseIdx(i)}

@@ -6,7 +6,7 @@ import {
   BookOpen, CalendarCheck, Brain, Monitor,
   FileCheck, Award, Lock, Terminal, Settings,
   FileText, UserCog,
-  Tags,
+  Tags, ShieldAlert, Coins,
 } from 'lucide-react';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { AuthGuard } from '@/components/guards/AuthGuard';
@@ -56,6 +56,8 @@ const adminSections = [
       { href: '/admin/msat', label: 'Exam Live Monitor', icon: Monitor },
       { href: '/admin/msat/questions', label: 'Bank Soal MSAT', icon: FileCheck },
       { href: '/admin/msat/create', label: 'Buat Ujian MSAT', icon: Brain },
+      { href: '/admin/msat/anomalies', label: 'Anomali Ujian', icon: ShieldAlert },
+      { href: '/admin/tokens', label: 'Token Peserta', icon: Coins },
       {
         label: 'Hasil & Sertifikasi', icon: Award,
         children: [

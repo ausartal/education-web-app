@@ -2,11 +2,12 @@
 
 import { FC, useState } from 'react';
 import { motion } from 'framer-motion';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/useToast';
 import { signOut } from '@/services/auth';
+import { AccountSecurity } from '@/components/shared/AccountSecurity';
 import { useRouter } from 'next/navigation';
 import { User, Bell, Globe, Shield, LogOut, LayoutDashboard, ChevronRight } from 'lucide-react';
 
@@ -240,6 +241,8 @@ const SettingsPage: FC = () => {
               </div>
             </div>
           </div>
+
+          <AccountSecurity />
 
           {/* Save */}
           <button

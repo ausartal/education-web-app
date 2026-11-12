@@ -13,6 +13,8 @@ import { ChevronLeft, ChevronRight, CheckCircle, Clock, List, X } from 'lucide-r
 import { useAuth } from '@/context/AuthContext';
 import { getMaterial, getMaterials } from '@/services/materials';
 import { Material } from '@/types/firestore';
+import { doc, updateDoc, arrayUnion } from '@/lib/client-firestore';
+import { db } from '@/lib/firebase';
 
 const MateriDetailPage: FC = () => {
   const params = useParams();
@@ -62,6 +64,12 @@ const MateriDetailPage: FC = () => {
   const handleMarkComplete = async () => {
     if (!profile || !material) return;
     setCompleted(true);
+    try {
+      // Persist completion — arrayUnion is idempotent so re-marking won't double-count.
+      await updateDoc(doc(db, 'users', profile.uid), {
+        completedMaterials: arrayUnion(material.id),
+      });
+    } catch { /* keep local state even if persist fails */ }
   };
 
   if (loading) {

@@ -5,10 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Users, Trophy, Clock, CheckCircle2,
-  ChevronDown, ChevronUp, AlertCircle, StickyNote, Save,
+  ChevronDown, ChevronUp, AlertCircle, StickyNote, Save, Download, Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { ItemAnalysisTable } from '@/components/teacher/ItemAnalysisTable';
+import { downloadAuthedFile } from '@/lib/download';
+import { useToast } from '@/hooks/useToast';
+import type { ItemStat } from '@/lib/item-analysis';
 import { ComprehensionCategory, MSATDomainResponse } from '@/types/firestore';
 
 // ── Inline MSAT constants (formerly in msat-engine.ts) ──
@@ -48,6 +52,8 @@ interface StudentSession {
 interface RecapData {
   schedule: { id: string; title: string; module: string; domainIds: string[]; examToken: string; durationMinutes: number; examType?: string; maxAttempts?: number };
   sessions: StudentSession[];
+  items?: ItemStat[];
+  respondents?: number;
   stats: { total: number; totalSessions: number; completed: number; inProgress: number; avgScore: number | null };
 }
 
@@ -240,6 +246,8 @@ const RecapPage: FC = () => {
   const { scheduleId } = useParams<{ scheduleId: string }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { addToast } = useToast();
+  const [exporting, setExporting] = useState(false);
   const [data, setData] = useState<RecapData | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -278,6 +286,18 @@ const RecapPage: FC = () => {
     });
   }, [scheduleId]);
 
+  const handleExport = async () => {
+    if (!user) return;
+    setExporting(true);
+    try {
+      await downloadAuthedFile(`/api/teacher/recap/${scheduleId}?format=csv`, await user.getIdToken(), 'rekap-ujian.csv');
+    } catch (err) {
+      addToast('error', err instanceof Error ? err.message : 'Gagal mengekspor rekap');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
@@ -309,10 +329,18 @@ const RecapPage: FC = () => {
           >
             <ArrowLeft size={18} />
           </button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900">{schedule.title}</h1>
             <p className="mt-0.5 text-sm text-gray-500">Rekap hasil ujian · {stats.completed} dari {stats.total} siswa selesai</p>
           </div>
+          <button
+            onClick={handleExport}
+            disabled={exporting || sessions.length === 0}
+            className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+          >
+            {exporting ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+            Ekspor CSV
+          </button>
         </div>
 
         {/* ── Stats ── */}
@@ -348,6 +376,15 @@ const RecapPage: FC = () => {
               </motion.div>
             );
           })}
+        </div>
+
+        {/* ── Item analysis ── */}
+        <div className="mb-8 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+          <div className="border-b border-gray-100 px-6 py-4">
+            <h2 className="font-semibold text-gray-900">Analisis Soal</h2>
+            <p className="mt-0.5 text-xs text-gray-400">Tingkat kesukaran, sebaran jawaban, dan daya beda tiap soal</p>
+          </div>
+          <ItemAnalysisTable items={data.items ?? []} respondents={data.respondents ?? 0} />
         </div>
 
         {/* ── Student list ── */}

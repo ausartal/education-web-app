@@ -4,14 +4,16 @@ import {
   query,
   where,
   orderBy,
+  limit,
   updateDoc,
   doc,
   writeBatch,
   Timestamp,
-} from 'firebase/firestore';
+} from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 
-export type NotificationType = 'message' | 'system';
+export type { NotificationType } from '@/lib/notification-content';
+import type { NotificationType } from '@/lib/notification-content';
 
 export interface Notification {
   id: string;
@@ -19,6 +21,7 @@ export interface Notification {
   type: NotificationType;
   title: string;
   body: string;
+  link?: string | null;
   read: boolean;
   createdAt: Timestamp;
 }
@@ -30,7 +33,8 @@ export async function getNotifications(
   const q = query(
     collection(db, 'notifications'),
     where('userId', '==', userId),
-    orderBy('createdAt', 'desc')
+    orderBy('createdAt', 'desc'),
+    limit(30)
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Notification);

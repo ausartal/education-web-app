@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useCallback, useMemo } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
@@ -237,11 +238,12 @@ const TeacherUjianPage: FC = () => {
 
         {/* ── Schedule list ── */}
         {schedules.length === 0 ? (
-          <div className="rounded-3xl bg-white p-16 text-center shadow-sm">
-            <ClipboardList size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="font-semibold text-gray-500">Belum ada ujian</p>
-            <p className="mt-1 text-sm text-gray-400">Buat ujian pertama untuk kelasmu</p>
-          </div>
+          <EmptyState
+            tone="violet"
+            icon={<ClipboardList size={32} />}
+            title="Belum ada ujian"
+            description="Buat ujian pertama untuk kelasmu. Pilih soal dari bank soal, tulis sendiri, atau pakai ujian adaptif."
+          />
         ) : (
           <div className="space-y-3">
             {schedules.map(sch => {

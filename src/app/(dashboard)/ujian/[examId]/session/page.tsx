@@ -108,87 +108,93 @@ const ExamSessionPage: FC = () => {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const phaseStartRef = useRef(Date.now());
+  const deadlineRef = useRef<number | null>(null);
+  const customAnswersRef = useRef<Record<string, string>>({});
+  const dirtyRef = useRef(false);
+  const [loadError, setLoadError] = useState('');
+  customAnswersRef.current = customAnswers;
 
-  // ── Load session from API ──
+  // ── Load the running session from the server ──
   useEffect(() => {
     if (!user) return;
-    const init = async () => {
-      const cached = localStorage.getItem(`msat_session_${sessionId}`);
-      if (cached) {
-        const { domainList: dl, domainNames: dn, questions: q, durationMinutes: dur, completedDomains: cd, timeLeft: tl, currentDomainIdx: cdi } = JSON.parse(cached);
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const idToken = await user.getIdToken();
+        const res = await fetch(`/api/exam-sessions/${sessionId}`, { headers: { Authorization: `Bearer ${idToken}` } });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+
+        if (!res.ok) {
+          if (res.status === 409) { router.replace(`/ujian/${sessionId}/results`); return; }
+          setLoadError(data.error || 'Ujian tidak dapat dimuat.');
+          setLoading(false);
+          return;
+        }
+
+        deadlineRef.current = Date.now() + (data.endsAt - data.serverNow);
+        setDurationMinutes(data.schedule.durationMinutes);
+        setTimeLeft(Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000)));
+
+        if (data.mode === 'custom' || data.mode === 'manual') {
+          setCustomMode(true);
+          setCustomQuestions(data.customQuestions ?? []);
+          setCustomAnswers(data.customAnswers ?? {});
+          setLoading(false);
+          return;
+        }
+
+        const qs = (data.questions ?? {}) as Record<string, DomainQuestions>;
+        const dl: string[] = data.schedule.domainIds ?? [];
+        const dn: Record<string, string> = {};
+        dl.forEach(id => {
+          dn[id] = (qs[id]?.anchor as QuestionData | undefined)?.domainName || id;
+        });
+        const cd: number = data.completedDomains ?? 0;
+        const startIdx = Math.min(cd, Math.max(0, dl.length - 1));
+
         setDomainList(dl);
         setDomainNames(dn);
-        setQuestions(q);
-        setDurationMinutes(dur);
+        setQuestions(qs);
+        setCurrentDomainIdx(startIdx);
         setCompletedDomains(cd);
-        setCurrentDomainIdx(cdi);
-        setTimeLeft(tl || dur * 60);
-        initDomainProgress(cdi, dl, dn, q);
+        initDomainProgress(startIdx, dl, dn, qs);
         setLoading(false);
-        return;
+      } catch {
+        if (!cancelled) {
+          setLoadError('Koneksi bermasalah. Muat ulang halaman untuk melanjutkan ujian.');
+          setLoading(false);
+        }
       }
-      setLoading(false);
     };
-    init();
+    load();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, sessionId]);
+  }, [user, sessionId, router]);
 
-  // Accept initial data passed via sessionStorage
+  // Mark custom answers as unsaved whenever they change
+  useEffect(() => { dirtyRef.current = true; }, [customAnswers]);
+
+  // Save custom answers to the server every 8s while they change
   useEffect(() => {
-    const raw = sessionStorage.getItem(`exam_init_${sessionId}`);
-    if (!raw) return;
-    sessionStorage.removeItem(`exam_init_${sessionId}`);
-    const parsed = JSON.parse(raw) as {
-      schedule: { title: string; durationMinutes: number; domainIds: string[] };
-      questions?: Record<string, Record<string, QuestionData>>;
-      completedDomains?: number;
-      mode?: string;
-      customQuestions?: Array<{ id: string; stem: string; options: Record<string, string>; correctAnswer: string }>;
-    };
-
-    const { schedule, completedDomains: cd = 0, mode } = parsed;
-    const dur = schedule.durationMinutes;
-
-    // ── Custom / Manual exam mode ──
-    if (mode === 'custom' || mode === 'manual') {
-      setCustomMode(true);
-      setCustomQuestions(parsed.customQuestions ?? []);
-      setDurationMinutes(dur);
-      setTimeLeft(dur * 60);
-      setLoading(false);
-      return;
-    }
-
-    // ── MSAT adaptive mode ──
-    const qs = parsed.questions ?? {};
-    const dl = schedule.domainIds;
-    const dn: Record<string, string> = {};
-    dl.forEach(id => {
-      const dq = qs[id];
-      dn[id] = (dq?.anchor as QuestionData & { domainName?: string })?.domainName || id;
-    });
-
-    const typedQ = qs as unknown as Record<string, DomainQuestions>;
-    const startIdx = Math.min(cd, dl.length - 1);
-
-    setDomainList(dl);
-    setDomainNames(dn);
-    setQuestions(typedQ);
-    setDurationMinutes(dur);
-    setTimeLeft(dur * 60);
-    setCurrentDomainIdx(startIdx);
-    setCompletedDomains(cd);
-
-    localStorage.setItem(`msat_session_${sessionId}`, JSON.stringify({
-      domainList: dl, domainNames: dn, questions: typedQ,
-      durationMinutes: dur, completedDomains: cd, currentDomainIdx: startIdx,
-      timeLeft: dur * 60,
-    }));
-
-    initDomainProgress(startIdx, dl, dn, typedQ);
-    setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
+    if (!customMode || loading || !user) return;
+    const timer = setInterval(async () => {
+      if (!dirtyRef.current) return;
+      dirtyRef.current = false;
+      try {
+        const idToken = await user.getIdToken();
+        const res = await fetch(`/api/exam-sessions/${sessionId}/progress`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ answers: customAnswersRef.current }),
+        });
+        if (!res.ok) dirtyRef.current = true;
+      } catch {
+        dirtyRef.current = true;
+      }
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [customMode, loading, user, sessionId]);
 
   // Show fullscreen gate once loaded
   useEffect(() => {
@@ -239,18 +245,19 @@ const ExamSessionPage: FC = () => {
   }, []);
 
   // ── Timer ──
+  // Counts down to the deadline the server set when the session started.
   useEffect(() => {
-    if (loading || timeLeft <= 0) return;
-    timerRef.current = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
-          clearInterval(timerRef.current!);
-          handleAutoSubmit();
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
+    if (loading || deadlineRef.current === null) return;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil(((deadlineRef.current as number) - Date.now()) / 1000));
+      setTimeLeft(left);
+      if (left === 0) {
+        clearInterval(timerRef.current!);
+        handleAutoSubmit();
+      }
+    };
+    tick();
+    timerRef.current = setInterval(tick, 1000);
     return () => clearInterval(timerRef.current!);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
@@ -423,18 +430,13 @@ const ExamSessionPage: FC = () => {
     setCurrentDomainIdx(nextIdx);
     setCompletedDomains(newCompleted);
 
-    localStorage.setItem(`msat_session_${sessionId}`, JSON.stringify({
-      domainList, domainNames, questions, durationMinutes,
-      completedDomains: newCompleted, currentDomainIdx: nextIdx, timeLeft,
-    }));
-
     initDomainProgress(nextIdx, domainList, domainNames, questions);
     } catch {
       // Network error during domain submit — keep submitting state so user can retry
     } finally {
       setSubmitting(false);
     }
-  }, [progress, user, sessionId, currentDomainIdx, domainList, domainNames, questions, completedDomains, durationMinutes, timeLeft, initDomainProgress]);
+  }, [progress, user, sessionId, currentDomainIdx, domainList, domainNames, questions, completedDomains, initDomainProgress]);
 
   const completeExam = async (idToken: string) => {
     try {
@@ -488,6 +490,16 @@ const ExamSessionPage: FC = () => {
   if (loading) return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
+    </div>
+  );
+
+  if (loadError) return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 px-6 text-center">
+      <p role="alert" className="max-w-sm text-sm text-gray-600">{loadError}</p>
+      <div className="flex gap-2">
+        <button onClick={() => window.location.reload()} className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white">Coba lagi</button>
+        <button onClick={() => router.push('/ujian')} className="rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-700">Kembali</button>
+      </div>
     </div>
   );
 

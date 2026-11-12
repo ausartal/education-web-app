@@ -11,7 +11,7 @@ import {
   query,
   where,
   updateDoc,
-} from 'firebase/firestore';
+} from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { UserProfile, ExamSession } from '@/types/firestore';
 import { RoleGuard } from '@/components/guards/RoleGuard';

@@ -7,6 +7,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Home, History, Award, CreditCard, Info, User, LogOut, Loader2 } from 'lucide-react';
 import { ExamAuthProvider, useExamAuth } from '@/context/ExamAuthContext';
 import { AdminPreviewBanner } from '@/components/admin/AdminPreviewBanner';
+import { ExamAuthGuard } from '@/components/exam/ExamAuthGuard';
+import { NotificationDropdown } from '@/components/layout/NotificationDropdown';
 import { examSignOut } from '@/services/exam-auth';
 
 const navItems = [
@@ -40,7 +42,7 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
       }
     };
 
-    document.addEventListener('mousedown', closeAccountMenu);
+    document.addEventListener('mousedown', closeAccountMenu)  
     return () => document.removeEventListener('mousedown', closeAccountMenu);
   }, []);
 
@@ -61,6 +63,11 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
     }
   };
 
+  // Login, register and the info page are public; everything else needs an Exam account.
+  const isPublicPage =
+    pathname.includes('/login') || pathname.includes('/register') || pathname === '/exam/info';
+  const content = isPublicPage ? children : <ExamAuthGuard>{children}</ExamAuthGuard>;
+
   // Full-screen pages: active exam, break, login, register — no navbar/footer
   const isFullScreen =
     pathname.includes('/session/') ||
@@ -71,7 +78,7 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
   if (isFullScreen) {
     return (
       <div className="flex min-h-screen flex-col bg-[#F8F7FF]">
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">{content}</main>
         <AdminPreviewBanner />
       </div>
     );
@@ -116,6 +123,7 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
           {/* User menu */}
           {user && (
             <div ref={accountMenuRef} className="relative flex items-center gap-2.5">
+              <NotificationDropdown />
               <div className="hidden text-right sm:block">
                 <p className="whitespace-nowrap text-xs font-semibold leading-tight text-[#0E1E47]">
                   {examUser?.displayName ?? 'Peserta'}
@@ -216,7 +224,7 @@ function ExamLayoutInner({ children }: { children: ReactNode }) {
       </nav>
 
       {/* Content */}
-      <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+      <main className="flex-1 pb-16 sm:pb-0">{content}</main>
 
       <AdminPreviewBanner />
     </div>

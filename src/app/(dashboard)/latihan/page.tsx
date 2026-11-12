@@ -5,14 +5,22 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Clock, Zap, Lock, Trophy, CheckCircle, ChevronRight, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
+import { isLevelUnlocked, slugTopic, topicScores, type PracticeLevel } from '@/lib/learning';
+
+interface PracticeTopic {
+  topic: string;
+  id: string;
+  label: string;
+  counts: Record<string, number>;
+}
 
 const QUIZZES = [
   {
     id: 'easy',
     title: 'Latihan Dasar',
-    subtitle: 'Konsep fundamental stoikiometri',
+    subtitle: 'Konsep fundamental',
     difficulty: 'Mudah',
     questions: 10,
     timePerQuestion: 45,
@@ -25,7 +33,7 @@ const QUIZZES = [
   {
     id: 'moderate',
     title: 'Latihan Menengah',
-    subtitle: 'Perhitungan stoikiometri lanjut',
+    subtitle: 'Penerapan konsep lebih lanjut',
     difficulty: 'Menengah',
     questions: 10,
     timePerQuestion: 60,
@@ -38,7 +46,7 @@ const QUIZZES = [
   {
     id: 'hard',
     title: 'Latihan Sulit',
-    subtitle: 'Limiting reagent & multi-step',
+    subtitle: 'Soal multi-langkah dan analisis',
     difficulty: 'Sulit',
     questions: 10,
     timePerQuestion: 90,
@@ -52,34 +60,53 @@ const QUIZZES = [
 
 const LatihanPage: FC = () => {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [confirm, setConfirm] = useState<string | null>(null);
-  const [lastScores, setLastScores] = useState<Record<string, number>>({});
-  const [easyDone, setEasyDone] = useState(false);
-  const [moderateDone, setModerateDone] = useState(false);
+  const [userData, setUserData] = useState<Record<string, unknown>>({});
+  const [topics, setTopics] = useState<PracticeTopic[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [loadingTopics, setLoadingTopics] = useState(true);
 
   useEffect(() => {
-    if (!profile) return;
+    if (!profile || !user) return;
     (async () => {
       try {
-        const snap = await getDoc(doc(db, 'users', profile.uid));
-        const data = snap.data() || {};
-        setEasyDone(!!data.easyQuizCompleted);
-        setModerateDone(!!data.lastQuiz_moderate);
-        const scores: Record<string, number> = {};
-        if (data.lastQuiz_easy) scores.easy = data.lastQuiz_easy.score;
-        if (data.lastQuiz_moderate) scores.moderate = data.lastQuiz_moderate.score;
-        if (data.lastQuiz_hard) scores.hard = data.lastQuiz_hard.score;
-        setLastScores(scores);
-      } catch { /* leave defaults — levels stay locked */ }
+        const [snap, token] = await Promise.all([getDoc(doc(db, 'users', profile.uid)), user.getIdToken()]);
+        setUserData((snap.data() || {}) as Record<string, unknown>);
+
+        const res = await fetch('/api/practice-questions/topics', { headers: { Authorization: `Bearer ${token}` } });
+        const data: { topics?: PracticeTopic[] } = res.ok ? await res.json() : {};
+        const list = data.topics ?? [];
+        setTopics(list);
+
+        const wanted = new URLSearchParams(window.location.search).get('topic');
+        const preferred = ((snap.data()?.settings as { selectedTopics?: string[] } | undefined)?.selectedTopics ?? []).map(slugTopic);
+        const pick =
+          list.find((t) => t.topic === wanted) ??
+          list.find((t) => preferred.includes(t.id)) ??
+          list[0] ??
+          null;
+        setSelectedTopic(pick ? pick.topic : null);
+      } catch { /* leave defaults — levels stay locked */ } finally {
+        setLoadingTopics(false);
+      }
     })();
-  }, [profile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, user]);
+
+  const currentTopic = topics.find((t) => t.topic === selectedTopic) ?? null;
+  const topicKey = currentTopic ? currentTopic.id : '';
+  const scores = topicScores(userData, topicKey);
+  const legacyEasyDone = topicKey === 'stoikiometri' && !!userData.easyQuizCompleted;
 
   const isLocked = (id: string) => {
-    if (id === 'easy') return false;
-    if (id === 'moderate') return !easyDone;
-    if (id === 'hard') return !moderateDone;
-    return true;
+    if (!currentTopic || (currentTopic.counts[id] ?? 0) === 0) return true;
+    return !isLevelUnlocked(id as PracticeLevel, scores, legacyEasyDone);
+  };
+
+  const lockHint = (quiz: (typeof QUIZZES)[number]) => {
+    if (currentTopic && (currentTopic.counts[quiz.id] ?? 0) === 0) return 'Belum ada soal untuk level ini';
+    return quiz.unlockHint;
   };
 
   const selectedQuiz = QUIZZES.find(q => q.id === confirm);
@@ -112,11 +139,38 @@ const LatihanPage: FC = () => {
         </div>
       </motion.div>
 
+      {/* Topic selector */}
+      {topics.length > 1 && (
+        <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Pilih topik latihan">
+          {topics.map((t) => (
+            <button
+              key={t.topic}
+              role="tab"
+              aria-selected={selectedTopic === t.topic}
+              onClick={() => setSelectedTopic(t.topic)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                selectedTopic === t.topic
+                  ? 'bg-violet-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!loadingTopics && topics.length === 0 && (
+        <div className="mb-5 rounded-2xl bg-white p-6 text-center text-sm text-gray-500 shadow-sm ring-1 ring-gray-100">
+          Belum ada soal latihan yang tersedia. Coba lagi nanti.
+        </div>
+      )}
+
       {/* Quiz cards */}
       <div className="space-y-3">
         {QUIZZES.map((quiz, i) => {
           const locked = isLocked(quiz.id);
-          const score = lastScores[quiz.id];
+          const score = scores[quiz.id as PracticeLevel];
           const done = score !== undefined;
 
           return (
@@ -172,8 +226,8 @@ const LatihanPage: FC = () => {
                     )}
                   </div>
 
-                  {locked && quiz.unlockHint && (
-                    <p className="relative mt-2 text-xs text-white/60">🔒 {quiz.unlockHint}</p>
+                  {locked && lockHint(quiz) && (
+                    <p className="relative mt-2 text-xs text-white/60">🔒 {lockHint(quiz)}</p>
                   )}
                 </div>
               </button>
@@ -233,7 +287,7 @@ const LatihanPage: FC = () => {
                   Belum Siap
                 </button>
                 <button
-                  onClick={() => { setConfirm(null); router.push(`/latihan/${selectedQuiz.id}`); }}
+                  onClick={() => { setConfirm(null); router.push(`/latihan/${selectedQuiz.id}?topic=${encodeURIComponent(selectedTopic ?? '')}`); }}
                   className={`flex-1 rounded-2xl bg-gradient-to-r ${selectedQuiz.gradient} py-3 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5`}
                 >
                   Mulai Sekarang

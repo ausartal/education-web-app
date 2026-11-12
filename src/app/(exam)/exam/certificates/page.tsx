@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useState, useEffect, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import Link from 'next/link';
 import {
   Award, Loader2, Download, Printer, ArrowRight, FileText,
@@ -24,11 +25,13 @@ const PREDIKAT_STYLES: Record<string, string> = {
   Terbatas: 'text-rose-700 bg-rose-50 ring-rose-200',
 };
 
-function formatDate(ts: { _seconds: number } | null): string {
+function formatDate(ts: unknown): string {
   if (!ts) return '-';
-  return new Date(ts._seconds * 1000).toLocaleDateString('id-ID', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
+  const o = ts as Record<string, unknown>;
+  const secs = (o._seconds ?? o.seconds) as number | undefined;
+  if (typeof secs === 'number') return new Date(secs * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const d = new Date(ts as string);
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 const ExamCertificatesPage: FC = () => {
@@ -69,17 +72,18 @@ const ExamCertificatesPage: FC = () => {
       </p>
 
       {certificates.length === 0 ? (
-        <div className="mt-8 rounded-lg bg-[#F8F7FF] py-12 text-center ring-1 ring-[#E5E0F5]">
-          <Award size={28} className="mx-auto text-[#9B8FC7]" />
-          <p className="mt-3 text-sm font-semibold text-[#5B6475]">Belum ada sertifikat</p>
-          <p className="mt-1 text-xs text-[#9CA3AF]">
-            Sertifikat akan muncul setelah admin memverifikasi dan menyetujui hasil ujian kamu.
-          </p>
-          <Link href="/exam"
-            className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#6320EE] hover:underline">
-            Mulai Ujian <ArrowRight size={12} />
-          </Link>
-        </div>
+        <EmptyState
+          className="mt-8"
+          tone="violet"
+          icon={<Award size={32} />}
+          title="Belum ada sertifikat"
+          description="Sertifikat akan muncul setelah admin memverifikasi dan menyetujui hasil ujianmu."
+          action={
+            <Link href="/exam" className="inline-flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#4D38D4]">
+              Mulai Ujian <ArrowRight size={12} />
+            </Link>
+          }
+        />
       ) : (
         <div className="mt-6 space-y-3">
           {certificates.map((cert) => {

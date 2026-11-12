@@ -1,6 +1,8 @@
 'use client';
 
 import { FC, useState, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PageHero } from '@/components/ui/PageHero';
 import { motion, AnimatePresence } from 'framer-motion';
 import { School, Plus, ArrowRight, X, AlertCircle, Loader2, Users, BookOpen } from 'lucide-react';
 import Link from 'next/link';
@@ -84,35 +86,39 @@ const KelasPage: FC = () => {
   return (
     <div className="mx-auto max-w-4xl py-8">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-extrabold text-gray-900">Kelas Saya</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            {classes.length > 0 ? `${classes.length} kelas yang kamu ikuti` : 'Kelas yang kamu ikuti dari guru'}
-          </p>
-        </div>
-        <button
-          onClick={() => { setShowJoin(true); setJoinError(''); setJoinSuccess(''); }}
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90"
-        >
-          <Plus size={16} /> Bergabung ke Kelas
-        </button>
-      </div>
+      <PageHero
+        tone="emerald"
+        eyebrow="Belajar bersama"
+        title="Kelas Saya"
+        description={classes.length > 0 ? `${classes.length} kelas yang kamu ikuti. Buka kelas untuk melihat materi, tugas, dan chat.` : 'Gabung ke kelas dari gurumu untuk mendapat materi, tugas, dan ujian.'}
+        image="/icons/hero-kelas.svg"
+        actions={
+          <button
+            onClick={() => { setShowJoin(true); setJoinError(''); setJoinSuccess(''); }}
+            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition-transform hover:-translate-y-0.5"
+          >
+            <Plus size={16} /> Bergabung ke Kelas
+          </button>
+        }
+        className="mb-8"
+      />
 
       {/* Class Grid */}
       {classes.length === 0 ? (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl bg-white p-16 text-center shadow-sm">
-          <School size={48} className="mx-auto mb-4 text-gray-300" />
-          <p className="font-semibold text-gray-500">Belum terdaftar di kelas manapun</p>
-          <p className="mt-1 text-sm text-gray-400">Minta kode bergabung dari gurumu</p>
-          <button
-            onClick={() => setShowJoin(true)}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90"
-          >
-            <Plus size={16} /> Masukkan Kode Kelas
-          </button>
-        </motion.div>
+        <EmptyState
+          tone="emerald"
+          icon={<School size={32} />}
+          title="Belum terdaftar di kelas manapun"
+          description="Minta kode bergabung dari gurumu, lalu masukkan di sini."
+          action={
+            <button
+              onClick={() => setShowJoin(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90"
+            >
+              <Plus size={16} /> Masukkan Kode Kelas
+            </button>
+          }
+        />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2">
           {classes.map((cls, i) => {

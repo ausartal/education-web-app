@@ -5,7 +5,7 @@ import {
   getDoc,
   query,
   where,
-} from 'firebase/firestore';
+} from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { Material } from '@/types/firestore';
 

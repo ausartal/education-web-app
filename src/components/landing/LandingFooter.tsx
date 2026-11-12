@@ -17,6 +17,7 @@ const footerGroups = [
     links: [
       { href: '/#faq', label: 'FAQ' },
       { href: '/#pricing', label: 'Assessment Pricing' },
+      { href: '/verifikasi', label: 'Verify Certificate' },
       { href: '/#contact', label: 'Contact Support' },
     ],
   },

@@ -13,7 +13,6 @@ import {
 } from '@/services/auth';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { auth } from '@/lib/firebase';
-import { UserRole } from '@/types/firestore';
 
 const fieldClass =
   'w-full rounded-xl border border-slate-200 bg-[#FCFCFE] py-3.5 pl-11 pr-3 text-sm text-slate-900 outline-none transition focus:border-[#6320EE] focus:bg-white focus:ring-4 focus:ring-[#6320EE]/10';
@@ -23,21 +22,20 @@ const RegisterPage: FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('student');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
-    if (password.length < 6) {
-      setError('Password must contain at least 6 characters.');
+    if (password.length < 8) {
+      setError('Password must contain at least 8 characters.');
       return;
     }
     setLoading(true);
     try {
-      await signUp(email, password, fullName, role);
-      router.push(role === 'teacher' ? '/teacher' : '/onboarding');
+      await signUp(email, password, fullName, 'student');
+      router.push('/onboarding');
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('sudah terdaftar di AKURAT')) {
@@ -91,7 +89,7 @@ const RegisterPage: FC = () => {
         Create your account
       </h1>
       <p className="mb-6 mt-2 text-sm leading-6 text-slate-500">
-        Choose how you will use AKURAT and begin learning with clarity.
+        Create a student account and begin learning with clarity. Teacher accounts are created by an administrator.
       </p>
 
       {error && (
@@ -102,43 +100,6 @@ const RegisterPage: FC = () => {
           {error}
         </div>
       )}
-
-      <div className="mb-5 grid grid-cols-2 gap-3">
-        {[
-          {
-            value: 'student' as UserRole,
-            label: 'Student',
-            description: 'Learn and track progress',
-            icon: '/icons/icon-student.svg',
-          },
-          {
-            value: 'teacher' as UserRole,
-            label: 'Teacher',
-            description: 'Guide and manage classes',
-            icon: '/icons/icon-teacher.svg',
-          },
-        ].map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => setRole(option.value)}
-            aria-pressed={role === option.value}
-            className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition-all ${role === option.value ? 'border-[#6320EE] bg-[#F4EFFF] shadow-sm' : 'border-slate-200 bg-white hover:border-[#CDBDF8]'}`}
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-              <Image src={option.icon} alt="" width={25} height={25} />
-            </span>
-            <span>
-              <span className="block text-sm font-bold text-[#27254F]">
-                {option.label}
-              </span>
-              <span className="block text-[11px] leading-4 text-slate-500">
-                {option.description}
-              </span>
-            </span>
-          </button>
-        ))}
-      </div>
 
       <button
         type="button"
@@ -228,7 +189,7 @@ const RegisterPage: FC = () => {
                 id="register-password"
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
                 autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}

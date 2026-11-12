@@ -6,10 +6,10 @@ import {
   User, Mail, Phone, MapPin, Building2, Calendar,
   AlertCircle, CheckCircle2, Loader2, Camera, Save,
 } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, storage } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { useExamAuth } from '@/context/ExamAuthContext';
 import type { ExamUserGender, ExamUserIdentityType } from '@/types/exam-user';
+import PhotoAdjustModal from '@/components/exam/PhotoAdjustModal';
 
 const fieldClass =
   'w-full rounded-lg border border-[#DCE5F2] bg-white py-2.5 pl-10 pr-3 text-sm text-[#172033] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#6320EE] focus:ring-2 focus:ring-[#6320EE]/10';
@@ -58,12 +58,11 @@ const ExamProfilePage: FC = () => {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const [photoSuccess, setPhotoSuccess] = useState('');
+  const [pendingPhoto, setPendingPhoto] = useState<string | null>(null); // object URL for adjust modal
 
-  // Only populate form from examUser on first load, not on every change
-  const formInitialized = useRef(false);
+  // Populate form whenever examUser loads (handles navigation back to page)
   useEffect(() => {
-    if (examUser && !formInitialized.current) {
-      formInitialized.current = true;
+    if (examUser) {
       setForm({
         displayName: examUser.displayName ?? '',
         phoneNumber: examUser.phoneNumber ?? '',
@@ -77,10 +76,6 @@ const ExamProfilePage: FC = () => {
       });
       setPhotoPreview(examUser.photoURL ?? null);
     }
-    if (examUser) {
-      // Always update photo preview from latest profile
-      setPhotoPreview(examUser.photoURL ?? null);
-    }
     setLoading(false);
   }, [examUser]);
 
@@ -91,6 +86,25 @@ const ExamProfilePage: FC = () => {
 
   const handleSave = async () => {
     setSaveError('');
+
+    // Validate all required fields
+    const requiredFields: Array<{ key: keyof ProfileForm; label: string }> = [
+      { key: 'displayName', label: 'Nama Lengkap' },
+      { key: 'phoneNumber', label: 'Nomor HP' },
+      { key: 'gender', label: 'Jenis Kelamin' },
+      { key: 'birthPlace', label: 'Tempat Lahir' },
+      { key: 'birthDate', label: 'Tanggal Lahir' },
+      { key: 'identityType', label: 'Tipe Identitas' },
+      { key: 'identityNumber', label: 'Nomor Identitas' },
+      { key: 'institution', label: 'Institusi' },
+      { key: 'address', label: 'Alamat' },
+    ];
+    const missing = requiredFields.filter(f => !form[f.key]?.trim());
+    if (missing.length > 0) {
+      setSaveError(`Field wajib belum diisi: ${missing.map(f => f.label).join(', ')}`);
+      return;
+    }
+
     setSaving(true);
     try {
       const user = (await import('@/lib/firebase')).auth.currentUser;
@@ -118,13 +132,21 @@ const ExamProfilePage: FC = () => {
     }
   };
 
-  const handlePhotoUpload = async (file: File) => {
+  // Called when user selects a file — shows adjust modal
+  const handleFileSelect = (file: File) => {
     setPhotoError('');
     setPhotoSuccess('');
     if (file.size > 2 * 1024 * 1024) {
       setPhotoError('Ukuran foto maksimal 2MB.');
       return;
     }
+    const url = URL.createObjectURL(file);
+    setPendingPhoto(url);
+  };
+
+  // Called when user confirms position in the modal
+  const handlePhotoConfirm = async (blob: Blob) => {
+    setPendingPhoto(null);
     if (!auth.currentUser) {
       setPhotoError('Sesi habis. Silakan masuk kembali.');
       return;
@@ -133,33 +155,50 @@ const ExamProfilePage: FC = () => {
     setPhotoUploading(true);
     try {
       // Show local preview immediately
-      const localUrl = URL.createObjectURL(file);
+      const localUrl = URL.createObjectURL(blob);
       setPhotoPreview(localUrl);
 
-      const storageRef = ref(storage, `exam_photos/${auth.currentUser.uid}`);
-      await uploadBytes(storageRef, file, { contentType: file.type });
-      const url = await getDownloadURL(storageRef);
+      // Upload via server-side API (avoids CORS issues with Firebase Storage)
+      const formData = new FormData();
+      formData.append('photo', blob, 'photo.jpg');
+      const token = await auth.currentUser.getIdToken();
+      const uploadRes = await fetch('/api/exam/profile/photo', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const data = await uploadRes.json().catch(() => ({}));
+        throw new Error(data.error || 'Gagal mengunggah foto');
+      }
+
+      const { photoURL } = await uploadRes.json();
 
       // Update preview to permanent URL
-      setPhotoPreview(url);
+      setPhotoPreview(photoURL);
 
-      const token = await auth.currentUser.getIdToken();
+      // Save photoURL to profile
       const res = await fetch('/api/exam/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ photoURL: url }),
+        body: JSON.stringify({ photoURL }),
       });
       if (!res.ok) throw new Error('Gagal menyimpan foto');
 
       await refreshProfile();
       setPhotoSuccess('Foto berhasil diunggah.');
-    } catch {
-      setPhotoError('Gagal mengunggah foto. Coba lagi.');
-      // Revert preview on error
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Gagal mengunggah foto. Coba lagi.');
       setPhotoPreview(examUser?.photoURL ?? null);
     } finally {
       setPhotoUploading(false);
     }
+  };
+
+  const handlePhotoCancel = () => {
+    if (pendingPhoto) URL.revokeObjectURL(pendingPhoto);
+    setPendingPhoto(null);
   };
 
   if (loading) {
@@ -348,7 +387,7 @@ const ExamProfilePage: FC = () => {
                 className="hidden"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) await handlePhotoUpload(file);
+                  if (file) handleFileSelect(file);
                   e.target.value = '';
                 }}
               />
@@ -407,6 +446,16 @@ const ExamProfilePage: FC = () => {
           </div>
         )}
       </div>
+
+      {/* Photo adjust modal */}
+      {pendingPhoto && (
+        <PhotoAdjustModal
+          imageUrl={pendingPhoto}
+          onConfirm={handlePhotoConfirm}
+          onCancel={handlePhotoCancel}
+          uploading={photoUploading}
+        />
+      )}
     </div>
   );
 };

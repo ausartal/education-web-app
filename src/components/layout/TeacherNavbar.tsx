@@ -15,7 +15,6 @@ const teacherNavLinks = [
   { href: '/teacher/ujian', label: 'Ujian' },
   { href: '/teacher/bank-soal', label: 'Bank Soal' },
   { href: '/teacher/materials', label: 'Materi' },
-  { href: '/teacher/students', label: 'Siswa' },
 ];
 
 export const TeacherNavbar: FC = () => {
@@ -66,9 +65,17 @@ export const TeacherNavbar: FC = () => {
         {user && (
           <div className="flex items-center gap-3">
             <NotificationDropdown />
-            <div className="group relative">
+            <div className="group relative flex items-center gap-2.5">
+              <div className="hidden text-right sm:block">
+                <p className="whitespace-nowrap text-xs font-semibold leading-tight text-gray-800">
+                  {profile?.displayName ?? 'Guru'}
+                </p>
+                <p className="text-[10px] text-gray-400">
+                  {profile?.role === 'admin' ? 'Admin' : 'Guru'}
+                </p>
+              </div>
               <button
-                className="flex items-center gap-2 rounded-md p-1.5 transition-colors hover:bg-gray-100"
+                className="rounded-full transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                 aria-label="Menu profil"
               >
                 {profile?.photoURL ? (
@@ -78,7 +85,7 @@ export const TeacherNavbar: FC = () => {
                     className="h-10 w-10 rounded-full object-cover ring-1 ring-gray-200"
                   />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-sm font-medium text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-emerald-600 ring-1 ring-gray-200">
                     {profile?.displayName?.charAt(0).toUpperCase() || 'T'}
                   </div>
                 )}

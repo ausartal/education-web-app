@@ -8,12 +8,17 @@ import {
   User,
   signOut as firebaseSignOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
+  updatePassword,
   updateProfile,
   browserLocalPersistence,
   browserSessionPersistence,
   setPersistence,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from '@/lib/client-firestore';
 import { auth, db } from '@/lib/firebase';
 import { UserRole, UserProfile } from '@/types/firestore';
 
@@ -64,6 +69,14 @@ export async function signUp(
     photoURL: null,
     role,
   });
+
+  if (!user!.emailVerified) {
+    try {
+      await sendEmailVerification(user!);
+    } catch {
+      // Non-fatal: the dashboard banner lets the user request it again
+    }
+  }
 }
 
 export async function signIn(
@@ -114,8 +127,76 @@ async function _syncGoogleUser(user: User): Promise<void> {
       role: 'student',
     });
   } else {
-    await updateLastLogin();
+    // Sync Google photo so students/teachers signing in with Gmail get their avatar
+    const updates: Record<string, unknown> = { lastLoginAt: serverTimestamp() };
+    const existingPhoto = (profileSnap.data() as { photoURL?: string | null })?.photoURL;
+    if (user.photoURL && !existingPhoto) {
+      updates.photoURL = user.photoURL;
+    }
+    await setDoc(profileRef, updates, { merge: true });
   }
+}
+
+/**
+ * Creates the missing school profile (student) for the signed-in account.
+ * Used to recover accounts whose profile was never written.
+ */
+export async function ensureStudentProfile(): Promise<UserProfile | null> {
+  const user = auth.currentUser;
+  if (!user) return null;
+  const existing = await getUserProfile(user.uid);
+  if (existing) return existing;
+  await createUserProfile(user.uid, {
+    email: user.email || '',
+    displayName: user.displayName || (user.email || '').split('@')[0],
+    photoURL: user.photoURL,
+    role: 'student',
+  });
+  return getUserProfile(user.uid);
+}
+
+export async function resendVerificationEmail(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Belum masuk');
+  await sendEmailVerification(user);
+}
+
+export function hasPasswordProvider(user: User | null): boolean {
+  return !!user?.providerData.some((p) => p.providerId === 'password');
+}
+
+async function reauthenticate(user: User, password?: string): Promise<void> {
+  if (hasPasswordProvider(user)) {
+    if (!password || !user.email) throw new Error('Masukkan kata sandi saat ini.');
+    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
+    return;
+  }
+  await reauthenticateWithPopup(user, googleProvider);
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Belum masuk');
+  await reauthenticate(user, currentPassword);
+  await updatePassword(user, newPassword);
+}
+
+/** Deletes the signed-in student account (server side) after re-authenticating. */
+export async function deleteOwnAccount(password?: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Belum masuk');
+  await reauthenticate(user, password);
+
+  const token = await user.getIdToken(true);
+  const res = await fetch('/api/user/account', {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Gagal menghapus akun.');
+  }
+  await firebaseSignOut(auth);
 }
 
 export async function signOut(): Promise<void> {

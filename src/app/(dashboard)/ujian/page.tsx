@@ -40,15 +40,7 @@ const UjianPage: FC = () => {
         return;
       }
 
-      // Store full question data in sessionStorage for the session page to consume
       const isCustom = data.mode === 'custom' || data.mode === 'manual';
-      sessionStorage.setItem(`exam_init_${data.sessionId}`, JSON.stringify({
-        schedule: data.schedule,
-        questions: data.questions ?? {},
-        completedDomains: data.completedDomains ?? 0,
-        mode: data.mode,
-        customQuestions: data.customQuestions ?? [],
-      }));
 
       if (data.resumed) {
         router.push(`/ujian/${data.sessionId}/session`);

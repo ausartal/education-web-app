@@ -39,11 +39,11 @@ const STORAGE_KEY = (id: string) => `msat_exam_${id}`;
 interface StoredState {
   answers: Record<string, string>;
   timeSpent: Record<string, number>;
-  currentIdx: number;
-  timeLeft: number;
   savedAt: number;
   stage: number;
 }
+
+const ANSWER_KEYS = ['A', 'B', 'C', 'D', 'E'];
 
 function saveState(id: string, state: StoredState) {
   try { localStorage.setItem(STORAGE_KEY(id), JSON.stringify(state)); } catch { /* ignore */ }
@@ -68,11 +68,12 @@ const ExamSessionPage: FC = () => {
   const [session, setSession] = useState<SessionData | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [timeSpent, setTimeSpent] = useState<Record<string, number>>({});
   const [currentIdx, setCurrentIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [online, setOnline] = useState(true);
   const [tabWarning, setTabWarning] = useState(false);
   const [tabCount, setTabCount] = useState(0);
@@ -80,121 +81,160 @@ const ExamSessionPage: FC = () => {
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [terminated, setTerminated] = useState(false);
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const deadlineRef = useRef<number | null>(null);
+  const answersRef = useRef<Record<string, string>>({});
+  const timeSpentRef = useRef<Record<string, number>>({});
   const questionStartRef = useRef(Date.now());
-  const timeLeftRef = useRef(timeLeft);
-  timeLeftRef.current = timeLeft;
+  const prevIdxRef = useRef(0);
+  const dirtyRef = useRef(false);
+  const autoSubmittedRef = useRef(false);
+  const submittingRef = useRef(false);
+  const terminatedRef = useRef(false);
+  const userRef = useRef(user);
+  const questionsRef = useRef<Question[]>([]);
+  const handleSubmitRef = useRef<(auto?: boolean) => void>(() => {});
+  answersRef.current = answers;
+  userRef.current = user;
+  questionsRef.current = questions;
 
-  // ── Init: fetch session + questions, restore state ──
+  const goToResults = useCallback(() => router.push(`/exam/results/${id}`), [router, id]);
+
+  // ── Init: fetch session, then the fixed question set for this stage ──
   useEffect(() => {
     if (!user) return;
     const init = async () => {
       try {
         const idToken = await user.getIdToken();
+        const headers = { Authorization: `Bearer ${idToken}` };
 
-        // Get session status
-        const sessionRes = await fetch(`/api/msat/sessions/${id}`, {
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
+        const sessionRes = await fetch(`/api/msat/sessions/${id}`, { headers });
         if (!sessionRes.ok) { router.push('/exam'); return; }
-        const sessionData: SessionData = await sessionRes.json();
+        const sessionData: SessionData & { violations?: number; terminated?: boolean } = await sessionRes.json();
 
-        if (sessionData.status === 'completed') { router.push(`/exam/results/${id}`); return; }
+        if (sessionData.status === 'completed' || sessionData.terminated) { goToResults(); return; }
         if (sessionData.status === 'on_break') { router.push(`/exam/break/${id}`); return; }
         if (sessionData.status === 'waiting') { router.push('/exam'); return; }
 
         setSession(sessionData);
+        setTabCount(sessionData.violations ?? 0);
 
-        // Try to restore from localStorage
-        const stored = loadState(id);
-        const durationSec = (sessionData.exam?.durationPerStage ?? 30) * 60;
-
-        if (stored && stored.stage === sessionData.currentStage) {
-          // Restore saved state — calculate remaining time from savedAt
-          const elapsedSinceSave = Math.floor((Date.now() - stored.savedAt) / 1000);
-          const remainingTime = Math.max(0, stored.timeLeft - elapsedSinceSave);
-          setAnswers(stored.answers);
-          setTimeSpent(stored.timeSpent);
-          setCurrentIdx(stored.currentIdx);
-          setTimeLeft(remainingTime > 0 ? remainingTime : durationSec);
-        } else {
-          // Fresh start — fetch questions
-          const qRes = await fetch(`/api/msat/sessions/${id}/questions`, {
-            headers: { Authorization: `Bearer ${idToken}` },
-          });
-          if (qRes.ok) {
-            const qData = await qRes.json();
-            setQuestions(qData.questions ?? []);
-          }
-          setTimeLeft(durationSec);
+        const qRes = await fetch(`/api/msat/sessions/${id}/questions`, { headers });
+        const qData = await qRes.json().catch(() => ({}));
+        if (!qRes.ok) {
+          if (qData.status === 'on_break') { router.push(`/exam/break/${id}`); return; }
+          if (qData.status === 'completed') { goToResults(); return; }
+          setLoadError(qData.error || 'Soal tidak dapat dimuat. Coba muat ulang halaman.');
+          setLoading(false);
+          return;
         }
-      } catch { /* ignore */ }
+
+        const loaded: Question[] = qData.questions ?? [];
+        const served = new Set(loaded.map(q => q.id));
+        deadlineRef.current = Date.now() + (qData.endsAt - qData.serverNow);
+
+        // Restore answers: newest of the server draft and the local copy.
+        let restoredAnswers: Record<string, string> = {};
+        let restoredTime: Record<string, number> = {};
+        let newest = 0;
+        const draft = qData.draft as { answers: Record<string, string>; timeSpent: Record<string, number>; savedAtMs: number } | null;
+        if (draft) {
+          restoredAnswers = draft.answers;
+          restoredTime = draft.timeSpent;
+          newest = draft.savedAtMs;
+        }
+        const local = loadState(id);
+        if (local && local.stage === sessionData.currentStage && local.savedAt > newest) {
+          restoredAnswers = local.answers;
+          restoredTime = local.timeSpent;
+        }
+        const cleanAnswers: Record<string, string> = {};
+        for (const [qid, value] of Object.entries(restoredAnswers ?? {})) {
+          if (served.has(qid) && ANSWER_KEYS.includes(value)) cleanAnswers[qid] = value;
+        }
+        const cleanTime: Record<string, number> = {};
+        for (const [qid, value] of Object.entries(restoredTime ?? {})) {
+          if (served.has(qid) && Number.isFinite(value)) cleanTime[qid] = value;
+        }
+
+        timeSpentRef.current = cleanTime;
+        setAnswers(cleanAnswers);
+        setQuestions(loaded);
+        setTimeLeft(Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000)));
+      } catch {
+        setLoadError('Koneksi bermasalah. Coba muat ulang halaman.');
+      }
       setLoading(false);
     };
     init();
-  }, [user, id, router]);
+  }, [user, id, router, goToResults]);
 
-  // ── Fetch questions if not restored ──
+  // ── Time spent per question ──
+  const commitTime = useCallback(() => {
+    const q = questionsRef.current[prevIdxRef.current];
+    const now = Date.now();
+    if (q) {
+      timeSpentRef.current[q.id] = (timeSpentRef.current[q.id] ?? 0) + (now - questionStartRef.current);
+    }
+    questionStartRef.current = now;
+  }, []);
+
   useEffect(() => {
-    if (!user || questions.length > 0 || loading) return;
-    const fetchQ = async () => {
-      const idToken = await user.getIdToken();
-      const qRes = await fetch(`/api/msat/sessions/${id}/questions`, {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-      if (qRes.ok) {
-        const qData = await qRes.json();
-        setQuestions(qData.questions ?? []);
-      }
-    };
-    fetchQ();
-  }, [user, id, questions.length, loading]);
+    commitTime();
+    prevIdxRef.current = currentIdx;
+  }, [currentIdx, commitTime]);
 
-  // ── Auto-save to localStorage every 5 seconds ──
+  // ── Autosave: local copy every 5s, server draft every 8s when changed ──
   useEffect(() => {
     if (loading || questions.length === 0) return;
-    const interval = setInterval(() => {
-      saveState(id, { answers, timeSpent, currentIdx, timeLeft: timeLeftRef.current, savedAt: Date.now(), stage: session?.currentStage ?? 1 });
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [loading, questions.length, answers, timeSpent, currentIdx, id, session]);
+    const stage = session?.currentStage ?? 1;
+    const writeLocal = () => saveState(id, { answers: answersRef.current, timeSpent: timeSpentRef.current, savedAt: Date.now(), stage });
 
-  // ── Save on beforeunload ──
-  useEffect(() => {
-    const handler = () => {
-      saveState(id, { answers, timeSpent, currentIdx, timeLeft: timeLeftRef.current, savedAt: Date.now(), stage: session?.currentStage ?? 1 });
+    const local = setInterval(writeLocal, 5000);
+    const remote = setInterval(async () => {
+      const currentUser = userRef.current;
+      if (!dirtyRef.current || !currentUser || submittingRef.current) return;
+      dirtyRef.current = false;
+      try {
+        const idToken = await currentUser.getIdToken();
+        const res = await fetch(`/api/msat/sessions/${id}/progress`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ answers: answersRef.current, timeSpent: timeSpentRef.current }),
+        });
+        if (!res.ok) dirtyRef.current = true;
+      } catch {
+        dirtyRef.current = true;
+      }
+    }, 8000);
+
+    window.addEventListener('beforeunload', writeLocal);
+    return () => {
+      clearInterval(local);
+      clearInterval(remote);
+      window.removeEventListener('beforeunload', writeLocal);
     };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [answers, timeSpent, currentIdx, id, session]);
+  }, [loading, questions.length, id, session]);
 
-  // ── Timer ──
+  // ── Timer: counts down to the deadline set by the server ──
   useEffect(() => {
-    if (loading || timeLeft <= 0) return;
-    timerRef.current = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
-          clearInterval(timerRef.current!);
-          handleSubmit(true);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [loading]);
-
-  // ── Track time per question ──
-  useEffect(() => {
-    questionStartRef.current = Date.now();
-  }, [currentIdx]);
+    if (loading || questions.length === 0) return;
+    const tick = () => {
+      if (deadlineRef.current === null) return;
+      const left = Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000));
+      setTimeLeft(left);
+      if (left === 0 && !autoSubmittedRef.current && !terminatedRef.current) {
+        autoSubmittedRef.current = true;
+        handleSubmitRef.current(true);
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [loading, questions.length]);
 
   // ── Fullscreen ──
   useEffect(() => {
     if (loading) return;
-    const enterFs = async () => {
-      try { await document.documentElement.requestFullscreen(); } catch { /* ignore */ }
-    };
     if (!document.fullscreenElement) {
       setShowFullscreen(true);
     }
@@ -205,20 +245,34 @@ const ExamSessionPage: FC = () => {
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, [loading]);
 
-  // ── Anti-cheat ──
+  // ── Anti-cheat: violations are counted on the server ──
   useEffect(() => {
-    const MAX_VIOLATIONS = 3;
-    const onVis = () => {
-      if (document.hidden) {
-        setTabCount(c => {
-          const next = c + 1;
-          if (next > MAX_VIOLATIONS) {
-            setTerminated(true);
-          }
-          return next;
+    const reportViolation = async () => {
+      if (terminatedRef.current) return;
+      try {
+        const currentUser = userRef.current;
+        if (!currentUser) throw new Error('no user');
+        const idToken = await currentUser.getIdToken();
+        const res = await fetch(`/api/msat/sessions/${id}/violation`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${idToken}` },
         });
-        setTabWarning(true);
+        if (!res.ok) throw new Error('violation failed');
+        const data: { violations: number; terminated: boolean } = await res.json();
+        setTabCount(data.violations);
+        if (data.terminated) {
+          terminatedRef.current = true;
+          setTerminated(true);
+          return;
+        }
+      } catch {
+        setTabCount(c => c + 1);
       }
+      setTabWarning(true);
+    };
+
+    const onVis = () => {
+      if (document.hidden) reportViolation();
     };
     const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
     const onOnline = () => setOnline(true);
@@ -257,71 +311,46 @@ const ExamSessionPage: FC = () => {
       document.removeEventListener('contextmenu', onContext);
       document.removeEventListener('keydown', onKeydown);
     };
-  }, []);
+  }, [id]);
 
-  // ── Force-terminate on violation limit ──
+  // ── The server ended the exam: show the notice, then go to the results page ──
   useEffect(() => {
     if (!terminated) return;
-    if (timerRef.current) clearInterval(timerRef.current);
-    // Force-submit after short delay so user sees the popup
-    const timeout = setTimeout(async () => {
-      try {
-        const idToken = await user!.getIdToken();
-        const payload = {
-          answers: questions.map(q => ({
-            questionId: q.id,
-            selectedAnswer: answers[q.id] ?? 'A',
-            timeSpentMs: timeSpent[q.id] ?? 0,
-          })),
-        };
-        await fetch(`/api/msat/sessions/${id}/submit-stage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-          body: JSON.stringify(payload),
-        });
-        await fetch(`/api/msat/sessions/${id}/complete`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
-      } catch { /* ignore */ }
+    const timeout = setTimeout(() => {
       clearState(id);
-      router.push('/exam');
+      goToResults();
     }, 3000);
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [terminated]);
+  }, [terminated, id, goToResults]);
 
   const handleAnswer = (questionId: string, answer: string) => {
-    const prevQ = questions[currentIdx];
-    if (prevQ) {
-      setTimeSpent(prev => ({
-        ...prev,
-        [prevQ.id]: (prev[prevQ.id] ?? 0) + (Date.now() - questionStartRef.current),
-      }));
-    }
+    dirtyRef.current = true;
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
   const handleSubmit = useCallback(async (autoSubmit = false) => {
-    if (submitting) return;
+    if (submittingRef.current || terminatedRef.current) return;
     if (!autoSubmit) {
-      const unanswered = questions.filter(q => !answers[q.id]).length;
+      const unanswered = questions.filter(q => !answersRef.current[q.id]).length;
       if (unanswered > 0 && !showConfirm) {
         setShowConfirm(true);
         return;
       }
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
-    if (timerRef.current) clearInterval(timerRef.current);
+    setSubmitError('');
+    setShowConfirm(false);
+    commitTime();
 
     try {
       const idToken = await user!.getIdToken();
       const payload = {
         answers: questions.map(q => ({
           questionId: q.id,
-          selectedAnswer: answers[q.id] ?? 'A',
-          timeSpentMs: timeSpent[q.id] ?? 0,
+          selectedAnswer: answersRef.current[q.id] ?? null,
+          timeSpentMs: Math.round(timeSpentRef.current[q.id] ?? 0),
         })),
       };
 
@@ -330,23 +359,41 @@ const ExamSessionPage: FC = () => {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify(payload),
       });
+      const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
         clearState(id);
-        const data = await res.json();
         if (data.completed) {
-          await fetch(`/api/msat/sessions/${id}/complete`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${idToken}` },
-          });
-          router.push(`/exam/results/${id}`);
-        } else if (data.break?.active) {
-          router.push(`/exam/break/${id}`);
+          try {
+            await fetch(`/api/msat/sessions/${id}/complete`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${idToken}` },
+            });
+          } catch { /* the results page finalises again */ }
+          goToResults();
+          return;
         }
+        if (data.break?.active) {
+          router.push(`/exam/break/${id}`);
+          return;
+        }
+        setSubmitError('Respons server tidak dikenali. Muat ulang halaman.');
+      } else if (res.status === 409 && data.status === 'completed') {
+        goToResults();
+        return;
+      } else if (res.status === 409 && data.status === 'on_break') {
+        router.push(`/exam/break/${id}`);
+        return;
+      } else {
+        setSubmitError(data.error || 'Gagal mengirim jawaban. Coba lagi.');
       }
-    } catch { /* ignore */ }
+    } catch {
+      setSubmitError('Koneksi terputus. Jawabanmu masih tersimpan, coba kirim lagi.');
+    }
+    submittingRef.current = false;
     setSubmitting(false);
-  }, [submitting, questions, answers, timeSpent, user, id, router, showConfirm]);
+  }, [questions, user, id, router, showConfirm, commitTime, goToResults]);
+  handleSubmitRef.current = handleSubmit;
 
   if (loading) {
     return (
@@ -359,7 +406,7 @@ const ExamSessionPage: FC = () => {
   if (!session || questions.length === 0) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#F8F7FF] text-center">
-        <p className="text-gray-500">Soal tidak ditemukan</p>
+        <p className="max-w-xs text-gray-500">{loadError || 'Soal tidak ditemukan'}</p>
         <button onClick={() => router.push('/exam')} className="rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white">Kembali</button>
       </div>
     );
@@ -464,6 +511,14 @@ const ExamSessionPage: FC = () => {
             </div>
           </div>
         </div>
+        {submitError && (
+          <div role="alert" className="mx-auto mt-2 flex max-w-4xl items-center justify-between gap-3 rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <span>{submitError}</span>
+            <button onClick={() => handleSubmit(true)} disabled={submitting} className="shrink-0 rounded-lg bg-rose-600 px-3 py-1 font-semibold text-white disabled:opacity-50">
+              {submitting ? 'Mengirim...' : 'Coba lagi'}
+            </button>
+          </div>
+        )}
         <div className="mx-auto mt-2 max-w-4xl">
           <div className="h-1 overflow-hidden rounded-full bg-gray-100">
             <motion.div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" animate={{ width: `${(answeredCount / questions.length) * 100}%` }} transition={{ duration: 0.3 }} />

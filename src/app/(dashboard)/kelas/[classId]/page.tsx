@@ -7,11 +7,12 @@ import {
   ArrowLeft, BookOpen, ClipboardList, ClipboardCheck, Clock,
   Calendar, ArrowRight, CheckCircle2, XCircle, ChevronRight,
   MessageCircle, Send, Loader2, RefreshCw, Upload, X, Link2,
-  PlusCircle, Trash2, AlertTriangle, Star,
+  PlusCircle, Trash2, AlertTriangle, Star, LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { stripMarkdown } from '@/lib/strip-markdown';
+import { useToast } from '@/hooks/useToast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ClassInfo {
@@ -78,6 +79,8 @@ const StudentClassDetailPage: FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const router = useRouter();
   const { user, profile } = useAuth();
+  const { addToast } = useToast();
+  const [leaving, setLeaving] = useState(false);
 
   const [cls, setCls] = useState<ClassInfo | null>(null);
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
@@ -137,10 +140,11 @@ const StudentClassDetailPage: FC = () => {
 
     let active = true;
     (async () => {
-      const { collection, query, orderBy, limit, onSnapshot } = await import('firebase/firestore');
+      const { collection, query, where, orderBy, limit, onSnapshot } = await import('@/lib/client-firestore');
       const { db } = await import('@/lib/firebase');
       const q = query(
-        collection(db, 'class_chats', classId, 'messages'),
+        collection(db, 'class_messages'),
+        where('classId', '==', classId),
         orderBy('createdAt', 'asc'),
         limit(200),
       );
@@ -164,9 +168,10 @@ const StudentClassDetailPage: FC = () => {
     if (!text || !user || !profile) return;
     setSendingChat(true);
     try {
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { collection, addDoc, serverTimestamp } = await import('@/lib/client-firestore');
       const { db } = await import('@/lib/firebase');
-      await addDoc(collection(db, 'class_chats', classId, 'messages'), {
+      await addDoc(collection(db, 'class_messages'), {
+        classId,
         senderId: user.uid,
         senderName: profile.displayName || 'Siswa',
         senderRole: 'student',
@@ -233,6 +238,22 @@ const StudentClassDetailPage: FC = () => {
     </div>
   );
 
+  const handleLeave = async () => {
+    if (!cls) return;
+    if (!confirm(`Keluar dari kelas "${cls.name}"? Kamu tidak bisa lagi melihat materi dan tugas kelas ini, tapi nilai yang sudah ada tetap tersimpan. Kamu bisa bergabung lagi dengan kode kelas.`)) return;
+    setLeaving(true);
+    try {
+      const t = await getToken();
+      const res = await fetch(`/api/student/classes/${classId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'Gagal keluar dari kelas');
+      addToast('success', 'Kamu sudah keluar dari kelas');
+      router.replace('/kelas');
+    } catch (err) {
+      addToast('error', err instanceof Error ? err.message : 'Gagal keluar dari kelas');
+      setLeaving(false);
+    }
+  };
+
   const activeExams = exams.filter(e => e.status === 'active');
   const tabs: { key: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { key: 'materi', label: 'Materi', icon: <BookOpen size={15} />, badge: materials.length || undefined },
@@ -255,6 +276,14 @@ const StudentClassDetailPage: FC = () => {
           </p>
           <p className="mt-0.5 text-xs text-gray-400">{cls.studentCount} siswa terdaftar</p>
         </div>
+        <button
+          onClick={handleLeave}
+          disabled={leaving}
+          className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+        >
+          {leaving ? <Loader2 size={13} className="animate-spin" /> : <LogOut size={13} />}
+          Keluar kelas
+        </button>
       </div>
 
       {/* Tabs */}

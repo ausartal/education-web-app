@@ -9,7 +9,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from '@/lib/client-firestore';
 import { auth, db } from '@/lib/firebase';
 import type { ExamUser, ExamRegistrationData } from '@/types/exam-user';
 
@@ -119,6 +119,24 @@ export async function examSignInWithGoogle(
     await firebaseSignOut(auth);
     throw error;
   }
+}
+
+/**
+ * Creates the Exam profile for an account that already exists (for example a
+ * school account). The identity details are completed afterwards on the profile page.
+ */
+export async function activateExamAccount(): Promise<{ needsProfileCompletion: boolean }> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Belum masuk');
+  const token = await user.getIdToken();
+  const res = await fetch('/api/exam/auth/activate', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = (await res.json().catch(() => ({}))) as { error?: string; needsProfileCompletion?: boolean };
+  if (!res.ok) throw new Error(data.error || 'Gagal mengaktifkan akun Exam');
+  await user.getIdToken(true);
+  return { needsProfileCompletion: data.needsProfileCompletion === true };
 }
 
 /**

@@ -53,9 +53,10 @@ const Skeleton: FC = () => (
   </tr>
 );
 
-function fmtDate(ts?: { seconds?: number }) {
-  if (!ts?.seconds) return '—';
-  return new Date(ts.seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+function fmtDate(ts?: Record<string, unknown> | null) {
+  const secs = (ts?._seconds ?? ts?.seconds) as number | undefined;
+  if (typeof secs !== 'number') return '—';
+  return new Date(secs * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 const AdminContent: FC = () => {

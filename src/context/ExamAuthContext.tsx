@@ -15,10 +15,13 @@ import { auth } from '@/lib/firebase';
 import { getExamUserProfile } from '@/services/exam-auth';
 import type { ExamUser } from '@/types/exam-user';
 
+export type ExamProfileStatus = 'loading' | 'ready' | 'missing' | 'error';
+
 interface ExamAuthContextValue {
   user: User | null;
   examUser: ExamUser | null;
   loading: boolean;
+  profileStatus: ExamProfileStatus;
   refreshProfile: () => Promise<void>;
 }
 
@@ -26,6 +29,7 @@ const ExamAuthContext = createContext<ExamAuthContextValue>({
   user: null,
   examUser: null,
   loading: true,
+  profileStatus: 'loading',
   refreshProfile: async () => {},
 });
 
@@ -33,16 +37,21 @@ export const ExamAuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(auth.currentUser);
   const [examUser, setExamUser] = useState<ExamUser | null>(null);
   const [loading, setLoading] = useState(!auth.currentUser);
+  const [profileStatus, setProfileStatus] = useState<ExamProfileStatus>('loading');
 
   const fetchProfile = useCallback(async (firebaseUser: User) => {
     try {
       const profile = await getExamUserProfile(firebaseUser.uid);
       if (profile) {
         setExamUser(profile);
+        setProfileStatus('ready');
+      } else {
+        setExamUser(null);
+        setProfileStatus('missing');
       }
-      // If profile is null (document doesn't exist yet), keep previous state
     } catch {
-      // On error, keep previous state — don't wipe existing data
+      // On error, keep previous data — only flag the failure
+      setProfileStatus((s) => (s === 'ready' ? s : 'error'));
     }
   }, []);
 
@@ -56,9 +65,11 @@ export const ExamAuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
+        setProfileStatus('loading');
         await fetchProfile(firebaseUser);
       } else {
         setExamUser(null);
+        setProfileStatus('missing');
       }
       setLoading(false);
     }, (err) => {
@@ -78,8 +89,8 @@ export const ExamAuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }, [user, fetchProfile]);
 
   const value = useMemo(
-    () => ({ user, examUser, loading, refreshProfile }),
-    [user, examUser, loading, refreshProfile],
+    () => ({ user, examUser, loading, profileStatus, refreshProfile }),
+    [user, examUser, loading, profileStatus, refreshProfile],
   );
 
   return <ExamAuthContext.Provider value={value}>{children}</ExamAuthContext.Provider>;

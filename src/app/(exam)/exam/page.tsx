@@ -1,12 +1,13 @@
 'use client';
 
 import { FC, useState, useEffect, useRef, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   KeyRound, AlertCircle, Loader2, ArrowRight,
   CreditCard, History, Clock, WifiOff, CheckCircle2,
-  Award, User, Shield,
+  Award, User, Shield, Calendar, FileText, ChevronRight,
 } from 'lucide-react';
 import { useExamAuth } from '@/context/ExamAuthContext';
 import { ExamAuthGuard } from '@/components/exam/ExamAuthGuard';
@@ -33,6 +34,18 @@ interface LastExam {
   completedAt: { _seconds: number } | null;
 }
 
+interface Announcement {
+  id: string;
+  title: string;
+  description: string;
+  totalStages: number;
+  questionsPerStage: number;
+  durationPerStage: number;
+  breakDuration: number;
+  createdAt: { _seconds: number; seconds?: number } | null;
+  scheduledAt?: string | null;
+}
+
 const PREDIKAT_STYLES: Record<string, string> = {
   Istimewa: 'text-violet-700 bg-violet-50 ring-violet-200',
   Unggul: 'text-blue-700 bg-blue-50 ring-blue-200',
@@ -52,6 +65,8 @@ const ExamDashboardContent: FC = () => {
   const [online, setOnline] = useState(true);
   const [examInfo, setExamInfo] = useState<ExamInfo | null>(null);
   const [lastExam, setLastExam] = useState<LastExam | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [openAnnouncement, setOpenAnnouncement] = useState<string | null>(null);
   const [waitingCount, setWaitingCount] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,14 +76,23 @@ const ExamDashboardContent: FC = () => {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const res = await fetch('/api/msat/history', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const [histRes, schedRes] = await Promise.all([
+        fetch('/api/msat/history', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch('/api/exam/scheduled', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+      if (histRes.ok) {
+        const data = await histRes.json();
         if (data.history?.length > 0) {
           setLastExam(data.history[0]);
         }
+      }
+      if (schedRes.ok) {
+        const data = await schedRes.json();
+        setAnnouncements((data.exams ?? []) as Announcement[]);
       }
     } catch { /* ignore */ }
   }, [user]);
@@ -470,9 +494,11 @@ const ExamDashboardContent: FC = () => {
             <div>
               <p className="text-sm font-semibold text-[#0E1E47]">{lastExam.examTitle}</p>
               <p className="text-xs text-[#9CA3AF]">
-                {lastExam.completedAt?._seconds
-                  ? new Date(lastExam.completedAt._seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-                  : '-'}
+                {(() => {
+                  const t = lastExam.completedAt as Record<string, unknown> | null;
+                  const secs = (t?._seconds ?? t?.seconds) as number | undefined;
+                  return typeof secs === 'number' ? new Date(secs * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+                })()}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -488,6 +514,85 @@ const ExamDashboardContent: FC = () => {
           </div>
         </div>
       )}
+
+      {/* Pengumuman ujian terjadwal */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wide text-[#7C6BC4]">Pengumuman Ujian</h2>
+          <span className="text-[10px] text-[#9CA3AF]">{Math.min(announcements.length, 5)} pengumuman</span>
+        </div>
+
+        {announcements.length === 0 ? (
+          <EmptyState
+            className="mt-3"
+            compact
+            tone="violet"
+            icon={<Calendar size={28} />}
+            title="Belum ada pengumuman"
+            description="Jadwal dan informasi ujian akan muncul di sini setelah admin mengumumkannya."
+          />
+        ) : (
+          <div className="mt-3 space-y-3">
+            {announcements.slice(0, 5).map((item) => {
+              const totalQ = item.questionsPerStage * item.totalStages;
+              const totalTime = item.durationPerStage * item.totalStages;
+              const isOpen = openAnnouncement === item.id;
+              const created = item.createdAt as Record<string, unknown> | null;
+              const secs = (created?._seconds ?? created?.seconds) as number | undefined;
+              const dateStr = typeof secs === 'number'
+                ? new Date(secs * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                : '-';
+
+              return (
+                <div key={item.id} className="overflow-hidden rounded-lg bg-white ring-1 ring-[#E5E0F5]">
+                  <button
+                    onClick={() => setOpenAnnouncement(isOpen ? null : item.id)}
+                    className="flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-[#F8F7FF]"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F0EDFF]">
+                      <Calendar size={16} className="text-[#6320EE]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="truncate text-sm font-semibold text-[#0E1E47]">{item.title}</h3>
+                        <span className="shrink-0 rounded bg-[#F0EDFF] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#6320EE]">Info</span>
+                      </div>
+                      {item.scheduledAt ? (
+                        <p className={`mt-0.5 text-xs font-medium ${new Date(item.scheduledAt).getTime() > Date.now() ? 'text-[#6320EE]' : 'text-[#9CA3AF]'}`}>
+                          {new Date(item.scheduledAt).getTime() > Date.now() ? 'Mulai ' : 'Dijadwalkan '}
+                          {new Date(item.scheduledAt).toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} WIB
+                        </p>
+                      ) : (
+                        <p className="mt-0.5 text-xs text-[#9CA3AF]">{dateStr}</p>
+                      )}
+                    </div>
+                    <ChevronRight
+                      size={15}
+                      className={`mt-1 shrink-0 text-[#9CA3AF] transition-transform ${isOpen ? 'rotate-90' : ''}`}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="border-t border-[#E5E0F5] px-4 pb-4 pt-3">
+                      {item.description && (
+                        <p className="text-sm leading-6 text-[#5B6475]">{item.description}</p>
+                      )}
+                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[#9CA3AF]">
+                        <span className="flex items-center gap-1"><FileText size={11} /> {totalQ} soal</span>
+                        <span className="flex items-center gap-1"><Clock size={11} /> {totalTime} menit</span>
+                        <span className="flex items-center gap-1"><Award size={11} /> {item.totalStages} stage</span>
+                      </div>
+                      <div className="mt-3 rounded-lg bg-[#F8F7FF] px-3 py-2.5 text-[11px] text-[#5B6475] ring-1 ring-[#E5E0F5]">
+                        Untuk mengikuti ujian ini, minta kode akses ke admin penyelenggara.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

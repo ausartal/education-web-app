@@ -40,8 +40,12 @@ function Skeleton() {
   return <div className="animate-pulse space-y-6"><div className="h-20 rounded-xl bg-slate-200" /><div className="grid gap-3 lg:grid-cols-3">{[1, 2, 3].map(i => <div key={i} className="h-24 rounded-xl bg-slate-200" />)}</div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map(i => <div key={i} className="h-40 rounded-xl bg-slate-200" />)}</div><div className="grid gap-5 xl:grid-cols-2"><div className="h-80 rounded-xl bg-slate-200" /><div className="h-80 rounded-xl bg-slate-200" /></div></div>;
 }
 
-function dateTime(value: string | null) {
-  return value ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value)) : 'Belum tersedia';
+function dateTime(value: unknown) {
+  if (!value) return 'Belum tersedia';
+  const o = value as Record<string, unknown>;
+  const secs = (o._seconds ?? o.seconds) as number | undefined;
+  const d = typeof secs === 'number' ? new Date(secs * 1000) : new Date(value as string);
+  return isNaN(d.getTime()) ? 'Belum tersedia' : new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(d);
 }
 
 const profileTone: Record<string, string> = {
