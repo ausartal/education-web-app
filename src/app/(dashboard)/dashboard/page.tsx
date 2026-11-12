@@ -24,7 +24,6 @@ import {
   GraduationCap,
   Users,
   ClipboardList,
-  Plus,
 } from 'lucide-react';
 
 interface MyClass {
@@ -336,7 +335,7 @@ const DashboardPage: FC = () => {
                 <Link
                   key={cls.id}
                   href={`/kelas/${cls.id}`}
-                  className="group flex flex-1 items-center gap-3 rounded-2xl border border-gray-100 px-4 py-3 transition-all hover:border-primary/30 hover:shadow-sm"
+                  className="group flex items-center gap-3 rounded-2xl border border-gray-100 px-4 py-4 transition-all hover:border-primary/30 hover:shadow-sm"
                 >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                     <GraduationCap size={20} className="text-primary" />
@@ -356,21 +355,15 @@ const DashboardPage: FC = () => {
                   <ChevronRight size={16} className="shrink-0 text-gray-300 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               ))}
-              {pageClasses.length < CLASSES_PER_PAGE && (
-                <Link
-                  href="/kelas"
-                  className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-gray-200 px-4 py-4 text-center transition-colors hover:border-primary/40 hover:bg-primary/5"
-                >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"><Plus size={18} /></span>
-                  <span className="text-sm font-bold text-gray-800">Bergabung ke kelas</span>
-                  <span className="text-xs text-gray-500">
-                    {myClasses.length === 0 ? 'Masukkan kode dari gurumu untuk mulai.' : 'Masukkan kode kelas baru dari gurumu.'}
-                  </span>
-                </Link>
+              {myClasses.length === 0 && (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-2xl bg-gray-50 px-4 py-6 text-center">
+                  <p className="text-sm font-semibold text-gray-700">Belum ada kelas</p>
+                  <p className="mt-1 text-xs text-gray-500">Kelas yang kamu ikuti akan muncul di sini.</p>
+                </div>
               )}
             </div>
             {totalClassPages > 1 && (
-              <div className="mt-4 flex items-center justify-between">
+              <div className="mt-auto flex items-center justify-between pt-4">
                 <button
                   onClick={() => setClassPage(safeClassPage - 1)}
                   disabled={safeClassPage === 0}
