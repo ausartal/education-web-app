@@ -68,7 +68,7 @@ const TaxonomyPage = () => {
   };
 
   return <div className="mx-auto max-w-[1440px] space-y-6 pb-10">
-    <AdminPageHeader eyebrow="Fondasi akademik" title="Struktur Mata Pelajaran" description="Kelola hierarki mata pelajaran, kurikulum, jenjang, unit, topik, subtopik, dan tujuan pembelajaran dari satu tempat." actions={<button type="button" onClick={() => setShowForm(true)} disabled={!childLevel} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"><Plus size={16} /> Tambah {childLevel ? TAXONOMY_LEVEL_LABELS[childLevel] : 'kategori'}</button>} />
+    <AdminPageHeader icon={<FolderTree size={22} />} eyebrow="Fondasi akademik" title="Struktur Mata Pelajaran" description="Kelola hierarki mata pelajaran, kurikulum, jenjang, unit, topik, subtopik, dan tujuan pembelajaran dari satu tempat." actions={<button type="button" onClick={() => setShowForm(true)} disabled={!childLevel} className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"><Plus size={16} /> Tambah {childLevel ? TAXONOMY_LEVEL_LABELS[childLevel] : 'kategori'}</button>} />
 
     <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs leading-5 text-blue-800">Struktur ini digunakan bersama oleh materi, bank soal, kelas, ujian, dan analitik. Mengarsipkan kategori tidak menghapus relasi historis.</div>
 

@@ -6,12 +6,21 @@ export const AdminPageHeader: FC<{
   title: string;
   description: string;
   actions?: ReactNode;
-}> = ({ eyebrow, title, description, actions }) => (
+  /** Optional icon shown in a soft tile before the title. */
+  icon?: ReactNode;
+}> = ({ eyebrow, title, description, actions, icon }) => (
   <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
-    <div className="min-w-0">
-      {eyebrow && <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-indigo-600">{eyebrow}</p>}
-      <h1 className="font-display text-2xl font-extrabold tracking-tight text-slate-900">{title}</h1>
-      <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">{description}</p>
+    <div className="flex min-w-0 items-start gap-4">
+      {icon && (
+        <span className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 sm:flex" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      <div className="min-w-0">
+        {eyebrow && <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.12em] text-indigo-600">{eyebrow}</p>}
+        <h1 className="font-display text-2xl font-extrabold tracking-tight text-slate-900">{title}</h1>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">{description}</p>
+      </div>
     </div>
     {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
   </header>
@@ -42,7 +51,11 @@ export const AdminEmptyState: FC<{
   action?: ReactNode;
 }> = ({ title, description, action }) => (
   <div className="flex min-h-56 flex-col items-center justify-center p-8 text-center">
-    <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400"><Inbox size={20} /></span>
+    <span className="relative mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-500 ring-1 ring-indigo-100">
+      <Inbox size={24} />
+      <span className="absolute -right-1.5 -top-1 h-2.5 w-2.5 rounded-full bg-indigo-300" aria-hidden="true" />
+      <span className="absolute -bottom-1 -left-1.5 h-2 w-2 rounded-full bg-amber-300" aria-hidden="true" />
+    </span>
     <h3 className="text-sm font-bold text-slate-800">{title}</h3>
     <p className="mt-1 max-w-md text-xs leading-5 text-slate-500">{description}</p>
     {action && <div className="mt-4">{action}</div>}

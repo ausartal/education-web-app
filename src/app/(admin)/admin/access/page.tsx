@@ -58,7 +58,7 @@ export default function AccessPage() {
   ];
 
   return <div className="mx-auto max-w-[1200px] space-y-6 pb-10">
-    <AdminPageHeader eyebrow="Keamanan dan akses" title="User & Permission" description="Tinjau administrator yang memiliki akses luas, aktivitas terbarunya, dan batas role yang saat ini diterapkan oleh sistem." actions={<Link href="/admin/users" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Kelola akun <ArrowRight size={15} /></Link>} />
+    <AdminPageHeader icon={<ShieldCheck size={22} />} eyebrow="Keamanan dan akses" title="User & Permission" description="Tinjau administrator yang memiliki akses luas, aktivitas terbarunya, dan batas role yang saat ini diterapkan oleh sistem." actions={<Link href="/admin/users" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Kelola akun <ArrowRight size={15} /></Link>} />
 
     {activeAdmins.length <= 1 && (
       <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4"><div className="flex gap-3"><AlertTriangle size={18} className="mt-0.5 shrink-0 text-rose-700" /><div><p className="text-sm font-bold text-rose-900">{activeAdmins.length === 0 ? 'Tidak ada administrator aktif' : 'Hanya ada satu administrator aktif'}</p><p className="mt-1 text-xs leading-5 text-rose-800">Jika akun ini terkunci atau dinonaktifkan, tidak ada yang bisa mengelola platform. Siapkan minimal satu administrator cadangan.</p></div></div></div>

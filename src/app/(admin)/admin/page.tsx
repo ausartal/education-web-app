@@ -4,6 +4,8 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, ArrowRight, CheckCircle2, ChevronRight, ClipboardCheck, FileText, Flag, Layers3, RefreshCw, ShieldCheck, Sparkles, TrendingUp, Users, XCircle } from 'lucide-react';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
+import { useAuth } from '@/context/AuthContext';
+import { greeting } from '@/lib/gamification';
 
 interface AnalyticsData {
   userRegistrationsByDay: Record<string, number>;
@@ -33,7 +35,7 @@ function TrendBars({ values, color }: { values: Record<string, number>; color: s
 }
 
 function EmptyState({ icon: Icon, title, detail }: { icon: typeof CheckCircle2; title: string; detail: string }) {
-  return <div className="flex min-h-[180px] flex-col items-center justify-center p-6 text-center"><span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-400"><Icon size={20} /></span><p className="text-sm font-bold text-slate-700">{title}</p><p className="mt-1 max-w-xs text-xs leading-5 text-slate-500">{detail}</p></div>;
+  return <div className="flex min-h-[180px] flex-col items-center justify-center p-6 text-center"><span className="relative mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-500 ring-1 ring-indigo-100"><Icon size={22} /><span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-indigo-300" aria-hidden="true" /></span><p className="text-sm font-bold text-slate-700">{title}</p><p className="mt-1 max-w-xs text-xs leading-5 text-slate-500">{detail}</p></div>;
 }
 
 function Skeleton() {
@@ -54,6 +56,8 @@ const profileTone: Record<string, string> = {
 };
 
 const DashboardOverview: FC = () => {
+  const { profile } = useAuth();
+  const firstName = profile?.displayName?.split(' ')[0] || 'Admin';
   const { data, isLoading, mutate } = useAuthSWR<AnalyticsData>('/api/admin/analytics', { dedupingInterval: 60_000 });
   const [refreshing, setRefreshing] = useState(false);
   const refresh = useCallback(async () => { setRefreshing(true); await mutate(); setRefreshing(false); }, [mutate]);
@@ -85,11 +89,11 @@ const DashboardOverview: FC = () => {
 
   return <div className="mx-auto max-w-[1440px] space-y-6 pb-10">
     <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
-      <div><div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500"><span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700">Pusat kendali</span><span>Ringkasan operasional platform</span></div><h1 className="font-display text-2xl font-extrabold tracking-tight text-slate-900">Dashboard Overview</h1><p className="mt-1 text-sm text-slate-500">Lihat kondisi penting, temukan risiko, dan lanjutkan tindakan yang paling berdampak.</p></div>
+      <div><div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500"><span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700">Pusat kendali</span><span>Ringkasan operasional platform</span></div><h1 className="font-display text-2xl font-extrabold tracking-tight text-slate-900">{greeting()}, {firstName}</h1><p className="mt-1 text-sm text-slate-500">Ini kondisi platform hari ini. Temukan risiko dan lanjutkan tindakan yang paling berdampak.</p></div>
       <div className="flex items-center gap-3"><span className="hidden items-center gap-2 text-xs text-slate-500 sm:flex"><span className="h-2 w-2 rounded-full bg-emerald-500" />Data platform tersinkron</span><button onClick={refresh} disabled={refreshing} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:opacity-60"><RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} /> Perbarui</button></div>
     </header>
 
-    <section aria-labelledby="priority-heading"><div className="mb-3 flex items-center justify-between"><div><h2 id="priority-heading" className="text-sm font-bold text-slate-900">Perlu perhatian</h2><p className="text-xs text-slate-500">Antrean tindakan yang tidak sebaiknya terlewat.</p></div><Link href="/admin/logs" className="hidden items-center gap-1 text-xs font-semibold text-indigo-700 hover:text-indigo-800 sm:flex">Lihat audit trail <ChevronRight size={14} /></Link></div>
+    <section aria-labelledby="priority-heading">{state.flagged === 0 && data.lowAccuracyQuestions.length === 0 && state.drafts === 0 && <div className="mb-3 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"><CheckCircle2 size={18} /></span><div><p className="text-sm font-bold text-emerald-900">Semua terkendali</p><p className="text-xs text-emerald-800/80">Tidak ada anomali, soal berisiko, atau materi tertunda yang perlu ditindak.</p></div></div>}<div className="mb-3 flex items-center justify-between"><div><h2 id="priority-heading" className="text-sm font-bold text-slate-900">Perlu perhatian</h2><p className="text-xs text-slate-500">Antrean tindakan yang tidak sebaiknya terlewat.</p></div><Link href="/admin/logs" className="hidden items-center gap-1 text-xs font-semibold text-indigo-700 hover:text-indigo-800 sm:flex">Lihat audit trail <ChevronRight size={14} /></Link></div>
       <div className="grid gap-3 lg:grid-cols-3">{priority.map(item => { const Icon = item.icon; return <Link key={item.href} href={item.href} className={'group flex min-h-[100px] items-center gap-3 rounded-xl border p-4 transition hover:-translate-y-0.5 hover:shadow-sm ' + item.tone}><span className={'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ' + item.badge}><Icon size={18} /></span><span className="min-w-0 flex-1"><span className="block text-sm font-bold">{item.title}</span><span className="mt-0.5 block text-xs leading-5 opacity-80">{item.detail}</span></span><ArrowRight size={16} className="shrink-0 opacity-50 transition group-hover:translate-x-0.5 group-hover:opacity-100" /></Link>; })}</div>
     </section>
 

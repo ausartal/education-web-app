@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { collection, getDocs, query, where } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
-import { ArrowRight, BookOpen, CalendarDays, ClipboardCheck, FileQuestion, GraduationCap, MessageCircle, Plus, TrendingUp, Users } from 'lucide-react';
+import { AlertCircle, ArrowRight, BookOpen, CalendarDays, CheckCircle2, ClipboardCheck, Clock, FileQuestion, GraduationCap, MessageCircle, Plus, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { PageHero } from '@/components/ui/PageHero';
+import { StatTile } from '@/components/ui/StatTile';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface StudentRow {
   uid: string;
@@ -26,6 +29,8 @@ const TeacherDashboard: FC = () => {
   const [questionCount, setQuestionCount] = useState(0);
   const [avgCompletion, setAvgCompletion] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [ungraded, setUngraded] = useState(0);
+  const [dueSoon, setDueSoon] = useState(0);
 
   useEffect(() => {
     if (!profile) return;
@@ -42,12 +47,19 @@ const TeacherDashboard: FC = () => {
 
         // 2. Assignments for those classes — count submissions per student
         const assignmentsByStudent = new Map<string, { assigned: number; submitted: number }>();
+        let ungradedCount = 0;
+        let dueSoonCount = 0;
         if (classIds.length > 0) {
           const asgnSnap = await getDocs(query(collection(db, 'assignments'), where('classId', 'in', classIds)));
           asgnSnap.docs.forEach((d) => {
             const data = d.data();
             const subs = (data.submissions as Record<string, unknown>) ?? {};
             const submittedIds = Object.keys(subs);
+            Object.values(subs).forEach((s) => {
+              if (typeof (s as { grade?: number | null }).grade !== 'number') ungradedCount += 1;
+            });
+            const due = data.dueDate ? new Date(data.dueDate as string).getTime() : NaN;
+            if (data.status !== 'draft' && due > Date.now() && due - Date.now() < 3 * 24 * 60 * 60 * 1000) dueSoonCount += 1;
             // Every student in the class is assigned; those in submissions have submitted
             const classDoc = classesSnap.docs.find((c) => c.id === data.classId);
             const classStudents: string[] = (classDoc?.data().studentIds as string[]) ?? [];
@@ -85,6 +97,8 @@ const TeacherDashboard: FC = () => {
           });
         }
         setStudents(studentRows);
+        setUngraded(ungradedCount);
+        setDueSoon(dueSoonCount);
 
         // 4. Average assignment completion (%)
         const rates = studentRows.filter((s) => s.assigned > 0).map((s) => s.submitted / s.assigned);
@@ -119,10 +133,10 @@ const TeacherDashboard: FC = () => {
   const firstName = profile.displayName?.split(' ')[0] || 'Guru';
   const today = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
   const stats = [
-    { label: 'Total siswa', value: students.length, detail: 'Di kelas Anda', icon: Users, tone: 'bg-sky-50 text-sky-600' },
-    { label: 'Materi belajar', value: materialCount, detail: 'Konten tersedia', icon: BookOpen, tone: 'bg-emerald-50 text-emerald-600' },
-    { label: 'Bank soal', value: questionCount, detail: 'Soal tersimpan', icon: FileQuestion, tone: 'bg-violet-50 text-violet-600' },
-    { label: 'Rata-rata tugas', value: `${avgCompletion}%`, detail: 'Penyelesaian tugas', icon: TrendingUp, tone: 'bg-amber-50 text-amber-600' },
+    { label: 'Total siswa', value: students.length, detail: 'Di kelas Anda', icon: Users, tone: 'blue' as const },
+    { label: 'Materi belajar', value: materialCount, detail: 'Konten tersedia', icon: BookOpen, tone: 'emerald' as const },
+    { label: 'Bank soal', value: questionCount, detail: 'Soal tersimpan', icon: FileQuestion, tone: 'violet' as const },
+    { label: 'Rata-rata tugas', value: `${avgCompletion}%`, detail: 'Penyelesaian tugas', icon: TrendingUp, tone: 'amber' as const },
   ];
   const quickActions = [
     { href: '/teacher/kelas', label: 'Kelola kelas', detail: 'Atur kelas dan anggota', icon: GraduationCap },
@@ -134,24 +148,64 @@ const TeacherDashboard: FC = () => {
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-6xl py-4 sm:py-8">
-        <motion.header {...cardMotion} className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-emerald-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Dashboard Guru</div>
-            <h1 className="font-display text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">Selamat datang, {firstName}</h1>
-            <p className="mt-1.5 text-sm text-gray-500">Pantau pembelajaran dan lanjutkan pekerjaan yang paling penting.</p>
-          </div>
-          <div className="flex items-center gap-2 text-xs font-medium capitalize text-gray-500 sm:pb-1"><CalendarDays size={15} className="text-gray-400" />{today}</div>
-        </motion.header>
+        <PageHero
+          tone="emerald"
+          eyebrow="Dashboard Guru"
+          title={`Selamat datang, ${firstName}`}
+          description="Pantau pembelajaran dan lanjutkan pekerjaan yang paling penting."
+          icon={<GraduationCap size={24} aria-hidden="true" />}
+          chips={[
+            { icon: <CalendarDays size={13} aria-hidden="true" />, label: today },
+            { icon: <Users size={13} aria-hidden="true" />, label: `${students.length} siswa` },
+          ]}
+          actions={
+            <>
+              <Link href="/teacher/kelas" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition-transform hover:-translate-y-0.5">
+                <GraduationCap size={15} aria-hidden="true" /> Kelola kelas
+              </Link>
+              <Link href="/teacher/materials" className="inline-flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30">
+                <Plus size={15} aria-hidden="true" /> Tambah materi
+              </Link>
+            </>
+          }
+          className="mb-7"
+        />
 
-        <motion.section {...cardMotion} transition={{ delay: 0.05 }} aria-label="Ringkasan dashboard" className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {stats.map((stat) => { const Icon = stat.icon; return (
-            <div key={stat.label} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-              <div className={`mb-4 flex h-9 w-9 items-center justify-center rounded-xl ${stat.tone}`}><Icon size={18} /></div>
-              <p className="text-2xl font-extrabold tabular-nums text-gray-900 sm:text-3xl">{stat.value}</p>
-              <p className="mt-1 text-sm font-semibold text-gray-700">{stat.label}</p>
-              <p className="mt-0.5 text-xs text-gray-400">{stat.detail}</p>
+        <section aria-label="Ringkasan dashboard" className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {stats.map((stat, i) => (
+            <StatTile key={stat.label} index={i} tone={stat.tone} icon={<stat.icon size={18} aria-hidden="true" />} value={stat.value} label={stat.label} hint={stat.detail} />
+          ))}
+        </section>
+
+        <motion.section {...cardMotion} transition={{ delay: 0.08 }} aria-label="Perlu perhatian" className="mb-7 grid gap-3 sm:grid-cols-2">
+          {ungraded > 0 || dueSoon > 0 ? (
+            <>
+              <Link href="/teacher/kelas" className="group flex items-center gap-3 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100 transition-all hover:-translate-y-0.5 hover:shadow-sm">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700"><AlertCircle size={18} aria-hidden="true" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-amber-900">{ungraded} jawaban belum dinilai</span>
+                  <span className="block text-xs text-amber-800/80">{ungraded > 0 ? 'Buka kelas, tab Tugas, untuk memberi nilai.' : 'Semua pengumpulan sudah dinilai.'}</span>
+                </span>
+                <ArrowRight size={15} className="text-amber-400 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              </Link>
+              <Link href="/teacher/kelas" className="group flex items-center gap-3 rounded-2xl bg-sky-50 p-4 ring-1 ring-sky-100 transition-all hover:-translate-y-0.5 hover:shadow-sm">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700"><Clock size={18} aria-hidden="true" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-sky-900">{dueSoon} tugas jatuh tempo 3 hari ke depan</span>
+                  <span className="block text-xs text-sky-800/80">Kirim pengingat ke siswa yang belum mengumpulkan.</span>
+                </span>
+                <ArrowRight size={15} className="text-sky-400 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              </Link>
+            </>
+          ) : (
+            <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100 sm:col-span-2">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700"><CheckCircle2 size={18} aria-hidden="true" /></span>
+              <span>
+                <span className="block text-sm font-bold text-emerald-900">Semua beres</span>
+                <span className="block text-xs text-emerald-800/80">Tidak ada penilaian tertunda atau tugas yang segera jatuh tempo.</span>
+              </span>
             </div>
-          ); })}
+          )}
         </motion.section>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)]">
@@ -161,11 +215,15 @@ const TeacherDashboard: FC = () => {
               <Link href="/teacher/students" className="flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800">Lihat semua <ArrowRight size={13} /></Link>
             </div>
             {topStudents.length === 0 ? (
-              <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-400"><Users size={20} /></div>
-                <p className="text-sm font-semibold text-gray-700">Belum ada data siswa</p>
-                <p className="mt-1 max-w-xs text-xs leading-5 text-gray-400">Data performa akan muncul setelah siswa bergabung ke kelas Anda.</p>
-              </div>
+              <EmptyState
+                compact
+                tone="emerald"
+                icon={<Users size={28} />}
+                title="Belum ada data siswa"
+                description="Data performa akan muncul setelah siswa bergabung ke kelasmu. Bagikan kode kelas untuk mengundang mereka."
+                action={<Link href="/teacher/kelas" className="inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700">Lihat kode kelas</Link>}
+                className="m-4 shadow-none ring-0"
+              />
             ) : (
               <div className="divide-y divide-gray-100">{topStudents.map((student, index) => {
                 const rate = student.assigned ? Math.round((student.submitted / student.assigned) * 100) : 0;

@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
+import { PageHero } from '@/components/ui/PageHero';
 
 interface ClassItem {
   id: string;
@@ -101,18 +102,26 @@ const TeacherKelasPage: FC = () => {
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-5xl py-8">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">Kelas Saya</h1>
-            <p className="mt-1 text-sm text-gray-500">Kelola kelas dan kode bergabung siswa</p>
-          </div>
-          <button
-            onClick={() => { setShowCreate(true); setForm({ name: '', subject: '' }); }}
-            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700"
-          >
-            <Plus size={16} /> Buat Kelas
-          </button>
-        </div>
+        <PageHero
+          tone="emerald"
+          eyebrow="Ruang mengajar"
+          title="Kelas Saya"
+          description="Kelola kelas dan bagikan kode bergabung ke siswa."
+          image="/icons/hero-kelas.svg"
+          chips={[
+            { label: `${classes.length - archivedCount} kelas aktif` },
+            { label: `${classes.filter((c) => c.status !== 'archived').reduce((sum, c) => sum + (c.studentCount ?? 0), 0)} siswa` },
+          ]}
+          actions={
+            <button
+              onClick={() => { setShowCreate(true); setForm({ name: '', subject: '' }); }}
+              className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+              <Plus size={16} /> Buat Kelas
+            </button>
+          }
+          className="mb-8"
+        />
 
         {archivedCount > 0 && (
           <div className="mb-5 inline-flex gap-1 rounded-xl bg-gray-100 p-1" role="tablist" aria-label="Status kelas">

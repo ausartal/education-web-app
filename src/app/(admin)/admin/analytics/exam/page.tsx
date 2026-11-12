@@ -33,7 +33,7 @@ export default function ExamAnalyticsPage() {
   ];
 
   return <div className="mx-auto max-w-[1440px] space-y-6 pb-10">
-    <AdminPageHeader eyebrow="AKURAT Exam" title="Analitik AKURAT Exam" description="Pantau kualitas asesmen adaptif, penyelesaian peserta, profil kemampuan, dan risiko sesi dari data MSAT aktual." actions={<Link href="/admin/msat/results" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Buka hasil peserta <ArrowRight size={15} /></Link>} />
+    <AdminPageHeader icon={<Activity size={22} />} eyebrow="AKURAT Exam" title="Analitik AKURAT Exam" description="Pantau kualitas asesmen adaptif, penyelesaian peserta, profil kemampuan, dan risiko sesi dari data MSAT aktual." actions={<Link href="/admin/msat/results" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Buka hasil peserta <ArrowRight size={15} /></Link>} />
 
     <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{cards.map(card => { const Icon = card.icon; return <article key={card.label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><span className={'flex h-9 w-9 items-center justify-center rounded-lg ' + card.tone}><Icon size={17} /></span><p className="mt-4 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">{card.label}</p><p className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">{card.value}</p><p className="mt-1 text-[11px] leading-4 text-slate-500">{card.help}</p></article>; })}</section>
 

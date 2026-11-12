@@ -81,6 +81,7 @@ export default function AnomaliesPage() {
     <div className="mx-auto max-w-[1200px] space-y-6 pb-10">
       <AdminPageHeader
         eyebrow="AKURAT Exam"
+        icon={<ShieldAlert size={22} />}
         title="Anomali Ujian"
         description="Sesi yang ditandai sistem: terlalu cepat, terlambat mengirim, skor turun mendadak, atau dihentikan. Tinjau lalu putuskan."
       />
