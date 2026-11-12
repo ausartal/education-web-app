@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Clock, Zap, Lock, Trophy, CheckCircle, ChevronRight, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 
 const QUIZZES = [

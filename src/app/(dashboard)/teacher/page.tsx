@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { useLivePoll } from '@/hooks/useLivePoll';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { ArrowRight, BookOpen, CalendarDays, ClipboardCheck, FileQuestion, GraduationCap, MessageCircle, Plus, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';

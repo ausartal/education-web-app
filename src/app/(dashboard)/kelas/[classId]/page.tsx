@@ -137,10 +137,11 @@ const StudentClassDetailPage: FC = () => {
 
     let active = true;
     (async () => {
-      const { collection, query, orderBy, limit, onSnapshot } = await import('firebase/firestore');
+      const { collection, query, where, orderBy, limit, onSnapshot } = await import('@/lib/client-firestore');
       const { db } = await import('@/lib/firebase');
       const q = query(
-        collection(db, 'class_chats', classId, 'messages'),
+        collection(db, 'class_messages'),
+        where('classId', '==', classId),
         orderBy('createdAt', 'asc'),
         limit(200),
       );
@@ -164,9 +165,10 @@ const StudentClassDetailPage: FC = () => {
     if (!text || !user || !profile) return;
     setSendingChat(true);
     try {
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { collection, addDoc, serverTimestamp } = await import('@/lib/client-firestore');
       const { db } = await import('@/lib/firebase');
-      await addDoc(collection(db, 'class_chats', classId, 'messages'), {
+      await addDoc(collection(db, 'class_messages'), {
+        classId,
         senderId: user.uid,
         senderName: profile.displayName || 'Siswa',
         senderRole: 'student',
