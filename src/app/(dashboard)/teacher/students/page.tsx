@@ -8,15 +8,12 @@ import { collection, getDocs, query, where } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
-import { Search, Zap, Flame, BookOpen, Trophy } from 'lucide-react';
+import { Search, Users, BookOpen, ClipboardCheck } from 'lucide-react';
 
 interface Student {
   uid: string;
   displayName: string;
   email: string;
-  xp: number;
-  level: number;
-  streak: number;
   totalLessons: number;
   totalQuizzes: number;
 }
@@ -41,9 +38,6 @@ const TeacherStudents: FC = () => {
               uid: d.id,
               displayName: data.displayName ?? 'Siswa',
               email: data.email ?? '',
-              xp: data.stats?.xp || 0,
-              level: data.stats?.level || 1,
-              streak: data.stats?.streak || 0,
               totalLessons: data.stats?.totalLessons || 0,
               totalQuizzes: data.stats?.totalQuizzes || 0,
             };
@@ -73,12 +67,6 @@ const TeacherStudents: FC = () => {
     );
   }
 
-  const totalXP = students.reduce((a, s) => a + s.xp, 0);
-  const avgLevel =
-    students.length > 0
-      ? Math.round(students.reduce((a, s) => a + s.level, 0) / students.length)
-      : 0;
-
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-5xl py-8">
@@ -86,27 +74,26 @@ const TeacherStudents: FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 rounded-3xl bg-gradient-to-br from-primary to-cyan-500 p-6 text-white shadow-sm"
+          className="mb-6 rounded-3xl bg-gradient-to-br from-primary via-blue-600 to-indigo-700 p-6 text-white shadow-sm"
         >
-          <h1 className="font-display text-2xl font-extrabold">Daftar Siswa</h1>
-          <p className="mt-1 text-sm text-white/80">{students.length} siswa terdaftar di platform</p>
+          <h1 className="font-display text-2xl font-extrabold">Daftar siswa</h1>
+          <p className="mt-1 text-sm text-blue-100">{students.length} siswa terdaftar di platform</p>
 
-          {/* Summary Stats */}
           <div className="mt-4 grid grid-cols-3 gap-3">
-            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
-              <Zap size={16} className="mb-1 opacity-80" />
-              <p className="text-lg font-black">{totalXP}</p>
-              <p className="text-[10px] opacity-75">Total XP</p>
+            <div className="rounded-2xl bg-white/15 p-3 backdrop-blur-sm">
+              <Users size={16} className="mb-1 text-blue-100" />
+              <p className="text-lg font-black">{students.length}</p>
+              <p className="text-[11px] text-blue-100">Total siswa</p>
             </div>
-            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
-              <Trophy size={16} className="mb-1 opacity-80" />
-              <p className="text-lg font-black">Lv. {avgLevel}</p>
-              <p className="text-[10px] opacity-75">Avg Level</p>
-            </div>
-            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
-              <BookOpen size={16} className="mb-1 opacity-80" />
+            <div className="rounded-2xl bg-white/15 p-3 backdrop-blur-sm">
+              <BookOpen size={16} className="mb-1 text-blue-100" />
               <p className="text-lg font-black">{students.reduce((a, s) => a + s.totalLessons, 0)}</p>
-              <p className="text-[10px] opacity-75">Pelajaran</p>
+              <p className="text-[11px] text-blue-100">Materi selesai</p>
+            </div>
+            <div className="rounded-2xl bg-white/15 p-3 backdrop-blur-sm">
+              <ClipboardCheck size={16} className="mb-1 text-emerald-300" />
+              <p className="text-lg font-black">{students.reduce((a, s) => a + s.totalQuizzes, 0)}</p>
+              <p className="text-[11px] text-blue-100">Latihan selesai</p>
             </div>
           </div>
         </motion.div>
@@ -144,7 +131,7 @@ const TeacherStudents: FC = () => {
                 href={`/teacher/students/${s.uid}`}
                 className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan-400 text-sm font-bold text-white">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blue-500 text-sm font-bold text-white">
                   {(s.displayName || '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -154,27 +141,14 @@ const TeacherStudents: FC = () => {
                   <p className="text-xs text-gray-500 truncate">{s.email}</p>
                 </div>
                 <div className="hidden items-center gap-5 sm:flex">
-                  <div className="flex items-center gap-1.5">
-                    <Zap size={13} className="text-amber-500" />
-                    <span className="text-sm font-bold text-amber-600">
-                      {s.xp}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Flame size={13} className="text-orange-500" />
-                    <span className="text-sm font-bold text-orange-600">
-                      {s.streak}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5" title="Materi selesai">
                     <BookOpen size={13} className="text-primary" />
-                    <span className="text-sm font-bold text-primary">
-                      {s.totalLessons}
-                    </span>
+                    <span className="text-sm font-bold text-primary">{s.totalLessons}</span>
                   </div>
-                  <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-600">
-                    Lv. {s.level}
-                  </span>
+                  <div className="flex items-center gap-1.5" title="Latihan selesai">
+                    <ClipboardCheck size={13} className="text-emerald-600" />
+                    <span className="text-sm font-bold text-emerald-600">{s.totalQuizzes}</span>
+                  </div>
                 </div>
               </Link>
             </motion.div>
