@@ -44,6 +44,8 @@ const TeacherQuestions: FC = () => {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
+    topic: 'stoikiometri',
+    subtopic: '',
     stem: '',
     difficulty: 'moderate' as Difficulty,
     optionA: '',
@@ -77,8 +79,8 @@ const TeacherQuestions: FC = () => {
 
   const handleCreate = async () => {
     try { await addDoc(collection(db, 'question_bank'), {
-      topic: 'stoikiometri',
-      subtopic: '',
+      topic: form.topic.trim().toLowerCase().replace(/\s+/g, '_') || 'stoikiometri',
+      subtopic: form.subtopic.trim(),
       difficulty: form.difficulty,
       stem: form.stem,
       options: {
@@ -290,6 +292,42 @@ const TeacherQuestions: FC = () => {
                 rows={3}
                 className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-700">
+                  Topik
+                </label>
+                <input
+                  list="guru-topic-options"
+                  placeholder="Pilih atau ketik topik baru"
+                  value={form.topic}
+                  onChange={(e) => setForm({ ...form, topic: e.target.value })}
+                  className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <datalist id="guru-topic-options">
+                  {Array.from(new Set(['stoikiometri', ...questions.map((q) => q.topic).filter(Boolean)])).map((t) => (
+                    <option key={t} value={t} />
+                  ))}
+                </datalist>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-700">
+                  Subtopik <span className="font-normal text-gray-400">(opsional)</span>
+                </label>
+                <input
+                  list="guru-subtopic-options"
+                  placeholder="Pilih atau ketik subtopik"
+                  value={form.subtopic}
+                  onChange={(e) => setForm({ ...form, subtopic: e.target.value })}
+                  className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <datalist id="guru-subtopic-options">
+                  {Array.from(new Set(questions.filter((q) => q.topic === form.topic.trim().toLowerCase().replace(/\s+/g, '_')).map((q) => q.subtopic).filter(Boolean))).map((t) => (
+                    <option key={t} value={t} />
+                  ))}
+                </datalist>
+              </div>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-gray-700">

@@ -385,17 +385,12 @@ const MsatQuestionsPage: FC = () => {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Modul</label>
-                  <select value={form.module} onChange={e => setForm(f => ({ ...f, module: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300">
-                    <option value="stoikiometri">Stoikiometri</option>
-                    <option value="termokimia">Termokimia</option>
-                    <option value="larutan">Larutan</option>
-                    <option value="kesetimbangan">Kesetimbangan</option>
-                    <option value="asam_basa">Asam Basa</option>
-                    <option value="redoks">Redoks</option>
-                    <option value="elektrokimia">Elektrokimia</option>
-                    <option value="kimia_organik">Kimia Organik</option>
-                  </select>
+                  <input list="msat-modul-options" value={form.module} onChange={e => setForm(f => ({ ...f, module: e.target.value }))}
+                    placeholder="Pilih atau ketik modul baru"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300" />
+                  <datalist id="msat-modul-options">
+                    {Array.from(new Set(['stoikiometri', 'termokimia', 'larutan', 'kesetimbangan', 'asam_basa', 'redoks', 'elektrokimia', 'kimia_organik', ...questions.map(q => q.module).filter(Boolean)])).map(m => <option key={m} value={m} />)}
+                  </datalist>
                 </div>
                 <div>
                   <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Topik <span className="font-normal normal-case text-slate-400">(opsional)</span></label>

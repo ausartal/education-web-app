@@ -13,13 +13,8 @@ import { MSATDifficulty } from '@/types/msat';
 
 const QuestionRenderer = dynamic(() => import('@/components/shared/QuestionRenderer'), { ssr: false });
 
-const DOMAINS = [
-  { id: 'tp1', name: 'Hubungan Mol & Pereaksi Pembatas' },
-  { id: 'tp2', name: 'Stoikiometri Gas (Avogadro/STP)' },
-  { id: 'tp3', name: 'Konsep Mol & Jumlah Partikel' },
-  { id: 'tp4', name: 'Rumus Empiris & Rumus Molekul' },
-  { id: 'tp5', name: 'Konsentrasi Larutan' },
-];
+interface TPOption { id: string; code?: string; name: string; }
+const DEFAULT_MODULES = ['stoikiometri'];
 
 const TIER_PATHS: { value: MSATTierPath; label: string; tier: number }[] = [
   { value: 'anchor',       label: 'T1 – Anchor (Sedang)',        tier: 1 },
@@ -43,6 +38,7 @@ interface ExamQ {
   id: string;
   domainId: string;
   domainName: string;
+  module?: string;
   tierPath: MSATTierPath;
   difficulty: MSATDifficulty;
   cognitiveLevel: CognitiveLevel;
@@ -56,7 +52,8 @@ interface ExamQ {
 }
 
 const emptyForm = () => ({
-  domainId: 'tp1',
+  domainId: '',
+  module: 'stoikiometri',
   tierPath: 'anchor' as MSATTierPath,
   cognitiveLevel: 'C2' as CognitiveLevel,
   stem: '',
@@ -80,13 +77,32 @@ const TeacherExamSoalPage: FC = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editVersion, setEditVersion] = useState<number>(1);
 
+  const [tpOptions, setTpOptions] = useState<TPOption[]>([]);
+  const [showNewTP, setShowNewTP] = useState(false);
+  const [newTP, setNewTP] = useState({ code: '', name: '' });
+  const [creatingTP, setCreatingTP] = useState(false);
+
   const getToken = useCallback(async () => user ? await user.getIdToken() : '', [user]);
+
+  const fetchTPs = useCallback(async () => {
+    if (!user) return;
+    try {
+      const t = await getToken();
+      const res = await fetch('/api/tp-definitions', { headers: { Authorization: `Bearer ${t}` } });
+      if (res.ok) {
+        const data = await res.json();
+        setTpOptions((data.tps || []).map((tp: TPOption) => ({ id: tp.id, code: tp.code, name: tp.name })));
+      }
+    } catch { /* list stays empty */ }
+  }, [user, getToken]);
+
+  useEffect(() => { fetchTPs(); }, [fetchTPs]);
 
   const fetchQuestions = useCallback(async () => {
     if (!user) return;
     try {
       const t = await getToken();
-      const params = new URLSearchParams({ module: 'stoikiometri' });
+      const params = new URLSearchParams();
       if (filterDomain) params.set('domainId', filterDomain);
       const res = await fetch(`/api/exam-questions?${params}`, { headers: { Authorization: `Bearer ${t}` } });
       if (!res.ok) throw new Error('Gagal memuat soal');
@@ -102,16 +118,16 @@ const TeacherExamSoalPage: FC = () => {
   useEffect(() => { fetchQuestions(); }, [fetchQuestions]);
 
   const handleSave = async () => {
-    if (!form.stem || !form.optionA || !form.optionB || !form.optionC || !form.optionD) return;
+    if (!form.domainId || !form.stem || !form.optionA || !form.optionB || !form.optionC || !form.optionD) return;
     setSaving(true);
     try {
       const t = await getToken();
-      const domain = DOMAINS.find(d => d.id === form.domainId);
+      const domain = domains.find(d => d.id === form.domainId);
       const tierInfo = TIER_PATHS.find(tp => tp.value === form.tierPath)!;
       const body = {
         domainId: form.domainId,
         domainName: domain?.name || form.domainId,
-        module: 'stoikiometri',
+        module: form.module.trim().toLowerCase().replace(/\s+/g, '_') || 'stoikiometri',
         tier: tierInfo.tier,
         tierPath: form.tierPath,
         difficulty: TIER_PATH_DIFFICULTY[form.tierPath],
@@ -122,18 +138,14 @@ const TeacherExamSoalPage: FC = () => {
         explanation: form.explanation,
       };
 
-      if (editId) {
-        await fetch(`/api/exam-questions/${editId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-          body: JSON.stringify(body),
-        });
-      } else {
-        await fetch('/api/exam-questions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-          body: JSON.stringify(body),
-        });
+      const res = await fetch(editId ? `/api/exam-questions/${editId}` : '/api/exam-questions', {
+        method: editId ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        setActionError(await readHttpError(res));
+        return;
       }
       setShowForm(false);
       setEditId(null);
@@ -151,6 +163,7 @@ const TeacherExamSoalPage: FC = () => {
     setEditVersion(q.version ?? 1);
     setForm({
       domainId: q.domainId,
+      module: q.module || 'stoikiometri',
       tierPath: q.tierPath,
       cognitiveLevel: q.cognitiveLevel,
       stem: q.stem,
@@ -163,6 +176,32 @@ const TeacherExamSoalPage: FC = () => {
       explanation: q.explanation || '',
     });
     setShowForm(true);
+  };
+
+  const handleCreateTP = async () => {
+    if (!newTP.code.trim() || !newTP.name.trim()) return;
+    setCreatingTP(true);
+    try {
+      const t = await getToken();
+      const res = await fetch('/api/tp-definitions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ code: newTP.code, name: newTP.name }),
+      });
+      if (!res.ok) {
+        setActionError(await readHttpError(res));
+        return;
+      }
+      const data = await res.json();
+      await fetchTPs();
+      setForm(f => ({ ...f, domainId: data.tp.id }));
+      setNewTP({ code: '', name: '' });
+      setShowNewTP(false);
+    } catch {
+      setActionError('Koneksi bermasalah, TP belum dibuat.');
+    } finally {
+      setCreatingTP(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -198,8 +237,17 @@ const TeacherExamSoalPage: FC = () => {
     (!filterTier || (filterTier === '1' ? q.tierPath === 'anchor' : filterTier === '2' ? ['mudah','sukar'].includes(q.tierPath) : ['sangat_mudah','sedang_a','sedang_b','sangat_sukar'].includes(q.tierPath)))
   );
 
+  const domains: TPOption[] = [
+    ...tpOptions,
+    ...questions
+      .filter(q => q.domainId && !tpOptions.some(tp => tp.id === q.domainId))
+      .reduce<TPOption[]>((acc, q) => acc.some(x => x.id === q.domainId) ? acc : [...acc, { id: q.domainId, name: q.domainName || q.domainId }], []),
+  ];
+  const moduleOptions = Array.from(new Set([...DEFAULT_MODULES, ...questions.map(q => q.module).filter((m): m is string => !!m)]));
+  const domainLabel = (d: TPOption) => `${d.code || d.id.toUpperCase()} – ${d.name}`;
+
   // Completeness check per domain
-  const domainCompleteness = DOMAINS.map(d => {
+  const domainCompleteness = domains.map(d => {
     const dqs = questions.filter(q => q.domainId === d.id && q.status === 'active');
     const paths = dqs.map(q => q.tierPath);
     const required: MSATTierPath[] = ['anchor','mudah','sukar','sangat_mudah','sedang_a','sedang_b','sangat_sukar'];
@@ -232,7 +280,8 @@ const TeacherExamSoalPage: FC = () => {
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {domainCompleteness.map(d => (
             <div key={d.id} className={`rounded-xl p-3 text-center ${d.complete ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{d.id.toUpperCase()}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{d.code || d.id.toUpperCase()}</p>
+              <p className="truncate text-[10px] text-gray-400" title={d.name}>{d.name}</p>
               <p className={`text-xl font-black ${d.complete ? 'text-emerald-600' : 'text-amber-600'}`}>{d.count}/7</p>
               {!d.complete && <p className="mt-0.5 text-[9px] text-amber-600">Kurang: {d.missing.length}</p>}
               {d.complete && <p className="mt-0.5 text-[9px] text-emerald-600">Lengkap ✓</p>}
@@ -246,7 +295,7 @@ const TeacherExamSoalPage: FC = () => {
             <select value={filterDomain} onChange={e => setFilterDomain(e.target.value)}
               className="appearance-none rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm outline-none focus:border-primary/60">
               <option value="">Semua Domain</option>
-              {DOMAINS.map(d => <option key={d.id} value={d.id}>{d.id.toUpperCase()} – {d.name.split('–')[1]?.trim()}</option>)}
+              {domains.map(d => <option key={d.id} value={d.id}>{domainLabel(d)}</option>)}
             </select>
             <ChevronDown size={13} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
@@ -276,7 +325,7 @@ const TeacherExamSoalPage: FC = () => {
                 <div key={q.id} className="rounded-2xl bg-white shadow-sm">
                   <div className="flex items-center gap-4 p-4">
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{q.domainId.toUpperCase()}</span>
+                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{(domains.find(d => d.id === q.domainId)?.code) || q.domainId.toUpperCase()}</span>
                       <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600">{tierInfo?.label || q.tierPath}</span>
                       <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">{q.cognitiveLevel}</span>
                       <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${q.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{q.status === 'active' ? 'Aktif' : 'Nonaktif'}</span>
@@ -342,12 +391,43 @@ const TeacherExamSoalPage: FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="mb-1.5 block text-xs font-semibold text-gray-700">Domain (TP)</label>
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <label className="text-xs font-semibold text-gray-700">Topik (TP)</label>
+                        <button type="button" onClick={() => setShowNewTP(v => !v)} className="text-[11px] font-semibold text-primary hover:underline">
+                          {showNewTP ? 'Batal' : '+ Topik baru'}
+                        </button>
+                      </div>
                       <select value={form.domainId} onChange={e => setForm(f => ({ ...f, domainId: e.target.value }))}
                         className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary/60">
-                        {DOMAINS.map(d => <option key={d.id} value={d.id}>{d.id.toUpperCase()} – {d.name.split('–')[1]?.trim()}</option>)}
+                        <option value="">Pilih topik...</option>
+                        {domains.map(d => <option key={d.id} value={d.id}>{domainLabel(d)}</option>)}
                       </select>
                     </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-gray-700">Modul</label>
+                      <input list="modul-options" value={form.module} onChange={e => setForm(f => ({ ...f, module: e.target.value }))}
+                        placeholder="Pilih atau ketik modul baru"
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary/60" />
+                      <datalist id="modul-options">{moduleOptions.map(m => <option key={m} value={m} />)}</datalist>
+                    </div>
+                    {showNewTP && (
+                      <div className="col-span-2 grid grid-cols-[110px_1fr_auto] items-end gap-2 rounded-xl bg-primary/5 p-3">
+                        <div>
+                          <label className="mb-1 block text-[11px] font-semibold text-gray-600">Kode</label>
+                          <input value={newTP.code} onChange={e => setNewTP(v => ({ ...v, code: e.target.value }))} placeholder="TP6"
+                            className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm outline-none focus:border-primary/60" />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-[11px] font-semibold text-gray-600">Nama topik</label>
+                          <input value={newTP.name} onChange={e => setNewTP(v => ({ ...v, name: e.target.value }))} placeholder="contoh: Hukum Dasar Kimia"
+                            className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm outline-none focus:border-primary/60" />
+                        </div>
+                        <button type="button" onClick={handleCreateTP} disabled={creatingTP || !newTP.code.trim() || !newTP.name.trim()}
+                          className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 hover:bg-primary/90">
+                          {creatingTP ? 'Membuat...' : 'Buat'}
+                        </button>
+                      </div>
+                    )}
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold text-gray-700">Tier Path</label>
                       <select value={form.tierPath} onChange={e => setForm(f => ({ ...f, tierPath: e.target.value as MSATTierPath }))}
