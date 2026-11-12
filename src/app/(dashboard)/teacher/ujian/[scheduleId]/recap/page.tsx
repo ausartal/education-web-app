@@ -206,7 +206,7 @@ const DomainCard: FC<{
         {!editing ? (
           <button
             onClick={() => { setEditing(true); setTimeout(() => textareaRef.current?.focus(), 50); }}
-            className="flex w-full items-center gap-1.5 rounded-xl border border-dashed border-gray-200 px-3 py-2 text-[11px] text-gray-400 transition-colors hover:border-violet-300 hover:text-violet-500"
+            className="flex w-full items-center gap-1.5 rounded-xl border border-dashed border-gray-200 px-3 py-2 text-[11px] text-gray-400 transition-colors hover:border-primary/30 hover:text-primary"
           >
             <StickyNote size={12} />
             {currentNote ? <span className="truncate text-left text-gray-600">{currentNote}</span> : 'Tambahkan catatan guru...'}
@@ -219,12 +219,12 @@ const DomainCard: FC<{
               onChange={e => setDraftNote(e.target.value)}
               placeholder="Catatan untuk kompetensi ini..."
               rows={3}
-              className="w-full resize-none rounded-xl border border-violet-200 bg-violet-50/50 px-3 py-2 text-[11px] text-gray-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 placeholder:text-gray-400"
+              className="w-full resize-none rounded-xl border border-primary/30 bg-primary/5/50 px-3 py-2 text-[11px] text-gray-700 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400"
             />
             <div className="flex gap-2">
               <button
                 onClick={handleSave}
-                className="flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-violet-700"
+                className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-primary/90"
               >
                 <Save size={11} /> {saved ? 'Tersimpan!' : 'Simpan'}
               </button>
@@ -302,7 +302,7 @@ const RecapPage: FC = () => {
 
   if (loading) return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/60 border-t-transparent" />
     </div>
   );
 
@@ -348,14 +348,14 @@ const RecapPage: FC = () => {
         {/* ── Stats ── */}
         <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
-            { label: 'Total Peserta', value: stats.total, icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+            { label: 'Total Peserta', value: stats.total, icon: Users, color: 'text-primary', bg: 'bg-primary/5' },
             { label: 'Siswa Selesai', value: stats.completed, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' },
             { label: 'Total Sesi', value: stats.totalSessions ?? stats.completed, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' },
             {
               label: 'Avg Skor Terbaik',
               value: stats.avgScore !== null ? `${stats.avgScore}` : '—',
               sub: stats.avgScore !== null ? `/${maxScore}` : undefined,
-              icon: Trophy, color: 'text-violet-500', bg: 'bg-violet-50',
+              icon: Trophy, color: 'text-primary', bg: 'bg-primary/5',
             },
           ].map((card, i) => {
             const Icon = card.icon;

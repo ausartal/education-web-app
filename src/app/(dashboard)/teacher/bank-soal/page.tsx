@@ -244,7 +244,7 @@ const BankSoalPage: FC = () => {
         {/* ── Left Sidebar ─────────────────────────────────────────── */}
         <div className="flex w-64 shrink-0 flex-col border-r border-gray-100">
           {/* Sidebar header */}
-          <div className="bg-gradient-to-br from-violet-600 to-indigo-700 px-4 py-4">
+          <div className="bg-gradient-to-br from-primary to-indigo-700 px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
@@ -266,13 +266,13 @@ const BankSoalPage: FC = () => {
           <div className="flex border-b border-gray-100">
             <button
               onClick={() => setTpTab('mine')}
-              className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${tpTab === 'mine' ? 'border-b-2 border-violet-500 text-violet-700' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${tpTab === 'mine' ? 'border-b-2 border-primary/60 text-primary' : 'text-gray-400 hover:text-gray-600'}`}
             >
               Private
             </button>
             <button
               onClick={() => setTpTab('global')}
-              className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${tpTab === 'global' ? 'border-b-2 border-violet-500 text-violet-700' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${tpTab === 'global' ? 'border-b-2 border-primary/60 text-primary' : 'text-gray-400 hover:text-gray-600'}`}
             >
               Public
             </button>
@@ -293,7 +293,7 @@ const BankSoalPage: FC = () => {
                         <p className="text-xs text-gray-400">Belum ada TP pribadi</p>
                         <button
                           onClick={() => { setEditTP(null); setTPForm(emptyTPForm()); setShowTPForm(true); }}
-                          className="mt-2 text-xs font-semibold text-violet-600 hover:underline"
+                          className="mt-2 text-xs font-semibold text-primary hover:underline"
                         >
                           + Buat TP Baru
                         </button>
@@ -358,7 +358,7 @@ const BankSoalPage: FC = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-lg bg-violet-100 px-2.5 py-0.5 text-xs font-bold text-violet-700">
+                      <span className="rounded-lg bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
                         {selectedTP.code}
                       </span>
                       {selectedTP.scope === 'global' ? (
@@ -417,13 +417,13 @@ const BankSoalPage: FC = () => {
               <div className="flex items-center gap-4 border-b border-gray-100 px-6">
                 <button
                   onClick={() => setQView('mine')}
-                  className={`border-b-2 py-3 text-sm font-semibold transition-colors ${qView === 'mine' ? 'border-violet-500 text-violet-700' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                  className={`border-b-2 py-3 text-sm font-semibold transition-colors ${qView === 'mine' ? 'border-primary/60 text-primary' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                 >
                   Soal Saya
                 </button>
                 <button
                   onClick={() => setQView('global')}
-                  className={`border-b-2 py-3 text-sm font-semibold transition-colors ${qView === 'global' ? 'border-violet-500 text-violet-700' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                  className={`border-b-2 py-3 text-sm font-semibold transition-colors ${qView === 'global' ? 'border-primary/60 text-primary' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                 >
                   Soal Public
                 </button>
@@ -434,7 +434,7 @@ const BankSoalPage: FC = () => {
                       value={qSearch}
                       onChange={e => setQSearch(e.target.value)}
                       placeholder="Cari soal..."
-                      className="rounded-xl border border-gray-200 py-1.5 pl-8 pr-3 text-xs outline-none focus:border-violet-300 focus:ring-1 focus:ring-violet-100"
+                      className="rounded-xl border border-gray-200 py-1.5 pl-8 pr-3 text-xs outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/20"
                     />
                   </div>
                   {qView === 'mine' && (
@@ -445,7 +445,7 @@ const BankSoalPage: FC = () => {
                         setFormTab('edit');
                         setShowQForm(true);
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-violet-700 transition-colors"
+                      className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary/90 transition-colors"
                     >
                       <Plus size={13} /> Tambah Soal
                     </button>
@@ -470,7 +470,7 @@ const BankSoalPage: FC = () => {
                     {qView === 'mine' && (
                       <button
                         onClick={() => { setEditQ(null); setForm(emptyForm(selectedTP.id)); setFormTab('edit'); setShowQForm(true); }}
-                        className="text-xs font-semibold text-violet-600 hover:underline"
+                        className="text-xs font-semibold text-primary hover:underline"
                       >
                         + Tambah soal pertama
                       </button>

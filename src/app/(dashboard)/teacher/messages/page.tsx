@@ -48,25 +48,20 @@ const formatDateLabel = (ts: unknown): string => {
 const getInitial = (name: string) => name.trim().charAt(0).toUpperCase();
 
 const AVATAR_COLORS = [
-  'from-violet-400 to-indigo-500',
-  'from-emerald-400 to-teal-500',
-  'from-amber-400 to-orange-500',
-  'from-rose-400 to-pink-500',
-  'from-sky-400 to-blue-500',
-  'from-fuchsia-400 to-purple-500',
-  'from-cyan-400 to-teal-500',
-  'from-lime-400 to-green-500',
+  'from-primary to-blue-500',
+  'from-blue-600 to-indigo-600',
+  'from-sky-500 to-blue-600',
+  'from-emerald-500 to-teal-500',
+  'from-blue-500 to-cyan-500',
+  'from-indigo-500 to-blue-500',
 ];
 
 const BUBBLE_COLORS = [
-  'bg-violet-500',
-  'bg-emerald-500',
-  'bg-sky-500',
-  'bg-amber-500',
-  'bg-rose-500',
-  'bg-indigo-500',
-  'bg-teal-500',
-  'bg-orange-500',
+  'bg-primary',
+  'bg-blue-600',
+  'bg-sky-600',
+  'bg-emerald-600',
+  'bg-indigo-600',
 ];
 
 const hashUid = (uid: string) => uid.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
@@ -182,7 +177,7 @@ const TeacherMessages: FC = () => {
 
   if (loading) return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/60 border-t-transparent" />
     </div>
   );
 
@@ -202,7 +197,7 @@ const TeacherMessages: FC = () => {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Cari siswa..."
-                className="w-full rounded-xl bg-gray-100 py-2.5 pl-9 pr-3 text-sm text-gray-700 outline-none transition-colors focus:bg-gray-50 focus:ring-2 focus:ring-violet-200 placeholder:text-gray-400"
+                className="w-full rounded-xl bg-gray-100 py-2.5 pl-9 pr-3 text-sm text-gray-700 outline-none transition-colors focus:bg-gray-50 focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400"
               />
             </div>
           </div>
@@ -218,13 +213,13 @@ const TeacherMessages: FC = () => {
                 onClick={() => setSelectedUid(contact.uid)}
                 className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
                   selectedUid === contact.uid
-                    ? 'bg-violet-50'
+                    ? 'bg-primary/5'
                     : 'hover:bg-gray-50'
                 }`}
               >
                 <Avatar name={contact.displayName} uid={contact.uid} />
                 <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm font-medium ${selectedUid === contact.uid ? 'text-violet-700' : 'text-gray-800'}`}>
+                  <p className={`truncate text-sm font-medium ${selectedUid === contact.uid ? 'text-primary' : 'text-gray-800'}`}>
                     {contact.displayName}
                   </p>
                   <p className="text-[11px] text-gray-400">Siswa</p>
@@ -357,12 +352,12 @@ const TeacherMessages: FC = () => {
                       onChange={e => setNewMessage(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                       placeholder="Tulis pesan..."
-                      className="flex-1 rounded-full bg-gray-100 px-5 py-3 text-sm text-gray-800 outline-none transition-colors focus:bg-gray-50 focus:ring-2 focus:ring-violet-200 placeholder:text-gray-400"
+                      className="flex-1 rounded-full bg-gray-100 px-5 py-3 text-sm text-gray-800 outline-none transition-colors focus:bg-gray-50 focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400"
                     />
                     <button
                       onClick={handleSend}
                       disabled={!newMessage.trim() || sending}
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white shadow-sm transition-all disabled:opacity-40 hover:enabled:bg-violet-700 hover:enabled:shadow-md active:enabled:scale-95"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-sm transition-all disabled:opacity-40 hover:enabled:bg-primary/90 hover:enabled:shadow-md active:enabled:scale-95"
                     >
                       <Send size={16} className={sending ? 'opacity-50' : ''} />
                     </button>

@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { Plus, Pencil, Trash2, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { readHttpError } from '@/lib/http-error';
+import { PageHeader, headerPrimaryButton, headerSecondaryButton } from '@/components/teacher/PageHeader';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { MSATTierPath, CognitiveLevel, AnswerKey } from '@/types/firestore';
 import { MSATDifficulty } from '@/types/msat';
@@ -206,7 +207,7 @@ const TeacherExamSoalPage: FC = () => {
     return { ...d, count: dqs.length, missing, complete: missing.length === 0 };
   });
 
-  if (loading) return <div className="flex min-h-[60vh] items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" /></div>;
+  if (loading) return <div className="flex min-h-[60vh] items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/60 border-t-transparent" /></div>;
 
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
@@ -217,16 +218,15 @@ const TeacherExamSoalPage: FC = () => {
         </div>
       )}
       <div className="mx-auto max-w-5xl py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">Bank Soal Ujian (MSAT)</h1>
-            <p className="mt-1 text-sm text-gray-500">Setiap domain membutuhkan 7 soal (1 anchor + 2 T2 + 4 T3)</p>
-          </div>
-          <button onClick={() => { setShowForm(true); setEditId(null); setForm(emptyForm()); }}
-            className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700">
-            <Plus size={16} /> Tambah Soal
-          </button>
-        </div>
+        <PageHeader
+          title="Bank soal ujian (MSAT)"
+          subtitle="Setiap domain membutuhkan 7 soal (1 anchor + 2 T2 + 4 T3)"
+          actions={
+            <button onClick={() => { setShowForm(true); setEditId(null); setForm(emptyForm()); }} className={headerPrimaryButton}>
+              <Plus size={16} /> Tambah soal
+            </button>
+          }
+        />
 
         {/* Completeness Status */}
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -244,7 +244,7 @@ const TeacherExamSoalPage: FC = () => {
         <div className="mb-5 flex flex-wrap gap-3">
           <div className="relative">
             <select value={filterDomain} onChange={e => setFilterDomain(e.target.value)}
-              className="appearance-none rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm outline-none focus:border-violet-400">
+              className="appearance-none rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm outline-none focus:border-primary/60">
               <option value="">Semua Domain</option>
               {DOMAINS.map(d => <option key={d.id} value={d.id}>{d.id.toUpperCase()} – {d.name.split('–')[1]?.trim()}</option>)}
             </select>
@@ -252,7 +252,7 @@ const TeacherExamSoalPage: FC = () => {
           </div>
           <div className="relative">
             <select value={filterTier} onChange={e => setFilterTier(e.target.value)}
-              className="appearance-none rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm outline-none focus:border-violet-400">
+              className="appearance-none rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm outline-none focus:border-primary/60">
               <option value="">Semua Tier</option>
               <option value="1">Tier 1 (Anchor)</option>
               <option value="2">Tier 2</option>
@@ -276,7 +276,7 @@ const TeacherExamSoalPage: FC = () => {
                 <div key={q.id} className="rounded-2xl bg-white shadow-sm">
                   <div className="flex items-center gap-4 p-4">
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">{q.domainId.toUpperCase()}</span>
+                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{q.domainId.toUpperCase()}</span>
                       <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600">{tierInfo?.label || q.tierPath}</span>
                       <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">{q.cognitiveLevel}</span>
                       <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${q.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{q.status === 'active' ? 'Aktif' : 'Nonaktif'}</span>
@@ -344,14 +344,14 @@ const TeacherExamSoalPage: FC = () => {
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold text-gray-700">Domain (TP)</label>
                       <select value={form.domainId} onChange={e => setForm(f => ({ ...f, domainId: e.target.value }))}
-                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400">
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary/60">
                         {DOMAINS.map(d => <option key={d.id} value={d.id}>{d.id.toUpperCase()} – {d.name.split('–')[1]?.trim()}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold text-gray-700">Tier Path</label>
                       <select value={form.tierPath} onChange={e => setForm(f => ({ ...f, tierPath: e.target.value as MSATTierPath }))}
-                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400">
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary/60">
                         {TIER_PATHS.map(tp => <option key={tp.value} value={tp.value}>{tp.label}</option>)}
                       </select>
                     </div>
@@ -363,7 +363,7 @@ const TeacherExamSoalPage: FC = () => {
                       <div className="flex gap-2">
                         {COGNITIVE_LEVELS.map(cl => (
                           <button key={cl} onClick={() => setForm(f => ({ ...f, cognitiveLevel: cl }))}
-                            className={`flex-1 rounded-lg py-2 text-xs font-bold transition-colors ${form.cognitiveLevel === cl ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                            className={`flex-1 rounded-lg py-2 text-xs font-bold transition-colors ${form.cognitiveLevel === cl ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                             {cl}
                           </button>
                         ))}
@@ -380,7 +380,7 @@ const TeacherExamSoalPage: FC = () => {
                     <label className="mb-1.5 block text-xs font-semibold text-gray-700">Stem Soal</label>
                     <textarea value={form.stem} onChange={e => setForm(f => ({ ...f, stem: e.target.value }))}
                       rows={3} placeholder="Tulis soal di sini..."
-                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-violet-400 font-mono" />
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary/60 font-mono" />
                   </div>
 
                   <div>
@@ -396,7 +396,7 @@ const TeacherExamSoalPage: FC = () => {
                             value={form[`option${k}` as keyof typeof form] as string}
                             onChange={e => setForm(f => ({ ...f, [`option${k}`]: e.target.value }))}
                             placeholder={k === 'E' ? `Opsi ${k} (opsional)` : `Opsi ${k}`}
-                            className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400"
+                            className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
                           />
                         </div>
                       ))}
@@ -408,7 +408,7 @@ const TeacherExamSoalPage: FC = () => {
                     <label className="mb-1.5 block text-xs font-semibold text-gray-700">Penjelasan (hanya untuk guru)</label>
                     <textarea value={form.explanation} onChange={e => setForm(f => ({ ...f, explanation: e.target.value }))}
                       rows={2} placeholder="Penjelasan singkat jawaban yang benar..."
-                      className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400" />
+                      className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-primary/60" />
                   </div>
                 </div>
 
@@ -416,7 +416,7 @@ const TeacherExamSoalPage: FC = () => {
                   <button onClick={() => { setShowForm(false); setEditId(null); }}
                     className="flex-1 rounded-xl bg-gray-100 py-2.5 text-sm font-semibold text-gray-700">Batal</button>
                   <button onClick={handleSave} disabled={saving || !form.stem || !form.optionA || !form.optionB || !form.optionC || !form.optionD}
-                    className="flex-1 rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-violet-700">
+                    className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-primary/90">
                     {saving ? 'Menyimpan...' : editId ? 'Simpan Perubahan' : 'Tambah Soal'}
                   </button>
                 </div>

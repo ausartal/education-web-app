@@ -197,7 +197,7 @@ const StudentDetail: FC = () => {
                       {exam.theta.toFixed(1)}
                     </span>
                     <div
-                      className="w-full rounded-md bg-gradient-to-t from-violet-500 to-indigo-400"
+                      className="w-full rounded-md bg-gradient-to-t from-primary to-blue-400"
                       style={{ height: `${Math.max(normalized, 8)}px` }}
                     />
                     <span className="text-[9px] text-gray-400">#{i + 1}</span>

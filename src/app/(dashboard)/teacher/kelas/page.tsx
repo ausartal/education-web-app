@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Users, BookOpen, Copy, Check, Pencil, Trash2, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { PageHeader, headerPrimaryButton, headerSecondaryButton } from '@/components/teacher/PageHeader';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 
@@ -96,19 +97,15 @@ const TeacherKelasPage: FC = () => {
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-5xl py-8">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">Kelas Saya</h1>
-            <p className="mt-1 text-sm text-gray-500">Kelola kelas dan kode bergabung siswa</p>
-          </div>
-          <button
-            onClick={() => { setShowCreate(true); setForm({ name: '', subject: '' }); }}
-            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700"
-          >
-            <Plus size={16} /> Buat Kelas
-          </button>
-        </div>
+        <PageHeader
+          title="Kelas saya"
+          subtitle="Kelola kelas dan kode bergabung siswa"
+          actions={
+            <button onClick={() => { setShowCreate(true); setForm({ name: '', subject: '' }); }} className={headerPrimaryButton}>
+              <Plus size={16} /> Buat kelas
+            </button>
+          }
+        />
 
         {/* Classes Grid */}
         {classes.length === 0 ? (
@@ -155,7 +152,7 @@ const TeacherKelasPage: FC = () => {
                   </div>
                   <button
                     onClick={() => copyCode(cls.joinCode)}
-                    className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+                    className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary/90"
                   >
                     {copiedCode === cls.joinCode ? <Check size={12} /> : <Copy size={12} />}
                     {copiedCode === cls.joinCode ? 'Disalin!' : 'Salin'}
@@ -236,7 +233,7 @@ const TeacherKelasPage: FC = () => {
                   <button
                     onClick={editItem ? handleEdit : handleCreate}
                     disabled={saving || !form.name || !form.subject}
-                    className="flex-1 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                    className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
                   >
                     {saving ? 'Menyimpan...' : editItem ? 'Simpan' : 'Buat'}
                   </button>

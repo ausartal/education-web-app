@@ -262,7 +262,7 @@ const TeacherMaterials: FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-sm"
+          className="mb-6 rounded-3xl bg-gradient-to-br from-primary via-blue-600 to-indigo-700 p-6 text-white shadow-sm"
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -332,9 +332,9 @@ const TeacherMaterials: FC = () => {
         {adminMaterials.length > 0 && (
           <div className="mb-8">
             <div className="mb-3 flex items-center gap-2">
-              <ShieldCheck size={15} className="text-violet-600" />
+              <ShieldCheck size={15} className="text-primary" />
               <h2 className="text-sm font-bold text-gray-700">Materi dari Admin</h2>
-              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700">
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                 Read-only untuk guru
               </span>
             </div>
@@ -372,7 +372,7 @@ const TeacherMaterials: FC = () => {
               <p className="text-sm font-medium text-gray-400">Belum ada materi</p>
               <button
                 onClick={openCreate}
-                className="mt-4 rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
+                className="mt-4 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90"
               >
                 Buat Materi Pertama
               </button>
@@ -552,7 +552,7 @@ const TeacherMaterials: FC = () => {
                 <button
                   onClick={handleSave}
                   disabled={saving || !form.title.trim()}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2 text-sm font-semibold text-white shadow-md disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2 text-sm font-semibold text-white shadow-md disabled:opacity-50"
                 >
                   {saving && <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
                   {modal === 'create' ? 'Buat Materi' : 'Simpan Perubahan'}
@@ -587,18 +587,18 @@ const MaterialCard: FC<{
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
       className={`group rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md ${
-        isAdminMaterial ? 'border border-violet-100' : ''
+        isAdminMaterial ? 'border border-primary/30' : ''
       }`}
     >
       <div className="flex items-center gap-4 p-5">
         {/* Icon */}
         <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
           isAdminMaterial
-            ? 'bg-gradient-to-br from-violet-100 to-purple-50'
-            : 'bg-gradient-to-br from-emerald-100 to-teal-50'
+            ? 'bg-gradient-to-br from-primary to-blue-500'
+            : 'bg-gradient-to-br from-primary/10 to-blue-50'
         }`}>
           {isAdminMaterial
-            ? <ShieldCheck size={20} className="text-violet-600" />
+            ? <ShieldCheck size={20} className="text-primary" />
             : <BookOpen size={20} className="text-emerald-600" />}
         </div>
 
@@ -607,7 +607,7 @@ const MaterialCard: FC<{
           <div className="flex items-center gap-2">
             <h3 className="truncate text-sm font-bold text-gray-900">{m.title}</h3>
             {isAdminMaterial && (
-              <span className="shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-600">
+              <span className="shrink-0 rounded-full bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary">
                 Admin
               </span>
             )}
@@ -688,7 +688,7 @@ const MaterialCard: FC<{
                 <div className="space-y-2 px-5 pb-4">
                   {[...m.editLog].reverse().map((entry, i) => (
                     <div key={i} className="flex items-start gap-3 rounded-xl bg-gray-50 px-3 py-2.5">
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-[10px] font-bold text-white">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blue-500 text-[10px] font-bold text-white">
                         {entry.editedByName?.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">

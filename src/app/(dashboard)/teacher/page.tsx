@@ -73,15 +73,25 @@ const TeacherDashboard: FC = () => {
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-6xl py-4 sm:py-8">
-        <motion.header {...cardMotion} className="mb-6 flex flex-col gap-4 border-b border-gray-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="flex items-center gap-2 text-sm font-medium capitalize text-gray-500"><CalendarDays size={15} className="text-primary" />{today}</p>
-            <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight text-gray-900 sm:text-[28px]">Selamat datang, {firstName}</h1>
-            <p className="mt-1.5 text-sm text-gray-500">Pantau pembelajaran siswa dan lanjutkan pekerjaan yang paling penting hari ini.</p>
-          </div>
-          <div className="flex flex-wrap gap-2.5">
-            <Link href="/teacher/materials" className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:border-primary/40 hover:text-primary"><Plus size={16} /> Tambah materi</Link>
-            <Link href="/teacher/ujian" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"><ClipboardCheck size={16} /> Kelola ujian</Link>
+        <motion.header
+          {...cardMotion}
+          className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-blue-600 to-indigo-700 p-6 text-white shadow-lg shadow-blue-200/60 sm:p-8"
+        >
+          <div className="pointer-events-none absolute -right-10 -top-14 h-52 w-52 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -bottom-20 right-24 h-44 w-44 rounded-full bg-white/10" />
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Dashboard guru
+              </span>
+              <h1 className="mt-3 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Selamat datang, {firstName}</h1>
+              <p className="mt-2 text-sm leading-relaxed text-blue-100">Pantau pembelajaran siswa dan lanjutkan pekerjaan yang paling penting hari ini.</p>
+              <div className="mt-4 flex items-center gap-2 text-xs font-medium capitalize text-blue-100"><CalendarDays size={14} />{today}</div>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              <Link href="/teacher/ujian" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-primary shadow-sm transition-transform hover:scale-[1.03]"><ClipboardCheck size={16} /> Kelola ujian</Link>
+              <Link href="/teacher/materials" className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/25"><Plus size={16} /> Tambah materi</Link>
+            </div>
           </div>
         </motion.header>
 

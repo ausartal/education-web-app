@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { PageHeader, headerPrimaryButton, headerSecondaryButton } from '@/components/teacher/PageHeader';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { useToast } from '@/hooks/useToast';
 
@@ -213,7 +214,7 @@ const TeacherUjianPage: FC = () => {
 
   if (schedLoading) return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/60 border-t-transparent" />
     </div>
   );
 
@@ -221,25 +222,20 @@ const TeacherUjianPage: FC = () => {
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-5xl py-8">
 
-        {/* ── Header ── */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">Ujian</h1>
-            <p className="mt-1 text-sm text-gray-500">Buat dan kelola jadwal ujian kelas</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/teacher/ujian/soal"
-              className="flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-100">
-              <HelpCircle size={15} /> Bank Soal
-            </Link>
-            <button
-              onClick={() => { resetForm(); setShowCreate(true); }}
-              className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-violet-700"
-            >
-              <Plus size={16} /> Buat Ujian
-            </button>
-          </div>
-        </div>
+        <PageHeader
+          title="Ujian"
+          subtitle="Buat dan kelola jadwal ujian kelas"
+          actions={
+            <>
+              <Link href="/teacher/ujian/soal" className={headerSecondaryButton}>
+                <HelpCircle size={15} /> Bank soal
+              </Link>
+              <button onClick={() => { resetForm(); setShowCreate(true); }} className={headerPrimaryButton}>
+                <Plus size={16} /> Buat ujian
+              </button>
+            </>
+          }
+        />
 
         {/* ── Schedule list ── */}
         {schedules.length === 0 ? (
@@ -253,7 +249,7 @@ const TeacherUjianPage: FC = () => {
             {schedules.map(sch => {
               const st = STATUS_LABELS[sch.status] || STATUS_LABELS.draft;
               const typeMap = { custom: 'Tulis Sendiri', manual: 'Pilih Manual', tp: 'MSAT Adaptif' };
-              const colorMap = { custom: 'bg-indigo-100 text-indigo-700', manual: 'bg-blue-100 text-blue-700', tp: 'bg-violet-100 text-violet-700' };
+              const colorMap = { custom: 'bg-primary/10 text-primary', manual: 'bg-blue-100 text-blue-700', tp: 'bg-primary/10 text-primary' };
               const typeKey = (sch.examType || 'tp') as keyof typeof typeMap;
               return (
                 <motion.div key={sch.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
@@ -276,9 +272,9 @@ const TeacherUjianPage: FC = () => {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
-                      <div className="rounded-xl bg-violet-50 px-4 py-2 text-center">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-violet-400">Token</p>
-                        <p className="font-mono text-lg font-black tracking-widest text-violet-700">{sch.examToken}</p>
+                      <div className="rounded-xl bg-primary/5 px-4 py-2 text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Token</p>
+                        <p className="font-mono text-lg font-black tracking-widest text-primary">{sch.examToken}</p>
                       </div>
                       <button onClick={() => copyToken(sch.examToken)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100">
                         {copiedToken === sch.examToken ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
@@ -291,13 +287,13 @@ const TeacherUjianPage: FC = () => {
                     <div className="flex items-center gap-1.5 text-xs text-gray-500"><Check size={13} className="text-emerald-500" /> {sch.completedCount} selesai</div>
                     {sch.avgScore !== null && (
                       <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                        <BarChart2 size={13} /> Avg: <span className="font-bold text-violet-600">{sch.avgScore}</span>
+                        <BarChart2 size={13} /> Avg: <span className="font-bold text-primary">{sch.avgScore}</span>
                       </div>
                     )}
                     <div className="ml-auto flex items-center gap-2">
                       <div className="relative">
                         <select value={sch.status} onChange={e => handleStatusChange(sch.id, e.target.value)}
-                          className="appearance-none rounded-lg border border-gray-200 py-1.5 pl-3 pr-7 text-xs font-medium text-gray-700 outline-none focus:border-violet-400">
+                          className="appearance-none rounded-lg border border-gray-200 py-1.5 pl-3 pr-7 text-xs font-medium text-gray-700 outline-none focus:border-primary/60">
                           <option value="active">Aktif</option>
                           <option value="draft">Draft</option>
                           <option value="closed">Tutup</option>
@@ -313,7 +309,7 @@ const TeacherUjianPage: FC = () => {
                       </button>
                       <button onClick={() => { setDeleteError(''); setDeleteConfirm(sch.id); }} className="rounded-lg p-1.5 text-gray-400 hover:bg-rose-50 hover:text-rose-500"><Trash2 size={14} /></button>
                       <Link href={`/teacher/ujian/${sch.id}/recap`}
-                        className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700">
+                        className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90">
                         Rekap <ArrowRight size={12} />
                       </Link>
                     </div>
@@ -344,7 +340,7 @@ const TeacherUjianPage: FC = () => {
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold text-gray-700">Kelas</label>
                       <select value={form.classId} onChange={e => setForm(f => ({ ...f, classId: e.target.value }))}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400">
+                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-primary/60">
                         <option value="">Pilih kelas...</option>
                         {classes.map(c => <option key={c.id} value={c.id}>{c.name} – {c.subject}</option>)}
                       </select>
@@ -353,7 +349,7 @@ const TeacherUjianPage: FC = () => {
                       <label className="mb-1.5 block text-xs font-semibold text-gray-700">Judul Ujian</label>
                       <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                         placeholder="contoh: Ujian Stoikiometri Bab 3"
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400" />
+                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-primary/60" />
                     </div>
                   </div>
 
@@ -362,9 +358,9 @@ const TeacherUjianPage: FC = () => {
                     <label className="mb-2 block text-xs font-semibold text-gray-700">Jenis Soal</label>
                     <div className="grid grid-cols-3 gap-2">
                       {[
-                        { key: 'tp' as const, icon: BookOpen, label: 'MSAT Adaptif', sub: 'Dari bank soal, urutan adaptif', sel: 'border-violet-500 bg-violet-50 text-violet-800', icon_sel: 'text-violet-600', unsel: 'border-gray-200 hover:border-violet-200 text-gray-600' },
+                        { key: 'tp' as const, icon: BookOpen, label: 'MSAT Adaptif', sub: 'Dari bank soal, urutan adaptif', sel: 'border-primary/60 bg-primary/5 text-primary', icon_sel: 'text-primary', unsel: 'border-gray-200 hover:border-primary/30 text-gray-600' },
                         { key: 'manual' as const, icon: ListChecks, label: 'Pilih Soal Manual', sub: 'Pilih soal spesifik dari bank', sel: 'border-blue-500 bg-blue-50 text-blue-800', icon_sel: 'text-blue-600', unsel: 'border-gray-200 hover:border-blue-200 text-gray-600' },
-                        { key: 'custom' as const, icon: PenLine, label: 'Tulis Sendiri', sub: 'Buat soal pilihan ganda baru', sel: 'border-indigo-500 bg-indigo-50 text-indigo-800', icon_sel: 'text-indigo-600', unsel: 'border-gray-200 hover:border-indigo-200 text-gray-600' },
+                        { key: 'custom' as const, icon: PenLine, label: 'Tulis Sendiri', sub: 'Buat soal pilihan ganda baru', sel: 'border-primary bg-primary/5 text-primary', icon_sel: 'text-primary', unsel: 'border-gray-200 hover:border-primary text-gray-600' },
                       ].map(opt => {
                         const Icon = opt.icon;
                         const selected = examSource === opt.key;
@@ -385,10 +381,10 @@ const TeacherUjianPage: FC = () => {
                     <div>
                       <label className="mb-2 block text-xs font-semibold text-gray-700">
                         Pilih TP (Tujuan Pembelajaran)
-                        {form.domainIds.length > 0 && <span className="ml-2 font-normal text-violet-600">{form.domainIds.length} dipilih</span>}
+                        {form.domainIds.length > 0 && <span className="ml-2 font-normal text-primary">{form.domainIds.length} dipilih</span>}
                       </label>
                       {tpLoading ? (
-                        <div className="flex justify-center py-6"><div className="h-6 w-6 animate-spin rounded-full border-4 border-violet-400 border-t-transparent" /></div>
+                        <div className="flex justify-center py-6"><div className="h-6 w-6 animate-spin rounded-full border-4 border-primary/60 border-t-transparent" /></div>
                       ) : tps.length === 0 ? (
                         <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
                           <AlertCircle size={14} />
@@ -400,13 +396,13 @@ const TeacherUjianPage: FC = () => {
                             const sel = form.domainIds.includes(tp.id);
                             return (
                               <button key={tp.id} type="button" onClick={() => toggleDomain(tp.id)}
-                                className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all ${sel ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:bg-gray-50'} ${!tp.isComplete ? 'opacity-60' : ''}`}>
-                                <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${sel ? 'border-violet-500 bg-violet-500' : 'border-gray-300'}`}>
+                                className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all ${sel ? 'border-primary/30 bg-primary/5' : 'border-gray-200 hover:bg-gray-50'} ${!tp.isComplete ? 'opacity-60' : ''}`}>
+                                <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${sel ? 'border-primary/60 bg-primary' : 'border-gray-300'}`}>
                                   {sel && <Check size={11} className="text-white" />}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-bold text-violet-700">{tp.code}</span>
+                                    <span className="text-xs font-bold text-primary">{tp.code}</span>
                                     <span className="truncate text-xs text-gray-700">{tp.name}</span>
                                   </div>
                                   <p className={`mt-0.5 text-[10px] ${tp.isComplete ? 'text-emerald-600' : 'text-amber-500'}`}>
@@ -419,7 +415,7 @@ const TeacherUjianPage: FC = () => {
                         </div>
                       )}
                       <button type="button" onClick={() => setForm(f => ({ ...f, shuffleQuestions: !f.shuffleQuestions }))}
-                        className={`mt-3 flex w-full items-center gap-2 rounded-xl border py-2 px-3 text-xs font-semibold transition-colors ${form.shuffleQuestions ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                        className={`mt-3 flex w-full items-center gap-2 rounded-xl border py-2 px-3 text-xs font-semibold transition-colors ${form.shuffleQuestions ? 'border-primary/30 bg-primary/5 text-primary' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
                         <Shuffle size={13} /> {form.shuffleQuestions ? 'Urutan domain diacak' : 'Urutan domain berurutan'}
                       </button>
                     </div>
@@ -478,7 +474,7 @@ const TeacherUjianPage: FC = () => {
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="mb-1 flex flex-wrap items-center gap-1">
-                                    <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold text-violet-700">{tp?.code ?? q.domainId}</span>
+                                    <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary">{tp?.code ?? q.domainId}</span>
                                     <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-semibold text-gray-600">{TIER_PATH_LABELS[q.tierPath] ?? q.tierPath}</span>
                                     {(q.version ?? 1) > 1 && (
                                       <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">v{q.version}</span>
@@ -506,7 +502,7 @@ const TeacherUjianPage: FC = () => {
                     <div>
                       <div className="mb-2 flex items-center justify-between">
                         <label className="text-xs font-semibold text-gray-700">{customQuestions.length} Soal</label>
-                        <button type="button" onClick={addCQ} className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                        <button type="button" onClick={addCQ} className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary">
                           <PlusCircle size={13} /> Tambah Soal
                         </button>
                       </div>
@@ -514,21 +510,21 @@ const TeacherUjianPage: FC = () => {
                         {customQuestions.map((cq, idx) => (
                           <div key={cq.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                             <div className="mb-3 flex items-center justify-between">
-                              <span className="text-xs font-bold text-indigo-700">Soal {idx + 1}</span>
+                              <span className="text-xs font-bold text-primary">Soal {idx + 1}</span>
                               {customQuestions.length > 1 && (
                                 <button type="button" onClick={() => removeCQ(idx)} className="rounded p-1 text-gray-400 hover:text-rose-500"><Trash2 size={12} /></button>
                               )}
                             </div>
                             <textarea value={cq.stem} onChange={e => updateCQ(idx, { stem: e.target.value })}
                               placeholder="Tulis pertanyaan di sini..." rows={2}
-                              className="mb-3 w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300" />
+                              className="mb-3 w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary" />
                             <div className="mb-3 grid grid-cols-2 gap-2">
                               {(['A', 'B', 'C', 'D'] as const).map(key => (
                                 <div key={key} className="flex items-center gap-1.5">
                                   <span className="w-4 text-xs font-bold text-gray-500">{key}.</span>
                                   <input value={cq.options[key]} onChange={e => updateCQOption(idx, key, e.target.value)}
                                     placeholder={`Opsi ${key}`}
-                                    className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-indigo-300" />
+                                    className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-primary" />
                                 </div>
                               ))}
                             </div>
@@ -561,7 +557,7 @@ const TeacherUjianPage: FC = () => {
                             setForm(f => ({ ...f, durationMinutes: isNaN(n) ? 0 : n }));
                           }}
                           onBlur={() => setForm(f => ({ ...f, durationMinutes: Math.min(180, Math.max(10, f.durationMinutes || 50)) }))}
-                          className="w-full rounded-xl border border-gray-200 py-2.5 pl-8 pr-4 text-sm outline-none focus:border-violet-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                          className="w-full rounded-xl border border-gray-200 py-2.5 pl-8 pr-4 text-sm outline-none focus:border-primary/60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                         />
                       </div>
                       <p className="mt-1 text-[10px] text-gray-400">10–180 menit</p>
@@ -576,8 +572,8 @@ const TeacherUjianPage: FC = () => {
                           { v: 0, label: '∞ tak terbatas' },
                         ].map(opt => (
                           <button key={opt.v} type="button" onClick={() => setForm(f => ({ ...f, maxAttempts: opt.v }))}
-                            className={`flex w-full items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition-colors ${form.maxAttempts === opt.v ? 'border-violet-400 bg-violet-50 font-semibold text-violet-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-                            <div className={`h-3 w-3 shrink-0 rounded-full border-2 transition-colors ${form.maxAttempts === opt.v ? 'border-violet-500 bg-violet-500' : 'border-gray-300'}`} />
+                            className={`flex w-full items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition-colors ${form.maxAttempts === opt.v ? 'border-primary/60 bg-primary/5 font-semibold text-primary' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                            <div className={`h-3 w-3 shrink-0 rounded-full border-2 transition-colors ${form.maxAttempts === opt.v ? 'border-primary/60 bg-primary' : 'border-gray-300'}`} />
                             {opt.label}
                           </button>
                         ))}
@@ -593,7 +589,7 @@ const TeacherUjianPage: FC = () => {
                     Batal
                   </button>
                   <button onClick={handleCreate} disabled={saving || !canCreate}
-                    className="flex-1 rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white disabled:opacity-40 hover:bg-violet-700">
+                    className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white disabled:opacity-40 hover:bg-primary/90">
                     {saving ? 'Membuat...' : 'Buat Ujian'}
                   </button>
                 </div>
@@ -617,7 +613,7 @@ const TeacherUjianPage: FC = () => {
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-gray-700">Judul</label>
                     <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                      className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400" />
+                      className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-primary/60" />
                   </div>
                   {editItem.examType === 'tp' && (
                     <div>
@@ -625,11 +621,11 @@ const TeacherUjianPage: FC = () => {
                       <div className="max-h-48 overflow-y-auto space-y-2">
                         {tps.map(tp => (
                           <button key={tp.id} type="button" onClick={() => toggleDomain(tp.id)}
-                            className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left ${form.domainIds.includes(tp.id) ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                            <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${form.domainIds.includes(tp.id) ? 'border-violet-500 bg-violet-500' : 'border-gray-300'}`}>
+                            className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left ${form.domainIds.includes(tp.id) ? 'border-primary/30 bg-primary/5' : 'border-gray-200 hover:bg-gray-50'}`}>
+                            <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${form.domainIds.includes(tp.id) ? 'border-primary/60 bg-primary' : 'border-gray-300'}`}>
                               {form.domainIds.includes(tp.id) && <Check size={11} className="text-white" />}
                             </div>
-                            <span className="text-sm text-gray-700"><span className="font-bold text-violet-700">{tp.code}</span> {tp.name}</span>
+                            <span className="text-sm text-gray-700"><span className="font-bold text-primary">{tp.code}</span> {tp.name}</span>
                           </button>
                         ))}
                       </div>
@@ -642,12 +638,12 @@ const TeacherUjianPage: FC = () => {
                         value={form.durationMinutes || ''}
                         onChange={e => { const n = parseInt(e.target.value); setForm(f => ({ ...f, durationMinutes: isNaN(n) ? 0 : n })); }}
                         onBlur={() => setForm(f => ({ ...f, durationMinutes: Math.min(180, Math.max(10, f.durationMinutes || 50)) }))}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-primary/60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold text-gray-700">Maks Percobaan</label>
                       <select value={form.maxAttempts} onChange={e => setForm(f => ({ ...f, maxAttempts: parseInt(e.target.value) }))}
-                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400">
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary/60">
                         <option value={1}>1× (sekali saja)</option>
                         <option value={2}>2× percobaan</option>
                         <option value={3}>3× percobaan</option>
@@ -659,7 +655,7 @@ const TeacherUjianPage: FC = () => {
                 <div className="flex gap-3 border-t border-gray-100 px-6 py-4">
                   <button onClick={() => setEditItem(null)} className="flex-1 rounded-xl bg-gray-100 py-2.5 text-sm font-semibold">Batal</button>
                   <button onClick={handleEdit} disabled={saving}
-                    className="flex-1 rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-violet-700">
+                    className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-primary/90">
                     {saving ? 'Menyimpan...' : 'Simpan'}
                   </button>
                 </div>

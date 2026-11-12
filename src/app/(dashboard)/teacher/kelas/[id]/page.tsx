@@ -134,7 +134,7 @@ const TeacherClassDetailPage: FC = () => {
           <button onClick={() => router.back()} className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">
             <ArrowLeft size={16} /> Kembali
           </button>
-          <div className={`rounded-3xl p-6 text-white shadow-sm ${archived ? 'bg-gradient-to-br from-gray-500 to-gray-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
+          <div className={`rounded-3xl p-6 text-white shadow-sm ${archived ? 'bg-gradient-to-br from-gray-500 to-gray-600' : 'bg-gradient-to-br from-primary via-blue-600 to-indigo-700'}`}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="mb-1 flex items-center gap-2 text-xs font-semibold text-emerald-100 uppercase tracking-wider">

@@ -15,6 +15,7 @@ import { db } from '@/lib/firebase';
 import { Question, Difficulty, AnswerKey } from '@/types/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { useLivePoll } from '@/hooks/useLivePoll';
+import { PageHeader, headerPrimaryButton, headerSecondaryButton } from '@/components/teacher/PageHeader';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { useToast } from '@/hooks/useToast';
 import { PlusCircle, Trash2, Upload } from 'lucide-react';
@@ -144,7 +145,7 @@ const TeacherQuestions: FC = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/60 border-t-transparent" />
       </div>
     );
   }
@@ -159,27 +160,15 @@ const TeacherQuestions: FC = () => {
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-5xl py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-end justify-between"
-        >
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">
-              Bank Soal
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              {questions.length} soal tersedia
-            </p>
-          </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
-          >
-            <PlusCircle size={16} /> Tambah Soal
-          </button>
-        </motion.div>
+        <PageHeader
+          title="Bank soal"
+          subtitle={`${questions.length} soal tersedia`}
+          actions={
+            <button onClick={() => setShowCreate(true)} className={headerPrimaryButton}>
+              <PlusCircle size={16} /> Tambah soal
+            </button>
+          }
+        />
 
         {/* Filter Pills */}
         <motion.div
@@ -201,7 +190,7 @@ const TeacherQuestions: FC = () => {
               onClick={() => setFilter(d.key)}
               className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${
                 filter === d.key
-                  ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-sm'
+                  ? 'bg-gradient-to-r from-primary to-blue-500 text-white shadow-sm'
                   : 'bg-white text-gray-600 shadow-sm hover:bg-gray-50'
               }`}
             >
@@ -222,7 +211,7 @@ const TeacherQuestions: FC = () => {
               className="group rounded-2xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-start gap-4">
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-xs font-bold text-violet-600">
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-xs font-bold text-primary">
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -265,7 +254,7 @@ const TeacherQuestions: FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-8 rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center transition-colors hover:border-violet-300"
+          className="mt-8 rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center transition-colors hover:border-primary/30"
         >
           <input
             type="file"
@@ -277,7 +266,7 @@ const TeacherQuestions: FC = () => {
           <Upload size={20} className="mx-auto mb-2 text-gray-400" />
           <label
             htmlFor="bulk-import"
-            className="cursor-pointer text-sm text-gray-500 hover:text-violet-600"
+            className="cursor-pointer text-sm text-gray-500 hover:text-primary"
           >
             Impor Massal — Pilih file JSON untuk mengimpor soal
           </label>
@@ -299,7 +288,7 @@ const TeacherQuestions: FC = () => {
                 value={form.stem}
                 onChange={(e) => setForm({ ...form, stem: e.target.value })}
                 rows={3}
-                className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-200"
+                className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div>
@@ -331,7 +320,7 @@ const TeacherQuestions: FC = () => {
                     onChange={(e) =>
                       setForm({ ...form, [`option${key}`]: e.target.value })
                     }
-                    className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-200"
+                    className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 ))}
               </div>
@@ -368,7 +357,7 @@ const TeacherQuestions: FC = () => {
                   setForm({ ...form, explanation: e.target.value })
                 }
                 rows={2}
-                className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-violet-200"
+                className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div className="flex gap-3 pt-2">
