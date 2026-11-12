@@ -55,6 +55,10 @@ const MateriDetailPage: FC = () => {
     fetch();
   }, [id, profile]);
 
+  useEffect(() => {
+    setCompleted(Boolean(profile?.completedMaterials?.includes(id)));
+  }, [id, profile?.completedMaterials]);
+
   // Navigation
   const currentIdx = allMaterials.findIndex((m) => m.id === id);
   const prevMaterial = currentIdx > 0 ? allMaterials[currentIdx - 1] : null;
@@ -83,12 +87,12 @@ const MateriDetailPage: FC = () => {
   if (!material) {
     return (
       <div className="py-20 text-center">
-        <p className="text-gray-500">Material not found</p>
+        <p className="text-gray-500">Materi tidak ditemukan</p>
         <Link
           href="/materi"
           className="mt-4 text-sm text-primary hover:underline"
         >
-          ← Back to materials
+          ← Kembali ke daftar materi
         </Link>
       </div>
     );
@@ -106,7 +110,7 @@ const MateriDetailPage: FC = () => {
           onClick={() => router.push('/materi')}
           className="flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-900"
         >
-          <ChevronLeft size={16} /> Back
+          <ChevronLeft size={16} /> Kembali
         </button>
 
         {/* Mobile TOC toggle */}
@@ -114,7 +118,7 @@ const MateriDetailPage: FC = () => {
           onClick={() => setTocOpen(!tocOpen)}
           className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-sm text-gray-600 shadow-sm lg:hidden"
         >
-          <List size={16} /> Contents
+          <List size={16} /> Daftar isi
         </button>
       </motion.div>
 
@@ -124,7 +128,7 @@ const MateriDetailPage: FC = () => {
           <div className="sticky top-20 rounded-3xl bg-white p-5 shadow-sm">
             <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
               <span className="h-4 w-1 rounded-full bg-primary" />
-              Contents
+              Daftar isi
             </h4>
             <nav className="space-y-0.5">
               {headings.map((h) => (
@@ -162,7 +166,7 @@ const MateriDetailPage: FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h4 className="font-bold text-gray-900">Contents</h4>
+                <h4 className="font-bold text-gray-900">Daftar isi</h4>
                 <button onClick={() => setTocOpen(false)}>
                   <X size={20} className="text-gray-400" />
                 </button>
@@ -266,7 +270,7 @@ const MateriDetailPage: FC = () => {
                     <ChevronLeft size={18} className="text-gray-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] text-gray-400">Previous</p>
+                    <p className="text-[10px] text-gray-400">Sebelumnya</p>
                     <p className="truncate text-sm font-semibold text-gray-700">
                       {prevMaterial.title}
                     </p>
@@ -281,7 +285,7 @@ const MateriDetailPage: FC = () => {
                   className="flex flex-1 items-center justify-end gap-3 rounded-2xl bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="min-w-0 text-right">
-                    <p className="text-[10px] text-gray-400">Next</p>
+                    <p className="text-[10px] text-gray-400">Berikutnya</p>
                     <p className="truncate text-sm font-semibold text-gray-700">
                       {nextMaterial.title}
                     </p>

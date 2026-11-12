@@ -99,6 +99,7 @@ const StudentClassDetailPage: FC = () => {
   const [submitText, setSubmitText] = useState('');
   const [submitLinks, setSubmitLinks] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const getToken = useCallback(async () => (user ? user.getIdToken() : ''), [user]);
 
@@ -184,6 +185,7 @@ const StudentClassDetailPage: FC = () => {
   const handleSubmitAssignment = async () => {
     if (!submitAsgn || !user) return;
     setSubmitting(true);
+    setSubmitError('');
     try {
       const t = await getToken();
       const links = submitLinks.filter(l => l.trim());
@@ -205,7 +207,7 @@ const StudentClassDetailPage: FC = () => {
       setSubmitText('');
       setSubmitLinks([]);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Gagal mengumpulkan tugas');
+      setSubmitError(err instanceof Error ? err.message : 'Gagal mengumpulkan tugas');
     } finally {
       setSubmitting(false);
     }
@@ -341,10 +343,9 @@ const StudentClassDetailPage: FC = () => {
                             )}
                           </div>
                           <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-gray-400">
-                            <span>{exam.domainIds?.length || 0} kompetensi</span>
-                            <span>·</span>
+                            {(exam.domainIds?.length ?? 0) > 0 && <><span>{exam.domainIds.length} kompetensi</span><span>·</span></>}
                             <span className="flex items-center gap-1"><Clock size={10} /> {exam.durationMinutes} menit</span>
-                            {exam.startTime && <><span>·</span><span className="flex items-center gap-1"><Calendar size={10} /> {fmtDateTime(exam.startTime)}</span></>}
+                            {(exam.startTime || exam.scheduledAt) && <><span>·</span><span className="flex items-center gap-1"><Calendar size={10} /> {fmtDateTime(exam.startTime || exam.scheduledAt)}</span></>}
                           </div>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-2">
@@ -586,9 +587,10 @@ const StudentClassDetailPage: FC = () => {
                         </div>
                       </div>
                     </div>
+                    {submitError && <p className="mx-5 mb-3 rounded-xl bg-rose-50 px-4 py-2.5 text-sm text-rose-700">{submitError}</p>}
                     <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-5 py-4">
                       <button
-                        onClick={() => { setSubmitAsgn(null); setSubmitLinks([]); }}
+                        onClick={() => { setSubmitAsgn(null); setSubmitLinks([]); setSubmitError(''); }}
                         className="rounded-xl border border-gray-200 px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
                       >
                         Batal
