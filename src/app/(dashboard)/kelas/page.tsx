@@ -4,7 +4,7 @@ import { FC, useState, useCallback } from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHero } from '@/components/ui/PageHero';
 import { motion, AnimatePresence } from 'framer-motion';
-import { School, Plus, ArrowRight, X, AlertCircle, Loader2, Users, BookOpen } from 'lucide-react';
+import { School, Plus, ArrowRight, X, AlertCircle, Loader2, Users, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
@@ -20,14 +20,10 @@ interface ClassItem {
 }
 
 const CLASS_PALETTES = [
-  { gradient: 'from-violet-500 to-indigo-600', light: 'bg-violet-50', badge: 'bg-violet-100 text-violet-700', btn: 'bg-violet-600 hover:bg-violet-700 text-white', icon: 'text-violet-300' },
-  { gradient: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50', badge: 'bg-emerald-100 text-emerald-700', btn: 'bg-emerald-600 hover:bg-emerald-700 text-white', icon: 'text-emerald-300' },
-  { gradient: 'from-sky-500 to-blue-600', light: 'bg-sky-50', badge: 'bg-sky-100 text-sky-700', btn: 'bg-sky-600 hover:bg-sky-700 text-white', icon: 'text-sky-300' },
-  { gradient: 'from-amber-500 to-orange-600', light: 'bg-amber-50', badge: 'bg-amber-100 text-amber-700', btn: 'bg-amber-600 hover:bg-amber-700 text-white', icon: 'text-amber-300' },
-  { gradient: 'from-rose-500 to-pink-600', light: 'bg-rose-50', badge: 'bg-rose-100 text-rose-700', btn: 'bg-rose-600 hover:bg-rose-700 text-white', icon: 'text-rose-300' },
-  { gradient: 'from-fuchsia-500 to-purple-600', light: 'bg-fuchsia-50', badge: 'bg-fuchsia-100 text-fuchsia-700', btn: 'bg-fuchsia-600 hover:bg-fuchsia-700 text-white', icon: 'text-fuchsia-300' },
-  { gradient: 'from-cyan-500 to-teal-600', light: 'bg-cyan-50', badge: 'bg-cyan-100 text-cyan-700', btn: 'bg-cyan-600 hover:bg-cyan-700 text-white', icon: 'text-cyan-300' },
-  { gradient: 'from-lime-500 to-green-600', light: 'bg-lime-50', badge: 'bg-lime-100 text-lime-700', btn: 'bg-lime-600 hover:bg-lime-700 text-white', icon: 'text-lime-300' },
+  { gradient: 'from-blue-600 to-cyan-500', badge: 'bg-blue-50 text-blue-700' },
+  { gradient: 'from-indigo-600 to-violet-500', badge: 'bg-indigo-50 text-indigo-700' },
+  { gradient: 'from-teal-600 to-emerald-500', badge: 'bg-teal-50 text-teal-700' },
+  { gradient: 'from-sky-600 to-indigo-500', badge: 'bg-sky-50 text-sky-700' },
 ];
 
 const getPalette = (id: string) =>
@@ -129,26 +125,21 @@ const KelasPage: FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="group overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow"
+                className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-100"
               >
-                {/* Color banner */}
-                <div className={`relative bg-gradient-to-br ${pal.gradient} px-5 py-5`}>
-                  <BookOpen size={40} className={`absolute right-4 top-3 opacity-20 ${pal.icon}`} />
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-white/70 mb-1">
-                    {cls.subject || 'Kelas'}
-                  </p>
-                  <h3 className="text-lg font-extrabold text-white leading-tight">{cls.name}</h3>
-                  <p className="mt-1 text-xs text-white/80">Guru: {cls.teacherName}</p>
+                <div className={`bg-gradient-to-br ${pal.gradient} px-5 py-5 text-white`}>
+                  <p className="truncate text-sm font-medium text-white/75">{cls.subject || 'Kelas'}</p>
+                  <h3 className="mt-0.5 truncate font-display text-lg font-extrabold leading-tight">{cls.name}</h3>
+                  <p className="mt-1 truncate text-xs text-white/80">Guru: {cls.teacherName}</p>
                 </div>
 
-                {/* Body */}
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-1 flex-col justify-between gap-4 p-4">
+                  <div className="flex min-h-[26px] items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                      <Users size={13} /> <span>{cls.studentCount} siswa</span>
+                      <Users size={13} aria-hidden="true" /> <span>{cls.studentCount} siswa</span>
                     </div>
                     {cls.activeExamCount > 0 && (
-                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${pal.badge}`}>
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${pal.badge}`}>
                         {cls.activeExamCount} ujian aktif
                       </span>
                     )}
@@ -156,9 +147,9 @@ const KelasPage: FC = () => {
 
                   <Link
                     href={`/kelas/${cls.id}`}
-                    className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-colors ${pal.btn}`}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gray-900 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-700"
                   >
-                    Masuk Kelas <ArrowRight size={13} />
+                    Masuk kelas <ArrowRight size={14} aria-hidden="true" />
                   </Link>
                 </div>
               </motion.div>
@@ -195,8 +186,8 @@ const KelasPage: FC = () => {
                 </div>
               )}
               {joinSuccess && (
-                <div className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  ✓ {joinSuccess}
+                <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  <Check size={15} /> {joinSuccess}
                 </div>
               )}
 

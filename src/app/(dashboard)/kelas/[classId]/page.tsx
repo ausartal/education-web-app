@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { stripMarkdown } from '@/lib/strip-markdown';
 import { useToast } from '@/hooks/useToast';
+import { PageHero } from '@/components/ui/PageHero';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ClassInfo {
@@ -208,7 +209,7 @@ const StudentClassDetailPage: FC = () => {
       setSubmitText('');
       setSubmitLinks([]);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Gagal mengumpulkan tugas');
+      addToast('error', err instanceof Error ? err.message : 'Gagal mengumpulkan tugas');
     } finally {
       setSubmitting(false);
     }
@@ -263,28 +264,32 @@ const StudentClassDetailPage: FC = () => {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl py-8">
-      {/* Header */}
-      <div className="mb-6 flex flex-wrap items-start gap-4">
-        <button onClick={() => router.back()} className="mt-1 rounded-xl p-2 hover:bg-gray-100">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h1 className="font-display text-xl font-extrabold text-gray-900">{cls.name}</h1>
-          <p className="text-sm text-gray-500">
-            {cls.subject} · Guru: <span className="font-medium text-gray-700">{cls.teacherName}</span>
-          </p>
-          <p className="mt-0.5 text-xs text-gray-400">{cls.studentCount} siswa terdaftar</p>
-        </div>
-        <button
-          onClick={handleLeave}
-          disabled={leaving}
-          className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
-        >
-          {leaving ? <Loader2 size={13} className="animate-spin" /> : <LogOut size={13} />}
-          Keluar kelas
-        </button>
-      </div>
+    <div className="mx-auto max-w-4xl py-8">
+      <PageHero
+        tone="emerald"
+        eyebrow={cls.subject || 'Kelas'}
+        title={cls.name}
+        description={`Guru: ${cls.teacherName} · ${cls.studentCount} siswa terdaftar`}
+        actions={
+          <>
+            <button
+              onClick={() => router.push('/kelas')}
+              className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/30"
+            >
+              <ArrowLeft size={14} aria-hidden="true" /> Semua kelas
+            </button>
+            <button
+              onClick={handleLeave}
+              disabled={leaving}
+              className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/30 disabled:opacity-50"
+            >
+              {leaving ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} aria-hidden="true" />}
+              Keluar kelas
+            </button>
+          </>
+        }
+        className="mb-6"
+      />
 
       {/* Tabs */}
       <div className="mb-6 flex gap-1 rounded-2xl bg-gray-100 p-1">
@@ -378,7 +383,7 @@ const StudentClassDetailPage: FC = () => {
                           {isActive && !exam.isCompleted && (
                             <>
                               <div className="rounded-xl bg-violet-50 px-4 py-1.5 text-center">
-                                <p className="text-[9px] font-semibold uppercase tracking-wider text-violet-500">Token</p>
+                                <p className="text-[10px] font-semibold text-violet-500">Token</p>
                                 <p className="font-mono text-sm font-black tracking-widest text-violet-700">{exam.examToken}</p>
                               </div>
                               <Link href="/ujian" className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700">

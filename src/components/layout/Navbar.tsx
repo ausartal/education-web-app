@@ -34,7 +34,7 @@ export const Navbar: FC = () => {
   return (
     <header className="sticky top-0 z-50 hidden md:block">
       {/* Accent line */}
-      <div className="h-[3px] bg-gradient-to-r from-violet-400 via-sky-400 to-emerald-400" />
+      <div className="h-[3px] bg-gradient-to-r from-primary to-cyan-400" />
 
       <div className="border-b border-stone-200/60 bg-white/90 backdrop-blur-md shadow-xs">
         <nav className="mx-auto flex h-14 max-w-7xl items-center justify-between px-5">
@@ -63,13 +63,13 @@ export const Navbar: FC = () => {
                       href={link.href}
                       className={`relative px-3.5 py-2 text-[13.5px] font-medium rounded-lg transition-all duration-150 ${
                         isActive
-                          ? 'text-violet-700 font-semibold'
+                          ? 'text-primary font-semibold'
                           : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'
                       }`}
                     >
                       {link.label}
                       {isActive && (
-                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-violet-500" />
+                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-primary" />
                       )}
                     </Link>
                   </li>

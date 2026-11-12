@@ -192,7 +192,7 @@ const MateriDetailPage: FC = () => {
         >
           {/* Title */}
           <div className="mb-8 rounded-3xl bg-gradient-to-r from-indigo-500 to-cyan-400 p-8 text-white lg:p-10">
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/50">
+            <p className="mb-2 text-sm font-medium text-white/60">
               {material.topic}
             </p>
             <h1 className="font-display text-2xl font-extrabold lg:text-3xl">

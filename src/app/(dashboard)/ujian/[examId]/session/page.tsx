@@ -931,7 +931,7 @@ const ExamSessionPage: FC = () => {
                 {/* ── Sidebar ── */}
                 <div className="space-y-3">
                   <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-                    <h3 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">Kompetensi</h3>
+                    <h3 className="mb-3 text-xs font-semibold text-gray-500">Kompetensi</h3>
                     <div className="space-y-1">
                       {domainList.map((id, i) => (
                         <div
