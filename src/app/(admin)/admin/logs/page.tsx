@@ -7,7 +7,7 @@ import { collection, limit as firestoreLimit, onSnapshot, orderBy, query } from 
 import { useAuth } from '@/context/AuthContext';
 import { AuditLog } from '@/types/firestore';
 import { db } from '@/lib/firebase';
-import { AdminPageHeader } from '@/components/admin/AdminUI';
+import { AdminPageHeader, AdminEmptyState } from '@/components/admin/AdminUI';
 
 const actionColors: Record<string, string> = {
   create_user: 'bg-emerald-50 text-emerald-700',
@@ -46,7 +46,7 @@ const SkeletonRow: FC = () => (
   <tr>
     {Array.from({ length: 5 }).map((_, i) => (
       <td key={i} className="px-5 py-3">
-        <div className="h-4 animate-pulse rounded bg-stone-100" />
+        <div className="h-4 animate-pulse rounded bg-slate-100" />
       </td>
     ))}
   </tr>
@@ -161,7 +161,7 @@ const AdminLogs: FC = () => {
         className="mb-6 grid grid-cols-3 gap-4"
       >
         {[
-          { label: 'Total Entri', value: logs.length, color: 'text-stone-900' },
+          { label: 'Total Entri', value: logs.length, color: 'text-slate-900' },
           {
             label: 'Hapus',
             value: logs.filter(l => l.action?.startsWith('delete')).length,
@@ -173,8 +173,8 @@ const AdminLogs: FC = () => {
             color: 'text-emerald-600',
           },
         ].map(stat => (
-          <div key={stat.label} className="border border-stone-100 rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-stone-500">{stat.label}</p>
+          <div key={stat.label} className="border border-slate-100 rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-xs text-slate-500">{stat.label}</p>
             <p className={`mt-1 font-display text-2xl font-extrabold ${stat.color}`}>
               {stat.value}
             </p>
@@ -197,7 +197,7 @@ const AdminLogs: FC = () => {
       >
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-stone-100 text-xs text-stone-500">
+            <tr className="border-b border-slate-100 text-xs text-slate-500">
               <th className="px-5 py-4 font-medium">Waktu</th>
               <th className="px-5 py-4 font-medium">Aktor</th>
               <th className="px-5 py-4 font-medium">Aksi</th>
@@ -205,7 +205,7 @@ const AdminLogs: FC = () => {
               <th className="px-5 py-4 font-medium">Detail</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-stone-50">
+          <tbody className="divide-y divide-slate-50">
             {loading
               ? Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
               : filteredLogs.map((log, i) => (
@@ -215,14 +215,14 @@ const AdminLogs: FC = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.01 }}
                     onClick={() => setSelectedLog(log)}
-                    className="cursor-pointer hover:bg-stone-50"
+                    className="cursor-pointer hover:bg-slate-50"
                   >
-                    <td className="px-5 py-3 text-xs text-stone-500 whitespace-nowrap">
+                    <td className="px-5 py-3 text-xs text-slate-500 whitespace-nowrap">
                       {formatTimestamp(log.timestamp as unknown as { seconds?: number; _seconds?: number })}
                     </td>
                     <td className="px-5 py-3">
                       <div>
-                        <p className="text-xs font-medium text-stone-900">{log.actorId}</p>
+                        <p className="text-xs font-medium text-slate-900">{log.actorId}</p>
                         <span className="inline-block rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
                           {log.actorRole}
                         </span>
@@ -231,7 +231,7 @@ const AdminLogs: FC = () => {
                     <td className="px-5 py-3">
                       <span
                         className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                          actionColors[log.action] ?? 'bg-stone-100 text-stone-600'
+                          actionColors[log.action] ?? 'bg-slate-100 text-slate-600'
                         }`}
                       >
                         {log.action}
@@ -239,12 +239,12 @@ const AdminLogs: FC = () => {
                     </td>
                     <td className="px-5 py-3">
                       <div>
-                        <p className="text-xs font-medium text-stone-700">{log.targetId}</p>
-                        <p className="text-[10px] text-stone-400">{log.targetType}</p>
+                        <p className="text-xs font-medium text-slate-700">{log.targetId}</p>
+                        <p className="text-[10px] text-slate-400">{log.targetType}</p>
                       </div>
                     </td>
                     <td className="px-5 py-3 max-w-xs">
-                      <p className="truncate text-xs text-stone-500">
+                      <p className="truncate text-xs text-slate-500">
                         {JSON.stringify(log.details)}
                       </p>
                     </td>
@@ -254,10 +254,11 @@ const AdminLogs: FC = () => {
         </table>
 
         {!loading && filteredLogs.length === 0 && (
-          <div className="py-16 text-center text-stone-400">
-            <ClipboardList size={32} className="mx-auto mb-3 opacity-40" />
-            <p className="text-sm">{logs.length ? 'Tidak ada log yang cocok dengan filter' : 'Belum ada audit log'}</p>
-          </div>
+          <AdminEmptyState
+            icon={<ClipboardList size={24} />}
+            title={logs.length ? 'Tidak ada log yang cocok' : 'Belum ada audit log'}
+            description={logs.length ? 'Coba ubah filter aksi atau kata kunci.' : 'Tindakan administrator dan sistem akan tercatat di sini.'}
+          />
         )}
       </motion.div>
 
@@ -266,7 +267,7 @@ const AdminLogs: FC = () => {
         <div className="mt-4 text-center">
           <button
             onClick={handleLoadMore}
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
           >
             <ChevronDown size={16} />
             Muat lebih banyak

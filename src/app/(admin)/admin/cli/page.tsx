@@ -335,11 +335,11 @@ const AdminCLI: FC = () => {
 
   const lineColor: Record<OutputLine['type'], string> = {
     input: 'text-green-400',
-    output: 'text-stone-400',
+    output: 'text-slate-400',
     error: 'text-red-400',
     success: 'text-emerald-400',
     info: 'text-cyan-400',
-    table: 'text-stone-400',
+    table: 'text-slate-400',
   };
 
   return (
@@ -353,7 +353,7 @@ const AdminCLI: FC = () => {
         actions={
           <>
             <button onClick={() => setOutput([])}
-              className="flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-xs font-semibold text-stone-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500">
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500">
               <Trash2 size={13} /> Bersihkan
             </button>
           </>
@@ -361,17 +361,17 @@ const AdminCLI: FC = () => {
       />
 
       {/* Terminal window */}
-      <div className="overflow-hidden rounded-2xl border border-stone-800 shadow-lg">
-        <div className="flex items-center gap-3 border-b border-stone-800 bg-stone-900 px-4 py-2.5">
-          <Terminal size={13} className="text-stone-500" />
-          <span className="flex-1 text-center font-mono text-xs text-stone-500">
+      <div className="overflow-hidden rounded-2xl border border-slate-800 shadow-lg">
+        <div className="flex items-center gap-3 border-b border-slate-800 bg-slate-900 px-4 py-2.5">
+          <Terminal size={13} className="text-slate-500" />
+          <span className="flex-1 text-center font-mono text-xs text-slate-500">
             admin@akurat — bash
           </span>
-          <span className="font-mono text-[10px] text-stone-600">{profile?.email ?? ''}</span>
+          <span className="font-mono text-[10px] text-slate-600">{profile?.email ?? ''}</span>
         </div>
 
         <div onClick={() => inputRef.current?.focus()}
-          className="min-h-[500px] max-h-[600px] cursor-text overflow-y-auto bg-stone-950 px-5 py-4 font-mono text-sm">
+          className="min-h-[500px] max-h-[600px] cursor-text overflow-y-auto bg-slate-950 px-5 py-4 font-mono text-sm">
           {output.map((line, i) => {
             if (line.type === 'table' && line.headers && line.rows) {
               const widths = line.headers.map((h, ci) => {
@@ -383,11 +383,11 @@ const AdminCLI: FC = () => {
                   <div className="whitespace-pre text-cyan-500 opacity-70">
                     {'  ' + line.headers.map((h, ci) => h.padEnd(widths[ci])).join('   ')}
                   </div>
-                  <div className="whitespace-pre text-stone-700">
+                  <div className="whitespace-pre text-slate-700">
                     {'  ' + widths.map(w => '─'.repeat(w)).join('   ')}
                   </div>
                   {line.rows.map((row, ri) => (
-                    <div key={ri} className={`whitespace-pre ${ri % 2 === 0 ? 'text-stone-300' : 'text-stone-400'}`}>
+                    <div key={ri} className={`whitespace-pre ${ri % 2 === 0 ? 'text-slate-300' : 'text-slate-400'}`}>
                       {'  ' + row.map((cell, ci) => (cell ?? '').padEnd(widths[ci])).join('   ')}
                     </div>
                   ))}
@@ -415,23 +415,23 @@ const AdminCLI: FC = () => {
       </div>
 
       {/* Keyboard shortcuts */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-stone-100 bg-stone-50 px-5 py-3">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-300">Pintasan</p>
-        <span className="text-xs text-stone-500">
-          <kbd className="rounded border border-stone-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">Enter</kbd>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-slate-100 bg-slate-50 px-5 py-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Pintasan</p>
+        <span className="text-xs text-slate-500">
+          <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">Enter</kbd>
           {' '}Jalankan
         </span>
-        <span className="text-xs text-stone-500">
-          <kbd className="rounded border border-stone-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">↑</kbd>
-          {' '}<kbd className="rounded border border-stone-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">↓</kbd>
+        <span className="text-xs text-slate-500">
+          <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">↑</kbd>
+          {' '}<kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">↓</kbd>
           {' '}Riwayat
         </span>
-        <span className="text-xs text-stone-500">
-          <kbd className="rounded border border-stone-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">Tab</kbd>
+        <span className="text-xs text-slate-500">
+          <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm">Tab</kbd>
           {' '}Autocomplete
         </span>
-        <span className="text-xs text-stone-500">
-          Ketik <code className="rounded border border-stone-100 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm text-cyan-600">help</code> untuk semua perintah
+        <span className="text-xs text-slate-500">
+          Ketik <code className="rounded border border-slate-100 bg-white px-1.5 py-0.5 font-mono text-[10px] shadow-sm text-cyan-600">help</code> untuk semua perintah
         </span>
       </div>
     </div>

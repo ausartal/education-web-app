@@ -8,7 +8,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
-import { AdminPageHeader } from '@/components/admin/AdminUI';
+import { AdminPageHeader, AdminLoadBanner, AdminEmptyState } from '@/components/admin/AdminUI';
+import { useToast } from '@/hooks/useToast';
+import { NETWORK_ERROR_MESSAGE, readHttpError } from '@/lib/http-error';
 
 interface Certificate {
   id: string;
@@ -54,6 +56,8 @@ const PREDIKAT_STYLES: Record<string, string> = {
 const AdminCertificatesPage: FC = () => {
   const { user } = useAuth();
   const confirmAction = useAdminConfirm();
+  const { addToast } = useToast();
+  const [loadError, setLoadError] = useState('');
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -75,8 +79,11 @@ const AdminCertificatesPage: FC = () => {
       if (res.ok) {
         const data = await res.json();
         setCertificates(data.certificates ?? []);
+        setLoadError('');
+      } else {
+        setLoadError(await readHttpError(res));
       }
-    } catch { /* ignore */ }
+    } catch { setLoadError(NETWORK_ERROR_MESSAGE); }
     setLoading(false);
   }, [user, filter]);
 
@@ -99,8 +106,11 @@ const AdminCertificatesPage: FC = () => {
       if (res.ok) {
         await fetchCertificates();
         if (detailCert?.id === certId) setDetailCert(null);
+        addToast('success', 'Status sertifikat diperbarui');
+      } else {
+        addToast('error', await readHttpError(res));
       }
-    } catch { /* ignore */ }
+    } catch { addToast('error', NETWORK_ERROR_MESSAGE); }
     setActionLoading(null);
   };
 
@@ -166,6 +176,8 @@ const AdminCertificatesPage: FC = () => {
         }
       />
 
+      {loadError && <AdminLoadBanner message={loadError} onRetry={fetchCertificates} />}
+
       {generateResult && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-xs text-emerald-700 border border-emerald-100">
           <CheckCircle2 size={13} /> {generateResult}
@@ -175,15 +187,15 @@ const AdminCertificatesPage: FC = () => {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari nama, email, ujian..."
-            className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-10 pr-3 text-sm text-stone-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20" />
+            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20" />
         </div>
         <div className="flex gap-1.5">
           {['', 'pending_approval', 'approved', 'sent', 'revoked'].map(s => (
             <button key={s} onClick={() => setFilter(s)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filter === s ? 'bg-violet-600 text-white' : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'}`}>
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filter === s ? 'bg-violet-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}>
               {s === '' ? 'Semua' : STATUS_CONFIG[s]?.label ?? s}
             </button>
           ))}
@@ -192,63 +204,62 @@ const AdminCertificatesPage: FC = () => {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Loader2 size={20} className="animate-spin text-stone-400" />
+          <Loader2 size={20} className="animate-spin text-slate-400" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl bg-white py-16 text-center border border-stone-100">
-          <Award size={28} className="mx-auto text-stone-300" />
-          <p className="mt-3 text-sm font-semibold text-stone-400">
-            {search || filter ? 'Tidak ada sertifikat yang sesuai filter' : 'Belum ada sertifikat'}
-          </p>
-        </div>
+        <AdminEmptyState
+          icon={<Award size={24} />}
+          title={search || filter ? 'Tidak ada sertifikat yang sesuai' : 'Belum ada sertifikat'}
+          description={search || filter ? 'Coba ubah filter atau kata kunci pencarian.' : 'Sertifikat dibuat otomatis setelah peserta menyelesaikan ujian, lalu menunggu persetujuanmu.'}
+        />
       ) : (
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-stone-100">
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-100">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-stone-100 bg-stone-50/50">
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Peserta</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Ujian</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400 text-center">Nilai</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">No. Sertifikat</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Status</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Tanggal</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Aksi</th>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Peserta</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Ujian</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400 text-center">Nilai</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">No. Sertifikat</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Tanggal</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-50">
+            <tbody className="divide-y divide-slate-50">
               {filtered.map((cert) => {
                 const status = STATUS_CONFIG[cert.status] ?? STATUS_CONFIG.pending_approval;
                 const StatusIcon = status.icon;
                 const isLoading = actionLoading === cert.id;
-                const predStyle = PREDIKAT_STYLES[cert.predikat] ?? 'text-stone-600 bg-stone-50';
+                const predStyle = PREDIKAT_STYLES[cert.predikat] ?? 'text-slate-600 bg-slate-50';
                 return (
-                  <tr key={cert.id} className="hover:bg-stone-50/80 transition-colors">
+                  <tr key={cert.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-stone-800">{cert.userName}</p>
-                      <p className="text-xs text-stone-400">{cert.userEmail}</p>
+                      <p className="font-semibold text-slate-800">{cert.userName}</p>
+                      <p className="text-xs text-slate-400">{cert.userEmail}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-stone-700">{cert.examTitle}</p>
+                      <p className="font-medium text-slate-700">{cert.examTitle}</p>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className="font-display text-base font-extrabold text-stone-800">{cert.score}</span>
+                      <span className="font-display text-base font-extrabold text-slate-800">{cert.score}</span>
                       <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${predStyle}`}>
                         {cert.predikat}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-mono text-xs text-stone-600">{cert.certificateNo}</span>
+                      <span className="font-mono text-xs text-slate-600">{cert.certificateNo}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.color} ${status.bg}`}>
                         <StatusIcon size={10} /> {status.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-stone-400">{formatDate(cert.issuedAt)}</td>
+                    <td className="px-4 py-3 text-xs text-slate-400">{formatDate(cert.issuedAt)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <button onClick={() => setDetailCert(cert)} title="Detail"
-                          className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600">
+                          className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
                           <Eye size={14} />
                         </button>
                         {cert.status === 'pending_approval' && (
@@ -283,65 +294,65 @@ const AdminCertificatesPage: FC = () => {
       {detailCert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={() => setDetailCert(null)}>
           <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
-              <h3 className="font-display text-lg font-extrabold text-stone-800">Detail Sertifikat</h3>
-              <button onClick={() => setDetailCert(null)} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <h3 className="font-display text-lg font-extrabold text-slate-800">Detail Sertifikat</h3>
+              <button aria-label="Tutup" title="Tutup" onClick={() => setDetailCert(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
                 <X size={18} />
               </button>
             </div>
 
             <div className="px-6 py-5 space-y-4">
-              <div className="rounded-xl bg-stone-50 px-4 py-3 border border-stone-100">
-                <p className="text-xs font-bold uppercase tracking-wide text-stone-400">Peserta</p>
-                <p className="mt-1 text-sm font-bold text-stone-800">{detailCert.userName}</p>
-                <p className="text-xs text-stone-500">{detailCert.userEmail}</p>
+              <div className="rounded-xl bg-slate-50 px-4 py-3 border border-slate-100">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Peserta</p>
+                <p className="mt-1 text-sm font-bold text-slate-800">{detailCert.userName}</p>
+                <p className="text-xs text-slate-500">{detailCert.userEmail}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-stone-50 px-4 py-3 border border-stone-100">
-                  <p className="text-xs font-bold uppercase tracking-wide text-stone-400">Ujian</p>
-                  <p className="mt-1 text-sm font-bold text-stone-800">{detailCert.examTitle}</p>
+                <div className="rounded-xl bg-slate-50 px-4 py-3 border border-slate-100">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Ujian</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">{detailCert.examTitle}</p>
                 </div>
-                <div className="rounded-xl bg-stone-50 px-4 py-3 border border-stone-100">
-                  <p className="text-xs font-bold uppercase tracking-wide text-stone-400">No. Sertifikat</p>
-                  <p className="mt-1 font-mono text-sm font-bold text-stone-800">{detailCert.certificateNo}</p>
+                <div className="rounded-xl bg-slate-50 px-4 py-3 border border-slate-100">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">No. Sertifikat</p>
+                  <p className="mt-1 font-mono text-sm font-bold text-slate-800">{detailCert.certificateNo}</p>
                 </div>
               </div>
 
-              <div className="rounded-xl bg-stone-50 px-4 py-3 border border-stone-100">
-                <p className="text-xs font-bold uppercase tracking-wide text-stone-400">Nilai & Predikat</p>
+              <div className="rounded-xl bg-slate-50 px-4 py-3 border border-slate-100">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Nilai & Predikat</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <span className="font-display text-xl font-extrabold text-stone-800">{detailCert.score}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${PREDIKAT_STYLES[detailCert.predikat] ?? 'text-stone-600 bg-stone-50'}`}>
+                  <span className="font-display text-xl font-extrabold text-slate-800">{detailCert.score}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${PREDIKAT_STYLES[detailCert.predikat] ?? 'text-slate-600 bg-slate-50'}`}>
                     {detailCert.predikat}
                   </span>
                 </div>
               </div>
 
-              <div className="rounded-xl bg-stone-50 px-4 py-3 border border-stone-100">
-                <p className="text-xs font-bold uppercase tracking-wide text-stone-400">Timeline</p>
+              <div className="rounded-xl bg-slate-50 px-4 py-3 border border-slate-100">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Timeline</p>
                 <div className="mt-2 space-y-2 text-xs">
                   <div className="flex items-center gap-2">
-                    <FileText size={12} className="text-stone-400" />
-                    <span className="text-stone-600">Dibuat: {formatDate(detailCert.issuedAt)}</span>
+                    <FileText size={12} className="text-slate-400" />
+                    <span className="text-slate-600">Dibuat: {formatDate(detailCert.issuedAt)}</span>
                   </div>
                   {detailCert.approvedAt && (
                     <div className="flex items-center gap-2">
                       <CheckCircle2 size={12} className="text-blue-500" />
-                      <span className="text-stone-600">Disetujui: {formatDate(detailCert.approvedAt)}</span>
+                      <span className="text-slate-600">Disetujui: {formatDate(detailCert.approvedAt)}</span>
                     </div>
                   )}
                   {detailCert.sentAt && (
                     <div className="flex items-center gap-2">
                       <Send size={12} className="text-emerald-500" />
-                      <span className="text-stone-600">Dikirim: {formatDate(detailCert.sentAt)}</span>
+                      <span className="text-slate-600">Dikirim: {formatDate(detailCert.sentAt)}</span>
                     </div>
                   )}
-                  {detailCert.revokedAt && <div className="flex items-center gap-2"><Ban size={12} className="text-rose-500" /><span className="text-stone-600">Dicabut: {formatDate(detailCert.revokedAt)}</span></div>}
+                  {detailCert.revokedAt && <div className="flex items-center gap-2"><Ban size={12} className="text-rose-500" /><span className="text-slate-600">Dicabut: {formatDate(detailCert.revokedAt)}</span></div>}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 border-t border-stone-100 pt-4">
+              <div className="flex items-center gap-2 border-t border-slate-100 pt-4">
                 {detailCert.status === 'pending_approval' && (
                   <>
                     <button onClick={() => handleAction(detailCert.id, 'approve')} disabled={actionLoading === detailCert.id}
@@ -349,7 +360,7 @@ const AdminCertificatesPage: FC = () => {
                       <CheckCircle2 size={15} /> Setujui
                     </button>
                     <Link href={`/exam/certificates/${detailCert.id}`}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-stone-100 px-4 py-2.5 text-sm font-bold text-stone-600 transition hover:bg-stone-200">
+                      className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-200">
                       <Eye size={15} /> Preview
                     </Link>
                   </>
@@ -361,14 +372,14 @@ const AdminCertificatesPage: FC = () => {
                       <Send size={15} /> Kirim Sertifikat
                     </button>
                     <Link href={`/exam/certificates/${detailCert.id}`}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-stone-100 px-4 py-2.5 text-sm font-bold text-stone-600 transition hover:bg-stone-200">
+                      className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-200">
                       <Eye size={15} /> Preview
                     </Link>
                   </>
                 )}
                 {detailCert.status === 'sent' && (
                   <Link href={`/exam/certificates/${detailCert.id}`}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-stone-100 py-2.5 text-sm font-bold text-stone-600 transition hover:bg-stone-200">
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-100 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-200">
                     <Eye size={15} /> Lihat Sertifikat
                   </Link>
                 )}

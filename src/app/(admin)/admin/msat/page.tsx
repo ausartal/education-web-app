@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { AdminPageHeader } from '@/components/admin/AdminUI';
+import { AdminPageHeader, AdminLoadBanner, AdminEmptyState } from '@/components/admin/AdminUI';
+import { NETWORK_ERROR_MESSAGE, readHttpError } from '@/lib/http-error';
 
 interface MSATStats {
   totalQuestions: number;
@@ -79,6 +80,7 @@ const quickActions = [
 
 const MsatPage: FC = () => {
   const { user } = useAuth();
+  const [loadError, setLoadError] = useState('');
   const [data, setData] = useState<MSATData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -96,8 +98,11 @@ const MsatPage: FC = () => {
       if (res.ok) {
         setData(await res.json());
         setLastUpdated(new Date());
+        setLoadError('');
+      } else {
+        setLoadError(await readHttpError(res));
       }
-    } catch { /* ignore */ }
+    } catch { setLoadError(NETWORK_ERROR_MESSAGE); }
     setLoading(false);
     setRefreshing(false);
   }, [user]);
@@ -131,13 +136,13 @@ const MsatPage: FC = () => {
         actions={
           <>
             <div className="flex items-center gap-2">
-              <button onClick={() => setAutoRefresh(value => !value)} className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${autoRefresh ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-stone-200 bg-white text-stone-500'}`}>
+              <button onClick={() => setAutoRefresh(value => !value)} className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${autoRefresh ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-500'}`}>
                 {autoRefresh ? 'Live · 15 dtk' : 'Live dijeda'}
               </button>
               <button
                 onClick={() => fetchData()}
                 disabled={refreshing}
-                className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-stone-500 shadow-sm border border-stone-200 transition-colors hover:bg-stone-50 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-500 shadow-sm border border-slate-200 transition-colors hover:bg-slate-50 disabled:opacity-50"
               >
                 <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
                 {lastUpdated ? lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Refresh'}
@@ -146,6 +151,8 @@ const MsatPage: FC = () => {
           </>
         }
       />
+
+      {loadError && <AdminLoadBanner message={loadError} onRetry={() => fetchData()} />}
 
       {/* Quick Access — Prominent top section */}
       <div className="grid gap-3 sm:grid-cols-3">
@@ -166,10 +173,10 @@ const MsatPage: FC = () => {
                   <Icon size={20} className="text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-stone-700">{action.label}</p>
-                  <p className="mt-0.5 text-[11px] text-stone-400">{action.desc}</p>
+                  <p className="text-sm font-bold text-slate-700">{action.label}</p>
+                  <p className="mt-0.5 text-[11px] text-slate-400">{action.desc}</p>
                 </div>
-                <ChevronRight size={16} className="shrink-0 text-stone-300 transition-transform group-hover:translate-x-0.5 group-hover:text-stone-400" />
+                <ChevronRight size={16} className="shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-400" />
                 <div className={`absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r ${action.accent} opacity-0 transition-opacity group-hover:opacity-100`} />
               </Link>
             </motion.div>
@@ -192,13 +199,13 @@ const MsatPage: FC = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.04 }}
-              className="rounded-2xl bg-white p-4 ring-1 ring-stone-100"
+              className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"
             >
               <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${s.bg}`}>
                 <Icon size={14} className={s.color} />
               </div>
-              <p className="mt-2.5 font-display text-2xl font-black text-stone-800">{s.value}</p>
-              <p className="text-[11px] font-medium text-stone-400">{s.label}</p>
+              <p className="mt-2.5 font-display text-2xl font-black text-slate-800">{s.value}</p>
+              <p className="text-[11px] font-medium text-slate-400">{s.label}</p>
             </motion.div>
           );
         })}
@@ -206,8 +213,8 @@ const MsatPage: FC = () => {
 
       {/* Distribution + Stage Info */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="rounded-2xl bg-white p-5 ring-1 ring-stone-100">
-          <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-stone-400">Distribusi Kesulitan</h3>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="rounded-2xl bg-white p-5 ring-1 ring-slate-100">
+          <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Distribusi Kesulitan</h3>
           <div className="space-y-2">
             {Object.entries(CATEGORY_LABELS).map(([key, cfg]) => {
               const count = stats?.categoryLabelCount[key] ?? 0;
@@ -216,7 +223,7 @@ const MsatPage: FC = () => {
               return (
                 <div key={key} className="flex items-center gap-3">
                   <span className={`w-24 shrink-0 text-[10px] font-bold ${cfg.color}`}>{cfg.label}</span>
-                  <div className="flex-1 overflow-hidden rounded-full bg-stone-100">
+                  <div className="flex-1 overflow-hidden rounded-full bg-slate-100">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
@@ -225,15 +232,15 @@ const MsatPage: FC = () => {
                       style={{ minWidth: count > 0 ? '6px' : '0' }}
                     />
                   </div>
-                  <span className="w-8 text-right text-[11px] font-semibold text-stone-500">{count}</span>
+                  <span className="w-8 text-right text-[11px] font-semibold text-slate-500">{count}</span>
                 </div>
               );
             })}
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="rounded-2xl bg-white p-5 ring-1 ring-stone-100">
-          <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-stone-400">Domain Kognitif per Stage</h3>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="rounded-2xl bg-white p-5 ring-1 ring-slate-100">
+          <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Domain Kognitif per Stage</h3>
           <div className="space-y-2">
             {Object.entries(DOMAIN_LABELS).map(([key, cfg]) => {
               const count = stats?.domainCount[key] ?? 0;
@@ -242,7 +249,7 @@ const MsatPage: FC = () => {
               return (
                 <div key={key} className="flex items-center gap-3">
                   <span className={`w-20 shrink-0 text-[10px] font-bold ${cfg.color}`}>{cfg.label}</span>
-                  <div className="flex-1 overflow-hidden rounded-full bg-stone-100">
+                  <div className="flex-1 overflow-hidden rounded-full bg-slate-100">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
@@ -251,16 +258,16 @@ const MsatPage: FC = () => {
                       style={{ minWidth: count > 0 ? '6px' : '0' }}
                     />
                   </div>
-                  <span className="w-8 text-right text-[11px] font-semibold text-stone-500">{count}</span>
+                  <span className="w-8 text-right text-[11px] font-semibold text-slate-500">{count}</span>
                 </div>
               );
             })}
           </div>
           <div className="mt-4 flex gap-2">
             {Object.entries(stats?.stageCount ?? {}).sort(([a], [b]) => Number(a) - Number(b)).map(([stage, count]) => (
-              <div key={stage} className="flex-1 rounded-xl bg-stone-50 px-3 py-2 text-center">
-                <p className="text-base font-black text-stone-700">{count}</p>
-                <p className="text-[10px] text-stone-400">Stage {stage}</p>
+              <div key={stage} className="flex-1 rounded-xl bg-slate-50 px-3 py-2 text-center">
+                <p className="text-base font-black text-slate-700">{count}</p>
+                <p className="text-[10px] text-slate-400">Stage {stage}</p>
               </div>
             ))}
           </div>
@@ -268,11 +275,11 @@ const MsatPage: FC = () => {
       </div>
 
       {/* Exams List */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="rounded-2xl bg-white ring-1 ring-stone-100">
-        <div className="flex items-center justify-between border-b border-stone-100 px-5 py-3.5">
-          <h3 className="text-sm font-bold text-stone-700">Daftar Ujian</h3>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="rounded-2xl bg-white ring-1 ring-slate-100">
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+          <h3 className="text-sm font-bold text-slate-700">Daftar Ujian</h3>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-stone-400">{exams.length} ujian</span>
+            <span className="text-[11px] text-slate-400">{exams.length} ujian</span>
             <Link href="/admin/msat/create" className="flex items-center gap-1 rounded-lg bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-600 transition-colors hover:bg-violet-100">
               <Plus size={11} /> Baru
             </Link>
@@ -280,28 +287,27 @@ const MsatPage: FC = () => {
         </div>
 
         {exams.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-14 text-center">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-100">
-              <FileCheck size={20} className="text-stone-400" />
-            </div>
-            <p className="text-sm font-semibold text-stone-500">Belum ada ujian</p>
-            <p className="mt-1 text-xs text-stone-400">Buat ujian MSAT pertama untuk memulai</p>
-          </div>
+          <AdminEmptyState
+            icon={<FileCheck size={24} />}
+            title="Belum ada ujian"
+            description="Buat ujian MSAT pertama, lalu bagikan kodenya ke peserta."
+            action={<Link href="/admin/msat/create" className="inline-flex rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700">Buat ujian</Link>}
+          />
         ) : (
-          <div className="divide-y divide-stone-50">
+          <div className="divide-y divide-slate-50">
             {[...exams].sort((a, b) => (b.sessionSummary?.flagged ?? 0) - (a.sessionSummary?.flagged ?? 0) || (b.sessionSummary?.inProgress ?? 0) - (a.sessionSummary?.inProgress ?? 0)).map((exam) => (
               <Link
                 key={exam.id}
                 href={`/admin/msat/${exam.id}`}
-                className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-stone-50"
+                className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-slate-50"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50">
                   <Brain size={16} className="text-violet-500" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-semibold text-stone-700 group-hover:text-violet-700">{exam.title}</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-[10px] text-stone-400">
-                    <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono font-bold text-stone-500">{exam.code}</span>
+                  <p className="truncate text-[13px] font-semibold text-slate-700 group-hover:text-violet-700">{exam.title}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-[10px] text-slate-400">
+                    <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono font-bold text-slate-500">{exam.code}</span>
                     <span>{exam.module}</span>
                     <span>·</span>
                     <span>{exam.totalStages} stage</span>
@@ -313,11 +319,11 @@ const MsatPage: FC = () => {
                   </p>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  exam.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-100 text-stone-500'
+                  exam.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
                 }`}>
                   {exam.status === 'active' ? 'Aktif' : exam.status}
                 </span>
-                <ChevronRight size={14} className="shrink-0 text-stone-300 transition-transform group-hover:translate-x-0.5" />
+                <ChevronRight size={14} className="shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5" />
               </Link>
             ))}
           </div>

@@ -9,7 +9,9 @@ import { useAuth } from '@/context/AuthContext';
 import { useAdminConfirm } from '@/components/admin/ConfirmProvider';
 import { TaxonomyPicker } from '@/components/admin/TaxonomyPicker';
 import { ContentTaxonomy } from '@/types/taxonomy';
-import { AdminPageHeader } from '@/components/admin/AdminUI';
+import { AdminPageHeader, AdminLoadBanner, AdminEmptyState } from '@/components/admin/AdminUI';
+import { useToast } from '@/hooks/useToast';
+import { NETWORK_ERROR_MESSAGE, readHttpError } from '@/lib/http-error';
 
 interface MSATQuestion {
   id: string;
@@ -96,6 +98,8 @@ const emptyForm: QuestionForm = {
 const MsatQuestionsPage: FC = () => {
   const confirmAction = useAdminConfirm();
   const { user } = useAuth();
+  const { addToast } = useToast();
+  const [loadError, setLoadError] = useState('');
   const [questions, setQuestions] = useState<MSATQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -122,8 +126,11 @@ const MsatQuestionsPage: FC = () => {
       if (res.ok) {
         const data = await res.json();
         setQuestions(data.questions ?? []);
+        setLoadError('');
+      } else {
+        setLoadError(await readHttpError(res));
       }
-    } catch { /* ignore */ }
+    } catch { setLoadError(NETWORK_ERROR_MESSAGE); }
     setLoading(false);
   }, [user]);
 
@@ -200,25 +207,34 @@ const MsatQuestionsPage: FC = () => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
     try {
       const idToken = await user.getIdToken();
-      await fetch(`/api/admin/msat/questions/${id}`, {
+      const res = await fetch(`/api/admin/msat/questions/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ status: newStatus }),
       });
+      if (!res.ok) {
+        addToast('error', await readHttpError(res));
+        return;
+      }
       await fetchQuestions();
-    } catch { /* ignore */ }
+    } catch { addToast('error', NETWORK_ERROR_MESSAGE); }
   };
 
   const handleDelete = async (id: string) => {
     if (!user || !(await confirmAction({ title: 'Hapus soal MSAT?', description: 'Soal akan dihapus permanen dari bank soal MSAT.', confirmLabel: 'Hapus soal', tone: 'danger' }))) return;
     try {
       const idToken = await user.getIdToken();
-      await fetch(`/api/admin/msat/questions/${id}`, {
+      const res = await fetch(`/api/admin/msat/questions/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${idToken}` },
       });
+      if (!res.ok) {
+        addToast('error', await readHttpError(res));
+        return;
+      }
+      addToast('success', 'Soal dihapus');
       await fetchQuestions();
-    } catch { /* ignore */ }
+    } catch { addToast('error', NETWORK_ERROR_MESSAGE); }
   };
 
   const filtered = questions.filter(q => {
@@ -249,22 +265,24 @@ const MsatQuestionsPage: FC = () => {
         }
       />
 
+      {loadError && <AdminLoadBanner message={loadError} onRetry={fetchQuestions} />}
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari soal atau topik..."
-            className="w-full rounded-xl border border-stone-200 bg-white py-2 pl-9 pr-3 text-xs text-stone-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
+            className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs text-slate-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
         </div>
-        <select value={filterDifficulty} onChange={e => setFilterDifficulty(e.target.value)} className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs text-stone-600 outline-none">
+        <select value={filterDifficulty} onChange={e => setFilterDifficulty(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 outline-none">
           <option value="">Semua Kesulitan</option>
           {Object.entries(DIFFICULTY_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
-        <select value={filterDomain} onChange={e => setFilterDomain(e.target.value)} className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs text-stone-600 outline-none">
+        <select value={filterDomain} onChange={e => setFilterDomain(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 outline-none">
           <option value="">Semua Domain</option>
           {Object.entries(DOMAIN_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
-        <select value={filterStage} onChange={e => setFilterStage(e.target.value)} className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs text-stone-600 outline-none">
+        <select value={filterStage} onChange={e => setFilterStage(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 outline-none">
           <option value="">Semua Stage</option>
           <option value="1">Stage 1</option>
           <option value="2">Stage 2</option>
@@ -275,58 +293,61 @@ const MsatQuestionsPage: FC = () => {
       {/* Questions List */}
       <div className="space-y-2">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl bg-white py-12 text-center ring-1 ring-stone-100">
-            <BookOpen size={24} className="mx-auto text-stone-300" />
-            <p className="mt-2 text-sm text-stone-400">Tidak ada soal ditemukan</p>
+          <div className="rounded-2xl bg-white ring-1 ring-slate-100">
+            <AdminEmptyState
+              icon={<BookOpen size={24} />}
+              title="Tidak ada soal ditemukan"
+              description={questions.length === 0 ? 'Tambahkan soal MSAT pertama untuk mulai menyusun ujian.' : 'Coba ubah pencarian atau filter.'}
+            />
           </div>
         ) : (
           filtered.map((q, i) => {
-            const diff = DIFFICULTY_MAP[q.difficulty] ?? { label: q.difficulty, color: 'text-stone-600', bg: 'bg-stone-50 ring-stone-200' };
-            const dom = DOMAIN_MAP[q.cognitiveDomain] ?? { label: q.cognitiveDomain, color: 'text-stone-600', bg: 'bg-stone-50 ring-stone-200' };
+            const diff = DIFFICULTY_MAP[q.difficulty] ?? { label: q.difficulty, color: 'text-slate-600', bg: 'bg-slate-50 ring-slate-200' };
+            const dom = DOMAIN_MAP[q.cognitiveDomain] ?? { label: q.cognitiveDomain, color: 'text-slate-600', bg: 'bg-slate-50 ring-slate-200' };
             const isExpanded = expandedId === q.id;
             return (
-              <div key={q.id} className="rounded-2xl bg-white ring-1 ring-stone-100">
+              <div key={q.id} className="rounded-2xl bg-white ring-1 ring-slate-100">
                 <button onClick={() => setExpandedId(isExpanded ? null : q.id)} className="flex w-full items-start gap-3 px-4 py-3.5 text-left">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-[10px] font-bold text-stone-500">{i + 1}</span>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-500">{i + 1}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[13px] font-medium text-stone-700">{q.stem}</p>
+                    <p className="line-clamp-2 text-[13px] font-medium text-slate-700">{q.stem}</p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                       {q.topic && <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 ring-1 ring-blue-200">{q.topic}</span>}
                       <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1 ${diff.bg} ${diff.color}`}>{diff.label}</span>
                       <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1 ${dom.bg} ${dom.color}`}>{dom.label}</span>
-                      <span className="rounded-md bg-stone-50 px-1.5 py-0.5 text-[10px] font-bold text-stone-500 ring-1 ring-stone-200">Stage {q.stage}</span>
+                      <span className="rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 ring-1 ring-slate-200">Stage {q.stage}</span>
                       {q.status === 'inactive' && <span className="rounded-md bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-500 ring-1 ring-red-200">Nonaktif</span>}
                     </div>
                   </div>
-                  <ChevronDown size={14} className={`mt-1 shrink-0 text-stone-300 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={14} className={`mt-1 shrink-0 text-slate-300 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                 </button>
                 {isExpanded && (
-                  <div className="border-t border-stone-100 px-4 py-3">
+                  <div className="border-t border-slate-100 px-4 py-3">
                     <div className="mb-3 space-y-1.5">
                       {Object.entries(q.options).map(([key, text]) => (
-                        <div key={key} className={`flex items-start gap-2 rounded-lg px-3 py-2 text-xs ${key === q.correctAnswer ? 'bg-emerald-50 ring-1 ring-emerald-200' : 'bg-stone-50'}`}>
-                          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold ${key === q.correctAnswer ? 'bg-emerald-500 text-white' : 'bg-stone-200 text-stone-500'}`}>{key}</span>
-                          <span className={key === q.correctAnswer ? 'font-medium text-emerald-700' : 'text-stone-600'}>{text}</span>
+                        <div key={key} className={`flex items-start gap-2 rounded-lg px-3 py-2 text-xs ${key === q.correctAnswer ? 'bg-emerald-50 ring-1 ring-emerald-200' : 'bg-slate-50'}`}>
+                          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold ${key === q.correctAnswer ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>{key}</span>
+                          <span className={key === q.correctAnswer ? 'font-medium text-emerald-700' : 'text-slate-600'}>{text}</span>
                         </div>
                       ))}
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-[10px] text-stone-400">
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400">
                         <span>Jawaban: <strong className="text-emerald-600">{q.correctAnswer}</strong></span>
                         {q.categoryLabel && <span>· {q.categoryLabel}</span>}
                         {q.cognitiveLevel && <span>· {q.cognitiveLevel}</span>}
                       </div>
                       <div className="flex items-center gap-1">
-                        <button onClick={(e) => { e.stopPropagation(); openEdit(q); }}
-                          className="rounded-lg p-1 text-stone-400 hover:bg-blue-50 hover:text-blue-500">
+                        <button aria-label="Edit" title="Edit" onClick={(e) => { e.stopPropagation(); openEdit(q); }}
+                          className="rounded-lg p-1 text-slate-400 hover:bg-blue-50 hover:text-blue-500">
                           <Edit3 size={12} />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleToggleStatus(q.id, q.status); }}
-                          className="rounded-lg px-2 py-1 text-[10px] font-bold text-stone-500 hover:bg-stone-100">
+                          className="rounded-lg px-2 py-1 text-[10px] font-bold text-slate-500 hover:bg-slate-100">
                           {q.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); handleDelete(q.id); }}
-                          className="rounded-lg p-1 text-stone-400 hover:bg-red-50 hover:text-red-500">
+                        <button aria-label="Hapus" title="Hapus" onClick={(e) => { e.stopPropagation(); handleDelete(q.id); }}
+                          className="rounded-lg p-1 text-slate-400 hover:bg-red-50 hover:text-red-500">
                           <Trash2 size={12} />
                         </button>
                       </div>
@@ -343,9 +364,9 @@ const MsatQuestionsPage: FC = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-8" onClick={() => { setShowModal(false); setEditId(null); }}>
           <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
-              <h3 className="font-display text-lg font-extrabold text-stone-800">{editId ? 'Edit Soal MSAT' : 'Tambah Soal MSAT'}</h3>
-              <button onClick={() => { setShowModal(false); setEditId(null); }} className="rounded-lg p-1 text-stone-400 hover:bg-stone-100"><X size={18} /></button>
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <h3 className="font-display text-lg font-extrabold text-slate-800">{editId ? 'Edit Soal MSAT' : 'Tambah Soal MSAT'}</h3>
+              <button aria-label="Tutup" title="Tutup" onClick={() => { setShowModal(false); setEditId(null); }} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"><X size={18} /></button>
             </div>
 
             <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-4">
@@ -364,9 +385,9 @@ const MsatQuestionsPage: FC = () => {
               <TaxonomyPicker value={form.taxonomy} requiredThrough="topic" onChange={taxonomy => setForm(previous => ({ ...previous, taxonomy, module: taxonomy.topic?.id ?? taxonomy.subject?.id ?? previous.module, topic: taxonomy.topic?.name ?? previous.topic }))} />
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Modul</label>
+                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Modul</label>
                   <select value={form.module} onChange={e => setForm(f => ({ ...f, module: e.target.value }))}
-                    className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300">
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300">
                     <option value="stoikiometri">Stoikiometri</option>
                     <option value="termokimia">Termokimia</option>
                     <option value="larutan">Larutan</option>
@@ -378,47 +399,47 @@ const MsatQuestionsPage: FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Topik <span className="text-red-400">*</span></label>
+                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Topik <span className="text-red-400">*</span></label>
                   <input value={form.topic} onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
-                    placeholder="e.g. Mol dan Mr" className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300" />
+                    placeholder="e.g. Mol dan Mr" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Stage</label>
+                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Stage</label>
                   <select value={form.stage} onChange={e => {
                     const newStage = Number(e.target.value);
                     const firstOpt = STAGE_OPTIONS[newStage][0];
                     setForm(f => ({ ...f, stage: newStage, difficulty: firstOpt.difficulty, categoryLabel: firstOpt.categoryLabel }));
                   }}
-                    className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300">
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300">
                     <option value={1}>Stage 1</option>
                     <option value={2}>Stage 2</option>
                     <option value={3}>Stage 3</option>
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Kesulitan</label>
+                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Kesulitan</label>
                   <select value={form.difficulty} onChange={e => {
                     const opt = STAGE_OPTIONS[form.stage].find(o => o.difficulty === e.target.value);
                     setForm(f => ({ ...f, difficulty: e.target.value, categoryLabel: opt?.categoryLabel ?? f.categoryLabel }));
                   }}
-                    className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300">
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300">
                     {STAGE_OPTIONS[form.stage].map(opt => (
                       <option key={opt.difficulty} value={opt.difficulty}>{opt.label}</option>
                     ))}
                   </select>
-                  <p className="mt-0.5 text-[10px] text-stone-400">Terkunci sesuai stage</p>
+                  <p className="mt-0.5 text-[10px] text-slate-400">Terkunci sesuai stage</p>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Domain Kognitif</label>
+                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Domain Kognitif</label>
                   <select value={form.cognitiveDomain} onChange={e => setForm(f => ({ ...f, cognitiveDomain: e.target.value }))}
-                    className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300">
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300">
                     {Object.entries(DOMAIN_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Level Kognitif</label>
+                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Level Kognitif</label>
                   <select value={form.cognitiveLevel} onChange={e => setForm(f => ({ ...f, cognitiveLevel: e.target.value }))}
-                    className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300">
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300">
                     <option value="L1">L1</option>
                     <option value="L2">L2</option>
                     <option value="L3">L3</option>
@@ -428,51 +449,51 @@ const MsatQuestionsPage: FC = () => {
 
               {/* Question stem */}
               <div>
-                <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Soal <span className="text-red-400">*</span></label>
+                <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Soal <span className="text-red-400">*</span></label>
                 <textarea value={form.stem} onChange={e => setForm(f => ({ ...f, stem: e.target.value }))}
                   placeholder="Tulis pertanyaan di sini..." rows={3}
-                  className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-xs text-stone-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-xs text-slate-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
               </div>
 
               {/* Options */}
               <div>
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Opsi Jawaban <span className="text-red-400">*</span></label>
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Opsi Jawaban <span className="text-red-400">*</span></label>
                 <div className="space-y-2">
                   {(['A', 'B', 'C', 'D', 'E'] as const).map(key => (
                     <div key={key} className="flex items-center gap-2">
                       <button type="button" onClick={() => setForm(f => ({ ...f, correctAnswer: key }))}
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold transition ${
-                          form.correctAnswer === key ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          form.correctAnswer === key ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                         }`}>{key}</button>
                       <input value={form.options[key]} onChange={e => setForm(f => ({ ...f, options: { ...f.options, [key]: e.target.value } }))}
                         placeholder={`Opsi ${key}`}
-                        className={`flex-1 rounded-lg border px-3 py-2 text-xs text-stone-700 outline-none transition ${
-                          form.correctAnswer === key ? 'border-emerald-300 bg-emerald-50 focus:border-emerald-400' : 'border-stone-200 focus:border-violet-300'
+                        className={`flex-1 rounded-lg border px-3 py-2 text-xs text-slate-700 outline-none transition ${
+                          form.correctAnswer === key ? 'border-emerald-300 bg-emerald-50 focus:border-emerald-400' : 'border-slate-200 focus:border-violet-300'
                         }`} />
                     </div>
                   ))}
                 </div>
-                <p className="mt-1.5 text-[10px] text-stone-400">Klik huruf untuk memilih jawaban benar</p>
+                <p className="mt-1.5 text-[10px] text-slate-400">Klik huruf untuk memilih jawaban benar</p>
               </div>
 
               {/* Optional fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Sub Elemen</label>
+                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Sub Elemen</label>
                   <input value={form.subElement} onChange={e => setForm(f => ({ ...f, subElement: e.target.value }))}
-                    placeholder="Opsional" className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300" />
+                    placeholder="Opsional" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-stone-400">Kompetensi</label>
+                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Kompetensi</label>
                   <input value={form.competency} onChange={e => setForm(f => ({ ...f, competency: e.target.value }))}
-                    placeholder="Opsional" className="w-full rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 outline-none focus:border-violet-300" />
+                    placeholder="Opsional" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 outline-none focus:border-violet-300" />
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-stone-100 px-6 py-4">
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4">
               <button onClick={() => { setShowModal(false); setEditId(null); }}
-                className="rounded-lg border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-600 hover:bg-stone-50">Batal</button>
+                className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
               <button onClick={handleSave} disabled={saving}
                 className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-5 py-2 text-xs font-bold text-white transition hover:bg-violet-700 disabled:opacity-40">
                 {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}

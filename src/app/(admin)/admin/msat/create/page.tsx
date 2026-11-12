@@ -10,7 +10,8 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { TaxonomyPicker } from '@/components/admin/TaxonomyPicker';
 import { ContentTaxonomy } from '@/types/taxonomy';
-import { AdminPageHeader } from '@/components/admin/AdminUI';
+import { AdminPageHeader, AdminLoadBanner } from '@/components/admin/AdminUI';
+import { NETWORK_ERROR_MESSAGE, readHttpError } from '@/lib/http-error';
 
 interface Question {
   id: string;
@@ -50,6 +51,7 @@ function generateCode(): string {
 const MsatCreatePage: FC = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const [loadError, setLoadError] = useState('');
 
   // Form state
   const [title, setTitle] = useState('');
@@ -97,8 +99,11 @@ const MsatCreatePage: FC = () => {
         if (res.ok) {
           const data = await res.json();
           setAllQuestions(data.questions ?? []);
+          setLoadError('');
+        } else {
+          setLoadError(await readHttpError(res));
         }
-      } catch { /* ignore */ }
+      } catch { setLoadError(NETWORK_ERROR_MESSAGE); }
       setLoading(false);
     };
     init();
@@ -220,6 +225,8 @@ const MsatCreatePage: FC = () => {
         description="Atur judul, kode, dan soal tiap cabang, lalu terbitkan ujian untuk peserta."
       />
 
+      {loadError && <AdminLoadBanner message={loadError} onRetry={() => window.location.reload()} />}
+
       {/* Step indicator */}
       <div className="flex items-center gap-2">
         {[
@@ -235,11 +242,11 @@ const MsatCreatePage: FC = () => {
               setStep(s.key as typeof step);
             }}
             className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
-              step === s.key ? 'bg-violet-100 text-violet-700' : 'text-stone-400 hover:text-stone-600'
+              step === s.key ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-slate-600'
             }`}
           >
             <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-              step === s.key ? 'bg-violet-600 text-white' : 'bg-stone-200 text-stone-500'
+              step === s.key ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-500'
             }`}>{i + 1}</span>
             {s.label}
           </button>
@@ -250,25 +257,25 @@ const MsatCreatePage: FC = () => {
         {/* ── STEP 1: CONFIG ── */}
         {step === 'config' && (
           <motion.div key="config" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-            <div className="rounded-2xl bg-white p-6 ring-1 ring-stone-100">
-              <h3 className="mb-4 text-sm font-bold text-stone-700">Informasi Ujian</h3>
+            <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-100">
+              <h3 className="mb-4 text-sm font-bold text-slate-700">Informasi Ujian</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-stone-500">Judul Ujian *</label>
-                  <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ujian MSAT Stoikiometri 2026" className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-500">Judul Ujian *</label>
+                  <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ujian MSAT Stoikiometri 2026" className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-stone-500">Deskripsi</label>
-                  <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-500">Deskripsi</label>
+                  <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
                 </div>
                 <TaxonomyPicker value={taxonomy} requiredThrough="topic" onChange={next => { setTaxonomy(next); setModule(next.topic?.id ?? next.subject?.id ?? ''); }} />
                 <div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-stone-500">Kode Akses</label>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-500">Kode Akses</label>
                     <div className="flex gap-2">
-                      <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} maxLength={6} className="flex-1 rounded-xl border border-stone-200 px-4 py-2.5 font-mono text-sm font-bold text-stone-700 outline-none focus:border-violet-300" />
-                      <button onClick={() => setCode(generateCode())} className="flex items-center justify-center rounded-xl bg-stone-100 px-3 text-stone-500 hover:bg-stone-200"><RefreshCw size={14} /></button>
-                      <button onClick={copyCode} className="flex items-center justify-center rounded-xl bg-stone-100 px-3 text-stone-500 hover:bg-stone-200">
+                      <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} maxLength={6} className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 font-mono text-sm font-bold text-slate-700 outline-none focus:border-violet-300" />
+                      <button aria-label="Buat ulang kode" title="Buat ulang kode" onClick={() => setCode(generateCode())} className="flex items-center justify-center rounded-xl bg-slate-100 px-3 text-slate-500 hover:bg-slate-200"><RefreshCw size={14} /></button>
+                      <button onClick={copyCode} className="flex items-center justify-center rounded-xl bg-slate-100 px-3 text-slate-500 hover:bg-slate-200">
                         {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                       </button>
                     </div>
@@ -276,39 +283,39 @@ const MsatCreatePage: FC = () => {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-stone-500">Durasi per Stage (menit)</label>
-                    <input type="number" value={durationPerStage} onChange={e => setDurationPerStage(Number(e.target.value))} min={5} max={120} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none" />
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-500">Durasi per Stage (menit)</label>
+                    <input type="number" value={durationPerStage} onChange={e => setDurationPerStage(Number(e.target.value))} min={5} max={120} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none" />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-stone-500">Durasi Istirahat (menit)</label>
-                    <input type="number" value={breakDuration} onChange={e => setBreakDuration(Number(e.target.value))} min={1} max={30} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none" />
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-500">Durasi Istirahat (menit)</label>
+                    <input type="number" value={breakDuration} onChange={e => setBreakDuration(Number(e.target.value))} min={1} max={30} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none" />
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-stone-500">Jadwal Mulai (opsional)</label>
-                  <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-700 outline-none" />
-                  <p className="mt-1 text-[11px] text-stone-400">Ditampilkan kepada peserta sebagai informasi. Ujian tetap dimulai oleh admin dari ruang tunggu.</p>
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-500">Jadwal Mulai (opsional)</label>
+                  <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none" />
+                  <p className="mt-1 text-[11px] text-slate-400">Ditampilkan kepada peserta sebagai informasi. Ujian tetap dimulai oleh admin dari ruang tunggu.</p>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-stone-500">Mode Ujian</label>
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-500">Mode Ujian</label>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setWaitingRoom(true)}
                       className={`flex-1 rounded-xl border-2 px-4 py-3 text-left transition-colors ${
-                        waitingRoom ? 'border-violet-500 bg-violet-50' : 'border-stone-200 bg-white hover:border-stone-300'
+                        waitingRoom ? 'border-violet-500 bg-violet-50' : 'border-slate-200 bg-white hover:border-slate-300'
                       }`}
                     >
-                      <p className={`text-sm font-semibold ${waitingRoom ? 'text-violet-700' : 'text-stone-600'}`}>Ruang Tunggu</p>
-                      <p className="mt-0.5 text-[11px] text-stone-400">Siswa menunggu hingga admin memulai ujian</p>
+                      <p className={`text-sm font-semibold ${waitingRoom ? 'text-violet-700' : 'text-slate-600'}`}>Ruang Tunggu</p>
+                      <p className="mt-0.5 text-[11px] text-slate-400">Siswa menunggu hingga admin memulai ujian</p>
                     </button>
                     <button
                       onClick={() => setWaitingRoom(false)}
                       className={`flex-1 rounded-xl border-2 px-4 py-3 text-left transition-colors ${
-                        !waitingRoom ? 'border-violet-500 bg-violet-50' : 'border-stone-200 bg-white hover:border-stone-300'
+                        !waitingRoom ? 'border-violet-500 bg-violet-50' : 'border-slate-200 bg-white hover:border-slate-300'
                       }`}
                     >
-                      <p className={`text-sm font-semibold ${!waitingRoom ? 'text-violet-700' : 'text-stone-600'}`}>Langsung Mulai</p>
-                      <p className="mt-0.5 text-[11px] text-stone-400">Siswa langsung masuk ujian setelah input kode</p>
+                      <p className={`text-sm font-semibold ${!waitingRoom ? 'text-violet-700' : 'text-slate-600'}`}>Langsung Mulai</p>
+                      <p className="mt-0.5 text-[11px] text-slate-400">Siswa langsung masuk ujian setelah input kode</p>
                     </button>
                   </div>
                 </div>
@@ -330,7 +337,7 @@ const MsatCreatePage: FC = () => {
               <select
                 value={filterTopic}
                 onChange={e => setFilterTopic(e.target.value)}
-                className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-600 outline-none focus:border-violet-300"
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 outline-none focus:border-violet-300"
               >
                 <option value="">Semua Topik</option>
                 {availableTopics.map(t => (
@@ -346,7 +353,7 @@ const MsatCreatePage: FC = () => {
               </button>
               <button
                 onClick={() => autoFillBranch(activeBranch)}
-                className="flex items-center gap-1.5 rounded-xl bg-stone-50 px-3 py-2 text-xs font-semibold text-stone-600 ring-1 ring-stone-200 transition-colors hover:bg-stone-100"
+                className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 transition-colors hover:bg-slate-100"
               >
                 <Sparkles size={13} />
                 Isi Otomatis {BRANCH_CONFIG[activeBranch].label}
@@ -354,7 +361,7 @@ const MsatCreatePage: FC = () => {
             </div>
 
             {/* Branch tabs */}
-            <div className="flex flex-wrap gap-1.5 rounded-2xl bg-white p-2 ring-1 ring-stone-100">
+            <div className="flex flex-wrap gap-1.5 rounded-2xl bg-white p-2 ring-1 ring-slate-100">
               {(Object.keys(BRANCH_CONFIG) as StageBranch[]).map(branch => {
                 const total = getBranchTotal(branch);
                 const complete = isBranchComplete(branch);
@@ -363,12 +370,12 @@ const MsatCreatePage: FC = () => {
                     key={branch}
                     onClick={() => { setActiveBranch(branch); setActiveDomain('knowing'); }}
                     className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold transition-colors ${
-                      activeBranch === branch ? 'bg-violet-100 text-violet-700' : 'text-stone-400 hover:bg-stone-50'
+                      activeBranch === branch ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:bg-slate-50'
                     }`}
                   >
-                    {complete ? <Check size={12} className="text-emerald-500" /> : <span className="h-3 w-3 rounded-full border-2 border-stone-300" />}
+                    {complete ? <Check size={12} className="text-emerald-500" /> : <span className="h-3 w-3 rounded-full border-2 border-slate-300" />}
                     {BRANCH_CONFIG[branch].label}
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${complete ? 'bg-emerald-100 text-emerald-600' : 'bg-stone-100 text-stone-500'}`}>
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${complete ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
                       {total}/12
                     </span>
                   </button>
@@ -385,11 +392,11 @@ const MsatCreatePage: FC = () => {
                     key={domain}
                     onClick={() => setActiveDomain(domain)}
                     className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
-                      activeDomain === domain ? 'bg-blue-100 text-blue-700' : 'text-stone-400 hover:text-stone-600'
+                      activeDomain === domain ? 'bg-blue-100 text-blue-700' : 'text-slate-400 hover:text-slate-600'
                     }`}
                   >
                     {DOMAIN_LABELS[domain]}
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${count === 4 ? 'bg-emerald-100 text-emerald-600' : 'bg-stone-100 text-stone-500'}`}>
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${count === 4 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
                       {count}/4
                     </span>
                   </button>
@@ -398,41 +405,41 @@ const MsatCreatePage: FC = () => {
             </div>
 
             {/* Question list */}
-            <div className="rounded-2xl bg-white ring-1 ring-stone-100">
-              <div className="border-b border-stone-100 px-5 py-3">
-                <p className="text-xs font-semibold text-stone-600">
+            <div className="rounded-2xl bg-white ring-1 ring-slate-100">
+              <div className="border-b border-slate-100 px-5 py-3">
+                <p className="text-xs font-semibold text-slate-600">
                   Pilih 4 soal {DOMAIN_LABELS[activeDomain]} untuk {BRANCH_CONFIG[activeBranch].label}
                   {filterTopic && <span className="ml-1 text-violet-600">({filterTopic})</span>}
                 </p>
-                <p className="mt-0.5 text-[10px] text-stone-400">
+                <p className="mt-0.5 text-[10px] text-slate-400">
                   {getFilteredQuestions(activeBranch, activeDomain).length} soal tersedia
                 </p>
               </div>
-              <div className="max-h-[400px] divide-y divide-stone-50 overflow-y-auto">
+              <div className="max-h-[400px] divide-y divide-slate-50 overflow-y-auto">
                 {getFilteredQuestions(activeBranch, activeDomain).map(q => {
                   const isSelected = (selectedQuestions[activeBranch]?.[activeDomain] ?? []).includes(q.id);
                   return (
                     <button
                       key={q.id}
                       onClick={() => toggleQuestion(activeBranch, activeDomain, q.id)}
-                      className={`flex w-full items-start gap-3 px-5 py-3 text-left transition-colors ${isSelected ? 'bg-violet-50' : 'hover:bg-stone-50'}`}
+                      className={`flex w-full items-start gap-3 px-5 py-3 text-left transition-colors ${isSelected ? 'bg-violet-50' : 'hover:bg-slate-50'}`}
                     >
-                      <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${isSelected ? 'border-violet-500 bg-violet-500' : 'border-stone-300'}`}>
+                      <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${isSelected ? 'border-violet-500 bg-violet-500' : 'border-slate-300'}`}>
                         {isSelected && <Check size={12} className="text-white" />}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-[13px] text-stone-700">{q.stem}</p>
+                        <p className="line-clamp-2 text-[13px] text-slate-700">{q.stem}</p>
                         <div className="mt-1 flex items-center gap-1.5">
                           {q.topic && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">{q.topic}</span>}
                           <span className="rounded bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-violet-600">{q.categoryLabel}</span>
-                          <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-400">{q.cognitiveDomain}</span>
+                          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-400">{q.cognitiveDomain}</span>
                         </div>
                       </div>
                     </button>
                   );
                 })}
                 {getFilteredQuestions(activeBranch, activeDomain).length === 0 && (
-                  <div className="px-5 py-8 text-center text-xs text-stone-400">
+                  <div className="px-5 py-8 text-center text-xs text-slate-400">
                     Tidak ada soal tersedia untuk kombinasi ini
                   </div>
                 )}
@@ -441,7 +448,7 @@ const MsatCreatePage: FC = () => {
 
             {/* Navigation */}
             <div className="flex justify-between">
-              <button onClick={() => setStep('config')} className="flex items-center gap-1.5 rounded-xl bg-stone-100 px-4 py-2.5 text-sm font-semibold text-stone-600 hover:bg-stone-200">
+              <button onClick={() => setStep('config')} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
                 <ArrowLeft size={14} /> Kembali
               </button>
               <button onClick={() => setStep('review')} disabled={!allBranchesComplete} className="flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40 hover:bg-[#4D38D4]">
@@ -454,23 +461,23 @@ const MsatCreatePage: FC = () => {
         {/* ── STEP 3: REVIEW ── */}
         {step === 'review' && (
           <motion.div key="review" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-4">
-            <div className="rounded-2xl bg-white p-6 ring-1 ring-stone-100">
-              <h3 className="mb-4 text-sm font-bold text-stone-700">Ringkasan Ujian</h3>
+            <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-100">
+              <h3 className="mb-4 text-sm font-bold text-slate-700">Ringkasan Ujian</h3>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div><p className="text-[10px] text-stone-400">Judul</p><p className="text-sm font-semibold text-stone-700">{title}</p></div>
-                <div><p className="text-[10px] text-stone-400">Kode</p><p className="font-mono text-sm font-bold text-stone-700">{code}</p></div>
-                <div><p className="text-[10px] text-stone-400">Durasi/Stage</p><p className="text-sm text-stone-700">{durationPerStage} menit</p></div>
-                <div><p className="text-[10px] text-stone-400">Istirahat</p><p className="text-sm text-stone-700">{breakDuration} menit</p></div>
-                <div><p className="text-[10px] text-stone-400">Mode</p><p className="text-sm text-stone-700">{waitingRoom ? 'Ruang Tunggu' : 'Langsung Mulai'}</p></div>
-                <div><p className="text-[10px] text-stone-400">Total Soal</p><p className="text-sm font-bold text-stone-700">{getTotalSelected()} soal</p></div>
+                <div><p className="text-[10px] text-slate-400">Judul</p><p className="text-sm font-semibold text-slate-700">{title}</p></div>
+                <div><p className="text-[10px] text-slate-400">Kode</p><p className="font-mono text-sm font-bold text-slate-700">{code}</p></div>
+                <div><p className="text-[10px] text-slate-400">Durasi/Stage</p><p className="text-sm text-slate-700">{durationPerStage} menit</p></div>
+                <div><p className="text-[10px] text-slate-400">Istirahat</p><p className="text-sm text-slate-700">{breakDuration} menit</p></div>
+                <div><p className="text-[10px] text-slate-400">Mode</p><p className="text-sm text-slate-700">{waitingRoom ? 'Ruang Tunggu' : 'Langsung Mulai'}</p></div>
+                <div><p className="text-[10px] text-slate-400">Total Soal</p><p className="text-sm font-bold text-slate-700">{getTotalSelected()} soal</p></div>
               </div>
 
               <div className="mt-4 space-y-2">
                 {(Object.keys(BRANCH_CONFIG) as StageBranch[]).map(branch => (
-                  <div key={branch} className="flex items-center gap-2 rounded-xl bg-stone-50 px-3 py-2">
+                  <div key={branch} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
                     <Check size={14} className="text-emerald-500" />
-                    <span className="text-xs text-stone-600">{BRANCH_CONFIG[branch].label}</span>
-                    <span className="ml-auto text-[10px] font-bold text-stone-400">{getBranchTotal(branch)} soal</span>
+                    <span className="text-xs text-slate-600">{BRANCH_CONFIG[branch].label}</span>
+                    <span className="ml-auto text-[10px] font-bold text-slate-400">{getBranchTotal(branch)} soal</span>
                   </div>
                 ))}
               </div>
@@ -483,7 +490,7 @@ const MsatCreatePage: FC = () => {
             )}
 
             <div className="flex justify-between">
-              <button onClick={() => setStep('questions')} className="flex items-center gap-1.5 rounded-xl bg-stone-100 px-4 py-2.5 text-sm font-semibold text-stone-600 hover:bg-stone-200">
+              <button onClick={() => setStep('questions')} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
                 <ArrowLeft size={14} /> Kembali
               </button>
               <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-xl bg-[#5841EA] px-6 py-2.5 text-sm font-bold text-white shadow-sm disabled:opacity-50 hover:bg-[#4D38D4]">

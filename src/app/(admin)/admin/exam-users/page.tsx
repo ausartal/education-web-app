@@ -6,7 +6,9 @@ import {
   Search, Eye, X, Camera, Phone, MapPin, Building2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { AdminPageHeader } from '@/components/admin/AdminUI';
+import { AdminPageHeader, AdminLoadBanner, AdminEmptyState } from '@/components/admin/AdminUI';
+import { useToast } from '@/hooks/useToast';
+import { NETWORK_ERROR_MESSAGE, readHttpError } from '@/lib/http-error';
 
 interface ExamUser {
   id: string;
@@ -46,6 +48,8 @@ function formatDate(ts: unknown): string {
 
 const AdminExamUsersPage: FC = () => {
   const { user } = useAuth();
+  const { addToast } = useToast();
+  const [loadError, setLoadError] = useState('');
   const [users, setUsers] = useState<ExamUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -66,8 +70,11 @@ const AdminExamUsersPage: FC = () => {
       if (res.ok) {
         const data = await res.json();
         setUsers(data.users ?? []);
+        setLoadError('');
+      } else {
+        setLoadError(await readHttpError(res));
       }
-    } catch { /* ignore */ }
+    } catch { setLoadError(NETWORK_ERROR_MESSAGE); }
     setLoading(false);
   }, [user, filter]);
 
@@ -86,8 +93,11 @@ const AdminExamUsersPage: FC = () => {
       if (res.ok) {
         await fetchUsers();
         if (detailUser?.id === uid) setDetailUser(null);
+        addToast('success', 'Data peserta diperbarui');
+      } else {
+        addToast('error', await readHttpError(res));
       }
-    } catch { /* ignore */ }
+    } catch { addToast('error', NETWORK_ERROR_MESSAGE); }
     setActionLoading(null);
   };
 
@@ -112,28 +122,30 @@ const AdminExamUsersPage: FC = () => {
         description="Kelola akun AKURAT Exam dan verifikasi identitas"
         actions={
           <>
-            <span className="rounded-xl bg-stone-100 px-3 py-1.5 text-xs font-bold text-stone-500">
+            <span className="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-500">
               {users.length} peserta
             </span>
           </>
         }
       />
 
+      {loadError && <AdminLoadBanner message={loadError} onRetry={fetchUsers} />}
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari nama, email, institusi..."
-            className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-10 pr-3 text-sm text-stone-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20"
+            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20"
           />
         </div>
         <div className="flex gap-1.5">
           {['', 'unverified', 'pending', 'verified', 'rejected'].map(s => (
             <button key={s} onClick={() => setFilter(s)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filter === s ? 'bg-violet-600 text-white' : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'}`}>
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${filter === s ? 'bg-violet-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}>
               {s === '' ? 'Semua' : STATUS_CONFIG[s]?.label ?? s}
             </button>
           ))}
@@ -142,70 +154,69 @@ const AdminExamUsersPage: FC = () => {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Loader2 size={20} className="animate-spin text-stone-400" />
+          <Loader2 size={20} className="animate-spin text-slate-400" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl bg-white py-16 text-center border border-stone-100">
-          <Users size={28} className="mx-auto text-stone-300" />
-          <p className="mt-3 text-sm font-semibold text-stone-400">
-            {search || filter ? 'Tidak ada peserta yang sesuai filter' : 'Belum ada peserta ujian'}
-          </p>
-        </div>
+        <AdminEmptyState
+          icon={<Users size={24} />}
+          title={search || filter ? 'Tidak ada peserta yang sesuai' : 'Belum ada peserta ujian'}
+          description={search || filter ? 'Coba ubah filter atau kata kunci pencarian.' : 'Peserta muncul di sini setelah mendaftar di portal AKURAT Exam.'}
+        />
       ) : (
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-stone-100">
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-100">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-stone-100 bg-stone-50/50">
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Peserta</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Institusi</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Identitas</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Verifikasi</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400 text-center">Token</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Daftar</th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Aksi</th>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Peserta</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Institusi</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Identitas</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Verifikasi</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400 text-center">Token</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Daftar</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-50">
+            <tbody className="divide-y divide-slate-50">
               {filtered.map((u) => {
                 const status = STATUS_CONFIG[u.verificationStatus] ?? STATUS_CONFIG.unverified;
                 const isLoading = actionLoading === u.id;
                 return (
-                  <tr key={u.id} className="hover:bg-stone-50/80 transition-colors">
+                  <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         {u.photoURL ? (
-                          <img src={u.photoURL} alt="" className="h-8 w-8 rounded-full object-cover ring-1 ring-stone-200" />
+                          <img src={u.photoURL} alt="" className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-200" />
                         ) : (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 ring-1 ring-stone-200">
-                            <Camera size={12} className="text-stone-400" />
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 ring-1 ring-slate-200">
+                            <Camera size={12} className="text-slate-400" />
                           </div>
                         )}
                         <div>
-                          <p className="font-semibold text-stone-800">{u.displayName}</p>
-                          <p className="text-xs text-stone-400">{u.email}</p>
+                          <p className="font-semibold text-slate-800">{u.displayName}</p>
+                          <p className="text-xs text-slate-400">{u.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-stone-600">{u.institution || '-'}</td>
+                    <td className="px-4 py-3 text-slate-600">{u.institution || '-'}</td>
                     <td className="px-4 py-3">
-                      <p className="text-xs text-stone-600">{u.identityType}: {u.identityNumber}</p>
-                      <p className="text-xs text-stone-400">{u.gender === 'L' ? 'Laki-laki' : 'Perempuan'}</p>
+                      <p className="text-xs text-slate-600">{u.identityType}: {u.identityNumber}</p>
+                      <p className="text-xs text-slate-400">{u.gender === 'L' ? 'Laki-laki' : 'Perempuan'}</p>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.color} ${status.bg}`}>
                         {status.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center font-mono text-sm font-bold text-stone-700">
+                    <td className="px-4 py-3 text-center font-mono text-sm font-bold text-slate-700">
                       {u.tokenBalance}
                     </td>
-                    <td className="px-4 py-3 text-xs text-stone-400">{formatDate(u.createdAt)}</td>
+                    <td className="px-4 py-3 text-xs text-slate-400">{formatDate(u.createdAt)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => { setDetailUser(u); setRejectNote(''); }}
                           title="Lihat detail"
-                          className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+                          className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                         >
                           <Eye size={14} />
                         </button>
@@ -243,9 +254,9 @@ const AdminExamUsersPage: FC = () => {
       {detailUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={() => setDetailUser(null)}>
           <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
-              <h3 className="font-display text-lg font-extrabold text-stone-800">Detail Peserta</h3>
-              <button onClick={() => setDetailUser(null)} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <h3 className="font-display text-lg font-extrabold text-slate-800">Detail Peserta</h3>
+              <button aria-label="Tutup" title="Tutup" onClick={() => setDetailUser(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
                 <X size={18} />
               </button>
             </div>
@@ -253,15 +264,15 @@ const AdminExamUsersPage: FC = () => {
             <div className="px-6 py-5 space-y-5">
               <div className="flex items-start gap-4">
                 {detailUser.photoURL ? (
-                  <img src={detailUser.photoURL} alt="" className="h-20 w-20 rounded-xl object-cover ring-1 ring-stone-200" />
+                  <img src={detailUser.photoURL} alt="" className="h-20 w-20 rounded-xl object-cover ring-1 ring-slate-200" />
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-stone-100 ring-1 ring-stone-200">
-                    <Camera size={24} className="text-stone-400" />
+                  <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-slate-100 ring-1 ring-slate-200">
+                    <Camera size={24} className="text-slate-400" />
                   </div>
                 )}
                 <div className="flex-1">
-                  <p className="text-base font-bold text-stone-800">{detailUser.displayName}</p>
-                  <p className="text-sm text-stone-500">{detailUser.email}</p>
+                  <p className="text-base font-bold text-slate-800">{detailUser.displayName}</p>
+                  <p className="text-sm text-slate-500">{detailUser.email}</p>
                   <div className="mt-2">
                     {(() => {
                       const s = STATUS_CONFIG[detailUser.verificationStatus] ?? STATUS_CONFIG.unverified;
@@ -276,49 +287,49 @@ const AdminExamUsersPage: FC = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2 text-stone-600">
-                  <Phone size={13} className="shrink-0 text-stone-400" />
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Phone size={13} className="shrink-0 text-slate-400" />
                   <span>{detailUser.phoneNumber || '-'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-stone-600">
-                  <Users size={13} className="shrink-0 text-stone-400" />
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Users size={13} className="shrink-0 text-slate-400" />
                   <span>{detailUser.gender === 'L' ? 'Laki-laki' : 'Perempuan'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-stone-600">
-                  <MapPin size={13} className="shrink-0 text-stone-400" />
+                <div className="flex items-center gap-2 text-slate-600">
+                  <MapPin size={13} className="shrink-0 text-slate-400" />
                   <span>{detailUser.birthPlace || '-'}, {detailUser.birthDate || '-'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-stone-600">
-                  <Building2 size={13} className="shrink-0 text-stone-400" />
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Building2 size={13} className="shrink-0 text-slate-400" />
                   <span>{detailUser.institution || '-'}</span>
                 </div>
               </div>
 
-              <div className="rounded-xl bg-stone-50 px-4 py-3 text-sm border border-stone-100">
-                <p className="text-xs font-bold uppercase tracking-wide text-stone-400">Identitas</p>
-                <p className="mt-1 font-semibold text-stone-700">{detailUser.identityType}: {detailUser.identityNumber}</p>
+              <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm border border-slate-100">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Identitas</p>
+                <p className="mt-1 font-semibold text-slate-700">{detailUser.identityType}: {detailUser.identityNumber}</p>
               </div>
 
               {detailUser.address && (
-                <div className="rounded-xl bg-stone-50 px-4 py-3 text-sm border border-stone-100">
-                  <p className="text-xs font-bold uppercase tracking-wide text-stone-400">Alamat</p>
-                  <p className="mt-1 text-stone-600">{detailUser.address}</p>
+                <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm border border-slate-100">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Alamat</p>
+                  <p className="mt-1 text-slate-600">{detailUser.address}</p>
                 </div>
               )}
 
               {detailUser.verificationStatus !== 'rejected' && (
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-stone-500">Catatan Penolakan (opsional)</label>
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-500">Catatan Penolakan (opsional)</label>
                   <input
                     value={rejectNote}
                     onChange={(e) => setRejectNote(e.target.value)}
                     placeholder="Alasan penolakan..."
-                    className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20"
                   />
                 </div>
               )}
 
-              <div className="flex items-center gap-2 border-t border-stone-100 pt-4">
+              <div className="flex items-center gap-2 border-t border-slate-100 pt-4">
                 {detailUser.verificationStatus !== 'verified' && (
                   <button
                     onClick={() => handleAction(detailUser.id, { verificationStatus: 'verified' })}
