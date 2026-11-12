@@ -10,7 +10,6 @@ import { useLivePoll } from '@/hooks/useLivePoll';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { doc, getDoc } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
-import { deriveTopics, type DerivedTopic } from '@/lib/learning';
 import { getMaterials } from '@/services/materials';
 import { Material } from '@/types/firestore';
 import {
@@ -37,32 +36,85 @@ interface MyClass {
 
 const CLASSES_PER_PAGE = 3;
 
-const TOPIC_ICONS: Record<string, string> = {
-  stoikiometri: '/icons/topic-calculus.svg',
-  'atom-model': '/icons/topic-atom-model.svg',
-  larutan: '/icons/topic-chemistry-flask.svg',
-  'ikatan-kimia': '/icons/topic-coordinate-geometry.svg',
-  'reaksi-redoks': '/icons/topic-coordinate-transformations.svg',
-  kesetimbangan: '/icons/topic-exponential-functions.svg',
-  'geometri-molekul': '/icons/topic-geometric-thinking.svg',
-};
-const FALLBACK_ICONS = Object.values(TOPIC_ICONS);
-
-const TOPIC_GRADIENTS = [
-  'bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400',
-  'bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-400',
-  'bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-400',
-  'bg-gradient-to-br from-rose-500 via-pink-500 to-orange-400',
-  'bg-gradient-to-br from-amber-500 via-orange-500 to-red-400',
-  'bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-400',
-  'bg-gradient-to-br from-lime-500 via-green-500 to-emerald-400',
+const COURSE_TOPICS = [
+  {
+    id: 'stoikiometri',
+    name: 'Stoikiometri',
+    subtitle: 'Perhitungan Kimia',
+    icon: '/icons/topic-calculus.svg',
+    gradient: 'bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400',
+    lessons: [
+      'Konsep Mol & Bilangan Avogadro',
+      'Massa Molar & Perhitungan',
+      'Pereaksi Pembatas',
+    ],
+  },
+  {
+    id: 'atom-model',
+    name: 'Model Atom',
+    subtitle: 'Struktur Materi',
+    icon: '/icons/topic-atom-model.svg',
+    gradient: 'bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-400',
+    lessons: [
+      'Teori Atom Dalton & Thomson',
+      'Model Atom Bohr',
+      'Konfigurasi Elektron',
+    ],
+  },
+  {
+    id: 'larutan',
+    name: 'Larutan',
+    subtitle: 'Konsentrasi & Campuran',
+    icon: '/icons/topic-chemistry-flask.svg',
+    gradient: 'bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-400',
+    lessons: [
+      'Molaritas & Molalitas',
+      'Pengenceran Larutan',
+      'Sifat Koligatif',
+    ],
+  },
+  {
+    id: 'ikatan-kimia',
+    name: 'Ikatan Kimia',
+    subtitle: 'Gaya Antar Atom',
+    icon: '/icons/topic-coordinate-geometry.svg',
+    gradient: 'bg-gradient-to-br from-rose-500 via-pink-500 to-orange-400',
+    lessons: ['Ikatan Ion', 'Ikatan Kovalen', 'Ikatan Logam'],
+  },
+  {
+    id: 'reaksi-redoks',
+    name: 'Reaksi Redoks',
+    subtitle: 'Transfer Elektron',
+    icon: '/icons/topic-coordinate-transformations.svg',
+    gradient: 'bg-gradient-to-br from-amber-500 via-orange-500 to-red-400',
+    lessons: ['Oksidasi & Reduksi', 'Bilangan Oksidasi', 'Penyetaraan Redoks'],
+  },
+  {
+    id: 'kesetimbangan',
+    name: 'Kesetimbangan',
+    subtitle: 'Reaksi Reversibel',
+    icon: '/icons/topic-exponential-functions.svg',
+    gradient: 'bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-400',
+    lessons: [
+      'Hukum Kesetimbangan',
+      'Konstanta Kc & Kp',
+      'Pergeseran Kesetimbangan',
+    ],
+  },
+  {
+    id: 'geometri-molekul',
+    name: 'Geometri Molekul',
+    subtitle: 'Bentuk & Sudut',
+    icon: '/icons/topic-geometric-thinking.svg',
+    gradient: 'bg-gradient-to-br from-lime-500 via-green-500 to-emerald-400',
+    lessons: ['Teori VSEPR', 'Hibridisasi', 'Polaritas Molekul'],
+  },
 ];
 
 const DashboardPage: FC = () => {
   const router = useRouter();
   const { profile } = useAuth();
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [topics, setTopics] = useState<DerivedTopic[]>([]);
   const [completedCount, setCompletedCount] = useState(0);
   const [quizCount, setQuizCount] = useState(0);
   const [activeCourseIdx, setActiveCourseIdx] = useState(0);
@@ -95,7 +147,6 @@ const DashboardPage: FC = () => {
       const validIds = new Set(mats.map((m) => m.id));
       setMaterials(mats);
       setCompletedCount(completed.filter((id) => validIds.has(id)).length);
-      setTopics(deriveTopics(mats, completed, userData.settings?.selectedTopics ?? []));
       setQuizCount(userData.stats?.totalQuizzes ?? 0);
     } catch { /* keep the last data on error */ } finally {
       setLoading(false);
@@ -115,11 +166,7 @@ const DashboardPage: FC = () => {
 
   const totalMaterials = materials.length;
   const materialsPct = totalMaterials > 0 ? Math.round((completedCount / totalMaterials) * 100) : 0;
-  const cards = topics.map((topic, i) => ({
-    ...topic,
-    icon: TOPIC_ICONS[topic.id] ?? FALLBACK_ICONS[i % FALLBACK_ICONS.length],
-    gradient: TOPIC_GRADIENTS[i % TOPIC_GRADIENTS.length],
-  }));
+  const cards = COURSE_TOPICS;
   const totalClassPages = Math.max(1, Math.ceil(myClasses.length / CLASSES_PER_PAGE));
   const safeClassPage = Math.min(classPage, totalClassPages - 1);
   const pageClasses = myClasses.slice(safeClassPage * CLASSES_PER_PAGE, (safeClassPage + 1) * CLASSES_PER_PAGE);
@@ -390,13 +437,6 @@ const DashboardPage: FC = () => {
         <div className="space-y-5">
           {/* Stacked Card Carousel */}
           <div className="relative h-[580px]">
-            {cards.length === 0 && (
-              <div className="flex h-full flex-col items-center justify-center rounded-3xl bg-gray-50 p-8 text-center">
-                <BookOpen size={32} className="mb-3 text-gray-300" />
-                <p className="font-semibold text-gray-700">Belum ada materi</p>
-                <p className="mt-1 text-sm text-gray-500">Materi dari gurumu akan muncul di sini.</p>
-              </div>
-            )}
             <AnimatePresence mode="popLayout">
               {cards.map((topic, i) => {
                 const offset = i - safeIdx;
@@ -438,13 +478,13 @@ const DashboardPage: FC = () => {
                         {/* Header */}
                         <div className="text-center">
                           <p className="mb-1 text-xs font-bold uppercase tracking-widest text-white/60">
-                            {topic.total} materi
+                            {topic.subtitle}
                           </p>
                           <h3 className="mb-1 font-display text-2xl font-extrabold text-white">
                             {topic.name}
                           </h3>
                           <p className="text-sm font-medium text-white/70">
-                            {topic.completed} dari {topic.total} selesai
+                            Level 1
                           </p>
                         </div>
 
@@ -487,10 +527,10 @@ const DashboardPage: FC = () => {
 
                             {/* Start / Continue Button */}
                             <Link
-                              href={topic.nextMaterialId ? `/materi/${topic.nextMaterialId}` : '/materi'}
+                              href="/materi"
                               className="mt-4 block w-full rounded-2xl bg-white py-4 text-center text-sm font-extrabold text-gray-900 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
                             >
-                              {topic.completed > 0 ? 'Lanjutkan belajar' : 'Mulai belajar'}
+                              Mulai belajar
                             </Link>
                           </motion.div>
                         )}
