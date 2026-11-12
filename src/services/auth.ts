@@ -89,7 +89,11 @@ export async function signIn(
     rememberMe ? browserLocalPersistence : browserSessionPersistence
   );
   await signInWithEmailAndPassword(auth, email, password);
-  await updateLastLogin();
+  try {
+    await updateLastLogin();
+  } catch {
+    // Bookkeeping only; the account is signed in either way.
+  }
 }
 
 export async function signInWithGoogle(): Promise<'popup' | 'redirect'> {

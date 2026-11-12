@@ -375,15 +375,21 @@ export async function GET(req: NextRequest, { params }: { params: { path: string
       size: docs.length,
     });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError(e);
   }
 }
 
 const EMPTY_RULES: CollectionRule = { read: [], write: [] };
 
+/** Logs the real cause on the server; the browser only learns that the data service is unavailable. */
+function serverError(e: unknown) {
+  console.error('[api/data]', e);
+  return NextResponse.json({ error: 'Server data sedang bermasalah. Coba lagi sebentar lagi.' }, { status: 500 });
+}
+
 function errorResponse(e: unknown) {
   if (e instanceof ForbiddenError) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  return serverError(e);
 }
 
 async function fetchExisting(db: Db, collection: string, id: string | null | undefined): Promise<Record<string, unknown> | null> {

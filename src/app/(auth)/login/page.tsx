@@ -21,6 +21,18 @@ const LoginPage: FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const DATA_UNAVAILABLE =
+    'Kamu berhasil masuk, tetapi data akunmu belum bisa dimuat karena server data bermasalah. Coba lagi sebentar lagi.';
+
+  /** Loads the school profile; null means the request itself failed (not that the profile is missing). */
+  async function fetchProfile(uid: string) {
+    try {
+      return { ok: true as const, profile: await getUserProfile(uid) };
+    } catch {
+      return { ok: false as const, profile: null };
+    }
+  }
+
   function redirectByRole(role?: string) {
     if (role === 'admin') router.push('/admin');
     else if (role === 'teacher') router.push('/teacher');
@@ -47,8 +59,12 @@ const LoginPage: FC = () => {
     setLoading(true);
     try {
       await signIn(email, password);
-      const profile = await getUserProfile(auth.currentUser!.uid);
-      redirectByRole(profile?.role);
+      const result = await fetchProfile(auth.currentUser!.uid);
+      if (!result.ok) {
+        setError(DATA_UNAVAILABLE);
+        return;
+      }
+      redirectByRole(result.profile?.role);
     } catch (err) {
       const message = getAuthErrorMessage(err);
       if (message) setError(message);
@@ -63,8 +79,13 @@ const LoginPage: FC = () => {
     try {
       const mode = await signInWithGoogle();
       if (mode === 'popup') {
-        const profile = await getUserProfile(auth.currentUser!.uid);
-        redirectByRole(profile?.role);
+        const result = await fetchProfile(auth.currentUser!.uid);
+        if (!result.ok) {
+          setError(DATA_UNAVAILABLE);
+          setLoading(false);
+          return;
+        }
+        redirectByRole(result.profile?.role);
       }
     } catch (err) {
       const message = getAuthErrorMessage(err);

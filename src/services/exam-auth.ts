@@ -74,7 +74,11 @@ export async function examSignIn(
     rememberMe ? browserLocalPersistence : browserSessionPersistence,
   );
   await signInWithEmailAndPassword(auth, email, password);
-  await updateExamLastLogin();
+  try {
+    await updateExamLastLogin();
+  } catch {
+    // Bookkeeping only; the account is signed in either way.
+  }
 }
 
 export interface ExamGoogleSignInResult {
