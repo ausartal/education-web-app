@@ -4,6 +4,8 @@ import { cancelSessionByAdmin, isServiceError, terminateSessionByAdmin } from '@
 import { content } from '@/lib/notification-content';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { refundJoinToken } from '@/lib/token-paywall';
+import { toMillis } from '@/lib/msat-session';
+import { validateExamWindow } from '@/lib/exam-schedule-validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,7 +116,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
   }
 
   const { examId } = params;
-  let body: { action?: string; targetSessionId?: string; reason?: string };
+  let body: { action?: string; targetSessionId?: string; reason?: string; scheduledAt?: string | null; closesAt?: string | null };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
@@ -158,6 +160,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { examId: st
         status: 'started',
         startedAt: new Date(),
       }, { merge: true });
+    } else if (action === 'update_schedule') {
+      const parse = (v: unknown): Date | null | 'invalid' => {
+        if (v === null || v === undefined || v === '') return null;
+        if (typeof v !== 'string') return 'invalid';
+        const d = new Date(v);
+        return Number.isNaN(d.getTime()) ? 'invalid' : d;
+      };
+      const opens = parse(body.scheduledAt);
+      const closes = parse(body.closesAt);
+      if (opens === 'invalid' || closes === 'invalid') {
+        return NextResponse.json({ error: 'Jadwal tidak valid' }, { status: 400 });
+      }
+      const windowError = validateExamWindow(opens?.getTime() ?? null, closes?.getTime() ?? null);
+      if (windowError) return NextResponse.json({ error: windowError }, { status: 400 });
+      await examRef.update({ scheduledAt: opens, expiresAt: closes });
     } else if (action === 'skip_break') {
       // Skip break for a specific student
       if (!targetSessionId) {

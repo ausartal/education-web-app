@@ -63,6 +63,8 @@ const MsatCreatePage: FC = () => {
   const [breakDuration, setBreakDuration] = useState(10);
   const [waitingRoom, setWaitingRoom] = useState(true);
   const [scheduledAt, setScheduledAt] = useState('');
+  const [closesAt, setClosesAt] = useState('');
+  const windowInvalid = !!closesAt && (new Date(closesAt).getTime() <= Date.now() || (!!scheduledAt && new Date(closesAt).getTime() <= new Date(scheduledAt).getTime()));
 
   // Questions
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
@@ -193,6 +195,7 @@ const MsatCreatePage: FC = () => {
           breakDuration,
           waitingRoom,
           scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+          closesAt: closesAt ? new Date(closesAt).toISOString() : null,
           stageQuestions: selectedQuestions,
         }),
       });
@@ -291,10 +294,17 @@ const MsatCreatePage: FC = () => {
                     <input type="number" value={breakDuration} onChange={e => setBreakDuration(Number(e.target.value))} min={1} max={30} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none" />
                   </div>
                 </div>
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-500">Jadwal Mulai (opsional)</label>
-                  <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none" />
-                  <p className="mt-1 text-[11px] text-slate-400">Ditampilkan kepada peserta sebagai informasi. Ujian tetap dimulai oleh admin dari ruang tunggu.</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-500">Dibuka pada (opsional)</label>
+                    <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none" />
+                    <p className="mt-1 text-[11px] text-slate-400">Peserta baru bisa masuk dengan kode mulai waktu ini. Kosong = langsung dibuka.</p>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-500">Ditutup pada (opsional)</label>
+                    <input type="datetime-local" value={closesAt} onChange={e => setClosesAt(e.target.value)} className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 outline-none ${windowInvalid ? 'border-rose-300' : 'border-slate-200'}`} />
+                    <p className={`mt-1 text-[11px] ${windowInvalid ? 'text-rose-500' : 'text-slate-400'}`}>{windowInvalid ? 'Harus setelah waktu dibuka dan setelah sekarang.' : 'Setelah ini peserta baru tidak bisa masuk. Yang sedang mengerjakan tetap lanjut. Kosong = tanpa batas.'}</p>
+                  </div>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-slate-500">Mode Ujian</label>
@@ -468,6 +478,8 @@ const MsatCreatePage: FC = () => {
                 <div><p className="text-[10px] text-slate-400">Kode</p><p className="font-mono text-sm font-bold text-slate-700">{code}</p></div>
                 <div><p className="text-[10px] text-slate-400">Durasi/Stage</p><p className="text-sm text-slate-700">{durationPerStage} menit</p></div>
                 <div><p className="text-[10px] text-slate-400">Istirahat</p><p className="text-sm text-slate-700">{breakDuration} menit</p></div>
+                <div><p className="text-[10px] text-slate-400">Dibuka</p><p className="text-sm text-slate-700">{scheduledAt ? new Date(scheduledAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'Langsung'}</p></div>
+                <div><p className="text-[10px] text-slate-400">Ditutup</p><p className="text-sm text-slate-700">{closesAt ? new Date(closesAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'Tanpa batas'}</p></div>
                 <div><p className="text-[10px] text-slate-400">Mode</p><p className="text-sm text-slate-700">{waitingRoom ? 'Ruang Tunggu' : 'Langsung Mulai'}</p></div>
                 <div><p className="text-[10px] text-slate-400">Total Soal</p><p className="text-sm font-bold text-slate-700">{getTotalSelected()} soal</p></div>
               </div>
@@ -493,7 +505,7 @@ const MsatCreatePage: FC = () => {
               <button onClick={() => setStep('questions')} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
                 <ArrowLeft size={14} /> Kembali
               </button>
-              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-xl bg-[#5841EA] px-6 py-2.5 text-sm font-bold text-white shadow-sm disabled:opacity-50 hover:bg-[#4D38D4]">
+              <button onClick={handleSave} disabled={saving || windowInvalid} className="flex items-center gap-2 rounded-xl bg-[#5841EA] px-6 py-2.5 text-sm font-bold text-white shadow-sm disabled:opacity-50 hover:bg-[#4D38D4]">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                 {saving ? 'Menyimpan...' : 'Buat Ujian'}
               </button>

@@ -30,6 +30,8 @@ interface ExamDetail {
   stageWeights: Record<string, number>;
   predicates: Record<string, { min: number; max: number; label: string; description: string }>;
   createdAt: { _seconds: number } | null;
+  scheduledAt?: { _seconds: number } | null;
+  expiresAt?: { _seconds: number } | null;
 }
 
 interface Session {
@@ -77,6 +79,47 @@ const MsatExamDetailPage: FC = () => {
   const [confirmAction, setConfirmAction] = useState<{ action: string; label: string; target?: string; needsReason?: boolean } | null>(null);
   const [reason, setReason] = useState('');
   const [actionError, setActionError] = useState('');
+  const [editSchedule, setEditSchedule] = useState(false);
+  const [opensInput, setOpensInput] = useState('');
+  const [closesInput, setClosesInput] = useState('');
+  const [scheduleError, setScheduleError] = useState('');
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+
+  const secToLocal = (v?: { _seconds: number } | null) => {
+    if (!v?._seconds) return '';
+    const ms = v._seconds * 1000;
+    return new Date(ms - new Date(ms).getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  };
+  const secToText = (v: { _seconds: number } | null | undefined, empty: string) =>
+    v?._seconds ? new Date(v._seconds * 1000).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : empty;
+
+  const saveSchedule = async () => {
+    if (!user) return;
+    setScheduleSaving(true);
+    setScheduleError('');
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch(`/api/admin/msat/${examId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({
+          action: 'update_schedule',
+          scheduledAt: opensInput ? new Date(opensInput).toISOString() : null,
+          closesAt: closesInput ? new Date(closesInput).toISOString() : null,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setScheduleError(data.error ?? 'Gagal menyimpan jadwal');
+      } else {
+        setEditSchedule(false);
+        await fetchData();
+      }
+    } catch {
+      setScheduleError('Koneksi bermasalah. Coba lagi.');
+    }
+    setScheduleSaving(false);
+  };
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -238,7 +281,34 @@ const MsatExamDetailPage: FC = () => {
               {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
             </button>
           </div>
-          <p className="mt-2 text-xs text-slate-400">Bagikan kode ini ke siswa</p>
+          <p className="mt-2 text-xs text-slate-400">Bagikan kode ini ke peserta</p>
+          {!editSchedule ? (
+            <div className="mt-3 flex items-start justify-between gap-3 border-t border-slate-100 pt-3">
+              <div className="space-y-0.5 text-xs text-slate-500">
+                <p>Dibuka: <span className="font-semibold text-slate-700">{secToText(exam.scheduledAt, 'Langsung')}</span></p>
+                <p>Ditutup: <span className="font-semibold text-slate-700">{secToText(exam.expiresAt, 'Tanpa batas')}</span></p>
+              </div>
+              <button onClick={() => { setOpensInput(secToLocal(exam.scheduledAt)); setClosesInput(secToLocal(exam.expiresAt)); setScheduleError(''); setEditSchedule(true); }} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200">Ubah jadwal</button>
+            </div>
+          ) : (
+            <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="mb-1 block text-[11px] font-semibold text-slate-500">Dibuka</label>
+                  <input type="datetime-local" value={opensInput} onChange={e => setOpensInput(e.target.value)} className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] font-semibold text-slate-500">Ditutup</label>
+                  <input type="datetime-local" value={closesInput} onChange={e => setClosesInput(e.target.value)} className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none" />
+                </div>
+              </div>
+              {scheduleError && <p role="alert" className="text-[11px] font-medium text-rose-600">{scheduleError}</p>}
+              <div className="flex gap-2">
+                <button onClick={() => setEditSchedule(false)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200">Batal</button>
+                <button onClick={saveSchedule} disabled={scheduleSaving} className="rounded-lg bg-[#5841EA] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4D38D4] disabled:opacity-50">{scheduleSaving ? 'Menyimpan...' : 'Simpan'}</button>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="rounded-2xl bg-white p-5 ring-1 ring-slate-100">

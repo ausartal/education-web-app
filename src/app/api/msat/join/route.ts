@@ -5,6 +5,8 @@ import { advanceBreakIfDue } from '@/lib/msat-server';
 import { ACTIVE_SESSION_STATUSES } from '@/lib/msat-session';
 import { consumeRateLimit } from '@/lib/rate-limit-server';
 import { rateLimitMessage } from '@/lib/rate-limit';
+import { toMillis } from '@/lib/msat-session';
+import { examWindowError } from '@/lib/exam-schedule-validation';
 import { JOIN_TOKEN_COST, canJoinWithBalance, getPaywallState } from '@/lib/token-paywall';
 
 export const dynamic = 'force-dynamic';
@@ -95,14 +97,6 @@ export async function POST(req: NextRequest) {
         return { kind: 'rejected', status: 404, error: 'Kode ujian tidak valid atau sudah tidak aktif' };
       }
 
-      const expiresAt = exam.expiresAt as { _seconds?: number; toDate?: () => Date } | null | undefined;
-      if (expiresAt) {
-        const expiry = expiresAt._seconds ? new Date(expiresAt._seconds * 1000) : expiresAt.toDate?.();
-        if (expiry && expiry < new Date()) {
-          return { kind: 'rejected', status: 410, error: 'Kode ujian sudah kedaluwarsa' };
-        }
-      }
-
       // One attempt per student and exam: resume an active session, or send
       // the student to the finished one instead of creating another.
       const sessionsSnap = await adminDb.collection('msat_sessions')
@@ -116,12 +110,17 @@ export async function POST(req: NextRequest) {
       const finished = sessions.filter((s) => s.status !== 'cancelled');
       if (finished.length > 0) return { kind: 'existing', sessionId: finished[0].id, status: 'completed' };
 
+      const windowError = examWindowError(toMillis(exam.scheduledAt), toMillis(exam.expiresAt));
+      if (windowError) {
+        return { kind: 'rejected', status: 403, error: windowError };
+      }
+
       const maxUses = (exam.maxUses as number | undefined) ?? 0;
       if (maxUses > 0 && ((exam.currentUses as number | undefined) ?? 0) >= maxUses) {
         return { kind: 'rejected', status: 429, error: 'Kode ujian sudah mencapai batas maksimal penggunaan' };
       }
 
-      const examIsActive = exam.status === 'in_progress';
+      const examIsActive = exam.status === 'in_progress' || exam.waitingRoom === false;
       const initialStatus = examIsActive ? 'in_progress' : 'waiting';
       const sessionRef = adminDb.collection('msat_sessions').doc();
 

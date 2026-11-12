@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from '@/lib/pg-firestore';
 import { STAGE_BRANCHES } from '@/lib/msat-session';
+import { validateExamWindow } from '@/lib/exam-schedule-validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { title, description, module, taxonomy, code, durationPerStage, breakDuration, waitingRoom, stageQuestions, scheduledAt } = body;
+  const { title, description, module, taxonomy, code, durationPerStage, breakDuration, waitingRoom, stageQuestions, scheduledAt, closesAt } = body;
 
   if (!title || !code) {
     return NextResponse.json({ error: 'Judul dan kode diperlukan' }, { status: 400 });
@@ -38,6 +39,16 @@ export async function POST(req: NextRequest) {
     if (Number.isNaN(scheduledAtDate.getTime())) {
       return NextResponse.json({ error: 'Jadwal mulai tidak valid' }, { status: 400 });
     }
+  }
+
+  let closesAtDate: Date | null = null;
+  if (closesAt) {
+    closesAtDate = new Date(closesAt);
+    if (Number.isNaN(closesAtDate.getTime())) {
+      return NextResponse.json({ error: 'Waktu ditutup tidak valid' }, { status: 400 });
+    }
+    const windowError = validateExamWindow(scheduledAtDate?.getTime() ?? null, closesAtDate.getTime());
+    if (windowError) return NextResponse.json({ error: windowError }, { status: 400 });
   }
 
   // Check code uniqueness
@@ -96,7 +107,7 @@ export async function POST(req: NextRequest) {
       title,
       description: description ?? '',
       code: code.toUpperCase(),
-      module: module ?? 'stoikiometri',
+      module: (typeof module === 'string' && module.trim()) || 'stoikiometri',
       taxonomy: taxonomy ?? null,
       totalStages: 3,
       questionsPerStage: 12,
@@ -123,7 +134,7 @@ export async function POST(req: NextRequest) {
       status: 'active',
       createdBy: decoded.uid,
       createdAt: FieldValue.serverTimestamp(),
-      expiresAt: null,
+      expiresAt: closesAtDate,
     });
 
     await adminDb.collection('audit_logs').add({

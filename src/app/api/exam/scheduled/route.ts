@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
           sessionStatus: session?.status ?? null,
           sessionId: session?.sessionId ?? null,
           createdAt: data.createdAt ?? null,
+          closesAt: toMillis(data.expiresAt) !== null ? new Date(toMillis(data.expiresAt) as number).toISOString() : null,
           scheduledAt: toMillis(data.scheduledAt) !== null ? new Date(toMillis(data.scheduledAt) as number).toISOString() : null,
         };
       })
