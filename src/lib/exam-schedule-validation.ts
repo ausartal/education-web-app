@@ -201,6 +201,7 @@ export function isExamQuestionAccessible(
 ): boolean {
   if (question.status !== 'active') return false;
   if (question.visibility === undefined) return true;
+  if (question.ownerId === teacherId) return true;
   if (question.visibility === 'global') return question.approvalStatus === 'approved';
   return question.visibility === 'private' && (allowAnyPrivateOwner || question.ownerId === teacherId);
 }

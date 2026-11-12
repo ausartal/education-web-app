@@ -15,6 +15,7 @@ export interface RawExamQuestion {
 /** Legacy questions (no visibility) are global; otherwise approved-global or the teacher's own private ones. */
 export function isQuestionVisibleTo(q: Record<string, unknown>, teacherId: string): boolean {
   if (!q.visibility) return true;
+  if (q.ownerId === teacherId) return true;
   if (q.visibility === 'global' && q.approvalStatus === 'approved') return true;
   if (q.visibility === 'private' && q.ownerId === teacherId) return true;
   return false;
@@ -37,7 +38,8 @@ export function assembleAdaptiveQuestions(
 ): AdaptiveAssembly {
   const questionsByDomain: AdaptiveAssembly['questionsByDomain'] = {};
 
-  for (const { id, data: q } of docs) {
+  const ordered = [...docs].sort((a, b) => a.id.localeCompare(b.id));
+  for (const { id, data: q } of ordered) {
     if (!isQuestionVisibleTo(q, teacherId)) continue;
     const domainId = q.domainId as string;
     const tierPath = LEGACY_TIER_MAP[q.tierPath as string] ?? (q.tierPath as string);

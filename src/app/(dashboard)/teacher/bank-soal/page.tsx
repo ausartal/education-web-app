@@ -6,6 +6,7 @@ import {
   Plus, Trash2, Globe, Lock, CheckCircle2, AlertCircle, BookOpen, Layers, Search, Loader2, ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { readHttpError } from '@/lib/http-error';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { TPDef, ExamQ, TIER_PATHS, TIER_PATH_DIFFICULTY, emptyForm, emptyTPForm } from '@/components/teacher/bank-soal/types';
 import { TPItem, QuestionCard, Modal } from '@/components/teacher/bank-soal/parts';
@@ -42,6 +43,7 @@ const BankSoalPage: FC = () => {
   const [form, setForm] = useState(emptyForm());
   const [savingQ, setSavingQ] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
   const [formTab, setFormTab] = useState<'edit' | 'preview'>('edit');
 
   const getToken = useCallback(async () => user ? await user.getIdToken() : '', [user]);
@@ -150,18 +152,20 @@ const BankSoalPage: FC = () => {
         visibility: form.visibility,
       };
 
-      if (editQ) {
-        await fetch(`/api/exam-questions/${editQ.id}`, {
+      const saveRes = editQ
+        ? await fetch(`/api/exam-questions/${editQ.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
           body: JSON.stringify(payload),
-        });
-      } else {
-        await fetch('/api/exam-questions', {
+        })
+        : await fetch('/api/exam-questions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
           body: JSON.stringify(payload),
         });
+      if (!saveRes.ok) {
+        setActionError(await readHttpError(saveRes));
+        return;
       }
 
       setShowQForm(false);
@@ -178,8 +182,12 @@ const BankSoalPage: FC = () => {
 
   const handleDeleteQuestion = async (qId: string) => {
     const t = await getToken();
-    await fetch(`/api/exam-questions/${qId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+    const delRes = await fetch(`/api/exam-questions/${qId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
     setDeleteConfirm(null);
+    if (!delRes.ok) {
+      setActionError(await readHttpError(delRes));
+      return;
+    }
     if (selectedTP) {
       await fetchQuestions(selectedTP.id, qView);
       await fetchTPs();
@@ -225,6 +233,12 @@ const BankSoalPage: FC = () => {
 
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
+      {actionError && (
+        <div role="alert" className="fixed left-1/2 top-20 z-[60] flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-start gap-3 rounded-xl bg-rose-600 px-4 py-3 text-sm text-white shadow-lg">
+          <span className="flex-1">{actionError}</span>
+          <button type="button" onClick={() => setActionError('')} className="font-semibold underline">Tutup</button>
+        </div>
+      )}
       <div className="flex h-[calc(100vh-5rem)] gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
 
         {/* ── Left Sidebar ─────────────────────────────────────────── */}

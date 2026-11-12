@@ -68,8 +68,8 @@ export async function POST(req: NextRequest) {
 
   // Validation
   const errors: string[] = [];
-  if (!module || typeof module !== 'string') errors.push('Modul wajib diisi');
-  if (!topic || typeof topic !== 'string') errors.push('Topik wajib diisi');
+  if (module !== undefined && module !== null && typeof module !== 'string') errors.push('Modul tidak valid');
+  if (topic !== undefined && topic !== null && typeof topic !== 'string') errors.push('Topik tidak valid');
   if (!stage || ![1, 2, 3].includes(stage as number)) errors.push('Stage harus 1, 2, atau 3');
   if (!difficulty || !['sangat_mudah', 'mudah', 'sedang', 'sukar', 'sangat_sukar'].includes(difficulty as string)) errors.push('Tingkat kesulitan tidak valid');
   if (!cognitiveDomain || !['knowing', 'applying', 'reasoning'].includes(cognitiveDomain as string)) errors.push('Domain kognitif tidak valid');
@@ -106,8 +106,8 @@ export async function POST(req: NextRequest) {
     const computedStageWeight = (body.stageWeight as number) || diffToWeight[difficulty as string] || 1.0;
 
     const docRef = await adminDb.collection('msat_question').add({
-      module: (module as string).trim(),
-      topic: (topic as string).trim(),
+      module: typeof module === 'string' && module.trim() ? module.trim() : 'stoikiometri',
+      topic: typeof topic === 'string' && topic.trim() ? topic.trim() : 'Umum',
       taxonomy: taxonomy ?? null,
       stage,
       difficulty,

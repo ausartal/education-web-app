@@ -32,11 +32,12 @@ export async function POST(req: NextRequest) {
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
-  const { topic, subtopic, taxonomy, difficulty, stem, options, correctAnswer, explanation, baseTime } = body as Record<string, unknown>;
+  const { topic: rawTopic, subtopic, taxonomy, difficulty, stem, options, correctAnswer, explanation, baseTime } = body as Record<string, unknown>;
 
-  if (!topic || !difficulty || !stem || !correctAnswer) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  if (!difficulty || !stem || !correctAnswer) {
+    return NextResponse.json({ error: 'Kesulitan, soal, dan jawaban benar wajib diisi' }, { status: 400 });
   }
+  const topic = typeof rawTopic === 'string' && rawTopic.trim() ? rawTopic.trim() : 'umum';
 
   const docRef = adminDb.collection('question_bank').doc();
   const question = {

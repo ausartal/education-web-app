@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyTeacher } from '@/lib/auth-helpers';
 import { FieldValue } from '@/lib/pg-firestore';
+import { blockingExamTitle } from '@/lib/exam-question-guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const body = await req.json();
+
+  if (typeof body.status === 'string' && body.status !== 'active') {
+    const blocking = await blockingExamTitle(data, params.id);
+    if (blocking) {
+      return NextResponse.json({ error: `Soal ini satu-satunya untuk tingkatnya dan dipakai ujian "${blocking}" yang masih aktif. Tutup ujian itu atau tambah soal pengganti dulu.` }, { status: 409 });
+    }
+  }
 
   const teacherAllowed = ['stem', 'options', 'correctAnswer', 'explanation', 'status', 'difficulty', 'cognitiveLevel', 'domainId'];
   const adminAllowed = [...teacherAllowed, 'approvalStatus', 'visibility'];
@@ -78,6 +86,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   if (!isAdmin && !isOwner) {
     return NextResponse.json({ error: 'Forbidden: bukan soal Anda' }, { status: 403 });
+  }
+
+  const blocking = await blockingExamTitle(data, params.id);
+  if (blocking) {
+    return NextResponse.json({ error: `Soal ini satu-satunya untuk tingkatnya dan dipakai ujian "${blocking}" yang masih aktif. Tutup ujian itu atau tambah soal pengganti dulu.` }, { status: 409 });
   }
 
   await ref.delete();

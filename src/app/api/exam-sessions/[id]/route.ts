@@ -76,8 +76,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       qs.docs.forEach((d) => questionDocs.push({ id: d.id, data: d.data() as Record<string, unknown> }));
     }
 
+    const pinnedIds = (session.questionIds as string[] | undefined) ?? [];
+    const sessionDocs = pinnedIds.length > 0 ? questionDocs.filter((q) => pinnedIds.includes(q.id)) : questionDocs;
     const { questionsByDomain, missingDomains, missingNames } = assembleAdaptiveQuestions(
-      questionDocs,
+      sessionDocs,
       schedule.teacherId as string,
       domainIds,
     );

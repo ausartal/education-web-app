@@ -268,7 +268,7 @@ const MsatCreatePage: FC = () => {
                   <label className="mb-1.5 block text-xs font-semibold text-slate-500">Deskripsi</label>
                   <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100" />
                 </div>
-                <TaxonomyPicker value={taxonomy} requiredThrough="topic" onChange={next => { setTaxonomy(next); setModule(next.topic?.id ?? next.subject?.id ?? ''); }} />
+                <TaxonomyPicker value={taxonomy} onChange={next => { setTaxonomy(next); setModule(next.topic?.id ?? next.subject?.id ?? ''); }} />
                 <div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-slate-500">Kode Akses</label>

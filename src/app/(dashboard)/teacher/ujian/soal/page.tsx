@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { Plus, Pencil, Trash2, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { readHttpError } from '@/lib/http-error';
 import { RoleGuard } from '@/components/guards/RoleGuard';
 import { MSATTierPath, CognitiveLevel, AnswerKey } from '@/types/firestore';
 import { MSATDifficulty } from '@/types/msat';
@@ -74,6 +75,7 @@ const TeacherExamSoalPage: FC = () => {
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editVersion, setEditVersion] = useState<number>(1);
 
@@ -165,10 +167,11 @@ const TeacherExamSoalPage: FC = () => {
   const handleDelete = async (id: string) => {
     try {
       const t = await getToken();
-      await fetch(`/api/exam-questions/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      const res = await fetch(`/api/exam-questions/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      if (!res.ok) setActionError(await readHttpError(res));
       fetchQuestions();
     } catch {
-      // Delete failed silently
+      setActionError('Koneksi bermasalah, soal belum terhapus.');
     } finally {
       setDeleteConfirm(null);
     }
@@ -177,14 +180,15 @@ const TeacherExamSoalPage: FC = () => {
   const handleToggleStatus = async (q: ExamQ) => {
     try {
       const t = await getToken();
-      await fetch(`/api/exam-questions/${q.id}`, {
+      const res = await fetch(`/api/exam-questions/${q.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
         body: JSON.stringify({ status: q.status === 'active' ? 'inactive' : 'active' }),
       });
+      if (!res.ok) setActionError(await readHttpError(res));
       fetchQuestions();
     } catch {
-      // Toggle failed silently
+      setActionError('Koneksi bermasalah, status soal belum berubah.');
     }
   };
 
@@ -206,6 +210,12 @@ const TeacherExamSoalPage: FC = () => {
 
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
+      {actionError && (
+        <div role="alert" className="fixed left-1/2 top-20 z-[60] flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-start gap-3 rounded-xl bg-rose-600 px-4 py-3 text-sm text-white shadow-lg">
+          <span className="flex-1">{actionError}</span>
+          <button type="button" onClick={() => setActionError('')} className="font-semibold underline">Tutup</button>
+        </div>
+      )}
       <div className="mx-auto max-w-5xl py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>

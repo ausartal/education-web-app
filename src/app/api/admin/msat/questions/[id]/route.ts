@@ -101,6 +101,17 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Soal tidak ditemukan' }, { status: 404 });
     }
 
+    const exams = await adminDb.collection('msat_access_code').get();
+    const usedBy = exams.docs.find((exam) => {
+      const byBranch = (exam.data().stageQuestionIds ?? {}) as Record<string, string[]>;
+      return Object.values(byBranch).some((ids) => Array.isArray(ids) && ids.includes(id));
+    });
+    if (usedBy) {
+      return NextResponse.json({
+        error: `Soal ini dipakai ujian "${(usedBy.data().title as string) ?? usedBy.id}". Ubah statusnya jadi nonaktif agar hasil ujian tetap utuh.`,
+      }, { status: 409 });
+    }
+
     await docRef.delete();
 
     return NextResponse.json({ success: true });

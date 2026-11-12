@@ -29,11 +29,12 @@ export async function POST(req: NextRequest) {
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
-  const { title, description, topic, subtopic, taxonomy, content, estimatedTime, status = 'draft', order = 0, learningObjectives = [], prerequisites = [] } = body;
+  const { title, description, topic: rawTopic, subtopic, taxonomy, content, estimatedTime, status = 'draft', order = 0, learningObjectives = [], prerequisites = [] } = body;
 
-  if (!title || !topic) {
-    return NextResponse.json({ error: 'title and topic are required' }, { status: 400 });
+  if (!title) {
+    return NextResponse.json({ error: 'Judul wajib diisi' }, { status: 400 });
   }
+  const topic = typeof rawTopic === 'string' && rawTopic.trim() ? rawTopic.trim() : 'umum';
 
   const docRef = adminDb.collection('materials').doc();
   const material = {

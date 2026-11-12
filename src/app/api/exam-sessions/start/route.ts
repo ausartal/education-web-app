@@ -160,6 +160,7 @@ export async function POST(req: NextRequest) {
     K4: 'sangat_mudah', K5: 'sedang_a', K6: 'sedang_b', K7: 'sangat_sukar',
   };
 
+  accessibleDocs.sort((a, b) => a.id.localeCompare(b.id));
   const questionsByDomain: Record<string, Record<string, unknown>> = {};
   accessibleDocs.forEach(d => {
     const q = d.data();
@@ -216,12 +217,26 @@ export async function POST(req: NextRequest) {
       await existingDoc.ref.update({ questionIds });
     }
     const completedDomains = (existingSession.domainResponses || []).length;
+    const pinned = new Set<string>((existingSession.questionIds as string[] | undefined) ?? []);
+    let resumeQuestions: Record<string, Record<string, unknown>> = questionsByDomain;
+    if (pinned.size > 0) {
+      resumeQuestions = {};
+      accessibleDocs.filter(d => pinned.has(d.id)).forEach(d => {
+        const q = d.data();
+        const tierPath = LEGACY_TIER_MAP[q.tierPath] ?? q.tierPath;
+        if (!resumeQuestions[q.domainId]) resumeQuestions[q.domainId] = {};
+        resumeQuestions[q.domainId][tierPath] = {
+          id: d.id, domainName: q.domainName, stem: q.stem, options: q.options,
+          tierPath, difficulty: q.difficulty, cognitiveLevel: q.cognitiveLevel,
+        };
+      });
+    }
     return NextResponse.json({
       sessionId: existingDoc.id,
       resumed: true,
       completedDomains,
       schedule: schedulePayload,
-      questions: questionsByDomain,
+      questions: resumeQuestions,
     });
   }
 
