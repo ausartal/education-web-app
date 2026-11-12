@@ -230,7 +230,7 @@ const BankSoalPage: FC = () => {
         {/* ── Left Sidebar ─────────────────────────────────────────── */}
         <div className="flex w-64 shrink-0 flex-col border-r border-gray-100">
           {/* Sidebar header */}
-          <div className="bg-violet-600 px-4 py-4">
+          <div className="bg-gradient-to-br from-violet-600 to-indigo-700 px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
@@ -254,13 +254,13 @@ const BankSoalPage: FC = () => {
               onClick={() => setTpTab('mine')}
               className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${tpTab === 'mine' ? 'border-b-2 border-violet-500 text-violet-700' : 'text-gray-400 hover:text-gray-600'}`}
             >
-              Pribadi
+              Private
             </button>
             <button
               onClick={() => setTpTab('global')}
               className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${tpTab === 'global' ? 'border-b-2 border-violet-500 text-violet-700' : 'text-gray-400 hover:text-gray-600'}`}
             >
-              Publik
+              Public
             </button>
           </div>
 

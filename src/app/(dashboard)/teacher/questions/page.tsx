@@ -14,7 +14,6 @@ import {
 import { db } from '@/lib/firebase';
 import { Question, Difficulty, AnswerKey } from '@/types/firestore';
 import { RoleGuard } from '@/components/guards/RoleGuard';
-import { PageHero } from '@/components/ui/PageHero';
 import { useToast } from '@/hooks/useToast';
 import { PlusCircle, Trash2, Upload } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
@@ -156,21 +155,26 @@ const TeacherQuestions: FC = () => {
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-5xl py-8">
         {/* Header */}
-        <PageHero
-          tone="violet"
-          eyebrow="Latihan siswa"
-          title="Bank Soal"
-          description={`${questions.length} soal tersedia.`}
-          actions={
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-violet-700 shadow-sm transition-transform hover:-translate-y-0.5"
-            >
-              <PlusCircle size={16} /> Tambah soal
-            </button>
-          }
-          className="mb-6"
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 flex items-end justify-between"
+        >
+          <div>
+            <h1 className="font-display text-2xl font-extrabold text-gray-900">
+              Bank Soal
+            </h1>
+            <p className="mt-1 text-sm text-gray-500">
+              {questions.length} soal tersedia
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
+          >
+            <PlusCircle size={16} /> Tambah Soal
+          </button>
+        </motion.div>
 
         {/* Filter Pills */}
         <motion.div
@@ -192,7 +196,7 @@ const TeacherQuestions: FC = () => {
               onClick={() => setFilter(d.key)}
               className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${
                 filter === d.key
-                  ? 'bg-violet-600 text-white shadow-sm'
+                  ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-sm'
                   : 'bg-white text-gray-600 shadow-sm hover:bg-gray-50'
               }`}
             >

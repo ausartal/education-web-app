@@ -24,7 +24,7 @@ interface PageHeroProps {
   className?: string;
 }
 
-/** Section banner: two-stop gradient, white text, rounded-3xl. */
+/** Section banner: gradient, white text, rounded-3xl, soft decorative circles. */
 export const PageHero: FC<PageHeroProps> = ({
   tone = 'blue',
   eyebrow,
@@ -46,12 +46,16 @@ export const PageHero: FC<PageHeroProps> = ({
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${styles.hero} p-6 text-white shadow-lg shadow-black/5 sm:p-8 ${className}`}
     >
+      <div className="pointer-events-none absolute -right-10 -top-12 h-44 w-44 rounded-full bg-white/10" aria-hidden="true" />
+      <div className="pointer-events-none absolute -bottom-10 left-1/3 h-32 w-32 rounded-full bg-white/10" aria-hidden="true" />
+      <div className="pointer-events-none absolute right-1/4 top-6 h-14 w-14 rounded-full bg-white/5" aria-hidden="true" />
+
       <div className="relative flex items-center justify-between gap-6">
         <div className="min-w-0 flex-1">
           {icon && !image && (
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">{icon}</div>
           )}
-          {eyebrow && <p className="mb-1 text-sm font-medium text-white/75">{eyebrow}</p>}
+          {eyebrow && <p className="mb-1 text-xs font-bold uppercase tracking-widest text-white/70">{eyebrow}</p>}
           <h1 className="font-display text-2xl font-extrabold leading-tight sm:text-3xl">{title}</h1>
           {description && <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/80">{description}</p>}
 

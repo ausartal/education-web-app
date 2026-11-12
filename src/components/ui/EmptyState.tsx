@@ -40,6 +40,9 @@ export const EmptyState: FC<EmptyStateProps> = ({
         <div className={`flex h-20 w-20 items-center justify-center rounded-3xl ${styles.soft} ${styles.icon} ring-1 ${styles.ring}`}>
           {icon}
         </div>
+        <span className={`absolute -right-2 -top-1 h-3 w-3 rounded-full ${styles.bar} opacity-60`} aria-hidden="true" />
+        <span className="absolute -bottom-1 -left-2 h-2.5 w-2.5 rounded-full bg-amber-300" aria-hidden="true" />
+        <span className="absolute -bottom-2 right-0 h-2 w-2 rounded-full bg-pink-300" aria-hidden="true" />
       </div>
       <h3 className="font-display text-lg font-extrabold text-gray-900">{title}</h3>
       {description && <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-gray-500">{description}</p>}

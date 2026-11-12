@@ -1,8 +1,6 @@
 'use client';
 
 import { FC, useState, useCallback, useMemo } from 'react';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { PageHero } from '@/components/ui/PageHero';
 import { useAuthSWR } from '@/hooks/useAuthSWR';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
@@ -218,38 +216,32 @@ const TeacherUjianPage: FC = () => {
       <div className="mx-auto max-w-5xl py-8">
 
         {/* ── Header ── */}
-        <PageHero
-          tone="violet"
-          eyebrow="Asesmen kelas"
-          title="Ujian"
-          description="Buat jadwal ujian, bagikan token ke siswa, lalu pantau hasilnya di rekap."
-          image="/icons/hero-ujian.svg"
-          chips={[{ label: `${schedules.length} ujian` }]}
-          actions={
-            <>
-              <button
-                onClick={() => { resetForm(); setShowCreate(true); }}
-                className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-violet-700 shadow-sm transition-transform hover:-translate-y-0.5"
-              >
-                <Plus size={16} /> Buat Ujian
-              </button>
-              <Link href="/teacher/ujian/soal"
-                className="flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/30">
-                <HelpCircle size={15} /> Bank Soal
-              </Link>
-            </>
-          }
-          className="mb-8"
-        />
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-extrabold text-gray-900">Ujian</h1>
+            <p className="mt-1 text-sm text-gray-500">Buat dan kelola jadwal ujian kelas</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/teacher/ujian/soal"
+              className="flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-100">
+              <HelpCircle size={15} /> Bank Soal
+            </Link>
+            <button
+              onClick={() => { resetForm(); setShowCreate(true); }}
+              className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-violet-700"
+            >
+              <Plus size={16} /> Buat Ujian
+            </button>
+          </div>
+        </div>
 
         {/* ── Schedule list ── */}
         {schedules.length === 0 ? (
-          <EmptyState
-            tone="violet"
-            icon={<ClipboardList size={32} />}
-            title="Belum ada ujian"
-            description="Buat ujian pertama untuk kelasmu. Pilih soal dari bank soal, tulis sendiri, atau pakai ujian adaptif."
-          />
+          <div className="rounded-3xl bg-white p-16 text-center shadow-sm">
+            <ClipboardList size={48} className="mx-auto mb-4 text-gray-300" />
+            <p className="font-semibold text-gray-500">Belum ada ujian</p>
+            <p className="mt-1 text-sm text-gray-400">Buat ujian pertama untuk kelasmu</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {schedules.map(sch => {

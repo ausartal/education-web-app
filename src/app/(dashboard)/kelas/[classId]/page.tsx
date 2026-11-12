@@ -7,13 +7,11 @@ import {
   ArrowLeft, BookOpen, ClipboardList, ClipboardCheck, Clock,
   Calendar, ArrowRight, CheckCircle2, XCircle, ChevronRight,
   MessageCircle, Send, Loader2, RefreshCw, Upload, X, Link2,
-  PlusCircle, Trash2, AlertTriangle, Star, LogOut,
+  PlusCircle, Trash2, AlertTriangle, Star,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { stripMarkdown } from '@/lib/strip-markdown';
-import { useToast } from '@/hooks/useToast';
-import { PageHero } from '@/components/ui/PageHero';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ClassInfo {
@@ -80,8 +78,6 @@ const StudentClassDetailPage: FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const router = useRouter();
   const { user, profile } = useAuth();
-  const { addToast } = useToast();
-  const [leaving, setLeaving] = useState(false);
 
   const [cls, setCls] = useState<ClassInfo | null>(null);
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
@@ -141,11 +137,10 @@ const StudentClassDetailPage: FC = () => {
 
     let active = true;
     (async () => {
-      const { collection, query, where, orderBy, limit, onSnapshot } = await import('@/lib/client-firestore');
+      const { collection, query, orderBy, limit, onSnapshot } = await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
       const q = query(
-        collection(db, 'class_messages'),
-        where('classId', '==', classId),
+        collection(db, 'class_chats', classId, 'messages'),
         orderBy('createdAt', 'asc'),
         limit(200),
       );
@@ -169,10 +164,9 @@ const StudentClassDetailPage: FC = () => {
     if (!text || !user || !profile) return;
     setSendingChat(true);
     try {
-      const { collection, addDoc, serverTimestamp } = await import('@/lib/client-firestore');
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
-      await addDoc(collection(db, 'class_messages'), {
-        classId,
+      await addDoc(collection(db, 'class_chats', classId, 'messages'), {
         senderId: user.uid,
         senderName: profile.displayName || 'Siswa',
         senderRole: 'student',
@@ -209,7 +203,7 @@ const StudentClassDetailPage: FC = () => {
       setSubmitText('');
       setSubmitLinks([]);
     } catch (err) {
-      addToast('error', err instanceof Error ? err.message : 'Gagal mengumpulkan tugas');
+      alert(err instanceof Error ? err.message : 'Gagal mengumpulkan tugas');
     } finally {
       setSubmitting(false);
     }
@@ -239,22 +233,6 @@ const StudentClassDetailPage: FC = () => {
     </div>
   );
 
-  const handleLeave = async () => {
-    if (!cls) return;
-    if (!confirm(`Keluar dari kelas "${cls.name}"? Kamu tidak bisa lagi melihat materi dan tugas kelas ini, tapi nilai yang sudah ada tetap tersimpan. Kamu bisa bergabung lagi dengan kode kelas.`)) return;
-    setLeaving(true);
-    try {
-      const t = await getToken();
-      const res = await fetch(`/api/student/classes/${classId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'Gagal keluar dari kelas');
-      addToast('success', 'Kamu sudah keluar dari kelas');
-      router.replace('/kelas');
-    } catch (err) {
-      addToast('error', err instanceof Error ? err.message : 'Gagal keluar dari kelas');
-      setLeaving(false);
-    }
-  };
-
   const activeExams = exams.filter(e => e.status === 'active');
   const tabs: { key: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { key: 'materi', label: 'Materi', icon: <BookOpen size={15} />, badge: materials.length || undefined },
@@ -264,32 +242,20 @@ const StudentClassDetailPage: FC = () => {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl py-8">
-      <PageHero
-        tone="emerald"
-        eyebrow={cls.subject || 'Kelas'}
-        title={cls.name}
-        description={`Guru: ${cls.teacherName} · ${cls.studentCount} siswa terdaftar`}
-        actions={
-          <>
-            <button
-              onClick={() => router.push('/kelas')}
-              className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/30"
-            >
-              <ArrowLeft size={14} aria-hidden="true" /> Semua kelas
-            </button>
-            <button
-              onClick={handleLeave}
-              disabled={leaving}
-              className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/30 disabled:opacity-50"
-            >
-              {leaving ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} aria-hidden="true" />}
-              Keluar kelas
-            </button>
-          </>
-        }
-        className="mb-6"
-      />
+    <div className="mx-auto max-w-3xl py-8">
+      {/* Header */}
+      <div className="mb-6 flex flex-wrap items-start gap-4">
+        <button onClick={() => router.back()} className="mt-1 rounded-xl p-2 hover:bg-gray-100">
+          <ArrowLeft size={20} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <h1 className="font-display text-xl font-extrabold text-gray-900">{cls.name}</h1>
+          <p className="text-sm text-gray-500">
+            {cls.subject} · Guru: <span className="font-medium text-gray-700">{cls.teacherName}</span>
+          </p>
+          <p className="mt-0.5 text-xs text-gray-400">{cls.studentCount} siswa terdaftar</p>
+        </div>
+      </div>
 
       {/* Tabs */}
       <div className="mb-6 flex gap-1 rounded-2xl bg-gray-100 p-1">
@@ -383,7 +349,7 @@ const StudentClassDetailPage: FC = () => {
                           {isActive && !exam.isCompleted && (
                             <>
                               <div className="rounded-xl bg-violet-50 px-4 py-1.5 text-center">
-                                <p className="text-[10px] font-semibold text-violet-500">Token</p>
+                                <p className="text-[9px] font-semibold uppercase tracking-wider text-violet-500">Token</p>
                                 <p className="font-mono text-sm font-black tracking-widest text-violet-700">{exam.examToken}</p>
                               </div>
                               <Link href="/ujian" className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700">
