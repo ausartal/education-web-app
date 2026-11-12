@@ -4,7 +4,7 @@ import { FC, useState, useEffect, useCallback } from 'react';
 import { useLivePoll } from '@/hooks/useLivePoll';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Clock, Zap, Lock, Trophy, CheckCircle, ChevronRight, RotateCcw } from 'lucide-react';
+import { Clock, Zap, Lock, Trophy, CheckCircle2, ChevronRight, RotateCcw, Sprout, Flame, ListChecks, Timer, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { doc, getDoc, updateDoc } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
@@ -12,42 +12,51 @@ import { db } from '@/lib/firebase';
 const QUIZZES = [
   {
     id: 'easy',
+    level: 1,
     title: 'Latihan Dasar',
     subtitle: 'Konsep fundamental stoikiometri',
     difficulty: 'Mudah',
     questions: 10,
     timePerQuestion: 45,
-    gradient: 'from-emerald-500 to-teal-500',
-    badge: 'bg-emerald-100 text-emerald-700',
-    icon: '🌱',
-    locked: false,
+    icon: Sprout,
+    accent: 'text-emerald-600',
+    soft: 'bg-emerald-50',
+    bar: 'bg-emerald-500',
+    badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    button: 'bg-emerald-600 hover:bg-emerald-700',
     unlockHint: null,
   },
   {
     id: 'moderate',
+    level: 2,
     title: 'Latihan Menengah',
     subtitle: 'Perhitungan stoikiometri lanjut',
     difficulty: 'Menengah',
     questions: 10,
     timePerQuestion: 60,
-    gradient: 'from-amber-500 to-orange-500',
-    badge: 'bg-amber-100 text-amber-700',
-    icon: '⚡',
-    locked: true,
-    unlockHint: 'Selesaikan Latihan Dasar terlebih dahulu',
+    icon: Zap,
+    accent: 'text-amber-600',
+    soft: 'bg-amber-50',
+    bar: 'bg-amber-500',
+    badge: 'bg-amber-50 text-amber-700 ring-amber-200',
+    button: 'bg-amber-600 hover:bg-amber-700',
+    unlockHint: 'Selesaikan Latihan Dasar untuk membuka level ini',
   },
   {
     id: 'hard',
+    level: 3,
     title: 'Latihan Sulit',
-    subtitle: 'Limiting reagent & multi-step',
+    subtitle: 'Pereaksi pembatas dan perhitungan bertahap',
     difficulty: 'Sulit',
     questions: 10,
     timePerQuestion: 90,
-    gradient: 'from-rose-500 to-pink-600',
-    badge: 'bg-rose-100 text-rose-700',
-    icon: '🔥',
-    locked: true,
-    unlockHint: 'Selesaikan Latihan Menengah terlebih dahulu',
+    icon: Flame,
+    accent: 'text-rose-600',
+    soft: 'bg-rose-50',
+    bar: 'bg-rose-500',
+    badge: 'bg-rose-50 text-rose-700 ring-rose-200',
+    button: 'bg-rose-600 hover:bg-rose-700',
+    unlockHint: 'Selesaikan Latihan Menengah untuk membuka level ini',
   },
 ];
 
@@ -87,106 +96,94 @@ const LatihanPage: FC = () => {
   };
 
   const selectedQuiz = QUIZZES.find(q => q.id === confirm);
+  const completedLevels = QUIZZES.filter(q => lastScores[q.id] !== undefined).length;
+  const scoreValues = Object.values(lastScores);
+  const bestScore = scoreValues.length > 0 ? Math.max(...scoreValues) : null;
+  const nextQuiz = QUIZZES.find(q => !isLocked(q.id) && lastScores[q.id] === undefined) ?? QUIZZES[0];
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-8">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <div className="mb-6 rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-700 p-8 text-white">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20">
-            <Brain size={28} />
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <motion.header initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <h1 className="font-display text-2xl font-extrabold text-gray-900">Latihan soal</h1>
+        <p className="mt-1 text-sm text-gray-500">Uji pemahaman stoikiometri lewat soal berwaktu. Selesaikan satu level untuk membuka level berikutnya.</p>
+      </motion.header>
+
+      <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6 grid grid-cols-3 gap-3">
+        {[
+          { label: 'Level selesai', value: `${completedLevels}/${QUIZZES.length}`, icon: ListChecks },
+          { label: 'Skor terbaik', value: bestScore !== null ? `${bestScore}%` : '-', icon: Trophy },
+          { label: 'Waktu per soal', value: `${QUIZZES[0].timePerQuestion}-${QUIZZES[2].timePerQuestion} dtk`, icon: Timer },
+        ].map(item => (
+          <div key={item.label} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+            <item.icon size={16} className="text-primary" />
+            <p className="mt-3 text-xl font-extrabold tabular-nums text-gray-900">{item.value}</p>
+            <p className="mt-0.5 text-xs text-gray-500">{item.label}</p>
           </div>
-          <h1 className="mb-1 font-display text-2xl font-extrabold">Latihan Soal</h1>
-          <p className="text-sm text-white/70">Uji pemahamanmu dengan soal interaktif berwaktu</p>
-        </div>
+        ))}
+      </motion.section>
 
-        {/* Rules */}
-        <div className="grid grid-cols-2 gap-2.5">
-          {[
-            { icon: Clock, text: 'Setiap soal ada batas waktu', color: 'text-violet-500' },
-            { icon: Zap, text: 'Jawab cepat untuk skor lebih tinggi', color: 'text-amber-500' },
-            { icon: Trophy, text: 'Buka level berikutnya dengan menyelesaikan level ini', color: 'text-emerald-500' },
-            { icon: RotateCcw, text: 'Bisa diulang kapan saja', color: 'text-blue-500' },
-          ].map((r, i) => (
-            <div key={i} className="flex items-start gap-2.5 rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-gray-100">
-              <r.icon size={15} className={`mt-0.5 shrink-0 ${r.color}`} />
-              <span className="text-xs text-gray-600 leading-snug">{r.text}</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Quiz cards */}
       <div className="space-y-3">
         {QUIZZES.map((quiz, i) => {
           const locked = isLocked(quiz.id);
           const score = lastScores[quiz.id];
           const done = score !== undefined;
+          const Icon = quiz.icon;
+          const isNext = !locked && !done && quiz.id === nextQuiz.id;
 
           return (
             <motion.div
               key={quiz.id}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
+              transition={{ delay: i * 0.06 }}
             >
-              <button
-                onClick={() => !locked && setConfirm(quiz.id)}
-                disabled={locked}
-                className={`group w-full overflow-hidden rounded-2xl text-left transition-all duration-200 ${
-                  locked ? 'cursor-not-allowed' : 'hover:-translate-y-0.5 hover:shadow-lg'
-                }`}
-              >
-                <div className={`relative bg-gradient-to-r ${quiz.gradient} p-5 text-white ${locked ? 'opacity-50 grayscale' : ''}`}>
-                  {/* Decorative circle */}
-                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
-
-                  <div className="relative flex items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-sm">
-                      {quiz.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h2 className="font-bold text-base">{quiz.title}</h2>
-                        {done && <CheckCircle size={14} className="text-white/80" />}
-                        {locked && <Lock size={13} className="text-white/60" />}
-                      </div>
-                      <p className="text-sm text-white/75">{quiz.subtitle}</p>
-                      <div className="mt-2 flex items-center gap-3 text-xs text-white/70">
-                        <span className="flex items-center gap-1"><Zap size={11} /> {quiz.questions} soal</span>
-                        <span className="flex items-center gap-1"><Clock size={11} /> {quiz.timePerQuestion}s/soal</span>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${quiz.badge}`}>
-                          {quiz.difficulty}
-                        </span>
-                      </div>
-                    </div>
-                    {!locked && (
-                      <div className="shrink-0">
-                        {done ? (
-                          <div className="rounded-xl bg-white/20 px-3 py-2 text-center backdrop-blur-sm">
-                            <p className="text-[10px] text-white/70">Terakhir</p>
-                            <p className="font-black text-lg">{score}%</p>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 rounded-xl bg-white/20 px-4 py-2 font-semibold text-sm backdrop-blur-sm">
-                            Mulai <ChevronRight size={15} />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {locked && quiz.unlockHint && (
-                    <p className="relative mt-2 text-xs text-white/60">🔒 {quiz.unlockHint}</p>
-                  )}
+              <div className={`flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 transition-shadow sm:p-5 ${
+                isNext ? 'ring-2 ring-primary/40' : 'ring-gray-100'
+              } ${locked ? 'opacity-70' : 'hover:shadow-md'}`}>
+                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${locked ? 'bg-gray-100 text-gray-400' : `${quiz.soft} ${quiz.accent}`}`}>
+                  {locked ? <Lock size={20} /> : <Icon size={22} />}
                 </div>
-              </button>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-base font-bold text-gray-900">{quiz.title}</h2>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${quiz.badge}`}>{quiz.difficulty}</span>
+                    {done && <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600"><CheckCircle2 size={12} /> Selesai</span>}
+                  </div>
+                  <p className="mt-0.5 text-sm text-gray-500">{quiz.subtitle}</p>
+                  <div className="mt-2 flex items-center gap-4 text-xs text-gray-400">
+                    <span className="flex items-center gap-1"><ListChecks size={12} /> {quiz.questions} soal</span>
+                    <span className="flex items-center gap-1"><Clock size={12} /> {quiz.timePerQuestion} dtk/soal</span>
+                  </div>
+                  {done && (
+                    <div className="mt-3 flex items-center gap-3">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+                        <div className={`h-full rounded-full ${quiz.bar}`} style={{ width: `${Math.min(score, 100)}%` }} />
+                      </div>
+                      <span className="text-xs font-bold tabular-nums text-gray-700">{score}%</span>
+                    </div>
+                  )}
+                  {locked && quiz.unlockHint && <p className="mt-2 text-xs text-gray-400">{quiz.unlockHint}</p>}
+                </div>
+
+                {!locked && (
+                  <button
+                    onClick={() => setConfirm(quiz.id)}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors ${quiz.button}`}
+                  >
+                    {done ? <><RotateCcw size={14} /> Ulangi</> : <>Mulai <ChevronRight size={15} /></>}
+                  </button>
+                )}
+              </div>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Confirmation overlay */}
+      <p className="mt-6 flex items-center gap-2 text-xs text-gray-400">
+        <Zap size={12} /> Jawab lebih cepat untuk skor lebih tinggi. Soal yang melewati batas waktu dianggap salah.
+      </p>
+
       <AnimatePresence>
         {confirm && selectedQuiz && (
           <motion.div
@@ -197,50 +194,50 @@ const LatihanPage: FC = () => {
             onClick={e => { if (e.target === e.currentTarget) setConfirm(null); }}
           >
             <motion.div
-              initial={{ y: 80, opacity: 0 }}
+              initial={{ y: 60, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 80, opacity: 0 }}
+              exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="latihan-confirm-title"
               className="w-full max-w-sm rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl"
             >
-              {/* Level badge */}
-              <div className={`mb-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r ${selectedQuiz.gradient} px-4 py-2 text-white`}>
-                <span className="text-lg">{selectedQuiz.icon}</span>
-                <span className="font-bold text-sm">{selectedQuiz.title}</span>
+              <div className="mb-4 flex items-start justify-between">
+                <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${selectedQuiz.soft} ${selectedQuiz.accent}`}>
+                  <selectedQuiz.icon size={22} />
+                </div>
+                <button onClick={() => setConfirm(null)} aria-label="Tutup" className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><X size={18} /></button>
               </div>
 
-              <h2 className="mb-1 text-xl font-extrabold text-gray-900">Siap Memulai?</h2>
-              <p className="mb-5 text-sm text-gray-500">Pastikan kamu dalam kondisi siap — timer akan langsung berjalan.</p>
+              <h2 id="latihan-confirm-title" className="text-lg font-extrabold text-gray-900">{selectedQuiz.title}</h2>
+              <p className="mb-5 mt-1 text-sm text-gray-500">Timer langsung berjalan setelah kamu mulai.</p>
 
               <div className="mb-5 grid grid-cols-3 gap-3">
                 {[
                   { label: 'Soal', value: `${selectedQuiz.questions}` },
-                  { label: 'Waktu/Soal', value: `${selectedQuiz.timePerQuestion}s` },
+                  { label: 'Waktu/soal', value: `${selectedQuiz.timePerQuestion} dtk` },
                   { label: 'Level', value: selectedQuiz.difficulty },
                 ].map(item => (
                   <div key={item.label} className="rounded-xl bg-gray-50 p-3 text-center">
-                    <p className="text-sm font-black text-gray-900">{item.value}</p>
-                    <p className="text-[10px] text-gray-400">{item.label}</p>
+                    <p className="text-sm font-bold text-gray-900">{item.value}</p>
+                    <p className="mt-0.5 text-[11px] text-gray-400">{item.label}</p>
                   </div>
                 ))}
-              </div>
-
-              <div className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
-                ⚠ Soal yang melewati batas waktu otomatis dianggap salah.
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirm(null)}
-                  className="flex-1 rounded-2xl border border-gray-200 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                  className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"
                 >
-                  Belum Siap
+                  Nanti dulu
                 </button>
                 <button
                   onClick={() => { setConfirm(null); router.push(`/latihan/${selectedQuiz.id}`); }}
-                  className={`flex-1 rounded-2xl bg-gradient-to-r ${selectedQuiz.gradient} py-3 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5`}
+                  className={`flex-1 rounded-xl py-3 text-sm font-bold text-white shadow-sm transition-colors ${selectedQuiz.button}`}
                 >
-                  Mulai Sekarang
+                  Mulai sekarang
                 </button>
               </div>
             </motion.div>
