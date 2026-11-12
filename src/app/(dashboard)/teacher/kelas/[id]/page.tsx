@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { PageHero } from '@/components/ui/PageHero';
 import { useToast } from '@/hooks/useToast';
 import { downloadAuthedFile } from '@/lib/download';
 import { StudentsTab } from '@/components/teacher/class/StudentsTab';
@@ -127,45 +128,35 @@ const TeacherClassDetailPage: FC = () => {
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-4xl py-8">
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <button onClick={() => router.back()} className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">
-            <ArrowLeft size={16} /> Kembali
-          </button>
-          <div className={`rounded-3xl p-6 text-white shadow-sm ${archived ? 'bg-gradient-to-br from-gray-500 to-gray-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="mb-1 flex items-center gap-2 text-xs font-semibold text-emerald-100 uppercase tracking-wider">
-                  {cls.subject}
-                  {archived && <span className="rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold text-white">Diarsipkan</span>}
-                </p>
-                <h1 className="font-display text-2xl font-extrabold">{cls.name}</h1>
-                <div className="mt-2 flex items-center gap-3 text-sm text-emerald-100">
-                  <span className="flex items-center gap-1.5"><Users size={13} /> {students.length} siswa</span>
-                  <span className="flex items-center gap-1.5"><ClipboardList size={13} /> {exams.length} ujian</span>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button onClick={handleExport} disabled={exporting} className={headerButton}>
-                    {exporting ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-                    Ekspor nilai (CSV)
-                  </button>
-                  <button onClick={handleToggleArchive} disabled={archiving} className={headerButton}>
-                    {archiving ? <Loader2 size={13} className="animate-spin" /> : archived ? <ArchiveRestore size={13} /> : <Archive size={13} />}
-                    {archived ? 'Aktifkan kembali' : 'Arsipkan kelas'}
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-2xl bg-white/20 px-5 py-3 backdrop-blur-sm">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-100">Kode Bergabung</p>
-                  <p className="font-mono text-xl font-black tracking-widest">{cls.joinCode}</p>
-                </div>
-                <button onClick={copyCode} aria-label="Salin kode kelas" className="rounded-xl bg-white/30 p-2 hover:bg-white/50 transition-colors">
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                </button>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        <button onClick={() => router.back()} className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-800">
+          <ArrowLeft size={16} /> Kembali
+        </button>
+        <PageHero
+          tone="emerald"
+          eyebrow={archived ? `${cls.subject} (diarsipkan)` : cls.subject}
+          title={cls.name}
+          chips={[
+            { icon: <Users size={13} aria-hidden="true" />, label: `${students.length} siswa` },
+            { icon: <ClipboardList size={13} aria-hidden="true" />, label: `${exams.length} ujian` },
+          ]}
+          actions={
+            <>
+              <button onClick={handleExport} disabled={exporting} className={headerButton}>
+                {exporting ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                Ekspor nilai (CSV)
+              </button>
+              <button onClick={handleToggleArchive} disabled={archiving} className={headerButton}>
+                {archiving ? <Loader2 size={13} className="animate-spin" /> : archived ? <ArchiveRestore size={13} /> : <Archive size={13} />}
+                {archived ? 'Aktifkan kembali' : 'Arsipkan kelas'}
+              </button>
+              <button onClick={copyCode} aria-label="Salin kode kelas" className={headerButton}>
+                {copied ? <Check size={13} /> : <Copy size={13} />}
+                Kode <span className="font-mono tracking-wider">{cls.joinCode}</span>
+              </button>
+            </>
+          }
+          className="mb-6"
+        />
 
         {/* ── Tabs ────────────────────────────────────────────────────────── */}
         <div className="mb-6 flex gap-1 rounded-2xl bg-gray-100 p-1">

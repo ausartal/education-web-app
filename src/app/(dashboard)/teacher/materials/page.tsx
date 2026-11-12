@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { PageHero } from '@/components/ui/PageHero';
 import { RichEditor } from '@/components/teacher/RichEditor';
 import { useToast } from '@/hooks/useToast';
 
@@ -260,36 +261,31 @@ const TeacherMaterials: FC = () => {
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-5xl py-8">
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-sm"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h1 className="font-display text-2xl font-extrabold">Kelola Materi</h1>
-              <p className="mt-1 text-sm text-white/80">
-                {materials.filter(m => m.status === 'published').length} dipublikasi · {materials.length} total
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
+        <PageHero
+          tone="teal"
+          eyebrow="Perpustakaan materi"
+          title="Kelola Materi"
+          description={`${materials.filter(m => m.status === 'published').length} dipublikasikan dari ${materials.length} materi.`}
+          actions={
+            <>
               <button
                 onClick={exportFormat}
-                className="flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/30 transition-colors"
-                title="Download template format import"
+                className="flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/30"
+                title="Unduh template format impor"
               >
                 <FileJson size={15} />
                 Template
               </button>
               <button
                 onClick={openCreate}
-                className="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50 transition-colors"
+                className="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-teal-700 shadow-sm transition-transform hover:-translate-y-0.5"
               >
-                <PlusCircle size={16} /> Tambah Materi
+                <PlusCircle size={16} /> Tambah materi
               </button>
-            </div>
-          </div>
-        </motion.div>
+            </>
+          }
+          className="mb-6"
+        />
 
         {/* ── Filters ─────────────────────────────────────────────────────── */}
         <motion.div

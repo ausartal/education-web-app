@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { Plus, Pencil, Trash2, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { PageHero } from '@/components/ui/PageHero';
 import { MSATTierPath, CognitiveLevel, AnswerKey } from '@/types/firestore';
 import { MSATDifficulty } from '@/types/msat';
 
@@ -207,25 +208,28 @@ const TeacherExamSoalPage: FC = () => {
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-5xl py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-gray-900">Bank Soal Ujian (MSAT)</h1>
-            <p className="mt-1 text-sm text-gray-500">Setiap domain membutuhkan 7 soal (1 anchor + 2 T2 + 4 T3)</p>
-          </div>
-          <button onClick={() => { setShowForm(true); setEditId(null); setForm(emptyForm()); }}
-            className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700">
-            <Plus size={16} /> Tambah Soal
-          </button>
-        </div>
+        <PageHero
+          tone="violet"
+          eyebrow="Ujian adaptif"
+          title="Bank Soal Ujian (MSAT)"
+          description="Setiap domain membutuhkan 7 soal: 1 anchor, 2 soal tier 2, dan 4 soal tier 3."
+          actions={
+            <button onClick={() => { setShowForm(true); setEditId(null); setForm(emptyForm()); }}
+              className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 shadow-sm transition-transform hover:-translate-y-0.5">
+              <Plus size={16} /> Tambah soal
+            </button>
+          }
+          className="mb-6"
+        />
 
         {/* Completeness Status */}
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {domainCompleteness.map(d => (
             <div key={d.id} className={`rounded-xl p-3 text-center ${d.complete ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{d.id.toUpperCase()}</p>
+              <p className="text-xs font-bold text-gray-500">{d.id.toUpperCase()}</p>
               <p className={`text-xl font-black ${d.complete ? 'text-emerald-600' : 'text-amber-600'}`}>{d.count}/7</p>
               {!d.complete && <p className="mt-0.5 text-[9px] text-amber-600">Kurang: {d.missing.length}</p>}
-              {d.complete && <p className="mt-0.5 text-[9px] text-emerald-600">Lengkap ✓</p>}
+              {d.complete && <p className="mt-0.5 text-[9px] text-emerald-600">Lengkap</p>}
             </div>
           ))}
         </div>

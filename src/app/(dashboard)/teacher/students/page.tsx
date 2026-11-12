@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { collection, getDocs, query, where } from '@/lib/client-firestore';
 import { db } from '@/lib/firebase';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { PageHero } from '@/components/ui/PageHero';
 import { Search, Zap, Flame, BookOpen, Trophy } from 'lucide-react';
 
 interface Student {
@@ -77,34 +78,18 @@ const TeacherStudents: FC = () => {
   return (
     <RoleGuard allowedRoles={['teacher', 'admin']}>
       <div className="mx-auto max-w-5xl py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 rounded-3xl bg-gradient-to-br from-primary to-cyan-500 p-6 text-white shadow-sm"
-        >
-          <h1 className="font-display text-2xl font-extrabold">Daftar Siswa</h1>
-          <p className="mt-1 text-sm text-white/80">{students.length} siswa terdaftar di platform</p>
-
-          {/* Summary Stats */}
-          <div className="mt-4 grid grid-cols-3 gap-3">
-            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
-              <Zap size={16} className="mb-1 opacity-80" />
-              <p className="text-lg font-black">{totalXP}</p>
-              <p className="text-[10px] opacity-75">Total XP</p>
-            </div>
-            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
-              <Trophy size={16} className="mb-1 opacity-80" />
-              <p className="text-lg font-black">Lv. {avgLevel}</p>
-              <p className="text-[10px] opacity-75">Avg Level</p>
-            </div>
-            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
-              <BookOpen size={16} className="mb-1 opacity-80" />
-              <p className="text-lg font-black">{students.reduce((a, s) => a + s.totalLessons, 0)}</p>
-              <p className="text-[10px] opacity-75">Pelajaran</p>
-            </div>
-          </div>
-        </motion.div>
+        <PageHero
+          tone="blue"
+          eyebrow="Pantau perkembangan"
+          title="Daftar Siswa"
+          description={`${students.length} siswa terdaftar di platform.`}
+          chips={[
+            { icon: <Zap size={13} aria-hidden="true" />, label: `${totalXP} total XP` },
+            { icon: <Trophy size={13} aria-hidden="true" />, label: `Level rata-rata ${avgLevel}` },
+            { icon: <BookOpen size={13} aria-hidden="true" />, label: `${students.reduce((a, s) => a + s.totalLessons, 0)} pelajaran selesai` },
+          ]}
+          className="mb-6"
+        />
 
         {/* Search */}
         <motion.div
@@ -121,8 +106,8 @@ const TeacherStudents: FC = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama atau email siswa..."
-            className="w-full rounded-2xl bg-white py-3.5 pl-11 pr-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-primary/20"
+            placeholder="Cari nama atau email siswa"
+            className="w-full rounded-2xl bg-white py-3.5 pl-11 pr-4 text-sm shadow-sm ring-1 ring-gray-100 outline-none focus:ring-2 focus:ring-primary/30"
           />
         </motion.div>
 
@@ -137,9 +122,9 @@ const TeacherStudents: FC = () => {
             >
               <Link
                 href={`/teacher/students/${s.uid}`}
-                className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition-colors hover:ring-primary/30"
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan-400 text-sm font-bold text-white">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                   {(s.displayName || '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">

@@ -15,6 +15,7 @@ import {
 import { db } from '@/lib/firebase';
 import { UserProfile, ExamSession } from '@/types/firestore';
 import { RoleGuard } from '@/components/guards/RoleGuard';
+import { PageHero } from '@/components/ui/PageHero';
 import { BookOpen, Target, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -87,33 +88,19 @@ const StudentDetail: FC = () => {
           href="/teacher/students"
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
         >
-          <ArrowLeft size={14} /> Back to Students
+          <ArrowLeft size={14} /> Kembali ke daftar siswa
         </Link>
 
-        {/* Profile Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-center gap-5"
-        >
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-cyan text-2xl font-black text-white">
-            {student.displayName.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <h1 className="font-display text-xl font-extrabold text-gray-900">
-              {student.displayName}
-            </h1>
-            <p className="text-sm text-gray-500">{student.email}</p>
-            {student.profile.school && (
-              <p className="text-xs text-gray-400">
-                {student.profile.school} • Kelas {student.profile.grade}
-              </p>
-            )}
-          </div>
-        </motion.div>
+        <PageHero
+          tone="blue"
+          eyebrow={student.profile.school ? `${student.profile.school}, kelas ${student.profile.grade}` : 'Profil siswa'}
+          title={student.displayName}
+          description={student.email}
+          className="mb-6"
+        />
 
         {/* Stats */}
-        <div className="mb-8 grid grid-cols-5 gap-3">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {stats.map((s) => {
             const Icon = s.icon;
             return (
@@ -134,13 +121,13 @@ const StudentDetail: FC = () => {
         </div>
 
         {/* Exam History */}
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
+        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
           <h2 className="mb-4 font-display text-base font-bold text-gray-900">
-            Exam History
+            Riwayat ujian
           </h2>
           {exams.length === 0 ? (
             <p className="py-6 text-center text-sm text-gray-400">
-              No exams taken yet
+              Belum ada ujian yang dikerjakan
             </p>
           ) : (
             <div className="space-y-3">
@@ -154,7 +141,7 @@ const StudentDetail: FC = () => {
                       {exam.examId}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Status: {exam.status} • Theta: {exam.theta.toFixed(1)}
+                      Status: {exam.status}, theta {exam.theta.toFixed(1)}
                     </p>
                   </div>
                   {exam.result && (
@@ -170,9 +157,9 @@ const StudentDetail: FC = () => {
 
         {/* Theta Progression Chart */}
         {exams.length > 0 && (
-          <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
+          <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
             <h2 className="mb-4 font-display text-base font-bold text-gray-900">
-              Theta Progression
+              Perkembangan theta
             </h2>
             <div className="flex items-end gap-1">
               {exams.map((exam, i) => {
@@ -186,7 +173,7 @@ const StudentDetail: FC = () => {
                       {exam.theta.toFixed(1)}
                     </span>
                     <div
-                      className="w-full rounded-md bg-gradient-to-t from-violet-500 to-indigo-400"
+                      className="w-full rounded-md bg-primary/70"
                       style={{ height: `${Math.max(normalized, 8)}px` }}
                     />
                     <span className="text-[9px] text-gray-400">#{i + 1}</span>
@@ -198,19 +185,19 @@ const StudentDetail: FC = () => {
         )}
 
         {/* Teacher Notes */}
-        <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
+        <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
           <h2 className="mb-4 font-display text-base font-bold text-gray-900">
-            Notes
+            Catatan
           </h2>
           <textarea
-            placeholder="Add notes about this student..."
+            placeholder="Tulis catatan tentang siswa ini"
             defaultValue={notes}
             onBlur={(e) => handleSaveNotes(e.target.value)}
             rows={4}
             className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm outline-none transition-all focus:bg-white focus:ring-2 focus:ring-primary/20"
           />
           <p className="mt-2 text-xs text-gray-400">
-            Auto-saves when you click away
+            Tersimpan otomatis saat kamu pindah dari kolom ini
           </p>
         </div>
       </div>
