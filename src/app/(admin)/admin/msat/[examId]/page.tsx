@@ -4,11 +4,12 @@ import { FC, useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Loader2, Copy, Check, Clock, Users, Target,
+  Loader2, Copy, Check, Clock, Users, Target,
   Play, Square, RefreshCw, Coffee, SkipForward, UserCheck,
-  AlertCircle, Send, LockKeyhole,
+  AlertCircle, Send, LockKeyhole, Brain,
 } from 'lucide-react';
 import Link from 'next/link';
+import { AdminPageHeader } from '@/components/admin/AdminUI';
 import { useAuth } from '@/context/AuthContext';
 
 interface ExamDetail {
@@ -176,7 +177,7 @@ const MsatExamDetailPage: FC = () => {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50"><AlertCircle size={20} className="text-amber-500" /></div>
                 <div>
                   <h3 className="text-sm font-bold text-stone-800">{confirmAction.label}</h3>
-                  <p className="text-xs text-stone-400">Aksi ini tidak bisa dibatalkan</p>
+                  <p className="text-xs text-stone-400">{confirmAction.action === 'activate' || confirmAction.action === 'deactivate' ? 'Kamu bisa mengubahnya lagi kapan saja' : 'Aksi ini tidak bisa dibatalkan'}</p>
                 </div>
               </div>
               {confirmAction.needsReason && (
@@ -206,21 +207,26 @@ const MsatExamDetailPage: FC = () => {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/msat" className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600">
-            <ArrowLeft size={16} />
-          </Link>
-          <div>
-            <h1 className="font-display text-xl font-extrabold text-stone-800">{exam.title}</h1>
-            <p className="text-xs text-stone-400">{exam.module} · {exam.totalStages} stage · {exam.waitingRoom ? 'Ruang Tunggu' : 'Langsung Mulai'}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`rounded-full px-3 py-1 text-[11px] font-bold ring-1 ${statusCfg.bg} ${statusCfg.color}`}>{statusCfg.label}</span>
-          <button onClick={fetchData} className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100"><RefreshCw size={14} /></button>
-        </div>
-      </div>
+      <AdminPageHeader
+        backHref="/admin/msat"
+        icon={<Brain size={22} />}
+        eyebrow="Monitor langsung"
+        title={exam.title}
+        description={`${exam.module} · ${exam.totalStages} stage · ${exam.waitingRoom ? 'Ruang Tunggu' : 'Langsung Mulai'}`}
+        actions={
+          <>
+            <span className={`rounded-full px-3 py-1 text-[11px] font-bold ring-1 ${statusCfg.bg} ${statusCfg.color}`}>{statusCfg.label}</span>
+            <button
+              onClick={fetchData}
+              aria-label="Muat ulang data ujian"
+              title="Muat ulang"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+            >
+              <RefreshCw size={15} aria-hidden="true" />
+            </button>
+          </>
+        }
+      />
 
       {/* Code + Quick Actions */}
       <div className="grid gap-3 sm:grid-cols-2">
@@ -239,29 +245,29 @@ const MsatExamDetailPage: FC = () => {
           <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">Kontrol Ujian</p>
           <div className="flex flex-wrap gap-2">
             {exam.status === 'active' && waitingSessions.length > 0 && (
-              <button onClick={() => setConfirmAction({ action: 'start', label: `Mulai ujian untuk ${waitingSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#4D38D4] disabled:opacity-50">
+              <button onClick={() => openConfirm({ action: 'start', label: `Mulai ujian untuk ${waitingSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#4D38D4] disabled:opacity-50">
                 {actionLoading === 'start' ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
                 Mulai Ujian ({waitingSessions.length})
               </button>
             )}
             {onBreakSessions.length > 0 && (
-              <button onClick={() => setConfirmAction({ action: 'skip_break_all', label: `Skip istirahat untuk ${onBreakSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-orange-50 px-4 py-2 text-xs font-semibold text-orange-700 ring-1 ring-orange-200 hover:bg-orange-100 disabled:opacity-50">
+              <button onClick={() => openConfirm({ action: 'skip_break_all', label: `Skip istirahat untuk ${onBreakSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-orange-50 px-4 py-2 text-xs font-semibold text-orange-700 ring-1 ring-orange-200 hover:bg-orange-100 disabled:opacity-50">
                 {actionLoading === 'skip_break_all' ? <Loader2 size={12} className="animate-spin" /> : <SkipForward size={12} />}
                 Skip Semua Istirahat ({onBreakSessions.length})
               </button>
             )}
             {heldResultSessions.length > 0 && (
-              <button onClick={() => setConfirmAction({ action: 'release_results_all', label: `Rilis hasil untuk ${heldResultSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100 disabled:opacity-50">
+              <button onClick={() => openConfirm({ action: 'release_results_all', label: `Rilis hasil untuk ${heldResultSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100 disabled:opacity-50">
                 {actionLoading === 'release_results_all' ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
                 Rilis Semua Hasil ({heldResultSessions.length})
               </button>
             )}
             {exam.status === 'active' ? (
-              <button onClick={() => setConfirmAction({ action: 'deactivate', label: 'Nonaktifkan ujian ini?' })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-stone-50 px-4 py-2 text-xs font-semibold text-stone-600 ring-1 ring-stone-200 hover:bg-stone-100 disabled:opacity-50">
+              <button onClick={() => openConfirm({ action: 'deactivate', label: 'Nonaktifkan ujian ini?' })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-stone-50 px-4 py-2 text-xs font-semibold text-stone-600 ring-1 ring-stone-200 hover:bg-stone-100 disabled:opacity-50">
                 <Square size={12} /> Nonaktifkan
               </button>
             ) : exam.status === 'inactive' ? (
-              <button onClick={() => handleAction('activate')} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100 disabled:opacity-50">
+              <button onClick={() => openConfirm({ action: 'activate', label: 'Aktifkan ujian ini agar peserta bisa bergabung?' })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100 disabled:opacity-50">
                 <Play size={12} /> Aktifkan
               </button>
             ) : null}
@@ -298,7 +304,7 @@ const MsatExamDetailPage: FC = () => {
               <h3 className="text-sm font-bold text-stone-700">Ruang Tunggu</h3>
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">{waitingSessions.length} siswa</span>
             </div>
-            <button onClick={() => setConfirmAction({ action: 'start', label: `Mulai ujian untuk ${waitingSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#4D38D4] disabled:opacity-50">
+            <button onClick={() => openConfirm({ action: 'start', label: `Mulai ujian untuk ${waitingSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#4D38D4] disabled:opacity-50">
               {actionLoading === 'start' ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
               Mulai Semua
             </button>
@@ -329,7 +335,7 @@ const MsatExamDetailPage: FC = () => {
               <h3 className="text-sm font-bold text-stone-700">Sedang Istirahat</h3>
               <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">{onBreakSessions.length} siswa</span>
             </div>
-            <button onClick={() => setConfirmAction({ action: 'skip_break_all', label: `Skip istirahat untuk ${onBreakSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 ring-1 ring-orange-200 hover:bg-orange-100 disabled:opacity-50">
+            <button onClick={() => openConfirm({ action: 'skip_break_all', label: `Skip istirahat untuk ${onBreakSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 ring-1 ring-orange-200 hover:bg-orange-100 disabled:opacity-50">
               <SkipForward size={12} /> Skip Semua
             </button>
           </div>
@@ -357,7 +363,7 @@ const MsatExamDetailPage: FC = () => {
                       {mins}:{secs.toString().padStart(2, '0')}
                     </span>
                     <button
-                      onClick={() => setConfirmAction({ action: 'skip_break', label: `Skip istirahat untuk ${s.studentName}?`, target: s.id })}
+                      onClick={() => openConfirm({ action: 'skip_break', label: `Skip istirahat untuk ${s.studentName}?`, target: s.id })}
                       disabled={!!actionLoading}
                       className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 text-orange-600 ring-1 ring-orange-200 hover:bg-orange-100 disabled:opacity-50"
                       title="Skip istirahat"
@@ -381,7 +387,7 @@ const MsatExamDetailPage: FC = () => {
               <h3 className="text-sm font-bold text-stone-700">Hasil Menunggu Rilis</h3>
               <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">{heldResultSessions.length} siswa</span>
             </div>
-            <button onClick={() => setConfirmAction({ action: 'release_results_all', label: `Rilis hasil untuk ${heldResultSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4D38D4] disabled:opacity-50">
+            <button onClick={() => openConfirm({ action: 'release_results_all', label: `Rilis hasil untuk ${heldResultSessions.length} siswa?` })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-[#5841EA] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4D38D4] disabled:opacity-50">
               <Send size={12} /> Rilis Semua
             </button>
           </div>
@@ -395,7 +401,7 @@ const MsatExamDetailPage: FC = () => {
                   <p className="truncate text-[13px] font-semibold text-stone-700">{s.studentName ?? 'Siswa'}</p>
                   <p className="text-[10px] text-stone-400">Ujian selesai · hasil belum terlihat oleh siswa</p>
                 </div>
-                <button onClick={() => setConfirmAction({ action: 'release_result', label: `Rilis hasil untuk ${s.studentName ?? 'siswa ini'}?`, target: s.id })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 ring-1 ring-violet-200 hover:bg-violet-100 disabled:opacity-50">
+                <button onClick={() => openConfirm({ action: 'release_result', label: `Rilis hasil untuk ${s.studentName ?? 'siswa ini'}?`, target: s.id })} disabled={!!actionLoading} className="flex items-center gap-1.5 rounded-xl bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 ring-1 ring-violet-200 hover:bg-violet-100 disabled:opacity-50">
                   <Send size={11} /> Rilis Hasil
                 </button>
               </div>
@@ -445,7 +451,7 @@ const MsatExamDetailPage: FC = () => {
                   {s.status === 'completed' && (
                     s.resultsReleasedAt
                       ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">Hasil dirilis</span>
-                      : <button onClick={() => setConfirmAction({ action: 'release_result', label: `Rilis hasil untuk ${s.studentName ?? 'siswa ini'}?`, target: s.id })} disabled={!!actionLoading} className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-700 ring-1 ring-violet-200 hover:bg-violet-100 disabled:opacity-50">Rilis hasil</button>
+                      : <button onClick={() => openConfirm({ action: 'release_result', label: `Rilis hasil untuk ${s.studentName ?? 'siswa ini'}?`, target: s.id })} disabled={!!actionLoading} className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-700 ring-1 ring-violet-200 hover:bg-violet-100 disabled:opacity-50">Rilis hasil</button>
                   )}
                   {(s.anomalyFlags?.length ?? 0) > 0 && (
                     <Link href="/admin/msat/anomalies" title={s.anomalyFlags?.join(', ')} className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100">
