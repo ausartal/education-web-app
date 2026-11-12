@@ -47,6 +47,10 @@ ui-debug.log
 .vscode/
 .idea/
 *.swp
+
+# DB sync artifacts
+scripts/local_backup_*.json
+scripts/akurat_vps_dump.sql
 *.swo
 
 # OS
