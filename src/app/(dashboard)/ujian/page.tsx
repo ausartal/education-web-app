@@ -1,10 +1,30 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { collection, getDocs, query, where } from '@/lib/client-firestore';
+import { db } from '@/lib/firebase';
+import { useLivePoll } from '@/hooks/useLivePoll';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { KeyRound, AlertCircle, Loader2, Shield, Brain, Clock, RotateCcw } from 'lucide-react';
+import { KeyRound, AlertCircle, Loader2, Shield, Brain, Clock, RotateCcw, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+
+interface HistoryRow {
+  id: string;
+  title: string;
+  status: string;
+  score: number | null;
+  maxScore: number;
+  at: number;
+}
+
+const toMs = (value: unknown): number => {
+  const v = value as { toDate?: () => Date; _seconds?: number; seconds?: number } | null | undefined;
+  if (!v) return 0;
+  if (typeof v.toDate === 'function') return v.toDate().getTime();
+  const sec = v._seconds ?? v.seconds;
+  return typeof sec === 'number' ? sec * 1000 : 0;
+};
 
 const UjianPage: FC = () => {
   const router = useRouter();
@@ -13,7 +33,34 @@ const UjianPage: FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState<'entry' | 'confirm'>('entry');
-  const [scheduleInfo, setScheduleInfo] = useState<{ title: string; durationMinutes: number; domainCount: number; sessionId?: string; resumed?: boolean } | null>(null);
+  const [scheduleInfo, setScheduleInfo] = useState<{ title: string; durationMinutes: number; totalQuestions: number; sessionId?: string; resumed?: boolean } | null>(null);
+  const [history, setHistory] = useState<HistoryRow[]>([]);
+
+  const uid = user?.uid;
+  const fetchHistory = useCallback(async () => {
+    if (!uid) return;
+    try {
+      const snap = await getDocs(query(collection(db, 'exam_sessions'), where('studentId', '==', uid)));
+      const rows = snap.docs.map((d) => {
+        const data = d.data();
+        const custom = data.examType === 'custom' || data.examType === 'manual';
+        return {
+          id: d.id,
+          title: (data.examTitle as string) || 'Ujian kelas',
+          status: data.status as string,
+          score: typeof data.numericScore === 'number' ? data.numericScore : null,
+          maxScore: custom ? 100 : 120,
+          at: toMs(data.completedAt) || toMs(data.startedAt),
+        } as HistoryRow;
+      });
+      setHistory(rows.sort((a, b) => b.at - a.at));
+    } catch {
+      setHistory([]);
+    }
+  }, [uid]);
+
+  useEffect(() => { fetchHistory(); }, [fetchHistory]);
+  useLivePoll(fetchHistory, 30_000);
 
   const handleValidate = async () => {
     if (!token.trim() || !user) return;
@@ -50,9 +97,9 @@ const UjianPage: FC = () => {
       setScheduleInfo({
         title: data.schedule.title,
         durationMinutes: data.schedule.durationMinutes,
-        domainCount: isCustom
+        totalQuestions: isCustom
           ? (data.customQuestions?.length ?? 0)
-          : (data.schedule.domainIds?.length || 0),
+          : (data.schedule.domainIds?.length || 0) * 3,
         sessionId: data.sessionId,
       });
       setStep('confirm');
@@ -114,7 +161,7 @@ const UjianPage: FC = () => {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { icon: Brain, text: 'Soal adaptif menyesuaikan kemampuanmu', color: 'text-violet-500 bg-violet-50' },
-                { icon: Clock, text: 'Durasi ujian 50 menit', color: 'text-blue-500 bg-blue-50' },
+                { icon: Clock, text: 'Durasi mengikuti jadwal dari gurumu', color: 'text-blue-500 bg-blue-50' },
                 { icon: RotateCcw, text: 'Backtrack diizinkan dalam tiap kompetensi', color: 'text-emerald-500 bg-emerald-50' },
                 { icon: Shield, text: 'Jangan tinggalkan tab selama ujian', color: 'text-amber-500 bg-amber-50' },
               ].map((rule, i) => {
@@ -129,6 +176,38 @@ const UjianPage: FC = () => {
                 );
               })}
             </div>
+
+            {history.length > 0 && (
+              <div className="mt-8">
+                <h2 className="mb-3 text-sm font-bold text-gray-900">Riwayat ujian</h2>
+                <div className="divide-y divide-gray-100 overflow-hidden rounded-2xl bg-white shadow-sm">
+                  {history.map((row) => {
+                    const running = row.status === 'in_progress';
+                    const done = row.status === 'completed' || row.status === 'flagged' || (row.status === 'timed_out' && row.score !== null);
+                    return (
+                      <button
+                        key={row.id}
+                        onClick={() => router.push(running ? `/ujian/${row.id}/session` : `/ujian/${row.id}/results`)}
+                        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-gray-50"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-gray-800">{row.title}</p>
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            {row.at ? new Date(row.at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                            {' · '}
+                            {running ? 'Sedang berjalan' : done ? 'Selesai' : row.status === 'timed_out' ? 'Waktu habis' : 'Dihentikan'}
+                          </p>
+                        </div>
+                        {done && row.score !== null && (
+                          <p className="text-sm font-bold tabular-nums text-violet-700">{row.score}<span className="text-xs font-medium text-gray-400">/{row.maxScore}</span></p>
+                        )}
+                        <ChevronRight size={16} className="shrink-0 text-gray-300" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -141,7 +220,7 @@ const UjianPage: FC = () => {
             <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
               <div className="mb-6 grid grid-cols-2 gap-4">
                 <div className="rounded-xl bg-gray-50 p-4 text-center">
-                  <p className="text-2xl font-black text-gray-900">{(scheduleInfo?.domainCount || 0) * 3}</p>
+                  <p className="text-2xl font-black text-gray-900">{scheduleInfo?.totalQuestions || 0}</p>
                   <p className="text-xs text-gray-500">Total Soal</p>
                 </div>
                 <div className="rounded-xl bg-gray-50 p-4 text-center">

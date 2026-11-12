@@ -95,7 +95,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const elapsedMs = Date.now() - startedAt.getTime();
     const maxMs = ((session.durationMinutes || 50) + 5) * 60 * 1000;
     if (elapsedMs > maxMs) {
-      await ref.update({ status: 'timed_out', completedAt: FieldValue.serverTimestamp() });
+      const update: Record<string, unknown> = { status: 'timed_out', completedAt: FieldValue.serverTimestamp() };
+      if (session.examType === 'custom' || session.examType === 'manual') {
+        const timedOutSchedule = await adminDb.collection('exam_schedules').doc(session.examScheduleId).get();
+        const questions = ((timedOutSchedule.data()?.customQuestions as Array<{ id: string; correctAnswer: string }>) ?? []);
+        const draft = (session.draftAnswers as Record<string, string>) ?? {};
+        const correct = questions.filter((q) => draft[q.id] === q.correctAnswer).length;
+        update.numericScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
+      }
+      await ref.update(update);
       return NextResponse.json({ error: 'Waktu ujian telah berakhir' }, { status: 410 });
     }
   }

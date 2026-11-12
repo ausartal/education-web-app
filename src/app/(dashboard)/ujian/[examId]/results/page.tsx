@@ -45,20 +45,23 @@ const ResultsPage: FC = () => {
   );
 
   const score = session.numericScore ?? 0;
-  const total = 120;
+  const examType = (session as { examType?: string }).examType;
+  const isCustom = examType === 'custom' || examType === 'manual';
+  const total = isCustom ? 100 : 120;
   const pct = Math.round((score / total) * 100);
   const domains = session.domainResponses || [];
-  const isCompleted = session.status === 'completed' || session.status === 'flagged';
+  const isCompleted = session.status === 'completed' || session.status === 'flagged' || ((session.status as string) === 'timed_out' && session.numericScore != null);
 
   // Score color
-  const scoreColor = score >= 96 ? 'from-emerald-500 to-teal-500'
-    : score >= 72 ? 'from-blue-500 to-cyan-500'
-    : score >= 48 ? 'from-amber-500 to-orange-500'
+  const ratio = score / total;
+  const scoreColor = ratio >= 0.8 ? 'from-emerald-500 to-teal-500'
+    : ratio >= 0.6 ? 'from-blue-500 to-cyan-500'
+    : ratio >= 0.4 ? 'from-amber-500 to-orange-500'
     : 'from-rose-500 to-pink-500';
 
-  const scoreLabel = score >= 96 ? 'Sangat Baik'
-    : score >= 72 ? 'Baik'
-    : score >= 48 ? 'Cukup'
+  const scoreLabel = ratio >= 0.8 ? 'Sangat Baik'
+    : ratio >= 0.6 ? 'Baik'
+    : ratio >= 0.4 ? 'Cukup'
     : 'Perlu Ditingkatkan';
 
   if (!isCompleted) {
@@ -97,7 +100,9 @@ const ResultsPage: FC = () => {
         className="mb-6 rounded-2xl bg-white p-6 shadow-sm"
       >
         <h3 className="mb-4 text-sm font-bold text-gray-900">Jawaban per Soal</h3>
-        {domains.length === 0 ? (
+        {isCustom ? (
+          <p className="text-sm text-gray-500">Kamu menjawab {((session as { customAnswers?: unknown[] }).customAnswers ?? []).length} soal. Pembahasan jawaban dibagikan oleh gurumu.</p>
+        ) : domains.length === 0 ? (
           <p className="text-sm text-gray-400">Tidak ada data jawaban.</p>
         ) : (
           <div className="space-y-4">
@@ -155,7 +160,7 @@ const ResultsPage: FC = () => {
         <div className="mt-3 flex justify-between text-xs text-gray-400">
           <span>0</span>
           <span>Rata-rata kelas tersedia di rekap guru</span>
-          <span>120</span>
+          <span>{total}</span>
         </div>
       </motion.div>
 
